@@ -10,7 +10,15 @@
  */
 
 import type { iBasicNode, iNodeContent } from "@aio-ui/core/node";
-import type { iAppDeps } from "./ports";
+import type {
+  iAnimationPort,
+  iAppRouteState,
+  iComponentRegistryPort,
+  iEventPort,
+  iRendererPort,
+  iRouterPort,
+  iStoragePort,
+} from "./ports";
 
 /**
  * One piece of a page.
@@ -78,20 +86,91 @@ export interface iAppSource {
 
 /** Construction options that are not content. */
 export interface iAppOptions {
-  /** Mount point, resolved once at construction. */
+  /** Mount point, resolved once at `mount()`. */
   container: HTMLElement | string;
   /** Route used when the hash is empty or invalid. Defaults to `home`. */
   defaultRoute?: string;
   /** Initial theme id. Defaults to `default`. */
   theme?: string;
-  /** Enables the shell debug channel (resolved builders, preload graph, misses). */
+  /** Enables the app debug channel (resolved slots, preload graph, misses). */
   debug?: boolean;
 }
 
-/** Full configuration: content, options and injected collaborators. */
+/**
+ * Full configuration: content and general options only.
+ *
+ * Module configuration is **not** here. Each module carries its own config at the
+ * place it is registered (`registerModule(Module, config)`), so this interface
+ * stays stable no matter how many modules an application installs.
+ */
 export interface iAppConfig extends iAppOptions {
   source: iAppSource;
-  deps: iAppDeps;
+}
+
+// ====================================================
+// Modules — everything the app consumes is registered
+// ====================================================
+
+/**
+ * Ports the app resolves from registered modules, keyed by the role they play.
+ *
+ * A module declares which slot it fills, so a module registered for the wrong
+ * role is rejected by the type system instead of failing at runtime.
+ */
+export interface iAppSlots {
+  registry: iComponentRegistryPort;
+  router: iRouterPort;
+  renderer: iRendererPort;
+  animation: iAnimationPort;
+  events: iEventPort;
+  storage: iStoragePort;
+}
+
+/** Slot name, for example `"router"`. */
+export type iAppSlot = keyof iAppSlots;
+
+/**
+ * Runtime data a module may need while it is being created.
+ *
+ * This is the injection point that makes `registerModule(HashRouter, …)`-style
+ * registration possible: a router is constructed with the routes and the change
+ * callback that only the app knows, so the app hands them over here.
+ */
+export interface iAppModuleContext {
+  /** Normalised route names, in source order. */
+  routes: string[];
+  /** Route used when the hash is unknown. */
+  defaultRoute: string;
+  /** Theme to start with — already restored from storage when one is registered. */
+  theme: string;
+  /** Whether the app debug channel is on. */
+  debug: boolean;
+  /** Callback the router must call whenever the hash changes. */
+  onRouteChanged: (state: iAppRouteState) => void | Promise<void>;
+}
+
+/**
+ * A module: a class whose static members describe one port.
+ *
+ * One convention, no identifier argument, no factory object:
+ *
+ * ```ts
+ * export class RouterModule {
+ *   static readonly slot = "router" as const;
+ *   static create(config: iRouterModuleConfig, context: iAppModuleContext): iRouterPort {
+ *     return new config.Router(context.defaultRoute, context.theme, context.routes, context.onRouteChanged);
+ *   }
+ * }
+ * app.registerModule(RouterModule, { Router: HashRouter });
+ * ```
+ */
+export interface iAppModuleClass<K extends iAppSlot = iAppSlot, C = unknown> {
+  /** Slot this module fills. */
+  readonly slot: K;
+  /** Builds the port. Called once, during `mount()`. */
+  create(config: C, context: iAppModuleContext): iAppSlots[K];
+  /** Releases the port created by `create()`. Called once, during `destroy()`. */
+  destroy?(port: iAppSlots[K]): void;
 }
 
 /** Context passed to a page controller before its route is rendered. */
@@ -128,14 +207,22 @@ export interface iPageController {
   attachMenu?(menu: iBasicNode): iBasicNode;
 }
 
-/** Public surface of a mounted shell. */
+/** Public surface of a mounted app. */
 export interface iApp {
   /** Route currently rendered. */
   readonly currentRoute: string;
-  /** Root element of the mounted shell, `null` before `mount()`. */
+  /** Root element of the mounted page, `null` before `mount()`. */
   readonly shell: HTMLElement | null;
 
-  /** Resolves the container, wires the router and renders the current hash route. */
+  /**
+   * Registers the module that fills a slot. Must be called before `mount()`.
+   *
+   * @param module - Module class; its static `slot` decides which port it becomes.
+   * @param config - Configuration owned by that module, never by `iAppConfig`.
+   */
+  registerModule<K extends iAppSlot, C>(module: iAppModuleClass<K, C>, config: C): iApp;
+
+  /** Resolves the container, creates the registered modules and renders the current route. */
   mount(): Promise<void>;
 
   /** Navigates to a route through the router. */
@@ -144,6 +231,6 @@ export interface iApp {
   /** Registers a controller for its `route`. */
   registerController(controller: iPageController): void;
 
-  /** Detaches listeners, runs controller teardown and removes the shell root. */
+  /** Releases modules in reverse registration order and unmounts the page. */
   destroy(): void;
 }

@@ -1,5 +1,12 @@
 import { ComponentRegistry } from '@aio-ui/core/ComponentRegistry';
-import { AioApp, type iEventPort, type iStoragePort } from '@aio-ui/app';
+import {
+  AioApp,
+  AnimationsModule,
+  ComponentsModule,
+  EventsModule,
+  RouterModule,
+  StorageModule,
+} from '@aio-ui/app';
 import { AnimationsService } from '@aio-ui/animations';
 import { HashRouter } from '@aio-ui/router';
 import { HomepageContent } from './content/home';
@@ -44,34 +51,13 @@ const pages = {
   form: BuildPageContent,
 };
 
-/** `localStorage` bisa ada tapi melempar (mode privat / iframe), jadi dibungkus. */
-const storage: iStoragePort = {
-  get: (key) => {
-    try {
-      return localStorage.getItem(key);
-    } catch {
-      return null;
-    }
-  },
-  set: (key, value) => {
-    try {
-      localStorage.setItem(key, value);
-    } catch {
-      /* persistence is optional */
-    }
-  },
-};
+/** `localStorage` bisa ada tapi melempar (mode privat / iframe); `StorageModule` yang membungkusnya. */
+const themeStorage = globalThis.localStorage;
 
 async function start(container: HTMLElement) {
   // registerServiceWorker();
 
   const emitter = new EventEmitter();
-  // `EventEmitter` hanya menerima kunci `iPageEvents`; app memakai kunci string
-  // supaya tidak terikat ke satu implementasi emitter.
-  const events: iEventPort = {
-    emit: (event, data) => emitter.emit(event as any, data as any),
-    on: (event, callback) => emitter.on(event as any, callback as any),
-  };
 
   const components = new ComponentRegistry(componentAssets)
     .register("form", (data: any) => {
@@ -113,25 +99,24 @@ async function start(container: HTMLElement) {
       };
     });
 
-  const shell = new AioApp({
+  // Semua modul diregister dulu, baru dipakai. Config tiap modul menempel di
+  // tempat registrasinya, jadi `iAppConfig` tetap general.
+  const app = new AioApp({
     container,
     defaultRoute: 'home',
     theme: 'default',
     source: { pages },
-    deps: {
-      registry: components,
-      routerFactory: (defaultRoute, theme, routes, onRouteChanged) =>
-        new HashRouter(defaultRoute, theme, routes, onRouteChanged),
-      animation: new AnimationsService(),
-      events,
-      storage,
-    },
-  });
+  })
+    .registerModule(ComponentsModule, { registry: components })
+    .registerModule(RouterModule, { Router: HashRouter })
+    .registerModule(StorageModule, { driver: themeStorage })
+    .registerModule(AnimationsModule, { Service: AnimationsService })
+    .registerModule(EventsModule, { emitter });
 
-  await shell.mount();
+  await app.mount();
 
-  // Debug manual di console: `__shell.navigate('blog')`.
-  (globalThis as any).__shell = shell;
+  // Debug manual di console: `__app.navigate('blog')`.
+  (globalThis as any).__app = app;
 }
 
 const app = document.querySelector<HTMLDivElement>('#app')

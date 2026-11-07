@@ -59,8 +59,9 @@ export interface iRouterPort {
 }
 
 /**
- * Router construction is injected too, because the shell has to hand the router
- * its own route-changed callback.
+ * Router construction is still a factory, but it is now handed to a router module
+ * (`RouterModule`) instead of being handed to the app directly: the app supplies the
+ * routes and the change callback, the module supplies the class.
  */
 export type iRouterFactory = (
   defaultRoute: string,
@@ -75,30 +76,27 @@ export interface iAnimationPort {
   destroy?(): void;
 }
 
-/** What the shell needs from an event emitter. */
+/**
+ * What the app needs from an event emitter.
+ *
+ * Deliberately loose (`any` payloads, method syntax): the emitter package types its
+ * keys against `iPageEvents`, and a shell that demanded those exact keys would force
+ * every project to depend on that type. A method declared with wider parameters is
+ * assignable both ways, so a real `EventEmitter` can be registered as-is.
+ */
 export interface iEventPort {
-  emit(event: string, data: unknown): void;
-  on(event: string, callback: (data: any) => void): void;
+  emit(event: any, data?: any): void;
+  on(event: any, callback: (...args: any[]) => void): void;
 }
 
 /**
- * What the shell needs from persistent storage.
+ * What the app needs from persistent storage.
  *
- * Only the theme id is persisted today. The port exists so the shell never
- * touches `localStorage` directly: a generated project may run in a privacy mode,
- * in an iframe, or in a Node test, where `localStorage` is either absent or throws.
+ * Only the theme id is persisted today. The port exists so the app never touches
+ * `localStorage` directly: a generated project may run in a privacy mode, in an
+ * iframe, or in a Node test, where `localStorage` is either absent or throws.
  */
 export interface iStoragePort {
   get(key: string): string | null;
   set(key: string, value: string): void;
-}
-
-/** Every collaborator the shell accepts. Only `registry` and `routerFactory` are required. */
-export interface iAppDeps {
-  registry: iComponentRegistryPort;
-  routerFactory: iRouterFactory;
-  renderer?: iRendererPort;
-  animation?: iAnimationPort;
-  events?: iEventPort;
-  storage?: iStoragePort;
 }

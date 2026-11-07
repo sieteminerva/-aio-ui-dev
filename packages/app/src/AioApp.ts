@@ -29,10 +29,20 @@ import { DOMRenderer } from "@aio-ui/core/DOMRenderer";
 import type { iBasicNode, iNodeContent } from "@aio-ui/core/node";
 import type { iBuilderRegistry } from "@aio-ui/core/registry";
 
-import type { iAppDeps, iRendererPort, iRouterPort } from "./ports";
+import type {
+  iAnimationPort,
+  iComponentRegistryPort,
+  iEventPort,
+  iRendererPort,
+  iRouterPort,
+  iStoragePort,
+} from "./ports";
 import type {
   iApp,
   iAppConfig,
+  iAppModuleClass,
+  iAppModuleContext,
+  iAppSlot,
   iPageBlock,
   iPageContent,
   iPageController,
@@ -124,7 +134,6 @@ function resolveContainer(target: HTMLElement | string): HTMLElement {
 
 export class AioApp implements iApp {
   readonly #source: iAppConfig["source"];
-  readonly #deps: iAppDeps;
   readonly #containerTarget: HTMLElement | string;
   readonly #defaultRoute: string;
   readonly #initialTheme: string;
@@ -133,9 +142,16 @@ export class AioApp implements iApp {
   /** Route content keyed by normalised route name; built once at construction. */
   readonly #pages = new Map<string, iPageContent>();
 
+  /** Registered modules, keyed by slot. Insertion order is creation order. */
+  #registrations = new Map<iAppSlot, { module: iAppModuleClass; config: unknown }>();
+
   #controllers = new Map<string, iPageController>();
+  #registry: iComponentRegistryPort | null = null;
   #router: iRouterPort | null = null;
   #renderer: iRendererPort | null = null;
+  #animation: iAnimationPort | null = null;
+  #events: iEventPort | null = null;
+  #storage: iStoragePort | null = null;
   #container: HTMLElement | null = null;
   #root: HTMLElement | null = null;
 
@@ -147,7 +163,6 @@ export class AioApp implements iApp {
 
   constructor(config: iAppConfig) {
     this.#source = config.source ?? { pages: {} };
-    this.#deps = config.deps;
     this.#containerTarget = config.container;
     this.#defaultRoute = normalizeRoute(config.defaultRoute);
     this.#initialTheme = config.theme || "default";
@@ -180,29 +195,99 @@ export class AioApp implements iApp {
   }
 
   /**
-   * Resolves the container, restores the persisted theme, wires the router and
-   * renders the route the URL already points at.
+   * Registers the module that fills a slot.
+   *
+   * Registration must happen before `mount()`: nothing is instantiated until then,
+   * so a module cannot be used before it is registered. Registering the same slot
+   * twice replaces the earlier module and says so, because that is almost always a
+   * mistake in a generated project.
+   *
+   * @param module - Module class; `module.slot` decides the port it becomes.
+   * @param config - Configuration owned by that module, not by `iAppConfig`.
+   * @returns The app, for a fluent chain.
+   * @throws {Error} When called after `mount()`.
+   */
+  public registerModule<K extends iAppSlot, C>(module: iAppModuleClass<K, C>, config: C): this {
+    if (this.#mounted) {
+      throw new Error(`[AioApp] registerModule("${module.slot}") must be called before mount().`);
+    }
+
+    if (this.#registrations.has(module.slot)) {
+      console.warn(`[AioApp] Slot "${module.slot}" already has a module; replacing it.`);
+    }
+
+    this.#registrations.set(module.slot, { module: module as unknown as iAppModuleClass, config });
+    return this;
+  }
+
+  /**
+   * Resolves the container, creates the registered modules and renders the route
+   * the URL already points at.
+   *
+   * Modules are created here, not at registration, because a module may need data
+   * that only exists at mount time (the route list, the restored theme, the
+   * route-changed callback).
    */
   public async mount(): Promise<void> {
     if (this.#mounted) return;
 
     this.#container = resolveContainer(this.#containerTarget);
-    this.#renderer = this.#deps.renderer ?? null;
-    this.#theme = this.#deps.storage?.get(THEME_STORAGE_KEY) || this.#initialTheme;
-
-    const routes = this.routes;
-    this.#router = this.#deps.routerFactory(
-      this.#defaultRoute,
-      this.#theme,
-      routes,
-      (state) => this.#onRouteChanged(state)
-    );
+    this.#createModules();
 
     this.#mounted = true;
-    this.#log("mount", { routes, theme: this.#theme });
+    this.#log("mount", { routes: this.routes, theme: this.#theme, slots: [...this.#registrations.keys()] });
 
-    const initial = this.#router.parseUrlHash();
+    const initial = this.#router!.parseUrlHash();
     await this.#renderRoute(initial.route, initial.fragment);
+  }
+
+  /**
+   * Creates every registered module in two phases.
+   *
+   * Storage goes first: the persisted theme has to be known *before* the router is
+   * built, because a router is constructed with its initial theme. Everything else
+   * then follows registration order.
+   */
+  #createModules(): void {
+    const context: iAppModuleContext = {
+      routes: this.routes,
+      defaultRoute: this.#defaultRoute,
+      theme: this.#initialTheme,
+      debug: this.#debug,
+      onRouteChanged: (state) => this.#onRouteChanged(state),
+    };
+
+    // Phase 1 — storage, so the theme can be restored before any consumer exists.
+    const storage = this.#registrations.get("storage");
+    if (storage) {
+      this.#storage = storage.module.create(storage.config, context) as iStoragePort;
+      const persisted = this.#storage.get(THEME_STORAGE_KEY);
+      if (persisted) {
+        this.#theme = persisted;
+        context.theme = persisted;
+      }
+    }
+
+    // Phase 2 — the rest, in registration order.
+    for (const [slot, registration] of this.#registrations) {
+      if (slot === "storage") continue;
+      const port = registration.module.create(registration.config, context);
+      if (slot === "registry") this.#registry = port as iComponentRegistryPort;
+      else if (slot === "router") this.#router = port as iRouterPort;
+      else if (slot === "renderer") this.#renderer = port as iRendererPort;
+      else if (slot === "animation") this.#animation = port as iAnimationPort;
+      else if (slot === "events") this.#events = port as iEventPort;
+    }
+
+    const missing = (["registry", "router"] as const).filter((slot) => !this.#registrations.has(slot));
+    if (missing.length) {
+      throw new Error(
+        `[AioApp] Missing required module(s): ${missing.join(", ")}. ` +
+        `Register them with registerModule(...) before mount().`
+      );
+    }
+
+    this.#log("modules:created", { slots: [...this.#registrations.keys()] });
   }
 
   /** Navigates through the router so the URL stays the single source of truth. */
@@ -211,13 +296,28 @@ export class AioApp implements iApp {
     this.#router.navigate(route, this.#theme, fragment);
   }
 
-  /** Runs the active controller's teardown, drops the router and unmounts the page. */
+  /** Runs the active controller's teardown, releases modules and unmounts the page. */
   public destroy(): void {
     const active = this.#controllers.get(this.#route);
     this.#runHook(active, "onDestroy");
 
-    this.#router?.destroy();
+    // Reverse registration order: a module created last is released first.
+    for (const [slot, registration] of [...this.#registrations].reverse()) {
+      const port = this.#portOf(slot);
+      if (!registration.module.destroy || !port) continue;
+      try {
+        (registration.module.destroy as (value: unknown) => void)(port);
+      } catch (error) {
+        console.error(`[AioApp] destroy of module "${slot}" failed:`, error);
+      }
+    }
+
+    this.#registry = null;
     this.#router = null;
+    this.#renderer = null;
+    this.#animation = null;
+    this.#events = null;
+    this.#storage = null;
 
     this.#root?.remove();
     this.#root = null;
@@ -229,6 +329,19 @@ export class AioApp implements iApp {
     this.#log("destroy", {});
   }
 
+  /** Returns the port currently created for a slot, for module teardown. */
+  #portOf(slot: iAppSlot): unknown {
+    switch (slot) {
+      case "registry": return this.#registry;
+      case "router": return this.#router;
+      case "renderer": return this.#renderer;
+      case "animation": return this.#animation;
+      case "events": return this.#events;
+      case "storage": return this.#storage;
+      default: return null;
+    }
+  }
+
   // ------------------------------------------------
   // Route pipeline
   // ------------------------------------------------
@@ -236,8 +349,8 @@ export class AioApp implements iApp {
   #onRouteChanged(state: { route: string; theme: string | null; fragment: string }): Promise<void> {
     if (state.theme && state.theme !== this.#theme) {
       this.#theme = state.theme;
-      this.#deps.storage?.set(THEME_STORAGE_KEY, state.theme);
-      this.#deps.events?.emit("themeChanged", {
+      this.#storage?.set(THEME_STORAGE_KEY, state.theme);
+      this.#events?.emit("themeChanged", {
         theme: state.theme,
         shell: this.#root,
       });
@@ -257,7 +370,7 @@ export class AioApp implements iApp {
     const target = this.#resolveRoute(route);
     const page = this.#pages.get(target);
 
-    this.#deps.events?.emit("pageChanged", { route: target });
+    this.#events?.emit("pageChanged", { route: target });
     this.#log("render:start", { route: target, sequence });
 
     try {
@@ -272,12 +385,12 @@ export class AioApp implements iApp {
 
       const node = this.#compose(pageToNode(prepared, target), target);
       const names = collectComponentNames(node);
-      const known = names.filter((name) => this.#deps.registry.has(name));
-      const missing = names.filter((name) => !this.#deps.registry.has(name));
+      const known = names.filter((name) => this.#registry!.has(name));
+      const missing = names.filter((name) => !this.#registry!.has(name));
 
       this.#log("preload", { route: target, components: names, missing, sequence });
-      this.#deps.events?.emit("beforeRender", { route: target, components: names, missing });
-      if (known.length) await this.#deps.registry.load(known, [node]);
+      this.#events?.emit("beforeRender", { route: target, components: names, missing });
+      if (known.length) await this.#registry!.load(known, [node]);
       if (sequence !== this.#sequence) return this.#log("render:superseded", { route: target, sequence });
 
       const tree = this.#renderNode(node);
@@ -289,13 +402,13 @@ export class AioApp implements iApp {
       await this.#afterCommit(target, tree);
       if (sequence !== this.#sequence) return;
 
-      this.#deps.events?.emit("ready", { route: target, shell: tree });
+      this.#events?.emit("ready", { route: target, shell: tree });
       this.#log("render:done", { route: target, sequence });
     } catch (error) {
       // The previous DOM stays mounted on purpose: a broken route must not blank
       // the application.
       console.error(`[AioApp] Render failed for route "${target}":`, error);
-      this.#deps.events?.emit("error", {
+      this.#events?.emit("error", {
         message: "Render failed",
         route: target,
         error,
@@ -324,7 +437,7 @@ export class AioApp implements iApp {
       return prepared || page;
     } catch (error) {
       console.error(`[AioApp] onPrepare failed for route "${route}":`, error);
-      this.#deps.events?.emit("error", { message: "onPrepare failed", route, error });
+      this.#events?.emit("error", { message: "onPrepare failed", route, error });
       return page;
     }
   }
@@ -367,11 +480,11 @@ export class AioApp implements iApp {
     const renderer = this.#renderer ?? (this.#renderer = new DOMRenderer() as iRendererPort);
     const renderFn = (child: any) => renderer.render(child, renderFn, buildFn);
     const buildFn = (name: keyof iBuilderRegistry, data: any) => {
-      if (!this.#deps.registry.has(name)) {
+      if (!this.#registry!.has(name)) {
         this.#log("miss", { component: name });
         return null;
       }
-      return this.#deps.registry.build(name, data);
+      return this.#registry!.build(name, data);
     };
 
     return renderer.render(node, renderFn, buildFn, { scopeId: this.#route });
@@ -394,7 +507,7 @@ export class AioApp implements iApp {
 
   /** Post-commit work that needs the DOM to be live: animation, anchor, onReady. */
   async #afterCommit(route: string, tree: HTMLElement): Promise<void> {
-    this.#deps.animation?.init(tree);
+    this.#animation?.init(tree);
 
     const controller = this.#controllers.get(route);
     if (controller?.onReady) {
@@ -402,7 +515,7 @@ export class AioApp implements iApp {
         controller.onReady(new Map(), tree);
       } catch (error) {
         console.error(`[AioApp] onReady failed for route "${route}":`, error);
-        this.#deps.events?.emit("error", { message: "onReady failed", route, error });
+        this.#events?.emit("error", { message: "onReady failed", route, error });
       }
     }
 

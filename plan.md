@@ -247,11 +247,13 @@ Delivered:
   `iPageContent` (`iNodeContent | iPageDocument`), `iPageController`,
   `iPagePrepareContext`, `iApp`
 - `packages/app/src/ports.ts` — `iComponentRegistryPort`, `iRendererPort`, `iRouterPort`,
-  `iRouterFactory`, `iAnimationPort`, `iEventPort`, `iStoragePort`, `iAppDeps`
+  `iRouterFactory`, `iAnimationPort`, `iEventPort`, `iStoragePort`
 - `packages/app/src/AioApp.ts` — the entry class plus `normalizeRoute`, `isPageDocument`,
   `blockToNode`, `pageToNode`
-- `docs/APP.md` — mount-point rule, two page shapes, preload derivation, events,
-  debug channel, registry requirements, open questions
+- `packages/app/src/modules.ts` — `ComponentsModule`, `RouterModule`, `StorageModule`,
+  `AnimationsModule`, `EventsModule`, `RendererModule`
+- `docs/APP.md` — mount-point rule, module convention, two page shapes, preload
+  derivation, events, debug channel, registry requirements, open questions
 
 ## Phase 2 — ComponentRegistry
 
@@ -361,6 +363,8 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-08 | Phase 1 done: `@aio-ui/app` created with contract-only interfaces (`types.ts`, `ports.ts`) and `docs/APPSHELL.md`. No implementation yet. |
 
 | 2026-11-08 | Entry implemented as `AioApp` (`packages/app/src/AioApp.ts`): container, router, sequence guard, preload, render, root swap, theme via `iStoragePort`, fragment scroll, controller lifecycle, events, debug channel. Contracts renamed `iAppShell*` → `iApp*`. Page content may be a node tree or a block document (`iPageContent`). Pages were re-rooted from `#app` to `.page` so the container stays a stable mount point. Example entry `main.ts` shrank to registration + `mount()`. |
+
+| 2026-11-08 | Module convention: `iAppDeps` removed. Every collaborator is now a registered module class (`slot` + `create(config, context)` + optional `destroy`), registered with `registerModule(Module, config)` before `mount()`. `iAppConfig` keeps only general options. Modules are created at `mount()` (storage first, so the persisted theme exists before the router), duplicates warn+replace, teardown runs in reverse order, registering after mount throws. Built-ins in `packages/app/src/modules.ts`: `ComponentsModule`, `RouterModule`, `StorageModule`, `AnimationsModule`, `EventsModule`, `RendererModule`. `iEventPort` widened so a typed `EventEmitter` registers directly. 68 tests, all routes unchanged (123/64/32/116/76). |
 
 | 2026-11-08 | Contracts written: `core/types/api.ts` (`iApiResponse`, `iFieldDescriptor`), app `iPageBlock`/`iPageDocument`, `docs/API.md` from a live response. |
 

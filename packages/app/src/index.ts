@@ -6,10 +6,32 @@
  * `iAppOptions` and `iAppDeps` describe what the entry receives.
  */
 export { AioApp, blockToNode, isPageDocument, normalizeRoute, pageToNode } from "./AioApp";
+export {
+  AnimationsModule,
+  ComponentsModule,
+  EventsModule,
+  RendererModule,
+  RouterModule,
+  StorageModule,
+} from "./modules";
+export type {
+  iAnimationsModuleConfig,
+  iComponentsModuleConfig,
+  iEventsModuleConfig,
+  iRendererModuleConfig,
+  iRouterClass,
+  iRouterModuleConfig,
+  iStorageDriver,
+  iStorageModuleConfig,
+} from "./modules";
 export type {
   iApp,
   iAppConfig,
+  iAppModuleClass,
+  iAppModuleContext,
   iAppOptions,
+  iAppSlot,
+  iAppSlots,
   iAppSource,
   iPageBlock,
   iPageContent,
@@ -19,7 +41,6 @@ export type {
 } from "./types";
 export type {
   iAnimationPort,
-  iAppDeps,
   iAppRouteState,
   iComponentRegistryPort,
   iEventPort,

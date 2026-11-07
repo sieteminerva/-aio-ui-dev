@@ -1,21 +1,27 @@
 # AioApp — Framework Entry
 
 `AioApp` (`packages/app/src/AioApp.ts`) is the framework entry point. It is the only
-class an application has to instantiate:
+class an application has to instantiate, and every collaborator it consumes is a
+**registered module** — nothing is instantiated outside and handed in silently:
 
 ```ts
 const app = new AioApp({
   container: "#app",
   defaultRoute: "home",
   source: { pages },
-  deps: { registry, routerFactory, animation, events, storage },
-});
+})
+  .registerModule(ComponentsModule, { registry: components })
+  .registerModule(RouterModule, { Router: HashRouter })
+  .registerModule(StorageModule, { driver: localStorage })
+  .registerModule(AnimationsModule, { Service: AnimationsService })
+  .registerModule(EventsModule, { emitter });
 
 await app.mount();
 ```
 
 The contract lives beside it: `iApp` (public surface), `iAppConfig`, `iAppSource`,
-`iAppOptions` (`types.ts`) and `iAppDeps` plus one port per collaborator (`ports.ts`).
+`iAppOptions`, `iAppSlots`, `iAppModuleClass`, `iAppModuleContext` (`types.ts`) and one
+port per collaborator (`ports.ts`).
 
 ## Why the entry exists
 
@@ -29,7 +35,7 @@ Before it, every mandatory step was hard-coded in `examples/gallery/src/main.ts`
 | Decide what to preload            | `buildersForRoute()`        | `collectComponentNames` + `registry.load` |
 | Preload, render, swap root        | `renderPage()`              | `#renderRoute()`                          |
 | Guard against overlapping renders | `renderSequence`            | `#sequence`                               |
-| Theme persistence                 | `localStorage` in the class | `iStoragePort`                            |
+| Theme persistence                 | `localStorage` in the class | `StorageModule` → `iStoragePort`        |
 | Fragment deep link                | —                           | `#scrollToFragment()`                     |
 | Run animations after render       | `animation.init()`          | `#afterCommit()`                          |
 | Report failures                   | `catch (console.error)`     | `events.emit("error")`                    |
@@ -37,6 +43,55 @@ Before it, every mandatory step was hard-coded in `examples/gallery/src/main.ts`
 `pageContentFor` and `buildersForRoute` existed because a route had to be declared twice:
 once for content, once for its components. Both are gone — `pages` is the single list,
 and the component names are derived from the tree.
+
+## Modules — register first, use second
+
+The app declares **slots**, not collaborators. `iAppSlots` is the complete list:
+`registry`, `router`, `renderer`, `animation`, `events`, `storage`. A module is a class
+whose static members describe one slot:
+
+```ts
+export class RouterModule {
+  static readonly slot = "router" as const;
+
+  static create(config: iRouterModuleConfig, context: iAppModuleContext): iRouterPort {
+    return new config.Router(
+      context.defaultRoute,
+      context.theme,
+      context.routes,
+      context.onRouteChanged,
+    );
+  }
+
+  static destroy(router: iRouterPort): void {
+    router.destroy();
+  }
+}
+```
+
+That is the whole convention: `slot` + `create(config, context)` + optional `destroy`.
+The class **is** the token — no identifier argument, no `defineModule()` alias, no
+`factory` indirection.
+
+| Rule | Why |
+| --- | --- |
+| `registerModule(Module, config)` — the class decides the slot | registering a storage module for the router slot is rejected by the type system, not discovered at runtime |
+| module config lives at the registration, never in `iAppConfig` | `iAppConfig` stays general (`container`, `source`, `defaultRoute`, `theme`, `debug`) no matter how many modules exist |
+| modules are created in `mount()`, not at registration | a router needs the route list, the restored theme and the change callback, which only exist at mount time |
+| registering after `mount()` throws | "register first, use second" is enforced, not documented |
+| duplicate slot → warn + replace | a generated project that lists one slot twice must not silently lose behaviour |
+| teardown runs in reverse registration order | a module created last may depend on one created earlier |
+
+`registry` and `router` are required; `renderer` defaults to `DOMRenderer`, `storage`
+falls back to memory, `animation` and `events` are skipped when absent.
+
+Creation order has one exception: **storage is created first**, because the persisted
+theme must be restored before the router is constructed with it. Everything after that
+follows registration order.
+
+`iAppModuleContext` is the injection point: `routes`, `defaultRoute`, `theme`, `debug`
+and `onRouteChanged`. It exists so a module class can receive data it cannot know by
+itself without becoming a factory closure.
 
 ## What `AioApp` owns
 
@@ -48,15 +103,16 @@ page controller (optional) ─────────────────�
 ```
 
 1. Resolve the container once, at `mount()`.
-2. Derive the component names of the page (see "Preload derivation").
-3. Await `registry.load(names)` before rendering. `registry.build` is synchronous, so
-   an unloaded component cannot be built.
+2. Create every registered module (storage first, then registration order).
+3. Derive the component names of the page (see "Preload derivation").
 4. Run the controller's `onPrepare`, use its returned page when provided.
-5. Render through the injected renderer, replace the container's children, keep one root.
-6. Drop a render that was superseded by a newer navigation.
-7. Run `animation.init(root)` on the new root when an animation port is provided.
-8. Scroll to the URL fragment, then run `onReady` for the active controller.
-9. Run the outgoing controller's `onDestroy` before its DOM is replaced.
+5. Await `registry.load(names)` before rendering. `registry.build` is synchronous, so
+   an unloaded component cannot be built.
+6. Render through the renderer port, replace the container's children, keep one root.
+7. Drop a render that was superseded by a newer navigation.
+8. Run `animation.init(root)` on the new root when an animation port is provided.
+9. Scroll to the URL fragment, then run `onReady` for the active controller.
+10. Run the outgoing controller's `onDestroy` before its DOM is replaced.
 
 ## The mount-point rule
 
