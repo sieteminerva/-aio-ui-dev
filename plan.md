@@ -86,7 +86,7 @@ package has been extracted and verified.
 | ----- | ------------------------------------------------------ | ----------- |
 | 0     | Monorepo restructure, zero behavior change             | done        |
 | 1     | AppShell contract (interfaces only)                    | done        |
-| 2     | `ComponentRegistry` rewrite to the agreed contract     | not started |
+| 2     | `ComponentRegistry` rewrite to the agreed contract     | in progress |
 | 3     | PageController contract + one reference implementation | not started |
 | 4     | AppShell implementation, `main.ts` reduced             | not started |
 | 5     | Port remaining FULL components                         | not started |
