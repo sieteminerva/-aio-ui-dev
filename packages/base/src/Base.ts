@@ -412,6 +412,48 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     return ((this.config as unknown as { slots?: Record<string, string> } | null)?.slots) ?? {};
   }
 
+  /** Ids already reported as missing, so each one warns exactly once. */
+  #missingModules = new Set<string>();
+
+  /** Sub-modules handed over by the registry (manifest `modules`). */
+  #modules: Record<string, unknown> = {};
+
+  /**
+   * Receives the sub-modules the registry resolved for this component.
+   *
+   * Kept out of `config` on purpose: several components already own a
+   * `config.modules` of their own, and `Required<iBuilderConfig>` would force
+   * every default config to declare it.
+   *
+   * @param modules - Module id to resolved module.
+   */
+  public provideModules(modules: Record<string, unknown>): void {
+    this.#modules = modules;
+  }
+
+  /**
+   * Resolves a sub-module declared in this component's manifest `modules`.
+   *
+   * A missing module is a normal state (LITE edition): it warns once and returns
+   * `undefined`, letting the caller decide how to degrade.
+   *
+   * @param id - Module id as declared in the manifest, e.g. `validation`.
+   * @returns The resolved module, or `undefined` when it is not available.
+   */
+  protected module<T = unknown>(id: string): T | undefined {
+    const resolved = this.#modules[id];
+    if (resolved !== undefined) return resolved as T;
+
+    if (!this.#missingModules.has(id)) {
+      this.#missingModules.add(id);
+      console.warn(
+        `[Builder:${String(this.builderId)}] module "${id}" is not available. ` +
+        `Declare it in this component's manifest or install its package.`,
+      );
+    }
+    return undefined;
+  }
+
   public setConfig(config: Partial<TConfig>) {
     this.config = this.resolveConfig(this.config, config)
   }

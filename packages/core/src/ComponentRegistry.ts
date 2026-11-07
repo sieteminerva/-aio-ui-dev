@@ -119,6 +119,9 @@ export class ComponentRegistry {
   // 💡 Deklarasikan cache secara formal agar tipe data aman dan tidak memakai (this as any)
   private _resolvedCache = new Map<string, any>();
 
+  /** Sub-modules resolved per component name: `componentName → { moduleId → module }`. */
+  private _modules = new Map<string, Record<string, unknown>>();
+
   private _dynamicConfigs = new Map<keyof iBuilderRegistry, Record<string, any>>();
 
   // 🧊 ANTI-FOUC LEDGER: jejek siap-notnya stylesheet lazy (normalized vite path)
@@ -306,11 +309,48 @@ export class ComponentRegistry {
           const loadedClass = await this.loadModule(manifest.path, manifest.stylesheet, name as string);
           if (loadedClass) this._resolvedCache.set(name as string, loadedClass);
         }
+        await this.loadModules(name as string, manifest);
       } catch (err) {
-        console.error(`[ComponentRegistry] preload failed for "${String(nameKey)}":`, err);
+        console.error(`[ComponentRegistry] load failed for "${String(nameKey)}":`, err);
         throw err;
       }
     }
+  }
+
+  /**
+   * Resolves the sub-modules a component declares in its manifest.
+   *
+   * Each module is cached under a namespaced key (`form:table`) so a module id
+   * shared by two components never collides. A module that cannot be resolved is
+   * reported and skipped: the component still loads, and `Builder.module(id)`
+   * decides how to degrade at use time.
+   *
+   * @param componentName - Owner of the modules.
+   * @param manifest - The component manifest that declares them.
+   */
+  private async loadModules(componentName: string, manifest: iComponentManifest): Promise<void> {
+    const refs = manifest.modules;
+    if (!refs?.length) return;
+
+    const resolved: Record<string, unknown> = this._modules.get(componentName) ?? {};
+    for (const ref of refs) {
+      if (resolved[ref.id] !== undefined) continue;
+
+      // A module without a path refers to another registered component.
+      const path = ref.path ?? ref.id;
+      const cacheKey = `${componentName}:${ref.id}`;
+      const loaded = await this.loadModule(path, ref.stylesheet, cacheKey);
+
+      if (loaded !== undefined && loaded !== null) {
+        resolved[ref.id] = loaded;
+        this._resolvedCache.set(cacheKey, loaded);
+      } else if (DEV) {
+        console.warn(
+          `[ComponentRegistry] module "${ref.id}" of "${componentName}" could not be resolved from "${path}".`,
+        );
+      }
+    }
+    this._modules.set(componentName, resolved);
   }
 
   /**
@@ -397,6 +437,12 @@ export class ComponentRegistry {
       try {
         const instance = new cachedClass(finalMergedConfig);
         if (instance && typeof instance.create === "function") {
+          // Hand over the sub-modules resolved during load(); a builder without
+          // a provideModules() implementation simply ignores them.
+          const resolvedModules = this._modules.get(String(name));
+          if (resolvedModules && typeof instance.provideModules === "function") {
+            instance.provideModules(resolvedModules);
+          }
           // 🧊 TOGGLE FASE: tandakan instance belum "loaded" SEBELUM create();
           // create() menempel marker hold pada SATU elemen puncaknya saja.
           instance.isLoaded = false;
