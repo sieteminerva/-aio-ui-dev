@@ -6,6 +6,12 @@
   "exports": {
     ".": "./src/index.ts",
     "./interface": "./src/interface.ts",
+    "./node": "./src/types/node.ts",
+    "./builder": "./src/types/builder.ts",
+    "./registry": "./src/types/registry.ts",
+    "./content": "./src/types/content.ts",
+    "./page": "./src/types/page.ts",
+    "./renderer": "./src/types/renderer.ts",
     "./ComponentRegistry": "./src/ComponentRegistry.ts",
     "./DOMRenderer": "./src/DOMRenderer.ts",
     "./BuilderPort": "./src/BuilderPort.ts",

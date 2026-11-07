@@ -1,4 +1,4 @@
-import type { iPageEvents } from "@aio-ui/core/interface";
+import type { iPageEvents } from "./PageEvents";
 
 type EventCallback<T> = (data: T) => void;
 

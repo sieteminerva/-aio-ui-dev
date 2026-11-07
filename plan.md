@@ -337,3 +337,5 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-07 | Step 0.9 done: app moved to `examples/gallery` with its own Vite. Workspace links replace aliases; manifests carry module specifiers and the host supplies a loader map. All routes verified. |
 
 | 2026-11-07 | Step 0.10 done: `docs/BOUNDARIES.md` written, plan/task docs moved to `.guidance/`, technical docs into `docs/`, stale `dist/` removed. `packages/modules` split into five installable packages. All routes verified. |
+
+| 2026-11-08 | Type split: `core/src/interface.ts` became a barrel over `types/{renderer,content,node,registry,builder,page}.ts`; `iPageEvents` moved to `@aio-ui/event-emitter/PageEvents`. Build hashes unchanged. |
