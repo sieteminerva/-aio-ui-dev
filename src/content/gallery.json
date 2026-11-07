@@ -1,0 +1,87 @@
+{
+  "status": "success",
+  "meta": {
+    "currentPage": 1,
+    "perPage": 5,
+    "totalItems": 25,
+    "totalPages": 5,
+    "links": {
+      "first": "https://google.com",
+      "prev": null,
+      "self": "https://google.com",
+      "next": "https://google.com",
+      "last": "https://google.com"
+    }
+  },
+  "data": [
+    {
+      "imageUrl": "https://placehold.co/600x800/8764b5/ffffff?text=Graphic design",
+      "category": "Visual, Motion & Brand",
+      "tags": [
+        "Graphic design",
+        "Brand identity",
+        "Digital Imaging",
+        "Motion graphic",
+        "Videography",
+        "Company profile",
+        "2D/3D visual",
+        "Album artwork"
+      ],
+      "title": "",
+      "decription": ""
+    },
+    {
+      "imageUrl": "https://placehold.co/800x600/1e3a5f/ffffff?text=Web application",
+      "category": "Software Engineering",
+      "tags": [
+        "Web application",
+        "Mobile application",
+        "Frontend framework",
+        "JavaScript library",
+        "Command-line interface",
+        "Game",
+        "Automation"
+      ],
+      "title": "",
+      "decription": ""
+    },
+    {
+      "imageUrl": "https://placehold.co/600x400/8764b5/ffffff?text=Product design",
+      "category": "Product & Fabrication",
+      "tags": [
+        "Product design",
+        "Packaging design",
+        "CNC",
+        "DIY machines"
+      ],
+      "title": "",
+      "decription": ""
+    },
+    {
+      "imageUrl": "https://placehold.co/400x600/1e3a5f/ffffff?text=Original music",
+      "category": "Music & Cultural Works",
+      "tags": [
+        "Original music",
+        "Recording",
+        "Sound Design"
+      ],
+      "title": "",
+      "decription": ""
+    },
+    {
+      "imageUrl": "https://placehold.co/600x1000/1e3a5f/ffffff?text=Web application",
+      "category": "Software Engineering",
+      "tags": [
+        "Web application",
+        "Mobile application",
+        "Frontend framework",
+        "JavaScript library",
+        "Command-line interface",
+        "Game",
+        "Automation"
+      ],
+      "title": "",
+      "decription": ""
+    }
+  ]
+}

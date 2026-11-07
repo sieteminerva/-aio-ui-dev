@@ -2,6 +2,7 @@ import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "../../in
 import { Builder } from "../Base";
 import { DropdownBuilder, type iDropdownConfig, type iDropdownContent } from "./Dropdown";
 import { InputControlsBuilder, type InputControlsElementType } from "./InputControls";
+import type { iCalculationFormula } from "./Handlers/Calculation";
 
 export type InputType =
   | "text"
@@ -87,6 +88,8 @@ export interface iBasicInputConfig {
   popover?: string | HTMLElement | undefined;
   display?: "block" | "inline";
   dropdown?: Partial<iDropdownConfig>;
+  /** Calculation strategy attached to this input (usually a readonly total field). */
+  calculator?: iCalculationFormula<any>;
 }
 
 export interface iBasicInputNode extends iBuilderConfig<InputElementType> {
@@ -97,11 +100,15 @@ export interface iBasicInputNode extends iBuilderConfig<InputElementType> {
   title?: string;
   placeholder?: string;
   value?: any;
+  /** Numeric increment; defaults to "any" so decimal values pass native validation. */
+  step?: number | "any";
   rows?: number;
   cols?: number;
   multiple?: boolean;
   disabled?: boolean;
   readonly?: boolean;
+  /** Skip InputControls' automatic read-only/disabled lock when edit actions are present. */
+  editable?: boolean;
   required?: boolean;
   checked?: boolean;
   range?: string;
@@ -288,7 +295,7 @@ export class InputBuilder extends Builder<InputElementType> {
           el.classList.add(...payload.className.split(" ").filter(Boolean));
         }
 
-        if (payload?.display) el.dataset.display = cfg.display;
+        if (payload?.display) el.setAttribute("data-display", payload.display ?? cfg.display);
         break;
 
       case "@field>label":
@@ -378,6 +385,16 @@ export class InputBuilder extends Builder<InputElementType> {
 
     el.id = payload.id;
     (el as HTMLInputElement).name = payload.name ? String(payload.name) : payload.id;
+
+    // Set the live control value after options are rendered. Cascade-created
+    // inputs pass through this method when a condition becomes true.
+    if (payload.value !== undefined && payload.value !== null && "value" in el) {
+      (el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value = String(payload.value);
+    }
+    if (el instanceof HTMLInputElement) {
+      if (payload.checked !== undefined) el.checked = Boolean(payload.checked);
+      if (el.type === "number") el.step = String(payload.step ?? "any");
+    }
 
     // Injeksi spesifikasi atribut HTML standar
     if (payload.placeholder) el.setAttribute("placeholder", String(payload.placeholder));

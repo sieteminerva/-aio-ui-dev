@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: "/rajutan/",
+  base: "/gallery/",
   css: {
     lightningcss: {
       targets: {

@@ -6,6 +6,7 @@ import { FileUploader } from "./FileUploader";
 import { FormCascade, type FormCascadeHost, type iCascadeEventDetail, FormCascadeHandler } from "./Handlers/Cascade";
 import { FormMultistepHandler, type FormMultistepHost } from "./Handlers/Multistep";
 import { FormValidationHandler } from "./Handlers/Validation";
+import { FormCalculationHandler, type iFormCalculationConfig } from "./Handlers/Calculation";
 import { IdAddressBuilder } from "./IdAddress/id-address-builder";
 import { InputBuilder } from "./Input";
 import "./Dropdown.css";
@@ -42,6 +43,7 @@ export interface iFormConfig extends iBuilderConfig<FormElementType> {
   multistep?: boolean;
   cascading?: boolean; // show or build input or group based on condition from input value before. it will looking "condition" property 
   onCascade?: null | ((detail: iCascadeEventDetail) => void); // listener kustom setiap kaskade mount/unmount/gate
+  calculation?: boolean;
   footer?: HTMLElement | string | null;
   onSubmit?: null | Function;
 }
@@ -65,6 +67,9 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
   // 🧾 Validasi terpusat (native + kaskade): emit + toast. Lihat Handlers/Validation.ts.
   #validation: FormValidationHandler | null = null;
+
+  // 🧮 Optional formula engine owned by this FormBuilder instance.
+  #calculation: FormCalculationHandler | null = null;
 
   // Inisialisasi komponen (uploader, IdAddress, dsb.) untuk step yang baru
   // lahir — engine memanggil ini lewat host hook onStepMount.
@@ -108,6 +113,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       cascading: false,
       autoDisableNextStep: false, // null = ikuti cascading && multistep
       onCascade: null,
+      calculation: false,
       namespace: null,
       emit: null,
       onSubmit: (_data: any) => { },
@@ -131,6 +137,8 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     this.#cascade = null;
     this.#multistep = null;
     this.#validation = null;
+    this.#calculation?.destroy();
+    this.#calculation = null;
     this.#onStepMounted = null;
 
     // const wrapper = this.render("@container", inputs);
@@ -400,7 +408,37 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       this.attachFormListener(formElement);
     }
 
+    if (formElement && this.config.calculation) {
+      const formulas = this.collectCalculationFormulas(this.#inputs);
+      const calculationConfig: iFormCalculationConfig = { strategies: { formula: formulas } };
+      this.#calculation = new FormCalculationHandler(formElement, calculationConfig).create();
+      formElement.calculator = this.#calculation;
+    }
+
     // console.log(`[Form Engine v2] Form ID "${formElement?.id}" successfully compiled with active listeners.`);
+  }
+
+  /** Collect per-input calculation strategies, inferring the nearest group id. */
+  private collectCalculationFormulas(inputs: any[]): iFormCalculationConfig["strategies"]["formula"] {
+    const formulas: iFormCalculationConfig["strategies"]["formula"] = [];
+    const visit = (items: any[], parentGroupId?: string): void => {
+      for (const item of items ?? []) {
+        if (!item || typeof item !== "object" || item instanceof Node) continue;
+        const formula = item.config?.calculator;
+        if (formula && typeof formula.formula === "function") {
+          formulas.push({
+            ...formula,
+            groupId: formula.groupId ?? parentGroupId,
+            outputId: formula.outputId ?? item.id,
+          });
+        }
+        if (Array.isArray(item.group)) {
+          visit(item.group, item.id ?? parentGroupId);
+        }
+      }
+    };
+    visit(inputs);
+    return formulas;
   }
 
 
@@ -517,6 +555,8 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     this.#cascade = null;
     this.#multistep?.dispose(); // Lepas listener delegasi + langkah tertahan
     this.#multistep = null;
+    this.#calculation?.destroy();
+    this.#calculation = null;
     this.#onStepMounted = null;
     this.destroy();
   }

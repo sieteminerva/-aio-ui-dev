@@ -1,8 +1,9 @@
-import { HomepageContent } from './content';
-import type { iBuilderRegistry } from './lib/interface';
+import type { iBuilderRegistry, iNodeContent } from './lib/interface';
 import { ComponentRegistry } from './lib/Modules/ComponentRegistry';
 import { DOMRenderer } from './lib/Modules/DOMRenderer';
 import { AnimationsService } from './lib/Modules/Animations/Animations';
+import { HashRouter, type iRouteState } from './lib/Modules/HashRouter';
+import { HomepageContent } from './content/home';
 
 import './lib/Styles/variables.css';
 import './lib/Styles/typography.css';
@@ -10,11 +11,15 @@ import './lib/Styles/components.css';
 import './lib/Styles/layout.css';
 import './lib/Styles/icon.css';
 import './style.css';
+
 import { EventEmitter } from './lib/Modules/EventEmitter';
+import { AboutContent } from './content/about';
+import { GalleryContent } from './content/gallery';
+import { BlogContent } from './content/blog';
 
 // 🔐 Daftarkan Service Worker supaya id_token disimpan di variabel SW.
 // BASE_URL mengikuti base vite ("/rajutan/") agar cocok dengan scope GitHub Pages.
-function registerServiceWorker() {
+export function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
 
   const base = import.meta.env.BASE_URL || '/';
@@ -28,12 +33,78 @@ function registerServiceWorker() {
   });
 }
 
+/** Peta rute → konten halaman. Unknown/`home` selalu jatuh ke HomepageContent. */
+function pageContentFor(route: string): iNodeContent {
+  const key = route.trim().toLowerCase().replace(/^#|\/+$/g, '') || 'home';
+  switch (key) {
+    case "home": return HomepageContent;
+    case "blog": return BlogContent;
+    case "about": return AboutContent;
+    case "gallery": return GalleryContent;
+    default: return HomepageContent;
+  }
+}
+
+// Infrastruktur bersama (dibangun sekali di bootstrap)
+let renderer: DOMRenderer;
+let animation: AnimationsService;
+let components: ComponentRegistry;
+let buildBuilderFn: (name: keyof iBuilderRegistry, data: any) => HTMLElement | null;
+let renderFn: (node: any) => HTMLElement | null;
+let currentRoot: HTMLElement | null = null;
+let renderSequence = 0;
+
+function buildersForRoute(route: string): string[] {
+  switch (route.trim().toLowerCase().replace(/^#|\/+$/g, '')) {
+    case 'home': return ['form', 'table'];
+    case 'gallery': return ['masonry'];
+    case 'blog': return ["article"];
+    default: return [];
+  }
+}
+
+/** Render satu halaman (rute) ke dalam #app — mengganti akar sebelumnya. */
+export async function renderPage(route: string): Promise<void> {
+  const sequence = ++renderSequence;
+  // route based Lazy-load components 
+  await components.preloadComponents(buildersForRoute(route), []);
+  if (sequence !== renderSequence) return;
+
+  const page = pageContentFor(route);
+  const tree = renderer.render(page, renderFn, buildBuilderFn);
+  if (currentRoot && currentRoot.isConnected) {
+    currentRoot.replaceWith(tree);
+  } else {
+    const app = document.getElementById('app');
+    if (app) app.replaceWith(tree);
+  }
+  currentRoot = tree;
+  animation.init();
+}
+
+
+/** Pasang HashRouter + jalankan render awal sesuai hash URL. */
+function bootRouting(): void {
+  const router = new HashRouter(
+    "home",
+    "default",
+    ["home", "about", "blog", "gallery"],
+    (state: iRouteState) => renderPage(state.route)
+  );
+
+  // Render pertama mengikuti posisi hash saat ini.
+  renderPage(router.parseUrlHash().route);
+
+  // Ekspos ke konsol untuk debugging manual: `window.__router.navigate('build')`
+  (globalThis as any).__router = router;
+}
+
 async function start(container: HTMLElement) {
-  registerServiceWorker();
+  // registerServiceWorker();
   // @ts-ignore
   const emitter = new EventEmitter();
-  const animation = new AnimationsService();
-  const components = new ComponentRegistry()
+  animation = new AnimationsService();
+  components = new ComponentRegistry()
     .register("form", (data: any) => {
       return {
         path: "lib/Components/Form/Form.ts",
@@ -52,17 +123,38 @@ async function start(container: HTMLElement) {
       };
     })
 
-  await components.preloadComponents(["form", "table"], [])
+    .register("masonry", (data: any) => {
+      return {
+        path: "lib/Components/Masonry/Masonry.ts",
+        stylesheet: "lib/Components/Masonry/Masonry.css", // alternative style definition also didn't loaded
+        config: data?.config,
+        schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
+      };
+    })
 
-  const renderer = new DOMRenderer();
-  const DomTree = renderer.render(
-    HomepageContent,
-    (node) => renderer.render(node, undefined, undefined),
-    (name: keyof iBuilderRegistry, data: any) => components.build(name, data)
-  )
-  container.replaceWith(DomTree);
-  animation.init()
+    .register("article", (data: any) => {
+      return {
+        path: "lib/Components/Article/Article.ts",
+        stylesheet: "lib/Components/Article/Article.css", // alternative style definition also didn't loaded
+        config: data?.config,
+        schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
+      };
+    })
+
+
+
+  renderer = new DOMRenderer();
+  renderFn = (node) => renderer.render(node, undefined, undefined);
+  buildBuilderFn = (name, data) => components.build(name, data);
+
+  bootRouting();
+
+  // `container` (asli #app dari index.html) akan diganti renderPage — pastikan
+  // referensi akar awal mengarah ke sana bila hash kosong.
+  if (!currentRoot && container) currentRoot = container;
 }
+
+
 
 const app = document.querySelector<HTMLDivElement>('#app')
 if (app) {

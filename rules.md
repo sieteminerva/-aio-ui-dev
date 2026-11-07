@@ -1,3 +1,5 @@
+> Legacy note: the active project guidance has moved to `.guidance/mandatory/` and `.guidance/project/`. Keep this file as a compatibility reference; update the guidance files when changing a rule.
+
 ## Structure
 
 - HTML the outer element must be valid html element not just `div`, like `main>section`, `nav`, `aside` etc.

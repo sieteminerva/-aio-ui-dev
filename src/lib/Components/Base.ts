@@ -1,11 +1,13 @@
-import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iActionProperty, iNodeRecordItem } from "../interface";
+import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iActionProperty, iNodeRecordItem, iNodeRecordRelations } from "../interface";
 // import { TemplateRegistry } from "../Modules/TemplateRegistry";
 // import { ElementCreatedEventBus } from "../Services/EventBus";
+import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
 import { buildNamespace, setMetadata } from "../Utility/Metadata";
 import { selectorToTree } from "../Utility/SelectorToTree";
+import { applyAttrDictionary, applyAttributeList } from "../Utility/AttributeUtils";
 
 export const GLOBAL_INSTANCE_COUNTER = new Map<string, number>();
-const IS_PROXY = Symbol("IS_PROXY");
+
 /**
  * @classdesc
  * Builder is the abstract foundation for declarative landing-page components.
@@ -42,8 +44,8 @@ const IS_PROXY = Symbol("IS_PROXY");
  * @example
  * builder.create(data, config);
  * builder.destroy();
- * builder.attach(node, "slot.path");
- * builder.detach(node);
+ * builder.attach("typeKey", "slotKey", payload);
+ * builder.detach("slotKey");
  *
  * @template TType - A string literal union representing the allowed selector tokens for the child component.
  * @template TConfig - The builder-specific configuration interface compatible with iBuilderConfig.
@@ -52,107 +54,42 @@ const IS_PROXY = Symbol("IS_PROXY");
  * @version 1.0.0
  */
 export abstract class Builder<TType extends string = string, TConfig extends iBuilderConfig<TType> = iBuilderConfig<TType>> {
-  /**
-   * 🧊 ANTI-FOUC VISUAL GATEKEEPER (LAZY-LOAD HYDRATION FLAG — O(1) INLINE CSS VAR)
-   *
-   * Public runtime flag yang membaca/menulis kondisi "siap tampil" dari sebuah
-   * builder instance. Nilai default `true` berarti komponen sinkron (tanpa
-   * lazy-load) TIDAK PERNAH ditahan oleh sistem placeholder sama sekali.
-   *
-   * ComponentRegistry mem-flip flag ini ke `false` tepat SEBELUM create()
-   * komponen lazy dijalankan (saat stylesheet-nya masih di tengah jalan).
-   * Selama `false`, create() menempelkan marker pada SATU elemen puncak
-   * saja: inline `--is-loading: 1` (state, diwarisi anak-anak) + atribut
-   * `data-hydrating` (pemicu visual CSS). TIDAK ADA stamping per-elemen
-   * anak — render() tidak menulis marker apa pun, jadi tabel/ratusan sel
-   * tidak pernah disentuh dan tidak ada penanda liar di dalam subtree.
-   *
-   * 🚀 MEKANISME PELEPASAN O(1) — releaseHydration() di elemen puncak:
-   * `--is-loading: 0` + hapus `data-hydrating` + pasang `data-loaded="true"`
-   * sebagai POINTER PERMANEN: rule CSS `[data-loaded="true"] *` memaksa
-   * seluruh keturunan membaca --is-loading: 0 (mengalahkan inline "1"
-   * sisa klon skeleton). Tanpa ledger/sweep/observer; referensi DOM
-   * tunggal (#hydrationHoldRoot) ikut ter-GC bersama instance — aman
-   * page-switching brutal.
-   */
-  public isLoaded: boolean = true;
+  /** 🧊 ANTI-FOUC GATE — extracted to `BaseAdapters/HydrationGate`.
+   *  Marker mechanics (`--is-loading` / `data-hydrating` / `data-loaded`)
+   *  live there; the builder only holds the gate instance and exposes the
+   *  `isLoaded` flag that ComponentRegistry flips before `create()`.
+   *  Kept in this fork on purpose: a builder moved onto Builder (the color
+   *  theme now is) must not silently lose the pre-paint hold its Base sibling
+   *  had — the registry release path (`instance.hydration`) stays identical. */
 
-  /**
-   * 📌 Referensi TUNGGAL elemen puncak yang terakhir dibekukan create().
-   * Sengaja bukan Set/Map: hanya ada SATU elemen puncak per create, ditimpa
-   * tiap build berikutnya, dan ikut ter-GC bersama instance — mustahil
-   * menumpuk.
-   */
-  #hydrationHoldRoot: HTMLElement | null = null;
 
-  /**
-   * 🧊 THE HOLD — dipanggil create() tepat sebelum root dikembalikan
-   * (pre-mount, pre-paint ⇒ mustahil FOUC). HANYA elemen puncak yang
-   * ditandai; anak-anak mengikuti lewat warisan custom property +
-   * selector keturunan di Animations.css. Marker:
-   * • inline `--is-loading: 1` → state tahanan (diwarisi seluruh subtree);
-   * • `data-hydrating`        → trigger visual shimmer (presence-attr murah,
-   *   pengganti [style*=...] substring yang mahal per-recalc);
-   * • hapus `data-loaded`     → pointer rilis lama dicabut saat tahan ulang.
-   * Bila instance dibekukan kedua kali, penanda penahanan generasi sebelumnya
-   * dilepaskan dulu agar tidak ada elemen tua yang terlantar.
-   */
-  private _applyHydrationHold(root: HTMLElement): HTMLElement {
-    if (!(root instanceof HTMLElement)) return root;
+  /** Compatibility surface: ComponentRegistry does `instance.isLoaded = false`. */
+  public isLoaded: boolean = false;
 
-    // 🧹 Generasi sebelumnya (instance di-create ulang sebelum sempat rilis):
-    // cukup lepas markernya — flag isLoaded tidak disentuh di jalur ini.
-    if (this.#hydrationHoldRoot && this.#hydrationHoldRoot !== root) {
-      this._releaseMarkers(this.#hydrationHoldRoot);
-    }
 
-    if (!this.isLoaded) {
-      root.style.setProperty("--is-loading", "1");
-      root.setAttribute("data-hydrating", "");
-      root.removeAttribute("data-loaded");
-      this.#hydrationHoldRoot = root;
-    } else if (root.hasAttribute("data-hydrating") || root.style.getPropertyValue("--is-loading") === "1") {
-      // 🧯 Fail-safe O(1): klon skeleton basi membawa marker lama padahal
-      // style sudah matang — bersihkan seketika tanpa sweep apa pun.
-      this._releaseMarkers(root);
-    }
-    return root;
-  }
+  /** 🧩 THE BUILDER CURRENTLY MATERIALIZING — `create()` pins itself here for
+   *  the whole duration of prepare()/initialize(), which is exactly the window
+   *  in which a parent instantiates its children. Same spirit as
+   *  `#namespaceStack`: the child picks up its caller without anyone having to
+   *  pass instances or register anything centrally. */
+  static #active: Builder<any, any> | null = null;
 
-  /**
-   * ✍️ TRIPLE-WRITE PELEPASAN (satu-satunya penulis marker rilis):
-   * 1. `--is-loading: 0`     → matikan state (anak ikut lewat warisan);
-   * 2. hapus `data-hydrating` → seluruh rule visual shimmer lenyap seketika;
-   * 3. pasang `data-loaded="true"` → POINTER PERMANEN untuk anak-anak: rule
-   *    CSS `[data-loaded="true"] * { --is-loading: 0 !important }` memaksa
-   *    marker "1" warisan/klon basi di subtree menjadi 0 selamanya.
-   */
-  private _releaseMarkers(target: HTMLElement): void {
-    target.style.setProperty("--is-loading", "0");
-    target.removeAttribute("data-hydrating");
-    target.setAttribute("data-loaded", "true");
-  }
+  /** 🧩 MY CALLER — the builder that instantiated me (captured the moment this
+   *  instance was constructed): the builder whose `config.slots` hosts my
+   *  projections. Root builders created by ComponentRegistry simply have none. */
+  #caller: Builder<any, any> | null = Builder.#active;
 
-  /**
-   * 🔓 PUBLIC RELEASE — dipanggil ComponentRegistry setelah stylesheet lazy
-   * selesai (sukses/gagal), memakai elemen puncak yang memang dipegangnya.
-   * Idempotent; juga membalik `isLoaded` agar build berikutnya tidak menahan.
-   */
-  public releaseHydration(element?: HTMLElement | null): void {
-    const target = element ?? this.#hydrationHoldRoot;
-    if (target instanceof HTMLElement) this._releaseMarkers(target);
-    this.#hydrationHoldRoot = null;
-    this.isLoaded = true;
-  }
+  /** 🧩 PROJECTED NODES — my own typeKey → the node I handed to my caller's slot
+   *  through `attach()`, plus the receptacle it displaced (so `detach()` can hand
+   *  that place back). A projected node no longer lives inside my root, so every
+   *  wiring/sync pass reads it alongside the root (see `scopes()`). */
+  #projected = new Map<TType, { slot: string; element: HTMLElement; receptacle: HTMLElement }>();
 
-  /**
-   * 🧯 PUBLIC ESCAPE HATCH — pelepasan paksa untuk alur eksotis di mana
-   * instance tidak dilalui ComponentRegistry (mis. builder dipakai di luar
-   * registry). Idempotent, tanpa timer/observer/penyapuan apa pun.
-   */
-  public forceReleaseHydration(): void {
-    this.releaseHydration();
-  }
+  /** 🧩 ROOT of the builder that hosts my projections — the shared ancestor
+   *  token vars are painted on; null when I have no caller (standalone). Set
+   *  in `attach()` the first time I project into a caller. */
+  protected rootElement: HTMLElement | null = null;
+
 
   static #namespaceStack: string[] = [];
 
@@ -283,18 +220,91 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     },
 
     /**
-     * ⚡ BATCH REBUILD RELATIONS (Clean & Fast)
-     * Menggunakan properti internal JS __templateId, DOM tetap bersih 100%!
+     * 📝 STORE (registration-time, called by render()) — cheap: only ensures a
+     * relations entry exists for the key (reusing the static selectorToTree
+     * entry when present) and returns it. NO DOM reading here — template()
+     * hasn't run yet, so the subtree would be invalid. render() stores the
+     * returned object as the node record's `relations`, so the record and
+     * hierarchy.get() share one object that update() later fills.
      */
-    update: (explicitRootKey?: TType): Record<string, any> => {
-      const rootKey = explicitRootKey || ("@container" as TType);
-      const rootEl = this.#nodes.get(rootKey)?.element as HTMLElement;
+    store: (key: string): iNodeRecordRelations => {
+      const existing = this.#staticHierarchy[key] as iNodeRecordRelations | undefined;
+      if (existing) return existing;
+      const fresh: iNodeRecordRelations = {
+        scope: this.instanceNamespace || "",
+        key,
+        template: key,
+        parent: null,
+        children: [],
+      };
+      this.#staticHierarchy[key] = fresh;
+      return fresh;
+    },
 
-      if (!rootEl) return this.#staticHierarchy;
+    /**
+     * ⚡ DIRECT-LAYER ELEMENT INVENTORY (same spirit as DOMRenderer.attachMetadata)
+     * Called from create(), AFTER prepare()/initialize() — template() may do
+     * arbitrary DOM operations, so only now is each node's subtree final.
+     *
+     * For every key in storage.nodes, searches through its live element and
+     * stores the SELECTOR STRING (`tag#id.classes`) of every element found
+     * inside it into `relations.elements`.
+     *
+     * Two hard rules:
+     * 1. `relations.children` (the static record keys from selectorToTree,
+     *    mapped via ">") is NEVER touched — key relations stay intact.
+     * 2. The walk STOPS at key boundaries: when it reaches an element owned
+     *    by another registered key (e.g. @colorizer>mode living inside
+     *    @colorizer>header), that element is recorded once in `elements`
+     *    but is NOT descended into — it inventories itself under its own
+     *    key, so nothing duplicates across layers.
+     *
+     * Same elementSelector format as DOMRenderer's attachMetadata.
+     * Idempotent: `elements` is rebuilt (deduped) on every run, and
+     * node.relations is kept pointed at the same object as the map.
+     */
+    update: (): Record<string, any> => {
+      // Same selector-string format as DOMRenderer.attachMetadata.
+      const elementSelector = (el: Element): string => {
+        const tag = el.tagName ? el.tagName.toLowerCase() : "div";
+        const idPart = el.id ? `#${el.id}` : "";
+        const classPart = el.className && typeof el.className === "string"
+          ? `.${el.className.trim().split(/\s+/).filter(Boolean).join(".")}`
+          : "";
+        return `${tag}${idPart}${classPart}`;
+      };
 
-      // Scan seluruh node yang tersimpan di memori lokal #nodes
-      this.#nodes.forEach((_nodeData, _key) => {
+      // anchor element (own element or wrapper top) → owning key, so the walk
+      // knows where another selector key's territory begins.
+      const anchors = new Map<HTMLElement, string>();
+      this.storage.nodes.forEach((node, key) => {
+        const el = node.element as any;
+        const anchor = el?.__outer ?? el;
+        if (anchor instanceof HTMLElement) anchors.set(anchor, key);
+      });
 
+      this.storage.nodes.forEach((node, key) => {
+        const el = node.element;
+        if (!(el instanceof HTMLElement)) return;
+
+        const relations = this.hierarchy.store(key);
+        node.relations = relations; // record ↔ map share one object
+
+        // 🧭 Direct-layer walk: record each element once, do not descend
+        // into subtrees owned by another selector key.
+        const found = new Set<string>();
+        const walk = (current: Element): void => {
+          for (const child of Array.from(current.children)) {
+            found.add(elementSelector(child));
+            const ownerKey = anchors.get(child as HTMLElement);
+            if (ownerKey === undefined || ownerKey === key) {
+              walk(child); // same key's territory — keep descending
+            }
+            // boundary: another key's element — recorded, not descended
+          }
+        };
+        walk(el);
+        relations.elements = Array.from(found);
       });
 
       return this.#staticHierarchy;
@@ -331,7 +341,7 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
   public abstract initialize(el?: HTMLElement, payload?: any, context?: any): void;
 
   constructor() {
-
+    this.proxyRuntime = new BuilderProxy(this.storage.proxy);
   }
 
   /**
@@ -378,8 +388,26 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     return Object.freeze({
       ...defaultOptions,
       ...userConfig,
-      selectors: mergedSelectors
+      selectors: mergedSelectors,
+      // 🧩 SLOT CONTRACT — resolved ONCE here (constructor time, before any
+      // render): from now on every slot lookup is a plain map read, so the
+      // framework knows which slot/typeKey pairs this builder owns without
+      // re-walking config or DOM.
+      slots: {
+        ...((defaultOptions as any).slots || {}),
+        ...((userConfig as any).slots || {}),
+      },
     }) as Required<C>;
+  }
+
+  /**
+   * 🧩 Declared slots of this builder: `typeKey → slotKey` (see resolveConfig).
+   * A declared key is a RECEPTACLE: at the end of create() its element is
+   * stamped with `data-slot="slotKey"` and published to the slot ledger, ready
+   * for another builder's `attach()`.
+   */
+  protected get slots(): Record<string, string> {
+    return ((this.config as unknown as { slots?: Record<string, string> } | null)?.slots) ?? {};
   }
 
   public setConfig(config: Partial<TConfig>) {
@@ -395,125 +423,25 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     );
   }
 
-  #cache = new Map<string, HTMLElement>();
+  /** 📦 NODE STORE — registri node milik instance ini: typeKey → record. */
+  protected storage = {
+    nodes: new Map<string, iNodeRecordItem>(),
+    proxy: new WeakMap<any, any>(),
+  };
 
-  #nodes = new Map<string, iNodeRecordItem>();
-
-  // #updates = new Map<TType, { target: any, element: HTMLElement }>
-
-  // 0. Siapkan cache global di luar class atau sebagai private property class untuk cegah memory leak
-  #proxyCache = new WeakMap<any, any>();
-
+  protected proxyRuntime: BuilderProxy;
 
   protected setProxy(
     key: string,
     payload: any,
     onUpdateCallback?: (target: any, prop: string | symbol, value: any) => void
   ): any {
-    const self = this;
-
-    function _isProxy(obj: any): boolean {
-      return Boolean(obj && typeof obj === "object" && obj[IS_PROXY] === true);
-    }
-
-    function _isPlainObjectOrArray(obj: any): boolean {
-      if (obj === null || typeof obj !== "object") return false;
-      if (obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
-        return false;
-      }
-      if (Array.isArray(obj)) return true;
-
-      const proto = Object.getPrototypeOf(obj);
-      return proto === Object.prototype || proto === null;
-    }
-
-    // Guard Clause: Kembalikan nilai langsung jika bukan Objek/Array yang valid
-    if (payload == null || typeof payload !== "object") return payload;
-    if (!_isPlainObjectOrArray(payload)) return payload;
-    if (_isProxy(payload)) return payload;
-    if (payload instanceof Node) return payload;
-
-    // 🟢 CEK CACHE: Ambil jika sudah pernah di-proxy-kan
-    if (this.#proxyCache.has(payload)) {
-      return this.#proxyCache.get(payload);
-    }
-
-    const singleProxyObj = new Proxy(payload, {
-      get: (target, prop, receiver) => {
-        if (prop === IS_PROXY) return true;
-
-        const value = Reflect.get(target, prop, receiver);
-
-        // 🟢 Deep Proxy Traversal: Pasang Proxy pada objek/array anak secara otomatis saat diakses
-        if (value !== null && _isPlainObjectOrArray(value) && !(value instanceof Node)) {
-          if (self.#proxyCache.has(value)) {
-            return self.#proxyCache.get(value);
-          }
-          // Rekursif membungkus child data dengan callback terikat yang sama
-          return self.setProxy(key, value, onUpdateCallback);
-        }
-        return value;
-      },
-
-      set: (target: any, prop: string | symbol, value: any, receiver: any) => {
-        const isArray = Array.isArray(target);
-
-        if (value !== null && typeof value === "object" && !_isProxy(value) && !(value instanceof Node)) {
-          value = self.setProxy(key, value, onUpdateCallback);
-        }
-
-        const oldValue = target[prop];
-        const isValueEqual = oldValue === value;
-
-        const success = Reflect.set(target, prop, value, receiver);
-
-        if (success) {
-          // 🟢 Tangani mutasi Array (Panjang Array & Indexing)
-          const isArrayLengthChange = isArray && prop === "length";
-          const isArrayMutated = isArray && !isNaN(Number(prop));
-
-          // Panggil callback HANYA jika terjadi nilai berubah nyata atau mutasi array
-          if (!isValueEqual || isArrayLengthChange || isArrayMutated) {
-            if (typeof onUpdateCallback === "function") {
-              onUpdateCallback(target, prop, value);
-            }
-          }
-        }
-        return success;
-      },
-
-      deleteProperty: (target: any, prop: string | symbol) => {
-        const hasProp = prop in target;
-        const success = Reflect.deleteProperty(target, prop);
-
-        if (success && hasProp) {
-          if (typeof onUpdateCallback === "function") {
-            onUpdateCallback(target, prop, undefined);
-          }
-        }
-        return success;
-      }
-    });
-
-    // Simpan ke Cache
-    this.#proxyCache.set(payload, singleProxyObj);
-
-    return singleProxyObj;
+    return this.proxyRuntime.makeReactive(key, payload, onUpdateCallback);
   }
 
-
-  // private _runUpdate(_key: TType, _target: any, _element?: HTMLElement) {
-  //   if (this.#updates.size === 0) {
-  //     queueMicrotask(() => {
-  //       this.#updates.forEach((context, patchKey) => {
-  //         // this.use(patchKey, context.target, context.element);
-  //         StateMutationEventBus.broadcast(String(patchKey), context.target, context.element);
-  //       });
-  //       this.#updates.clear();
-  //     });
-  //     // this.#updates.set(key, { target, element });
-  //   }
-  // }
+  protected bindState(root: HTMLElement, source: any): void {
+    this.proxyRuntime.bind(root, source);
+  }
 
   /**
    * @description
@@ -535,31 +463,37 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     const effectiveConfig = config || (content && typeof content === "object" ? (content as any).config : undefined);
     if (effectiveConfig) this.config = this.resolveConfig(this.config, effectiveConfig);
 
-    // Unified identity orchestration: seed, namespace, hierarchy, stack management
+    // Unified identity orchestration: seed, namespace, stack management
     const identity = this.ensureIdentity(content, this.config, { pushNamespace: true, popNamespace: true });
     this.#staticHierarchy = identity.hierarchy;
+    this.storage.nodes.clear();
+    this.activeLiveThemeId = this.config?.themeId || document.body.dataset.theme?.replace(/^theme-/, "") || "default";
 
     // 🟢 PROXY-FIRST: Ubah seluruh payload 'content' menjadi Reactive Proxy sejak awal
     content = this.setProxy(identity.namespace, content);
 
-    try {
-      this.activeLiveThemeId = this.config?.themeId || document.body.dataset.theme?.replace(/^theme-/, "") || "default";
-      this.#nodes.clear();
+    // 🧩 CALLER WINDOW — anything instantiated from here on resolves THIS
+    // builder as its caller (and therefore as its slot host).
+    const previousActive = Builder.#active;
+    Builder.#active = this;
 
+    try {
       // Gunakan 'this.data' (Proxy Matang) untuk proses prepare()
-      const DOMTree = this.prepare(content, this.config) as HTMLElement;
+      const DOMTree = this.prepare(content, this.config) as HTMLElement | null | undefined;
+      if (!DOMTree || !(DOMTree instanceof HTMLElement)) {
+        throw new Error(`[Builder:${String(this.builderId)}] prepare() returned no valid DOM element. Check selectors, template(), and the builder's render path.`);
+      }
 
       // Detonasi event bindings interaktif klik browser
       this.initialize(DOMTree, content);
 
       this.hierarchy.update();
-      // console.log("hierarchy", this.#staticHierarchy, identity);
+      // console.log("hierarchy", this.hierarchy.get(), identity);
 
-      // 🧊 Anti-FOUC: tandai SATU elemen puncak ini (bukan anak-anaknya)
-      // bila instance sedang menunggu stylesheet lazy — pre-mount, pre-paint.
-      return this._applyHydrationHold(DOMTree);
+      return DOMTree;
     } finally {
-      // console.log("[template cache]", this.#cache.entries());
+      // Unpin — the caller window closes together with create().
+      Builder.#active = previousActive;
     }
   }
 
@@ -602,58 +536,56 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     };
 
     const selector = this.config.selectors?.[typeKey];
-    if (!selector) return undefined;
+    if (!selector) {
+      throw new Error(`[Builder:${String(this.builderId)}] Unknown selector "${String(typeKey)}". Check the selector map or template key name.`);
+    }
 
     let el: HTMLElement;
 
-    // 1. Ambil dari template jika sudah pernah di-store, atau buat baru
-    if (this.#cache.has(typeKey)) {
-      const template = this.#cache.get(typeKey)!;
-      const fragment = (template as HTMLTemplateElement).content.cloneNode(true) as DocumentFragment;
-      el = fragment.firstElementChild as HTMLElement;
-    } else {
-      const tagName = selector.tagName || "div";
-      el = document.createElement(tagName);
-      this._applyNodeAttributes(el, selector);
+    const tagName = selector.tagName || "div";
+    el = document.createElement(tagName);
+    this._applyNodeAttributes(el, selector);
 
-      if (selector.wrapper) {
-        const wrapperChain = this._wrapElement(selector.wrapper, el);
-        if (wrapperChain) {
-          (el as any).__outer = wrapperChain.__outer;
-          (el as any).__inner = el;
-        }
-        // console.log(el)
+    if (selector.wrapper) {
+      const wrapperChain = this._wrapElement(selector.wrapper, el);
+      if (wrapperChain) {
+        (el as any).__outer = wrapperChain.__outer;
+        (el as any).__inner = el;
       }
+      // console.log(el)
     }
 
-    // 🟢 2. PAYLOAD SUDAH PROXY: Langsung gunakan payload tanpa re-proxy
-    // const activePayload = payload;
+    // 🧩 SLOT RECEPTACLE — a key declared in `config.slots` is a slot THIS
+    // builder provides. Stamped right here (the map was resolved once at
+    // construction), so a child hosted by this builder finds it with a single
+    // root-scoped query — no registry, no document sweep.
+    const slotKey = this.slots[typeKey];
+    if (slotKey) el.dataset.slot = slotKey;
 
     // 🟢 3. DAFTARKAN NODE FISIK KE #nodes
     const data = {
       key: typeKey,
       element: el,
       payload, // Konsisten mengacu pada objek reaktif yang sama
-      relations: this.hierarchy?.get()?.[typeKey]
+      relations: this.hierarchy.store(typeKey)
     };
 
-    this.#nodes.set(typeKey, data);
+    this.storage.nodes.set(typeKey, data);
+
+    // console.log(typeKey, this.storage.nodes.entries())
 
     // 4. Hidrasi data awal via template()
     this.template(typeKey, el, payload, selector);
 
-    // (🧊 Anti-FOUC hold DIPINDAH ke create(): hanya elemen puncak yang
-    // ditandai — render() tidak lagi menulis marker per-elemen anak, agar
-    // tidak ada penanda liar di dalam subtree yang lolos dari pelepasan.)
-
     // 5. Metadata & Emit Event
     setMetadata(el, [data || {}], typeKey as string);
-    registerTheme(typeKey, el, payload, this.config.selectors?.[typeKey]!);
+
+    registerTheme(typeKey, el, payload, selector);
 
     if (this.config?.emit !== undefined) {
       // if (this.builderId == "menu") console.log("Base", { payload })
       this.config.emit?.("elementAdded", {
-        builder: this.builderId,
+        builder: this.builderId as keyof iBuilderRegistry,
         type: typeKey as TType,
         element: el,
         data: payload
@@ -665,47 +597,151 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     return el;
   }
 
-  /**
-   * 📦 STORE: Bertugas menyimpan cetakan murni <template> ke #cache
-   * HANYA dipanggil manual oleh developer untuk Komponen Makro yang berharga!
-   */
-  store(typeKey: TType, element: HTMLElement) {
-    if (!this.#cache.has(typeKey)) {
-      const templateEl = document.createElement("template");
-      // Clone skeleton murni tanpa data terikat
-      templateEl.content.appendChild(element.cloneNode(true));
-      // StateMutationEventBus.broadcast(String(typeKey), {}, element);
-      this.#cache.set(typeKey, templateEl);
-    }
-  }
-
-  /**
-   * ♻️ USE (Dulu 'reuse'): Mengambil Blueprint <template> dari #cache 
-   * dan langsung merender instance baru secara instan
-   */
-  use(typeKey: TType, payload?: any, targetElement?: HTMLElement, selector?: iActionProperty): HTMLElement | undefined {
-    // Mode A: Patching Elemen Eksisting
-    if (targetElement) {
-      this.template(typeKey, targetElement, payload, selector);
-      return targetElement;
-    }
-
-    // Mode B: Buat/Clone Elemen Baru dari Cetakan
-    return this.render(typeKey, payload);
-  }
-
-
   protected load(key: TType): HTMLElement | null {
     // if (this.builderId === "pricing-card") console.log(this.builderId, "this.load", nodes);
-    const node = this.#nodes.get(key)
+    const node = this.storage.nodes.get(key)
     // console.log({ node })
 
     return node?.element!;
   }
 
   protected payload(key: TType): any {
-    return this.#nodes.get(key) || null;
+    return this.storage.nodes.get(key) || null;
   }
+
+  // =====================================================================
+  // 🧩 SLOTTING — attach/detach
+  // =====================================================================
+
+  /**
+   * 🧩 ATTACH — project ONE of this builder's keys into a slot declared by the
+   * caller's config (`slots`), and wire only that key.
+   *
+   * This is the default way a parent consumes a child:
+   *
+   *   const studio = new ColorThemeBuilder(config)
+   *     .attach("@colorizer>configurator", "color-configurator")
+   *     .attach("@colorizer>output", "color-output");
+   *
+   * No create(), so the rest of the child's tree is never built — only the keys
+   * asked for. The key is rendered through the normal `render()` (so it lands in
+   * the node store, `load(key)` keeps answering, and its own template() pulls in
+   * the child keys that key is made of), then swapped in for the caller's
+   * receptacle. The receptacle is found the cheap way: the caller's root key
+   * anchors one `querySelector('[data-slot="…"]')` inside the caller's own tree.
+   * Nothing is registered anywhere — `attach()` talks to `#caller`, the builder
+   * that instantiated this one.
+   *
+   * Wiring is per-scope: initialize(node, payload) is what runs, so a builder
+   * that wires by scope (see ColorTheme.initialize) binds exactly the attached
+   * key — and attaching several keys to one instance keeps ONE state, ONE sync
+   * effect and one binding per control (see `scopes()`).
+   *
+   * A builder without a caller (registry-built root / standalone page) keeps its
+   * nodes in its own tree — that is the fallback, not an error.
+   *
+   * @param typeKey  key of this builder to project (a key of my selector map).
+   * @param slotKey  slot declared by the caller's config.
+   * @param payload  data this key's template() needs; omit it when the template
+   *                 can derive what it needs from the builder's own state.
+   * @returns the current builder for chaining.
+   */
+  public attach(typeKey: TType, slotKey: string, payload?: any): this {
+    // 🥾 attach() is an entry point of its own — boot without content so the key
+    // below can be rendered even though create() never ran.
+    if (!Object.keys(this.hierarchy.get()).length) {
+      const identity = this.ensureIdentity(undefined, this.config, { pushNamespace: true, popNamespace: true });
+      this.#staticHierarchy = identity.hierarchy;
+      this.storage.nodes.clear();
+      this.activeLiveThemeId = this.config?.themeId || document.body.dataset.theme?.replace(/^theme-/, "") || "default";
+    }
+
+    const node = this.load(typeKey) ?? this.render(typeKey, payload);
+    if (!node) return this;
+
+    const caller = this.#caller;
+    if (!caller) return this;
+
+    const callerSels = Object.keys(caller.hierarchy.get());
+    const callerRootKey = callerSels[0] as TType | undefined;
+    const callerRoot = callerRootKey ? (caller.load(callerRootKey) ?? null) : null;
+    const receptacle = callerRoot?.querySelector<HTMLElement>(`[data-slot="${slotKey}"]`);
+    if (!receptacle) {
+      console.warn(
+        `[Builder:${String(this.builderId)}] attach("${String(typeKey)}") found no receptacle for slot ` +
+        `"${slotKey}" in caller "${String(caller.builderId)}" — declare it in the caller's config.slots.`
+      );
+      return this;
+    }
+
+    // A wrapped key occupies the tree through its wrapper chain, so that chain
+    // is what gets projected (the inner element stays the registered node).
+    const element = ((node as any).__outer as HTMLElement | undefined) ?? node;
+
+    element.dataset.slot = slotKey;
+    this.#projected.set(typeKey, { slot: slotKey, element, receptacle });
+
+    // 🔀 WELD — the receptacle's hooks (its classes/style scope, its attributes)
+    // are carried onto the projected node, which then takes its place. Stamped
+    // `data-slot` above wins, and the receptacle's inline `style` is left behind
+    // (that is the empty-placeholder state, not chrome).
+    element.classList.add(...Array.from(receptacle.classList));
+    for (const { name, value } of Array.from(receptacle.attributes)) {
+      if (name === "style" || element.hasAttribute(name)) continue;
+      element.setAttribute(name, value);
+    }
+    receptacle.replaceWith(element);
+
+    this.rootElement ??= callerRoot;
+
+
+    // 🔌 Wire THIS key only. Re-entering a scope is harmless (bind refreshes an
+    // existing binding instead of stacking listeners), which is exactly why
+    // attaching configurator + output + mode to one instance stays in sync
+    // without duplicating anything.
+    this.initialize(element, payload);
+    return this;
+  }
+
+  /**
+   * 🧷 DETACH — hand the caller its receptacle back and return the projected
+   * node to its owner (still registered, ready to re-attach).
+   *
+   * @param slotKey  slot to release.
+   * @returns current builder.
+   */
+  public detach(slotKey: string): this {
+    for (const [typeKey, entry] of this.#projected) {
+      if (entry.slot !== slotKey) continue;
+      if (entry.element.parentNode) entry.element.replaceWith(entry.receptacle);
+      this.#projected.delete(typeKey);
+    }
+    return this;
+  }
+
+  /**
+   * 🔌 WIRING SCOPES — every DOM location this instance paints: the builder
+   * root first, then each node projected into my caller's slot.
+   *
+   * This is what makes initialize()/sync slot-aware: a builder is exactly as
+   * multi-rooted as its projections, so initialize() runs once for the root and
+   * loops `scopes()`, while the reactive sync loop repaints every scope — that
+   * is how a projected panel stays wired and in sync with the owner's state.
+   */
+  protected scopes(): HTMLElement[] {
+    const scopes: HTMLElement[] = [];
+    const ownRootKey = Object.keys(this.hierarchy.get())[0] as TType | undefined;
+    const root = ownRootKey ? this.load(ownRootKey) : null;
+    if (root) scopes.push(root);
+
+    for (const { element } of this.#projected.values()) {
+      // A parked projection still lives under the root → already covered by it.
+      if (element === root || root?.contains(element)) continue;
+      scopes.push(element);
+    }
+    return scopes;
+  }
+
 
   /**
    * @description
@@ -721,7 +757,7 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     typeKeys.forEach((key) => {
       const liveElement = this.load(key) as HTMLElement;
       if (liveElement) liveElement.remove();
-      this.#nodes.delete(key);
+      this.storage.nodes.delete(key);
     });
   }
 
@@ -745,13 +781,12 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
         data: null // Bebas dari tracking rawDataNode kotor
       });
     }
-    // TODO get hierarchy find the root element and use it as pointer which to dest
-    // roy this.hierarchy.get()
+
     // ====================================================
     // 🔮 THE ANCESTRAL POINTER EXTRACTOR (EVAKUASI DARI MAP POOL)
     // Jemput elemen root hidup dari dalam saku standard identifier @container!
     // ====================================================
-    const rootElement = this.#nodes.get(typeKey || "@container" as TType)?.element
+    const rootElement = this.storage.nodes.get(typeKey || "@container" as TType)?.element
 
     if (rootElement) {
       // Cabut dari silsilah induk bodi HTML jika memiliki parentNode aktif di browser
@@ -765,34 +800,19 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
       console.log(`[Lifecycle Security] DOM Element Node for "${String(this.builderId)}" successfully unmounted.`);
     }
 
-    this.#nodes.clear();
+    this.storage.nodes.clear();
+
+    // 🧩 Give my caller its receptacles back: projections do not outlive me.
+    for (const slotKey of new Set(Array.from(this.#projected.values(), (entry) => entry.slot))) {
+      this.detach(slotKey);
+    }
+
     this.config = null as any;
     this.instanceNamespace = null;
 
     // console.log(`[Lifecycle Security] _nodes Map successfully liquidated. Memory state at 0B leak.`);
   }
 
-
-  public attachGlobal(childElement: HTMLElement | any, globalSlotPathKey: string): void {
-    if (!globalSlotPathKey || !(globalThis as any).ElementCreatedEventBus) return;
-
-    const attached = (globalThis as any).ElementCreatedEventBus.attach(childElement, globalSlotPathKey);
-    if (!attached) {
-      console.warn(`⚠️ [Slotting Warning]: Failed to attach node into target "${globalSlotPathKey}".`);
-      return;
-    }
-
-    console.log(`🚀 [Independent Slotting]: Welding "${this.builderId}" node into target "${globalSlotPathKey}"`);
-  }
-
-  public detachGlobal(childElement: HTMLElement | any): void {
-    if (!childElement || !(globalThis as any).ElementCreatedEventBus) return;
-    const detached = (globalThis as any).ElementCreatedEventBus.detach(childElement);
-    if (!detached) {
-      const el = childElement.element || childElement;
-      if (el && el.parentElement) el.remove();
-    }
-  }
 
   /**
    * Recursively parses CSS selector chains (e.g., ".column>neon", "div.col-4>.card-wrapper")
@@ -882,27 +902,29 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
   /**
    * 🧱 THE ATTR AND METADATA WELDER (POS PENGURUS DATA ATRIBUT)
    * Melumat tuntas ID, ClassName, kustom attrs, hingga data- attributes bawaan database Sheets.
+   * Pair-stamping delegated to Utility/AttributeUtils.
    */
   private _applyNodeAttributes(el: HTMLElement, selector: any): void {
     if (!selector) return;
 
     // 1. Suntikkan Identitas ID jika didefinisikan kaku di dalam selektor preset
-    if (selector.id) {
+    if (selector.id && selector.id !== "") {
       el.id = selector.id;
     }
 
     // 2. Suntikkan Kosmetik ClassName standar secara aman
-    if (selector.className) {
+    if (selector.className && selector.className !== "") {
       el.className = selector.className;
     }
 
-    // 3. 🧙‍♂️ SAFE ATTRS EXTRACTOR: Menyisir dan menancapkan atribut HTML legal JIT
-    // Hanya memproses boks 'attrs' khusus, memblokir buta loop properti config luar!
-    if (selector.attrs && typeof selector.attrs === "object") {
-      Object.entries(selector.attrs).forEach(([attrName, attrValue]) => {
-        el.setAttribute(attrName, String(attrValue));
-      });
+    // 3. Suntikkan Text Content
+    if (selector.textContent && selector.textContent !== "") {
+      el.textContent = selector.textContent;
     }
+
+    // 4. 🧙‍♂️ SAFE ATTRS: dictionary `attrs` + array `attributes` (shared utils)
+    applyAttrDictionary(el, selector.attrs);
+    applyAttributeList(el, selector.attributes);
   }
 
 }
