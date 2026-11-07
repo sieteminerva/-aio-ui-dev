@@ -1,5 +1,5 @@
 import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iActionProperty, iNodeRecordItem, iNodeRecordRelations } from "@aio-ui/core/interface";
-// import { TemplateRegistry } from "@aio-ui/modules/TemplateRegistry";
+// import { TemplateRegistry } from "@aio-ui/template-registry";
 // import { ElementCreatedEventBus } from "../Services/EventBus";
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
 import { HydrationGate } from "./BaseAdapters/HydrationGate";

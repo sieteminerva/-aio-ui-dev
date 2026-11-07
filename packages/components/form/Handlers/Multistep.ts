@@ -8,7 +8,7 @@
 // berjalan di dalam engine, tanpa membebani Form.ts.
 // ======================================================================
 
-import type { iModuleDefinition } from "@aio-ui/modules/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
 import type { iFormModuleContext } from "../FormModuleTypes";
 

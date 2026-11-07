@@ -9,14 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aio-ui/animations": "*",
     "@aio-ui/article": "*",
     "@aio-ui/base": "*",
     "@aio-ui/core": "*",
+    "@aio-ui/event-emitter": "*",
     "@aio-ui/form": "*",
     "@aio-ui/masonry": "*",
     "@aio-ui/message": "*",
-    "@aio-ui/modules": "*",
     "@aio-ui/rating": "*",
+    "@aio-ui/router": "*",
     "@aio-ui/styles": "*",
     "@aio-ui/table": "*",
     "@aio-ui/utilities": "*"

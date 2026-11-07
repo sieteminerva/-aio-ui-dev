@@ -84,7 +84,7 @@ package has been extracted and verified.
 
 | Phase | Scope                                                  | Status                     |
 | ----- | ------------------------------------------------------ | -------------------------- |
-| 0     | Monorepo restructure, zero behavior change             | in progress (0.1–0.2 done) |
+| 0     | Monorepo restructure, zero behavior change             | done                       |
 | 1     | AppShell contract (interfaces only)                    | not started                |
 | 2     | `ComponentRegistry` rewrite to the agreed contract     | not started                |
 | 3     | PageController contract + one reference implementation | not started                |
@@ -218,8 +218,11 @@ Notes:
 
 ### 0.10 Document the boundaries
 
-- [ ] Write `docs/BOUNDARIES.md` with the import rules actually proven during migration
+- [x] Write `docs/BOUNDARIES.md` with the import rules actually proven during migration
 - [ ] Add a boundary check to the verification gate
+- [x] Housekeeping: plan/task docs into `.guidance/`, technical docs into `docs/`, stale root `dist/` removed
+- [x] Split `packages/modules` into installable packages: `@aio-ui/router`, `@aio-ui/event-emitter`,
+      `@aio-ui/http-service`, `@aio-ui/animations`, `@aio-ui/module-loader`
 
 ---
 
@@ -311,12 +314,12 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 
 ## 7. Open questions
 
-| #   | Question                                                                                                                                                                                                                        | Affects    |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
-| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                                                                                                                           | closed     |
-| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now.                                                                                                          | closed     |
-| Q3  | Should `Menu` be remapped now or dropped from the port list until the shell exists?                                                                                                                                             | Phase 5    |
-| Q4  | `docs/` target folder for technical documentation (currently `.archives/docs`)                                                                                                                                                  | Phase 0.10 |
+| #   | Question                                                                                                                                                                 | Affects    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
+| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                                                                    | closed     |
+| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now.                                                   | closed     |
+| Q3  | Should `Menu` be remapped now or dropped from the port list until the shell exists?                                                                                      | Phase 5    |
+| Q4  | `docs/` target folder for technical documentation (currently `.archives/docs`)                                                                                           | Phase 0.10 |
 | Q5  | Component package naming — resolved: `@aio-ui/<name>`, so install name and import name are identical (`@aio-ui/form/Form`). The `@aio-ui/components/*` alias is retired. | closed     |
 
 ## 8. Change log
@@ -332,3 +335,5 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-07 | Step 0.8 done: all 17 components in `packages/components/<name>/`. Globs, manifests, `normalizeVitePath` and the Vite chunk rule retargeted. `src/lib` removed. All routes verified; lazy CSS now loads from `packages/components/**`. |
 
 | 2026-11-07 | Step 0.9 done: app moved to `examples/gallery` with its own Vite. Workspace links replace aliases; manifests carry module specifiers and the host supplies a loader map. All routes verified. |
+
+| 2026-11-07 | Step 0.10 done: `docs/BOUNDARIES.md` written, plan/task docs moved to `.guidance/`, technical docs into `docs/`, stale `dist/` removed. `packages/modules` split into five installable packages. All routes verified. |

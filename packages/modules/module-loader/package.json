@@ -1,0 +1,13 @@
+{
+  "name": "@aio-ui/module-loader",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./ModuleRegistry": "./ModuleRegistry.ts",
+    "./ModuleLoader": "./ModuleLoader.ts"
+  },
+  "dependencies": {
+    "@aio-ui/core": "*"
+  }
+}

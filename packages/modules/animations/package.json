@@ -1,0 +1,14 @@
+{
+  "name": "@aio-ui/animations",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./Animations.ts",
+    "./Animations": "./Animations.ts"
+  },
+  "dependencies": {
+    "@aio-ui/core": "*",
+    "@aio-ui/utilities": "*"
+  }
+}

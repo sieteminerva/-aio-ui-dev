@@ -1,0 +1,14 @@
+{
+  "name": "@aio-ui/http-service",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./HttpService.ts",
+    "./HttpService": "./HttpService.ts"
+  },
+  "dependencies": {
+    "@aio-ui/core": "*",
+    "@aio-ui/utilities": "*"
+  }
+}

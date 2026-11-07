@@ -1,0 +1,14 @@
+{
+  "name": "@aio-ui/event-emitter",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./EventEmitter.ts",
+    "./EventEmitter": "./EventEmitter.ts"
+  },
+  "dependencies": {
+    "@aio-ui/core": "*",
+    "@aio-ui/utilities": "*"
+  }
+}
