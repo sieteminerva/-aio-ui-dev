@@ -25,8 +25,19 @@ export interface iComponentManifest {
 export interface iComponentModuleRef {
   /** Stable id inside the owning component, e.g. `validation`. */
   id: string;
-  /** Module specifier. When omitted, the registry resolves `id` from its own entries. */
+  /**
+   * Module specifier. When omitted, `id` is treated as the name of another
+   * registered component: its own manifest (path, stylesheet, nested modules) is
+   * honoured, so a component registered standalone works as a sub-module without
+   * being declared again.
+   */
   path?: string;
+  /**
+   * Named export to take from the module. Adapters and handlers are usually one
+   * export among several; without this the registry picks `default`, then the
+   * first exported function, then the namespace object.
+   */
+  export?: string;
   stylesheet?: string;
   config?: any;
 }
@@ -213,7 +224,7 @@ export class ComponentRegistry {
     return this.builders.has(name);
   }
 
-  private async loadModule(script?: string, stylesheet?: string, componentName?: string): Promise<any> {
+  private async loadModule(script?: string, stylesheet?: string, componentName?: string, exportName?: string): Promise<any> {
     let jsModule: any = null;
     let rawCss: any = null;
 
@@ -228,8 +239,14 @@ export class ComponentRegistry {
       }
     }
 
-    // Ekstrak Class/Constructor Komponen Anda
-    const builderClass = jsModule?.default || (jsModule && Object.values(jsModule).find(v => typeof v === 'function' || (v && typeof (v as any).create === 'function'))) || jsModule;
+    // Ekstrak nilai yang diminta: export bernama, default, fungsi pertama, atau namespace.
+    const builderClass = !jsModule
+      ? null
+      : exportName
+        ? (jsModule[exportName] ?? jsModule?.default?.[exportName] ?? null)
+        : (jsModule.default
+          || Object.values(jsModule).find(v => typeof v === 'function' || (v && typeof (v as any).create === 'function'))
+          || jsModule);
     // console.log({ builderClass, stylesheet })
     // 2. Memuat File CSS (Menggunakan inline query untuk Constructable Stylesheets)
     let effectiveStyle: string | CSSStyleSheet | undefined = stylesheet;
@@ -299,9 +316,17 @@ export class ComponentRegistry {
    * @param componentNames - Registered component names to resolve.
    * @param pagesData - Source tree used to find each component's node config.
    */
+  /** Components currently being loaded, so a `modules` cycle cannot recurse forever. */
+  private _loading = new Set<string>();
+
   public async load(componentNames: string[], pagesData: any[] = []): Promise<void> {
     for (const nameKey of componentNames) {
       const name = nameKey as keyof iBuilderRegistry;
+
+      // Step 1: A component already in flight is skipped; this also makes a
+      // two-way `modules` reference (form → table → form) safe.
+      if (this._loading.has(String(name))) continue;
+
       const fn = this.builders.resolve(String(name));
       if (!fn) continue;
 
@@ -309,6 +334,7 @@ export class ComponentRegistry {
       const matchedData = this.getBuilderNode(pagesData as iBasicNode[], name as string);
 
       try {
+        this._loading.add(String(name));
         const manifest = fn((matchedData || {}) as iBuilderRegistry[typeof name]);
         if (manifest?.path || manifest?.stylesheet) {
           const loadedClass = await this.loadModule(manifest.path, manifest.stylesheet, name as string);
@@ -318,6 +344,8 @@ export class ComponentRegistry {
       } catch (err) {
         console.error(`[ComponentRegistry] load failed for "${String(nameKey)}":`, err);
         throw err;
+      } finally {
+        this._loading.delete(String(name));
       }
     }
   }
@@ -341,17 +369,36 @@ export class ComponentRegistry {
     for (const ref of refs) {
       if (resolved[ref.id] !== undefined) continue;
 
-      // A module without a path refers to another registered component.
-      const path = ref.path ?? ref.id;
+      // A module without a path names another registered component. Delegate to
+      // its own entry so its manifest, stylesheet and nested modules are honoured.
+      if (!ref.path) {
+        if (!this.has(ref.id)) {
+          if (DEV) {
+            console.warn(
+              `[ComponentRegistry] module "${ref.id}" of "${componentName}" is neither a path nor a registered component.`,
+            );
+          }
+          continue;
+        }
+        await this.load([ref.id]);
+        const registered = this._resolvedCache.get(ref.id);
+        if (registered !== undefined) {
+          resolved[ref.id] = registered;
+          this._resolvedCache.set(`${componentName}:${ref.id}`, registered);
+        }
+        continue;
+      }
+
       const cacheKey = `${componentName}:${ref.id}`;
-      const loaded = await this.loadModule(path, ref.stylesheet, cacheKey);
+      const loaded = await this.loadModule(ref.path, ref.stylesheet, cacheKey, ref.export);
 
       if (loaded !== undefined && loaded !== null) {
         resolved[ref.id] = loaded;
         this._resolvedCache.set(cacheKey, loaded);
       } else if (DEV) {
         console.warn(
-          `[ComponentRegistry] module "${ref.id}" of "${componentName}" could not be resolved from "${path}".`,
+          `[ComponentRegistry] module "${ref.id}" of "${componentName}" could not be resolved from "${ref.path}"` +
+          `${ref.export ? ` (export "${ref.export}")` : ""}.`,
         );
       }
     }

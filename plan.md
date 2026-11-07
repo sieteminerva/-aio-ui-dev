@@ -251,11 +251,12 @@ Delivered:
 - [x] Reduce `RegisterFn` to a single manifest signature — `iComponentManifest`
 - [x] Remove `LoadFn`, `dummyLoadFn` and the unused branching in `build()`
   - `main` chunk 71.03 kB → 69.94 kB; all five routes byte-identical node counts
-- [ ] Add `modules` to the component manifest and resolve it during preload
-- [ ] Make the preload graph recursive
-- [ ] Namespace `_resolvedCache` keys per module
-- [ ] Implement `iComponentSource` (`has`, `resolve`) and register it with `Base`
-- [ ] Add `Base.sub(id)` with a single warn-once policy
+- [x] Add `modules` to the component manifest and resolve it during load
+- [x] Make the load graph recursive (a module id may name another registered component)
+- [x] Namespace `_resolvedCache` keys per module (`form:table`)
+- [x] `Base.module(id)` with a single warn-once policy
+- [~] `iComponentSource` dropped: no longer needed once modules are handed to builders
+      through `provideModules()`; `core` never asks `base` to resolve anything
 - [ ] Split asset loading into a `ComponentLoader` if the class keeps growing
 - [ ] Tests: manifest resolution, module preload, missing module policy
 
@@ -359,3 +360,5 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-08 | Phase 2: `preloadComponents` renamed to `load`; `modules` resolved per component with namespaced cache keys (`form:table`) and handed to builders via `provideModules()`; `Base.module(id)` added with warn-once. Deliberately NOT on `config.modules` because Form already owns that key. |
 
 | 2026-11-08 | Phase 2 tests: 9 registry tests (manifest, config merge, schema payload, module resolution, missing module, dedupe, unknown name). Fixed two Node-hostile spots found by the tests: `isPlainRecord` DOM guard and stylesheet derivation treating specifiers as file paths. 42 → 51 tests. |
+
+| 2026-11-08 | Module registry complete: `modules[].path` optional (falls back to a registered component), `modules[].export` selects a named export for adapters/handlers, cycle-safe loading. `iComponentSource` dropped as unnecessary. 54 tests. |

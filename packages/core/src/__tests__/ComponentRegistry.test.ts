@@ -181,4 +181,58 @@ describe("ComponentRegistry manifest contract", () => {
 
     expect(() => registry.build("form", {})).toThrow(/not preloaded|not a Builder/);
   });
+
+  it("resolves a module id that names another registered component", async () => {
+    const tableInstances: FakeInstance[] = [];
+    const registry = new ComponentRegistry(
+      makeAssets({
+        "@fake/form": async () => ({ default: makeBuilderClass(instances) }),
+        "@fake/table": async () => ({ default: makeBuilderClass(tableInstances) }),
+      }),
+    );
+    registry.register("table", () => ({ path: "@fake/table" }));
+    registry.register("form", () => ({ path: "@fake/form", modules: [{ id: "table" }] }));
+
+    await registry.load(["form"]);
+    registry.build("form", {});
+
+    expect(instances[0].modules.table).toBeTypeOf("function");
+    // The standalone component was loaded through its own manifest.
+    expect(() => registry.build("table", {})).not.toThrow();
+  });
+
+  it("picks the named export a module ref asks for", async () => {
+    const registry = new ComponentRegistry({
+      modules: {
+        "@fake/form": async () => ({ default: makeBuilderClass(instances) }),
+        "@fake/adapters": async () => ({ default: Engine, cascadeAdapter: TableAdapter }),
+      },
+      styles: {},
+    });
+    registry.register("form", () => ({
+      path: "@fake/form",
+      modules: [{ id: "cascade", path: "@fake/adapters", export: "cascadeAdapter" }],
+    }));
+
+    await registry.load(["form"]);
+    registry.build("form", {});
+
+    expect(instances[0].modules.cascade).toBe(TableAdapter);
+  });
+
+  it("survives a two-way modules reference", async () => {
+    const registry = new ComponentRegistry(
+      makeAssets({
+        "@fake/form": async () => ({ default: makeBuilderClass(instances) }),
+        "@fake/table": async () => ({ default: makeBuilderClass([]) }),
+      }),
+    );
+    registry.register("table", () => ({ path: "@fake/table", modules: [{ id: "form" }] }));
+    registry.register("form", () => ({ path: "@fake/form", modules: [{ id: "table" }] }));
+
+    await expect(registry.load(["form"])).resolves.toBeUndefined();
+    registry.build("form", {});
+
+    expect(instances).toHaveLength(1);
+  });
 });
