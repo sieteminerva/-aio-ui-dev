@@ -1,24 +1,41 @@
-import type { ComponentBuilderFn, iBasicNode, iBuilderRegistry } from "./interface";
+import type { iBasicNode, iBuilderRegistry } from "./interface";
 import { Registry } from "./Registry";
 import { getBuilderAdapter } from "./BuilderPort";
 
-
-// 💡 DEKLARASI KONTAK LAZY LOAD UNTUK MODEL METADATA (STYLE 3)
-export interface iSimpleWayManifest {
+/**
+ * Component manifest — the single registration shape.
+ *
+ * A component package describes how to load itself and how to configure itself.
+ * The registry never receives a class, an element, or a promise directly.
+ */
+export interface iComponentManifest {
+  /** Module specifier or host path used to load the component module. */
   path: string;
+  /** Stylesheet specifier. Derived from `path` when omitted and `path` is a file. */
   stylesheet?: string;
-  script?: string;
+  /** Default configuration, merged beneath the node's own config. */
   config?: any;
+  /** Payload handed to the builder. When omitted, the node content is used. */
   schema?: any;
+  /** Sub-modules this component owns, loaded alongside it. */
+  modules?: iComponentModuleRef[];
 }
 
-export type LoadFn = (options: { script?: string; stylesheet?: string }) => Promise<any>;
+/** A sub-module a component declares (engine, collaborator, adapter). */
+export interface iComponentModuleRef {
+  /** Stable id inside the owning component, e.g. `validation`. */
+  id: string;
+  /** Module specifier. When omitted, the registry resolves `id` from its own entries. */
+  path?: string;
+  stylesheet?: string;
+  config?: any;
+}
 
-// Polimorfisme Tanda Tangan Registrasi yang Sah di Framework Anda
+/**
+ * One registration signature, no variants: every entry returns a manifest.
+ */
 export type RegisterFn<K extends keyof iBuilderRegistry> =
-  | ComponentBuilderFn<iBuilderRegistry[K]> // OldWayFn / Standard murni (Style 1)
-  | ((data: iBuilderRegistry[K], load: LoadFn) => Promise<HTMLElement | null>) // ConfigurableWayFn (Style 2)
-  | ((data: iBuilderRegistry[K], config?: any) => iSimpleWayManifest); // SimpleWayFn Manifest (Style 3)
+  (data: iBuilderRegistry[K]) => iComponentManifest;
 
 /**
  * Asset loader maps supplied by the HOST application.
@@ -66,6 +83,11 @@ function findStyleLoader(map: Record<string, () => Promise<any>>, key: string): 
 }
 
 const DEV = (import.meta as any).env?.DEV === true;
+
+/** Narrow a value to a plain object record (not array, element, or null). */
+function isPlainRecord(value: unknown): value is Record<string, any> {
+  return typeof value === "object" && value !== null && !Array.isArray(value) && !(value instanceof Element);
+}
 
 export class ComponentRegistry {
   /**
@@ -271,28 +293,11 @@ export class ComponentRegistry {
       // @ts-ignore (Mempertahankan fungsionalitas pencarian framework bawaan Anda)
       const matchedData = this.getBuilderNode(pagesData as iBasicNode[], name as string);
 
-      const loadFn: LoadFn = async ({ script, stylesheet }) => {
-        // Ditambahkan nameKey sebagai parameter ke-3 agar sinkron
-        const loadedClass = await this.loadModule(script, stylesheet, name as string);
-        if (loadedClass) {
-          this._resolvedCache.set(name as string, loadedClass);
-        }
-        return loadedClass;
-      };
-
       try {
-        // Solusi polimorfisme parameter agar Style 3 tidak rusak saat di-preload
-        const result = fn(matchedData || {}, loadFn as any);
-
-        if (result && typeof result === "object" && !(result instanceof HTMLElement) && !(result instanceof Promise)) {
-          const manifest = result as iSimpleWayManifest;
-          const scriptPath = manifest.path || manifest.script;
-          if (scriptPath || manifest.stylesheet) {
-            const loadedClass = await loadFn({ script: scriptPath, stylesheet: manifest.stylesheet });
-            if (loadedClass) {
-              this._resolvedCache.set(name as string, loadedClass);
-            }
-          }
+        const manifest = fn((matchedData || {}) as iBuilderRegistry[typeof name]);
+        if (manifest?.path || manifest?.stylesheet) {
+          const loadedClass = await this.loadModule(manifest.path, manifest.stylesheet, name as string);
+          if (loadedClass) this._resolvedCache.set(name as string, loadedClass);
         }
       } catch (err) {
         console.error(`[ComponentRegistry] preload failed for "${String(nameKey)}":`, err);
@@ -312,45 +317,24 @@ export class ComponentRegistry {
       throw new Error(`[ComponentRegistry] No builder registered for "${String(name)}".`);
     }
 
-    // 1. Panggil fn() dulu untuk menangkap Manifest (Style 3) + path CSS tersembunyi
-    // @ts-ignore
-    const dummyLoadFn: LoadFn = ({ script, stylesheet }) => Promise.resolve({});
-    const result = fn(data, dummyLoadFn as any);
+    // 1. Every registration returns a manifest: there are no variants to detect.
+    const manifest = fn(data);
+    const manifestConfig = manifest.config;
+    const cssPath = manifest.stylesheet
+      ?? (/\.[cm]?[jt]sx?$/.test(manifest.path) ? manifest.path.replace(/\.[cm]?[jt]sx?$/, ".css") : undefined);
 
-    // 2. Bongkar Manifest (Style 3): schema & config kustom yang harus dipakai builder
-    let manifestSchema: any = undefined;
-    let hasManifestSchema = false;
-    let manifestConfig: any = undefined;
-    let cssPath: string | undefined;
-    if (result && typeof result === "object" && !(result instanceof HTMLElement) && !(result instanceof Promise) && !(typeof (result as any).create === "function")) {
-      const manifest = result as iSimpleWayManifest;
-      // Perlakukan sebagai Manifest hanya bila punya penanda path/script (hindari false-positive)
-      if (manifest.path || manifest.script) {
-        if (manifest.schema !== undefined) {
-          manifestSchema = manifest.schema;
-          hasManifestSchema = true;
-        }
-        if (manifest.config) manifestConfig = manifest.config;
-
-        cssPath = manifest.stylesheet;
-        if (!cssPath && manifest.path) {
-          cssPath = manifest.path.replace(/\.(ts|tsx|js|jsx)$/, '.css');
-        }
-      }
-    }
-
-    // 3. Content payload: hormati schema Manifest; bila tak ada, ekstrak data.content
+    // 2. Content payload: the manifest wins; otherwise the node content is used.
     const activeThemeConfig = this._dynamicConfigs.get(name) || {};
-    let contentPayload = hasManifestSchema ? manifestSchema : data;
-    if (!hasManifestSchema && data && typeof data === "object" && !Array.isArray(data) && data.content !== undefined) {
-      contentPayload = data.content;
-    }
+    const nodeRecord = isPlainRecord(data) ? data : null;
+    const contentPayload = manifest.schema !== undefined
+      ? manifest.schema
+      : (nodeRecord && nodeRecord.content !== undefined ? nodeRecord.content : data);
 
     // 4. Merge config — PRIORITAS = tema < manifest (default registrasi) < userConfig (instance/node).
     //    Instance (node.config) menang atas default registrasi; tema jadi lapisan terbawah.
     //    `selectors` digabung secara DEEP sehingga override parsial (mis. sidebar hanya mengirim
     //    `{ "@menu": { id } }`) tidak menimpa seluruh selectors default milik builder.
-    const userConfig = (data && typeof data === "object" && !Array.isArray(data)) ? (data.config || {}) : {};
+    const userConfig = nodeRecord ? (nodeRecord.config || {}) : {};
 
     // Lapisan dasar: tema + manifest default
     let baseConfig: any = { ...activeThemeConfig };
@@ -369,8 +353,8 @@ export class ComponentRegistry {
     if (Object.keys(mergedSelectors).length) finalMergedConfig.selectors = mergedSelectors;
     else delete finalMergedConfig.selectors;
 
-    if (data && typeof data === "object" && !Array.isArray(data) && data.config) {
-      data.config = finalMergedConfig;
+    if (nodeRecord && nodeRecord.config) {
+      nodeRecord.config = finalMergedConfig;
     }
 
     // 5. 🧊 GAYA MUNDUR CERDAS (MANIFEST CSS): muat stylesheet Manifest sambil
@@ -423,40 +407,10 @@ export class ComponentRegistry {
       }
     }
 
-    if (result && typeof result === "object" && !(result instanceof Promise)) {
-      if (result instanceof HTMLElement) return result;
-      if (typeof (result as any).create === "function") {
-        const instance = result as any;
-        if (!instance.config) instance.config = finalMergedConfig;
-        // 🧊 Fase jalur instansi dari manifest: protokol tahan-rilis yang sama.
-        instance.isLoaded = false;
-        const builtInstanceElement = instance.create(contentPayload, finalMergedConfig);
-        if (!builtInstanceElement) {
-          throw new Error(`[ComponentRegistry] Manifest builder "${String(name)}" created a null element.`);
-        }
-        this._launchPostLoadInstance(instance, stylePending, builtInstanceElement);
-        return builtInstanceElement;
-      }
-    }
-
-    // JALUR EMERGENSI: Jika kelas sudah ter-load dari preloadComponents sebelumnya
-    const PreloadedBuilderClass = this._resolvedCache.get(name as string);
-    if (PreloadedBuilderClass) {
-      if (typeof PreloadedBuilderClass.create === "function") {
-        const actualElement = PreloadedBuilderClass.create(contentPayload, finalMergedConfig);
-        if (!actualElement) {
-          throw new Error(`[ComponentRegistry] Preloaded builder "${String(name)}" created a null element.`);
-        }
-        if (PreloadedBuilderClass.isLoaded) {
-          actualElement?.style?.removeProperty("--is-loading");
-          actualElement?.removeAttribute?.("data-hydrating");
-          actualElement?.removeAttribute?.("data-loaded");
-        }
-        return actualElement;
-      }
-    }
-
-    throw new Error(`[ComponentRegistry] Builder "${String(name)}" could not produce a DOM element. Inspect the component factory, prepare(), or config selectors.`);
+    throw new Error(
+      `[ComponentRegistry] Builder "${String(name)}" could not produce a DOM element. ` +
+      `Its module was not preloaded, or the class is not a Builder.`,
+    );
   }
 
   private injectStyle(sheet: CSSStyleSheet): void {

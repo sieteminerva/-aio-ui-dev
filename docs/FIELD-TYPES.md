@@ -47,17 +47,17 @@ only place the original header text survives.
 
 ### Note keys
 
-| Key | Type | Status | Meaning |
-| --- | --- | --- | --- |
-| `title` | string | observed | display label; written by `DataService` on first read |
-| `type` | field type | observed | authoritative form type; defaults to `text` |
-| `placeholder` | string | observed | input placeholder |
-| `required` | boolean | observed | value must be filled |
-| `range` | string | observed | named range whose values become `config.options` |
-| `config.skipped` | boolean | observed | hidden from forms; the value stays in `data` |
-| `config.options` | string[] | observed | resolved option list for `select` |
-| `config.sheet`, `config.cell` | storage | observed | address of the column; GAS-only |
-| `maxlength` | number | observed | maximum character length |
+| Key                           | Type       | Status   | Meaning                                               |
+| ----------------------------- | ---------- | -------- | ----------------------------------------------------- |
+| `title`                       | string     | observed | display label; written by `DataService` on first read |
+| `type`                        | field type | observed | authoritative form type; defaults to `text`           |
+| `placeholder`                 | string     | observed | input placeholder                                     |
+| `required`                    | boolean    | observed | value must be filled                                  |
+| `range`                       | string     | observed | named range whose values become `config.options`      |
+| `config.skipped`              | boolean    | observed | hidden from forms; the value stays in `data`          |
+| `config.options`              | string[]   | observed | resolved option list for `select`                     |
+| `config.sheet`, `config.cell` | storage    | observed | address of the column; GAS-only                       |
+| `maxlength`                   | number     | observed | maximum character length                              |
 
 `config.skipped` is the current flag. If a `hidden` / `system` distinction is added later it
 must live in `config` too, so the descriptor keeps one shape.
@@ -77,7 +77,7 @@ the current code and must not be reintroduced.
 
 Only used when a note is absent, i.e. before `DataService` has written one.
 
-| Sheet validation | Field type | Notes |
+| Sheet validation                                            | Field type               | Notes                                       |
 | ----------------------------------------------------------- | ------------------------ | ------------------------------------------- |
 | `dropdown`                                                  | `select`                 | options from `note.options` or `note.range` |
 | `number_between`, `number_greater_than`, `number_less_than` | `number`                 | carry `min`/`max` through                   |

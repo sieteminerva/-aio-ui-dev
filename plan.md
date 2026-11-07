@@ -248,8 +248,9 @@ Delivered:
 
 ## Phase 2 — ComponentRegistry
 
-- [ ] Reduce `RegisterFn` to a single manifest signature
-- [ ] Remove `LoadFn`, `dummyLoadFn` and the unused branching in `build()`
+- [x] Reduce `RegisterFn` to a single manifest signature — `iComponentManifest`
+- [x] Remove `LoadFn`, `dummyLoadFn` and the unused branching in `build()`
+  - `main` chunk 71.03 kB → 69.94 kB; all five routes byte-identical node counts
 - [ ] Add `modules` to the component manifest and resolve it during preload
 - [ ] Make the preload graph recursive
 - [ ] Namespace `_resolvedCache` keys per module
@@ -352,3 +353,5 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-08 | Phase 1 done: `@aio-ui/app` created with contract-only interfaces (`types.ts`, `ports.ts`) and `docs/APPSHELL.md`. No implementation yet. |
 
 | 2026-11-08 | Contracts written: `core/types/api.ts` (`iApiResponse`, `iFieldDescriptor`), app `iPageBlock`/`iPageDocument`, `docs/API.md` from a live response. |
+
+| 2026-11-08 | Phase 2 started: single `iComponentManifest` (`modules`, `iComponentModuleRef`), `LoadFn`/polymorphism removed, dead branches in `build()` deleted. `main` 71.03 → 69.94 kB, all routes identical. |

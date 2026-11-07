@@ -12,9 +12,12 @@ GET <exec-url>?sheetName=<sheet>&limit=<n>&page=<n>&lang=<code>&category=<value>
 {
   "success": true,
   "message": "Data retrieved successfully.",
-  "data": [ { "timestamp": "2026-05-30T16:28:56.000Z", "segment": "portfolio", "...": "..." } ],
+  "data": [{ "timestamp": "2026-05-30T16:28:56.000Z", "segment": "portfolio", "...": "..." }],
   "meta": {
-    "totalItems": 14, "itemsPerPage": 10, "currentPage": 1, "totalPages": 2,
+    "totalItems": 14,
+    "itemsPerPage": 10,
+    "currentPage": 1,
+    "totalPages": 2,
     "links": { "self": "?limit=10&order=asc&page=1", "next": "?limit=10&order=asc&page=2", "prev": null }
   }
 }
@@ -58,12 +61,12 @@ Observed properties of the schema:
 The server splits on non-alphanumerics, lowercases the first token and capitalises the
 rest. A single PascalCase token is lowercased whole:
 
-| Header | Record key |
-| --- | --- |
+| Header          | Record key     |
+| --------------- | -------------- |
 | `Email Address` | `emailAddress` |
-| `ImageUrl` | `imageurl` |
-| `UUID` | `uuid` |
-| `timestamp` | `timestamp` |
+| `ImageUrl`      | `imageurl`     |
+| `UUID`          | `uuid`         |
+| `timestamp`     | `timestamp`    |
 
 So `ImageUrl` and `Image URL` produce different keys. Writing headers with spaces
 (`Image Url`) yields the intended `imageUrl`. The frontend must reuse this exact rule
