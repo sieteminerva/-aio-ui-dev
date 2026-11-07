@@ -6,8 +6,8 @@ import { multistepFormAdapter } from "./Handlers/Multistep";
 import { validationFormAdapter } from "./Handlers/Validation";
 import { idAddressFormAdapter } from "./IdAddress/IdAddress.FormAdapter";
 import { inputFormAdapter } from "./Input.FormAdapter";
-import { messageFormAdapter } from "../Message/Message.FormAdapter";
-import { tableFormAdapter } from "../Table/Table.FormAdapter";
+import { messageFormAdapter } from "@aio-ui/components/message/Message.FormAdapter";
+import { tableFormAdapter } from "@aio-ui/components/table/Table.FormAdapter";
 
 /** Erased definition type for the preset arrays, where module results differ per id. */
 export type FormModuleDefinition = iModuleDefinition<iFormModuleContext, any>;

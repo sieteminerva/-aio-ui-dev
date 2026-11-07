@@ -36,9 +36,9 @@ export default defineConfig({
               // Beri nama chunk-nya secara dinamis / statis
               name(id) {
                 // Pastikan file berasal dari folder komponen Anda
-                if (id.includes('/Components/')) {
+                if (id.includes('/components/')) {
                   // Ambil jalur setelah nama folder komponen
-                  const parts = id.split('Components/');
+                  const parts = id.split('components/');
                   if (parts[1]) {
                     // Ambil nama sub-folder pertamanya (misal: 'Form', 'Tab', 'Card')
                     const folderName = parts[1].split('/')[0];
@@ -48,7 +48,7 @@ export default defineConfig({
                 }
               },
               // Tangkap semua file (termasuk .ts, .tsx, .css, dll.) yang berada di dalam folder Components Anda
-              test: /src\/lib\/Components\//,
+              test: /packages\/components\//,
             },
             {
               // SINKRONISASI VENDOR (Opsional: satukan library pihak ketiga jika ada)

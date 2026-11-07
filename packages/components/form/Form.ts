@@ -1,6 +1,6 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
-import type { iMessageContent } from "../Message/Message";
+import type { iMessageContent } from "@aio-ui/components/message/Message";
 import type { FormCascade, FormCascadeHost, iCascadeEventDetail } from "./Handlers/Cascade";
 import type { FormMultistepHandler, FormMultistepHost } from "./Handlers/Multistep";
 import type { FormValidationHandler } from "./Handlers/Validation";

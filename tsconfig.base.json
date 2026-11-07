@@ -31,7 +31,8 @@
       "@aio-ui/base": ["./packages/base/src/index.ts"],
       "@aio-ui/base/*": ["./packages/base/src/*"],
       "@aio-ui/utilities/*": ["./packages/utilities/src/*"],
-      "@aio-ui/modules/*": ["./packages/modules/src/*"]
+      "@aio-ui/modules/*": ["./packages/modules/src/*"],
+      "@aio-ui/components/*": ["./packages/components/*"]
     }
   }
 }

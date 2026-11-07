@@ -1,7 +1,7 @@
 import type { iModuleDefinition } from "@aio-ui/modules/ModuleRegistry";
-import type { iFormModuleContext, iFormTableTarget } from "../Form/FormModuleTypes";
-import { FORM_MODULE_IDS } from "../Form/FormModuleTypes";
-import { InputBuilder } from "../Form/Input";
+import type { iFormModuleContext, iFormTableTarget } from "@aio-ui/components/form/FormModuleTypes";
+import { FORM_MODULE_IDS } from "@aio-ui/components/form/FormModuleTypes";
+import { InputBuilder } from "@aio-ui/components/form/Input";
 import { TableBuilder } from "./Table";
 
 /**

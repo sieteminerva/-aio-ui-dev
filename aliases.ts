@@ -13,4 +13,5 @@ export const workspaceAliases: Record<string, string> = {
   "@aio-ui/base": fileURLToPath(new URL("./packages/base/src", import.meta.url)),
   "@aio-ui/utilities": fileURLToPath(new URL("./packages/utilities/src", import.meta.url)),
   "@aio-ui/modules": fileURLToPath(new URL("./packages/modules/src", import.meta.url)),
+  "@aio-ui/components": fileURLToPath(new URL("./packages/components", import.meta.url)),
 };

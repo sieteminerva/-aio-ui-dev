@@ -40,7 +40,8 @@ function normalizeVitePath(pathStr: string): string {
   let clean = pathStr.trim().replace(/\\/g, "/");
   if (clean.startsWith("./")) clean = clean.slice(2);
   if (clean.startsWith("/")) clean = clean.slice(1);
-  if (!clean.startsWith("src/")) clean = `src/${clean}`;
+  // Paths are project-root relative. No `src/` assumption: the host decides
+  // where its components live and supplies the matching glob keys.
   return `/${clean}`;
 }
 

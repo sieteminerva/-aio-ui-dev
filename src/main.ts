@@ -106,13 +106,13 @@ async function start(container: HTMLElement) {
   components = new ComponentRegistry({
     // Asset maps belong to the host: a glob pattern is resolved against the
     // application that declares it, never against the framework package.
-    modules: import.meta.glob("/src/lib/Components/**/*.{ts,tsx,js,jsx}", { eager: false }),
-    styles: import.meta.glob("/src/lib/Components/**/*.css", { query: "?inline", import: "default" }),
+    modules: import.meta.glob("/packages/components/**/*.{ts,tsx,js,jsx}", { eager: false }),
+    styles: import.meta.glob("/packages/components/**/*.css", { query: "?inline", import: "default" }),
   })
     .register("form", (data: any) => {
       return {
-        path: "lib/Components/Form/Form.ts",
-        stylesheet: "lib/Components/Form/Form.css", // alternative style definition also didn't loaded
+        path: "packages/components/form/Form.ts",
+        stylesheet: "packages/components/form/Form.css", // alternative style definition also didn't loaded
         config: Object.assign({}, data?.config || {}, { emit: (event: any, payload: any) => emitter.emit(event, payload as any) }),
         schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
       };
@@ -120,8 +120,8 @@ async function start(container: HTMLElement) {
 
     .register("table", (data: any) => {
       return {
-        path: "lib/Components/Table/Table.ts",
-        stylesheet: "lib/Components/Table/Table.css", // alternative style definition also didn't loaded
+        path: "packages/components/table/Table.ts",
+        stylesheet: "packages/components/table/Table.css", // alternative style definition also didn't loaded
         config: data?.config,
         schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
       };
@@ -129,8 +129,8 @@ async function start(container: HTMLElement) {
 
     .register("masonry", (data: any) => {
       return {
-        path: "lib/Components/Masonry/Masonry.ts",
-        stylesheet: "lib/Components/Masonry/Masonry.css", // alternative style definition also didn't loaded
+        path: "packages/components/masonry/Masonry.ts",
+        stylesheet: "packages/components/masonry/Masonry.css", // alternative style definition also didn't loaded
         config: data?.config,
         schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
       };
@@ -138,8 +138,8 @@ async function start(container: HTMLElement) {
 
     .register("article", (data: any) => {
       return {
-        path: "lib/Components/Article/Article.ts",
-        stylesheet: "lib/Components/Article/Article.css", // alternative style definition also didn't loaded
+        path: "packages/components/article/Article.ts",
+        stylesheet: "packages/components/article/Article.css", // alternative style definition also didn't loaded
         config: data?.config,
         schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
       };

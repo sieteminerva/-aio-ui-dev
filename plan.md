@@ -174,12 +174,26 @@ Each component is its own gate: the route that uses it must render identically.
 Must be done here: rewrite the Vite `codeSplitting` rule, which currently matches
 `/src/lib/Components/` and therefore no longer covers `Base` or any package.
 
-- [ ] `message`
-- [ ] `rating`
-- [ ] `masonry`
-- [ ] `article`
-- [ ] `table`
-- [ ] `form`
+- [x] `message`
+- [x] `rating`
+- [x] `masonry`
+- [x] `article`
+- [x] `table`
+- [x] `form`
+
+All 17 component folders were moved in one pass into `packages/components/<lowercase>/` (flat layout,
+no `src/`), so imports read `@aio-ui/components/form/Form`.
+
+Supporting changes made in this step:
+
+- Alias `@aio-ui/components` → `packages/components` (Vite + `tsconfig.base.json`).
+- `normalizeVitePath` no longer forces a `src/` prefix: manifest `path` values are now
+  project-root relative, which is what the host glob map produces.
+- Host globs and the four manifests in `main.ts` point at `packages/components/**`.
+- Vite `codeSplitting` rule retargeted from `/src/lib/Components/` to `packages/components/`;
+  chunk names still resolve to `component-<name>`.
+- `FormRegistry.ts` moved unchanged, on purpose: it is the reference case for how a component
+  with installable sub-modules should eventually be structured.
 
 ### 0.9 Move the application
 
@@ -287,6 +301,7 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now. | closed     |
 | Q3  | Should `Menu` be remapped now or dropped from the port list until the shell exists?                                    | Phase 5    |
 | Q4  | `docs/` target folder for technical documentation (currently `.archives/docs`)                                         | Phase 0.10 |
+| Q5  | Component packages have no `package.json` yet. Naming must be decided before `npm install`: `@aio-ui/component-form` (one canonical import path `@aio-ui/components/form/Form`) or `@aio-ui/form` (install name = import name)? | Phase 0.9  |
 
 ## 8. Change log
 
@@ -297,4 +312,5 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-07 | Step 0.2 done: `ComponentRegistry` now receives `{ modules, styles }` instead of owning `import.meta.glob`. All five routes verified.                                                  |
 | 2026-11-07 | Steps 0.3–0.5 done: workspace skeleton, `packages/styles`, `packages/utilities`, and `interface` moved to `packages/core`. Build output byte-identical.                                |
 | 2026-11-07 | Step 0.6 done: `packages/core` (`DOMRenderer`, `ComponentRegistry`, `Registry`, `BuilderPort`) and `packages/base` (`Base`, `BaseAdapters`). Shared `aliases.ts`. All routes verified. |
-| 2026-11-07 | Step 0.7 done: `packages/modules` (`HashRouter`, `EventEmitter`, `HttpService`, `ModuleRegistry`, `ModuleLoader`, `Animations`). `src/lib` now contains only `Components/`. |
+| 2026-11-07 | Step 0.7 done: `packages/modules` (`HashRouter`, `EventEmitter`, `HttpService`, `ModuleRegistry`, `ModuleLoader`, `Animations`). `src/lib` now contains only `Components/`.            |
+| 2026-11-07 | Step 0.8 done: all 17 components in `packages/components/<name>/`. Globs, manifests, `normalizeVitePath` and the Vite chunk rule retargeted. `src/lib` removed. All routes verified; lazy CSS now loads from `packages/components/**`. |

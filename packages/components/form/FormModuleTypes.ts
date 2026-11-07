@@ -1,4 +1,4 @@
-import type { iMessageContent } from "../Message/Message";
+import type { iMessageContent } from "@aio-ui/components/message/Message";
 import type { iFormConfig } from "./Form";
 import type { FormCascadeHost } from "./Handlers/Cascade";
 import type { FormMultistepHost } from "./Handlers/Multistep";
