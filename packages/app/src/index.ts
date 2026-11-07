@@ -4,6 +4,8 @@ export type {
   iAppShellConfig,
   iAppShellOptions,
   iAppShellSource,
+  iPageBlock,
+  iPageDocument,
   iPageController,
   iPagePrepareContext,
 } from "./types";

@@ -9,8 +9,38 @@
  * here; anything else belongs to a package it receives through `iAppShellDeps`.
  */
 
-import type { iBasicNode, iNodeContent } from "@aio-ui/core/node";
+import type { iBasicNode } from "@aio-ui/core/node";
 import type { iAppShellDeps } from "./ports";
+
+/**
+ * One piece of a page.
+ *
+ * A block is either static (its `props` are the content) or bound to a table
+ * (`source` names a sheet, and the renderer receives the fetched records).
+ */
+export interface iPageBlock {
+  id?: string;
+  /** Component name, resolved through the component registry. */
+  type: string;
+  /** Static content for this block. Ignored when `source` is set. */
+  props?: unknown;
+  /** Sheet name to fetch records from. Records are passed as the block payload. */
+  source?: string;
+  /** Query overrides forwarded to the table endpoint. */
+  query?: Record<string, string | number>;
+  children?: iPageBlock[];
+  className?: string;
+  attrs?: Record<string, string>;
+}
+
+/** One route of the application, as authored by the preset or the editor. */
+export interface iPageDocument {
+  route: string;
+  title?: string;
+  theme?: string;
+  blocks: iPageBlock[];
+  meta?: Record<string, unknown>;
+}
 
 /**
  * Source of truth for the application content.
@@ -19,8 +49,8 @@ import type { iAppShellDeps } from "./ports";
  * project it is produced by transforming the CMS response into node trees.
  */
 export interface iAppShellSource {
-  /** Route name to page tree. */
-  pages: Record<string, iNodeContent>;
+  /** Route name to page document. */
+  pages: Record<string, iPageDocument>;
   menu?: iBasicNode | HTMLElement | null;
   footer?: iBasicNode | HTMLElement | null;
 }
@@ -46,7 +76,7 @@ export interface iAppShellConfig extends iAppShellOptions {
 /** Context passed to a page controller before its route is rendered. */
 export interface iPagePrepareContext {
   route: string;
-  page: iNodeContent;
+  page: iPageDocument;
   menu: iBasicNode | HTMLElement | null;
   footer: iBasicNode | HTMLElement | null;
   theme: string | null;
@@ -65,7 +95,7 @@ export interface iPageController {
   readonly route: string;
 
   /** Runs once per route render, before preload and render. May return a page tree to use instead. */
-  onPrepare?(context: iPagePrepareContext): iNodeContent | void | Promise<iNodeContent | void>;
+  onPrepare?(context: iPagePrepareContext): iPageDocument | void | Promise<iPageDocument | void>;
 
   /** Runs after the new page tree is attached to the DOM. */
   onReady?(elements: Map<string, HTMLElement>, shell: HTMLElement): void;

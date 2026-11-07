@@ -12,6 +12,7 @@
  * - `@aio-ui/core/renderer` — renderer contracts
  */
 export * from "./types/renderer";
+export * from "./types/api";
 export * from "./types/content";
 export * from "./types/node";
 export * from "./types/registry";

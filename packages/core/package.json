@@ -12,6 +12,7 @@
     "./content": "./src/types/content.ts",
     "./page": "./src/types/page.ts",
     "./renderer": "./src/types/renderer.ts",
+    "./api": "./src/types/api.ts",
     "./ComponentRegistry": "./src/ComponentRegistry.ts",
     "./DOMRenderer": "./src/DOMRenderer.ts",
     "./BuilderPort": "./src/BuilderPort.ts",
