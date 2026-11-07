@@ -27,57 +27,61 @@ Facts consumers can rely on:
 - Default ordering is the identifier column (uuid) ascending, not by timestamp.
 - A `file` column holds one or more Drive URLs joined by `", "`.
 
-## Deviations from the intended contract
+## Schema (`fields`)
 
-### 1. `fields` is missing
+Confirmed present on a live deployment: one descriptor per column, in sheet order.
 
-`GvizService.paginate()` returns
-
-```js
-fields: this.headers[targetSheetName]
+```json
+{ "title": "ImageUrl", "type": "file",
+  "config": { "sheet": 2128641545, "cell": "I1" }, "hasTranslation": true }
+{ "title": "Segment", "type": "select", "required": true, "range": "SegmentRange",
+  "placeholder": "Select an option",
+  "config": { "sheet": 2128641545, "cell": "B1", "options": ["intro", "portfolio"] } }
+{ "title": "timestamp", "type": "text",
+  "config": { "skipped": true, "sheet": 2128641545, "cell": "A1" } }
 ```
 
-but `this.headers` is already **the field array for the requested sheet**
-(`options.headersSchema`), not a map keyed by sheet name. Indexing an array with a
-string yields `undefined`, and `JSON.stringify` drops the key, so the schema never
-reaches the client.
+Observed properties of the schema:
 
-Fix: `fields: this.headers` (as `paginateManualLoad()` already does at its own return).
+- `title` keeps the original header text; record keys are a separate normalisation.
+- `required` is sometimes `false`, sometimes absent — treat both as "not required".
+- `range` is echoed from the note and also resolved into `config.options`.
+- `config.skipped` marks a column hidden from the generated form. It is **not** a privacy
+  flag: skipped columns are still returned in `data` by design.
+- `config.sheet` / `config.cell` are storage addresses and should not be shipped to a
+  public browser payload.
 
-Consequence for the frontend: `iApiResponse.fields` is declared optional, and the shell
-must work without it until the deployment is fixed.
+## Conventions to know
 
-### 2. Header casing collapses inside a word
+### Record keys are not reversible from `title`
 
-`"Email Address"` → `emailAddress`, but `"ImageUrl"` → `imageurl`.
+The server splits on non-alphanumerics, lowercases the first token and capitalises the
+rest. A single PascalCase token is lowercased whole:
 
-Normalisation only splits on separators, so `ImageUrl` is treated as one lowercase token.
-Either write headers with separators (`Image Url`) or make the converter split on case
-boundaries. Until then, record keys are **not** predictable from a header written in
-PascalCase, and `fields[].title` cannot be mapped to a key without replicating the exact
-same algorithm.
+| Header | Record key |
+| --- | --- |
+| `Email Address` | `emailAddress` |
+| `ImageUrl` | `imageurl` |
+| `UUID` | `uuid` |
+| `timestamp` | `timestamp` |
 
-### 3. System columns still reach the client
+So `ImageUrl` and `Image URL` produce different keys. Writing headers with spaces
+(`Image Url`) yields the intended `imageUrl`. The frontend must reuse this exact rule
+rather than guess from `title`.
 
-`skipHeaders` (`timestamp`, `uuid`, `email address`) removes columns from `fields` only.
-`data` is produced by `select("*")`, so `emailAddress` is returned in full.
+### Empty cells are omitted
 
-For a public site that is a privacy leak. Recommendation: the public response should drop
-columns whose note has `config.skipped` or a future `system` flag, while keeping `uuid`
-and `timestamp` (needed for keys and ordering).
+Records do not contain a key whose cell is empty, so a record is not a dense row.
+Consumers must treat every key as optional.
 
-### 4. Errors return HTML, not JSON
+### `file` columns hold a URL list
 
-An exception thrown before the response builder is used returns a Google error page.
-Clients then fail with `Unexpected token '<'` and render nothing, with no visible cause.
-Wrap `doGet` / `doPost` in one `try/catch` that always responds through
-`APIService.createResponse`.
+One or more Drive URLs joined by `", "`. Split before use; keep the order.
 
-## Consumer rules
+## Server-side todos (out of scope until we work on GAS)
 
-1. Never assume `fields` exists.
-2. Never assume a header maps to a key by a rule other than the server's converter.
-3. Split `file` values on `", "`; treat the result as an ordered list.
-4. Treat `meta.links` as relative.
-5. A missing block source must degrade to an empty render with a reported warning, never a
-   thrown exception.
+1. Errors thrown before the response builder returns an HTML page, not JSON.
+   Wrap `doGet` / `doPost` so clients never receive HTML.
+2. Decide whether `config.sheet` / `config.cell` should be stripped from public responses.
+3. Default ordering is the identifier column ascending, not `timestamp`; confirm that is
+   the intended reading order for generated pages.

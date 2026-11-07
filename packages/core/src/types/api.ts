@@ -22,6 +22,16 @@ export type iFieldType =
 export type iRecord = Record<string, unknown>;
 
 /**
+ * Header text to record key, as implemented by the server.
+ *
+ * Tokens are split on non-alphanumerics; the first token is lowercased and each
+ * following token is capitalised. A single PascalCase token is lowercased whole,
+ * so `ImageUrl` becomes `imageurl` while `Email Address` becomes `emailAddress`.
+ * Consumers must reuse this rule verbatim; it is not reversible from `title`.
+ */
+export type iRecordKey = string;
+
+/**
  * Column descriptor. Mirrors the JSON stored in the header cell note and returned
  * by `DataService.getHeaderAttributes()`.
  */
@@ -65,14 +75,14 @@ export interface iApiMeta {
 /**
  * Envelope returned by `GET`.
  *
- * `fields` is declared optional on purpose: the deployed build omits it while
- * `GvizService.paginate()` indexes its header array by sheet name, which yields
- * `undefined`. Consumers must tolerate its absence rather than assume a schema.
+ * Confirmed against a live deployment: `fields` carries one descriptor per column,
+ * in sheet order. Records are NOT one-to-one with fields: empty cells are omitted,
+ * and skipped columns still appear in `data`.
  */
 export interface iApiResponse<T extends iRecord = iRecord> {
   success: boolean;
   message: string;
   data: T[];
-  fields?: iFieldDescriptor[];
+  fields: iFieldDescriptor[];
   meta: iApiMeta;
 }
