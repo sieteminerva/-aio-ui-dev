@@ -150,27 +150,32 @@ export interface iAppModuleContext {
 }
 
 /**
- * A module: a class whose static members describe one port.
+ * A module **class** — the class itself is the token.
  *
- * One convention, no identifier argument, no factory object:
+ * Two members are the whole convention:
  *
  * ```ts
- * export class RouterModule {
+ * export class HashRouter {
  *   static readonly slot = "router" as const;
- *   static create(config: iRouterModuleConfig, context: iAppModuleContext): iRouterPort {
- *     return new config.Router(context.defaultRoute, context.theme, context.routes, context.onRouteChanged);
- *   }
+ *   constructor(config?: iHashRouterConfig, context?: iHashRouterContext) { … }
  * }
- * app.registerModule(RouterModule, { Router: HashRouter });
+ *
+ * app.registerModule(HashRouter);
  * ```
+ *
+ * - `slot` says which port the class becomes, so a class registered for the wrong
+ *   role is rejected by the type system instead of failing at runtime;
+ * - the constructor receives `(config, context)`. `config` is whatever the caller
+ *   passed as the second argument of `registerModule`; `context` is filled by the
+ *   app. A class that needs neither simply ignores the parameters.
+ *
+ * No wrapper class, no `defineModule()` alias, no factory object.
  */
-export interface iAppModuleClass<K extends iAppSlot = iAppSlot, C = unknown> {
-  /** Slot this module fills. */
+export interface iAppModuleClass<K extends iAppSlot = iAppSlot> {
+  /** Slot this class fills. */
   readonly slot: K;
-  /** Builds the port. Called once, during `mount()`. */
-  create(config: C, context: iAppModuleContext): iAppSlots[K];
-  /** Releases the port created by `create()`. Called once, during `destroy()`. */
-  destroy?(port: iAppSlots[K]): void;
+  /** Builds the port. Called once, during `mount()`, with the registered config. */
+  new (...args: any[]): iAppSlots[K];
 }
 
 /** Context passed to a page controller before its route is rendered. */
@@ -217,10 +222,19 @@ export interface iApp {
   /**
    * Registers the module that fills a slot. Must be called before `mount()`.
    *
-   * @param module - Module class; its static `slot` decides which port it becomes.
+   * Two shapes, one rule — the class (or instance) declares `slot`:
+   *
+   * ```ts
+   * app.registerModule(HashRouter);                    // class, no config
+   * app.registerModule(AppStorage, { driver });        // class + config
+   * app.registerModule(components);                    // instance you already assembled
+   * ```
+   *
+   * @param module - Module class, or an already-built port instance.
    * @param config - Configuration owned by that module, never by `iAppConfig`.
    */
-  registerModule<K extends iAppSlot, C>(module: iAppModuleClass<K, C>, config: C): iApp;
+  registerModule<M extends iAppModuleClass>(module: M, config?: ConstructorParameters<M>[0]): iApp;
+  registerModule<K extends iAppSlot>(instance: iAppSlots[K]): iApp;
 
   /** Resolves the container, creates the registered modules and renders the current route. */
   mount(): Promise<void>;

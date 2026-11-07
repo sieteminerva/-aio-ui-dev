@@ -19,6 +19,9 @@ export class DOMRenderer<
   C extends Partial<any> = {},
   S extends string = DefaultSelectors
 > {
+  /** Slot this class fills when registered as an app module. */
+  static readonly slot = "renderer" as const;
+
   config!: any;
   #cleanupMap = new Map<HTMLElement, (element: HTMLElement) => void>();
   private records: iNodeRecordItem[] = [];

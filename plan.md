@@ -250,8 +250,8 @@ Delivered:
   `iRouterFactory`, `iAnimationPort`, `iEventPort`, `iStoragePort`
 - `packages/app/src/AioApp.ts` — the entry class plus `normalizeRoute`, `isPageDocument`,
   `blockToNode`, `pageToNode`
-- `packages/app/src/modules.ts` — `ComponentsModule`, `RouterModule`, `StorageModule`,
-  `AnimationsModule`, `EventsModule`, `RendererModule`
+- `packages/app/src/modules.ts` — `AppStorage` (the `storage` port; every other slot is
+  filled by a class the framework already ships)
 - `docs/APP.md` — mount-point rule, module convention, two page shapes, preload
   derivation, events, debug channel, registry requirements, open questions
 
@@ -364,7 +364,7 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 
 | 2026-11-08 | Entry implemented as `AioApp` (`packages/app/src/AioApp.ts`): container, router, sequence guard, preload, render, root swap, theme via `iStoragePort`, fragment scroll, controller lifecycle, events, debug channel. Contracts renamed `iAppShell*` → `iApp*`. Page content may be a node tree or a block document (`iPageContent`). Pages were re-rooted from `#app` to `.page` so the container stays a stable mount point. Example entry `main.ts` shrank to registration + `mount()`. |
 
-| 2026-11-08 | Module convention: `iAppDeps` removed. Every collaborator is now a registered module class (`slot` + `create(config, context)` + optional `destroy`), registered with `registerModule(Module, config)` before `mount()`. `iAppConfig` keeps only general options. Modules are created at `mount()` (storage first, so the persisted theme exists before the router), duplicates warn+replace, teardown runs in reverse order, registering after mount throws. Built-ins in `packages/app/src/modules.ts`: `ComponentsModule`, `RouterModule`, `StorageModule`, `AnimationsModule`, `EventsModule`, `RendererModule`. `iEventPort` widened so a typed `EventEmitter` registers directly. 68 tests, all routes unchanged (123/64/32/116/76). |
+| 2026-11-08 | Module convention: `iAppDeps` removed. Every collaborator is a registered module, and **the real class is the token** (`static readonly slot` + `constructor(config, context)`), so no wrapper classes exist: `registerModule(HashRouter)`, `registerModule(AppStorage, { driver })`, `registerModule(AnimationsService)`, `registerModule(componentRegistryInstance)`. `iAppConfig` keeps only general options; config types come from `ConstructorParameters<M>`. `HashRouter` now accepts `(config, context)`; `ComponentRegistry`, `DOMRenderer`, `AnimationsService`, `EventEmitter` carry `static slot`. Modules are constructed at `mount()` (storage first so the persisted theme exists before the router), duplicates warn+replace, teardown is `port.destroy?.()` in reverse order, registering after mount throws, and a module without a slot throws with a hint. 68 tests, all routes unchanged (123/64/32/116/76). |
 
 | 2026-11-08 | Contracts written: `core/types/api.ts` (`iApiResponse`, `iFieldDescriptor`), app `iPageBlock`/`iPageDocument`, `docs/API.md` from a live response. |
 

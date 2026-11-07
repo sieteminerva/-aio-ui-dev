@@ -44,6 +44,9 @@ export interface AnimationRecord {
  * dynamic mutation discovery, and viewport intersection entry/exit management.
  */
 export class AnimationsService {
+  /** Slot this class fills when registered as an app module. */
+  static readonly slot = "animation" as const;
+
   private globalDelay: number;
   public config: Partial<AnimationServiceConfig>;
 

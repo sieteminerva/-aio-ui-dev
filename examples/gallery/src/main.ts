@@ -1,12 +1,5 @@
 import { ComponentRegistry } from '@aio-ui/core/ComponentRegistry';
-import {
-  AioApp,
-  AnimationsModule,
-  ComponentsModule,
-  EventsModule,
-  RouterModule,
-  StorageModule,
-} from '@aio-ui/app';
+import { AioApp, AppStorage } from '@aio-ui/app';
 import { AnimationsService } from '@aio-ui/animations';
 import { HashRouter } from '@aio-ui/router';
 import { HomepageContent } from './content/home';
@@ -99,19 +92,23 @@ async function start(container: HTMLElement) {
       };
     });
 
-  // Semua modul diregister dulu, baru dipakai. Config tiap modul menempel di
-  // tempat registrasinya, jadi `iAppConfig` tetap general.
+  // Semua modul diregister dulu, baru dipakai. Kelasnya sendiri yang jadi token:
+  // masing-masing mendeklarasikan `static readonly slot`, dan config menempel di
+  // tempat registrasinya — jadi `iAppConfig` tetap general.
   const app = new AioApp({
     container,
     defaultRoute: 'home',
     theme: 'default',
     source: { pages },
   })
-    .registerModule(ComponentsModule, { registry: components })
-    .registerModule(RouterModule, { Router: HashRouter })
-    .registerModule(StorageModule, { driver: themeStorage })
-    .registerModule(AnimationsModule, { Service: AnimationsService })
-    .registerModule(EventsModule, { emitter });
+    // instance yang sudah dirakit (manifest komponen hidup di sini, bukan di app)
+    .registerModule(components)
+    // kelas tanpa config: routes, theme dan onRouteChanged disuntik dari context
+    .registerModule(HashRouter)
+    .registerModule(AppStorage, { driver: themeStorage })
+    .registerModule(AnimationsService)
+    // instance yang sama dipakai manifest form di atas, jadi event-nya nyambung
+    .registerModule(emitter);
 
   await app.mount();
 

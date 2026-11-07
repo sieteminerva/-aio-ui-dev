@@ -42,6 +42,7 @@ import type {
   iAppConfig,
   iAppModuleClass,
   iAppModuleContext,
+  iAppSlots,
   iAppSlot,
   iPageBlock,
   iPageContent,
@@ -143,7 +144,10 @@ export class AioApp implements iApp {
   readonly #pages = new Map<string, iPageContent>();
 
   /** Registered modules, keyed by slot. Insertion order is creation order. */
-  #registrations = new Map<iAppSlot, { module: iAppModuleClass; config: unknown }>();
+  #registrations = new Map<
+    iAppSlot,
+    { module: iAppModuleClass | null; config: unknown; instance: unknown }
+  >();
 
   #controllers = new Map<string, iPageController>();
   #registry: iComponentRegistryPort | null = null;
@@ -197,26 +201,55 @@ export class AioApp implements iApp {
   /**
    * Registers the module that fills a slot.
    *
-   * Registration must happen before `mount()`: nothing is instantiated until then,
-   * so a module cannot be used before it is registered. Registering the same slot
-   * twice replaces the earlier module and says so, because that is almost always a
-   * mistake in a generated project.
+   * Acceptance covers both shapes with one rule: **the module declares its slot**.
    *
-   * @param module - Module class; `module.slot` decides the port it becomes.
+   * ```ts
+   * app.registerModule(HashRouter);                 // class, no config
+   * app.registerModule(AppStorage, { driver });     // class + config
+   * app.registerModule(components);                 // instance you already assembled
+   * ```
+   *
+   * Nothing is instantiated here: a class is constructed during `mount()`, because a
+   * module may need the route list, the restored theme or the change callback, which
+   * do not exist yet. Registering the same slot twice replaces the earlier module and
+   * says so, because that is almost always a mistake in a generated project.
+   *
+   * @param module - Module class, or an already-built port instance.
    * @param config - Configuration owned by that module, not by `iAppConfig`.
    * @returns The app, for a fluent chain.
-   * @throws {Error} When called after `mount()`.
+   * @throws {Error} When called after `mount()`, or when the module declares no slot.
    */
-  public registerModule<K extends iAppSlot, C>(module: iAppModuleClass<K, C>, config: C): this {
+  public registerModule<M extends iAppModuleClass>(
+    module: M,
+    config?: ConstructorParameters<M>[0]
+  ): iApp;
+  public registerModule<K extends iAppSlot>(instance: iAppSlots[K]): iApp;
+  public registerModule(target: unknown, config?: unknown): iApp {
     if (this.#mounted) {
-      throw new Error(`[AioApp] registerModule("${module.slot}") must be called before mount().`);
+      throw new Error("[AioApp] registerModule() must be called before mount().");
     }
 
-    if (this.#registrations.has(module.slot)) {
-      console.warn(`[AioApp] Slot "${module.slot}" already has a module; replacing it.`);
+    const isClass = typeof target === "function";
+    const slot = (isClass ? (target as iAppModuleClass).slot : (target as any)?.constructor?.slot) as
+      | iAppSlot
+      | undefined;
+
+    if (!slot) {
+      throw new Error(
+        "[AioApp] Module declares no slot. Add `static readonly slot = \"<slot>\"` " +
+        "to the class, or pass a class instead of an untagged object."
+      );
     }
 
-    this.#registrations.set(module.slot, { module: module as unknown as iAppModuleClass, config });
+    if (this.#registrations.has(slot)) {
+      console.warn(`[AioApp] Slot "${slot}" already has a module; replacing it.`);
+    }
+
+    this.#registrations.set(slot, {
+      module: isClass ? (target as iAppModuleClass) : null,
+      config,
+      instance: isClass ? null : target,
+    });
     return this;
   }
 
@@ -241,6 +274,12 @@ export class AioApp implements iApp {
     await this.#renderRoute(initial.route, initial.fragment);
   }
 
+  /** Navigates through the router so the URL stays the single source of truth. */
+  public navigate(route: string, fragment: string = ""): void {
+    if (!this.#router) return;
+    this.#router.navigate(route, this.#theme, fragment);
+  }
+
   /**
    * Creates every registered module in two phases.
    *
@@ -260,7 +299,7 @@ export class AioApp implements iApp {
     // Phase 1 — storage, so the theme can be restored before any consumer exists.
     const storage = this.#registrations.get("storage");
     if (storage) {
-      this.#storage = storage.module.create(storage.config, context) as iStoragePort;
+      this.#storage = this.#instantiate("storage", storage, context) as iStoragePort;
       const persisted = this.#storage.get(THEME_STORAGE_KEY);
       if (persisted) {
         this.#theme = persisted;
@@ -271,7 +310,7 @@ export class AioApp implements iApp {
     // Phase 2 — the rest, in registration order.
     for (const [slot, registration] of this.#registrations) {
       if (slot === "storage") continue;
-      const port = registration.module.create(registration.config, context);
+      const port = this.#instantiate(slot, registration, context);
       if (slot === "registry") this.#registry = port as iComponentRegistryPort;
       else if (slot === "router") this.#router = port as iRouterPort;
       else if (slot === "renderer") this.#renderer = port as iRendererPort;
@@ -290,10 +329,24 @@ export class AioApp implements iApp {
     this.#log("modules:created", { slots: [...this.#registrations.keys()] });
   }
 
-  /** Navigates through the router so the URL stays the single source of truth. */
-  public navigate(route: string, fragment: string = ""): void {
-    if (!this.#router) return;
-    this.#router.navigate(route, this.#theme, fragment);
+  /**
+   * Returns the port of one registration.
+   *
+   * An instance registration is used as-is; a class registration is constructed with
+   * `(config, context)` — the single constructor rule of the module convention.
+   */
+  #instantiate(
+    slot: iAppSlot,
+    registration: { module: iAppModuleClass | null; config: unknown; instance: unknown },
+    context: iAppModuleContext
+  ): unknown {
+    if (!registration.module) return registration.instance;
+
+    try {
+      return new registration.module(registration.config, context);
+    } catch (error) {
+      throw new Error(`[AioApp] Failed to create module for slot "${slot}": ${(error as Error).message}`);
+    }
   }
 
   /** Runs the active controller's teardown, releases modules and unmounts the page. */
@@ -301,12 +354,13 @@ export class AioApp implements iApp {
     const active = this.#controllers.get(this.#route);
     this.#runHook(active, "onDestroy");
 
-    // Reverse registration order: a module created last is released first.
-    for (const [slot, registration] of [...this.#registrations].reverse()) {
-      const port = this.#portOf(slot);
-      if (!registration.module.destroy || !port) continue;
+    // Reverse registration order: a module created last is released first. Any port
+    // may expose `destroy()`, so no extra teardown convention is needed.
+    for (const [slot] of [...this.#registrations].reverse()) {
+      const port = this.#portOf(slot) as { destroy?: () => void } | null;
+      if (!port || typeof port.destroy !== "function") continue;
       try {
-        (registration.module.destroy as (value: unknown) => void)(port);
+        port.destroy();
       } catch (error) {
         console.error(`[AioApp] destroy of module "${slot}" failed:`, error);
       }

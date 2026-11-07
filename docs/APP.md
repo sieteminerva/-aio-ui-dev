@@ -10,11 +10,11 @@ const app = new AioApp({
   defaultRoute: "home",
   source: { pages },
 })
-  .registerModule(ComponentsModule, { registry: components })
-  .registerModule(RouterModule, { Router: HashRouter })
-  .registerModule(StorageModule, { driver: localStorage })
-  .registerModule(AnimationsModule, { Service: AnimationsService })
-  .registerModule(EventsModule, { emitter });
+  .registerModule(components)                              // instance you assembled
+  .registerModule(HashRouter)                              // class, no config
+  .registerModule(AppStorage, { driver: localStorage })    // class + config
+  .registerModule(AnimationsService)
+  .registerModule(emitter);
 
 await app.mount();
 ```
@@ -35,7 +35,7 @@ Before it, every mandatory step was hard-coded in `examples/gallery/src/main.ts`
 | Decide what to preload            | `buildersForRoute()`        | `collectComponentNames` + `registry.load` |
 | Preload, render, swap root        | `renderPage()`              | `#renderRoute()`                          |
 | Guard against overlapping renders | `renderSequence`            | `#sequence`                               |
-| Theme persistence                 | `localStorage` in the class | `StorageModule` → `iStoragePort`        |
+| Theme persistence                 | `localStorage` in the class | `AppStorage` → `iStoragePort`            |
 | Fragment deep link                | —                           | `#scrollToFragment()`                     |
 | Run animations after render       | `animation.init()`          | `#afterCommit()`                          |
 | Report failures                   | `catch (console.error)`     | `events.emit("error")`                    |
@@ -47,40 +47,52 @@ and the component names are derived from the tree.
 ## Modules — register first, use second
 
 The app declares **slots**, not collaborators. `iAppSlots` is the complete list:
-`registry`, `router`, `renderer`, `animation`, `events`, `storage`. A module is a class
-whose static members describe one slot:
+`registry`, `router`, `renderer`, `animation`, `events`, `storage`.
+
+**The real class is the token.** No wrapper class, no `defineModule()` alias, no
+`factory` object — the class already knows what it is, because it declares its slot:
 
 ```ts
-export class RouterModule {
+export class HashRouter {
   static readonly slot = "router" as const;
-
-  static create(config: iRouterModuleConfig, context: iAppModuleContext): iRouterPort {
-    return new config.Router(
-      context.defaultRoute,
-      context.theme,
-      context.routes,
-      context.onRouteChanged,
-    );
-  }
-
-  static destroy(router: iRouterPort): void {
-    router.destroy();
-  }
+  constructor(config: iHashRouterConfig = {}, context?: iHashRouterContext) { … }
 }
 ```
 
-That is the whole convention: `slot` + `create(config, context)` + optional `destroy`.
-The class **is** the token — no identifier argument, no `defineModule()` alias, no
-`factory` indirection.
+```ts
+const app = new AioApp({ container, source: { pages } })
+  .registerModule(components)                              // instance you assembled
+  .registerModule(HashRouter)                              // class, no config
+  .registerModule(AppStorage, { driver: localStorage })    // class + config
+  .registerModule(AnimationsService)
+  .registerModule(emitter);
+
+await app.mount();
+```
+
+Two members are the whole convention:
+
+| Member | Meaning |
+| --- | --- |
+| `static readonly slot = "<slot>"` | which port this class becomes |
+| `constructor(config, context)` | `config` is what `registerModule` received; `context` is supplied by the app |
+
+A class with a different constructor shape still works — it just ignores the extra
+argument. `registerModule(instance)` is accepted too: the slot is read from
+`instance.constructor.slot`, which lets a host assemble something the app should not
+build itself (the example passes the `ComponentRegistry` it already filled with
+manifests).
 
 | Rule | Why |
 | --- | --- |
-| `registerModule(Module, config)` — the class decides the slot | registering a storage module for the router slot is rejected by the type system, not discovered at runtime |
-| module config lives at the registration, never in `iAppConfig` | `iAppConfig` stays general (`container`, `source`, `defaultRoute`, `theme`, `debug`) no matter how many modules exist |
-| modules are created in `mount()`, not at registration | a router needs the route list, the restored theme and the change callback, which only exist at mount time |
+| the class decides the slot | registering a storage class for the router slot is rejected by the type system, not discovered at runtime |
+| config is `ConstructorParameters<M>[0]`, so it is typed by the class itself | no duplicated config interface; `AppStorage` infers `iStorageConfig` |
+| config lives at the registration, never in `iAppConfig` | `iAppConfig` stays general (`container`, `source`, `defaultRoute`, `theme`, `debug`) no matter how many modules exist |
+| modules are constructed in `mount()`, not at registration | a router needs the route list, the restored theme and the change callback, which only exist at mount time |
 | registering after `mount()` throws | "register first, use second" is enforced, not documented |
+| a module without a slot throws with a hint | an untagged object would otherwise land nowhere |
 | duplicate slot → warn + replace | a generated project that lists one slot twice must not silently lose behaviour |
-| teardown runs in reverse registration order | a module created last may depend on one created earlier |
+| teardown runs in reverse registration order, calling `port.destroy?.()` | no extra teardown convention; any port that owns resources exposes `destroy()` |
 
 `registry` and `router` are required; `renderer` defaults to `DOMRenderer`, `storage`
 falls back to memory, `animation` and `events` are skipped when absent.
@@ -90,8 +102,17 @@ theme must be restored before the router is constructed with it. Everything afte
 follows registration order.
 
 `iAppModuleContext` is the injection point: `routes`, `defaultRoute`, `theme`, `debug`
-and `onRouteChanged`. It exists so a module class can receive data it cannot know by
-itself without becoming a factory closure.
+and `onRouteChanged`. It is why `registerModule(HashRouter)` needs no config — the three
+arguments a router cannot know by itself arrive through it.
+
+| Slot | Class | Package |
+| --- | --- | --- |
+| `registry` | `ComponentRegistry` | `@aio-ui/core` |
+| `router` | `HashRouter` | `@aio-ui/router` |
+| `renderer` | `DOMRenderer` (default) | `@aio-ui/core` |
+| `animation` | `AnimationsService` | `@aio-ui/animations` |
+| `events` | `EventEmitter` | `@aio-ui/event-emitter` |
+| `storage` | `AppStorage` | `@aio-ui/app` |
 
 ## What `AioApp` owns
 

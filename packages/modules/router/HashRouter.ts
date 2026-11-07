@@ -4,22 +4,48 @@ export interface iRouteState {
   fragment: string;
 }
 
+/** Options a host may define itself when the router is used standalone. */
+export interface iHashRouterConfig {
+  defaultRoute?: string;
+  initialTheme?: string;
+  validRoutes?: string[];
+  onRouteChanged?: (state: iRouteState) => void | Promise<void>;
+}
+
+/**
+ * Runtime data supplied by the host that owns the router.
+ *
+ * Structurally identical to `iAppModuleContext` in `@aio-ui/app`, but declared here
+ * so this package never imports the app.
+ */
+export interface iHashRouterContext extends iHashRouterConfig {
+  theme?: string;
+  routes?: string[];
+}
+
 export class HashRouter {
+  /** Slot this class fills when registered as an app module. */
+  static readonly slot = "router" as const;
+
   private defaultRoute: string;
   private currentThemeId: string;
   public onRouteChanged: (state: iRouteState) => void | Promise<void>;
   private validRoutes: string[] = [];
 
-  constructor(
-    defaultRoute: string,
-    initialTheme: string,
-    validRoutes: string[],
-    onRouteChanged: (state: iRouteState) => void | Promise<void>
-  ) {
+  /**
+   * @param config - Options for standalone use (`{ defaultRoute, initialTheme, validRoutes, onRouteChanged }`).
+   * @param context - Host-supplied runtime data; wins over `config` when both are given.
+   */
+  constructor(config: iHashRouterConfig = {}, context?: iHashRouterContext) {
+    const defaultRoute = context?.defaultRoute ?? config.defaultRoute ?? "home";
+    const initialTheme = context?.theme ?? config.initialTheme ?? "default";
+    const validRoutes = context?.routes ?? config.validRoutes ?? [];
+    const onRouteChanged = context?.onRouteChanged ?? config.onRouteChanged;
+
     this.defaultRoute = this._normalizeRoute(defaultRoute);
     this.currentThemeId = this._normalizeTheme(initialTheme) || "default";
-    this.onRouteChanged = onRouteChanged;
-    this.validRoutes = validRoutes.map(r => r.trim().toLowerCase());
+    this.onRouteChanged = onRouteChanged ?? (() => undefined);
+    this.validRoutes = validRoutes.map((r) => r.trim().toLowerCase());
     // Ikat event listener native browser secara aman
     window.addEventListener("hashchange", this._handleHashChange);
   }

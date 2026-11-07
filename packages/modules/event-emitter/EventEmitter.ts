@@ -3,6 +3,9 @@ import type { iPageEvents } from "./PageEvents";
 type EventCallback<T> = (data: T) => void;
 
 export class EventEmitter {
+  /** Slot this class fills when registered as an app module. */
+  static readonly slot = "events" as const;
+
   private listeners: Record<string, EventCallback<any>[]> = {};
 
   public on<K extends keyof iPageEvents>(event: K, callback: EventCallback<iPageEvents[K]>): void {

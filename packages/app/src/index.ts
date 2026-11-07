@@ -6,24 +6,8 @@
  * `iAppOptions` and `iAppDeps` describe what the entry receives.
  */
 export { AioApp, blockToNode, isPageDocument, normalizeRoute, pageToNode } from "./AioApp";
-export {
-  AnimationsModule,
-  ComponentsModule,
-  EventsModule,
-  RendererModule,
-  RouterModule,
-  StorageModule,
-} from "./modules";
-export type {
-  iAnimationsModuleConfig,
-  iComponentsModuleConfig,
-  iEventsModuleConfig,
-  iRendererModuleConfig,
-  iRouterClass,
-  iRouterModuleConfig,
-  iStorageDriver,
-  iStorageModuleConfig,
-} from "./modules";
+export { AppStorage } from "./modules";
+export type { iStorageConfig, iStorageDriver } from "./modules";
 export type {
   iApp,
   iAppConfig,

@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { StorageModule } from "@aio-ui/app";
+import { AppStorage } from "@aio-ui/app";
 
 /**
- * The built-in modules are plain classes with no DOM dependency, so the parts that
- * carry real logic (storage guarding) can be tested in Node.
+ * The built-in storage port has no DOM dependency, so the parts that carry real
+ * logic (driver guarding) can be tested in Node.
  */
-describe("StorageModule", () => {
+describe("AppStorage", () => {
   it("wraps a driver into the storage port", () => {
     const bag = new Map<string, string>();
     const driver = {
@@ -13,7 +13,7 @@ describe("StorageModule", () => {
       setItem: (key: string, value: string) => void bag.set(key, value),
     };
 
-    const storage = StorageModule.create({ driver });
+    const storage = new AppStorage({ driver });
     storage.set("active_theme", "cyberpunk");
 
     expect(storage.get("active_theme")).toBe("cyberpunk");
@@ -30,14 +30,14 @@ describe("StorageModule", () => {
       }),
     };
 
-    const storage = StorageModule.create({ driver });
+    const storage = new AppStorage({ driver });
 
     expect(() => storage.set("active_theme", "default")).not.toThrow();
     expect(storage.get("active_theme")).toBeNull();
   });
 
   it("falls back to memory when no driver is registered", () => {
-    const storage = StorageModule.create();
+    const storage = new AppStorage();
 
     expect(storage.get("active_theme")).toBeNull();
 
@@ -46,6 +46,6 @@ describe("StorageModule", () => {
   });
 
   it("declares the slot it fills", () => {
-    expect(StorageModule.slot).toBe("storage");
+    expect(AppStorage.slot).toBe("storage");
   });
 });

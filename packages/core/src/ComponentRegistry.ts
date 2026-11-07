@@ -164,6 +164,9 @@ export function collectComponentNames(source: unknown): string[] {
 }
 
 export class ComponentRegistry {
+  /** Slot this class fills when registered as an app module. */
+  static readonly slot = "registry" as const;
+
   /**
    * 🧱 Builder storage backed by the generic registry kernel.
    *
