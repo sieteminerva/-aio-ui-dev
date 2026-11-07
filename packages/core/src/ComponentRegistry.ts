@@ -106,6 +106,67 @@ function isPlainRecord(value: unknown): value is Record<string, any> {
   return typeof Element === "undefined" || !(value instanceof Element);
 }
 
+/**
+ * Collects the component names a page source needs, in discovery order.
+ *
+ * Two shapes are recognised:
+ *
+ * - node trees: a string `builder` field (`{ builder: "form", content: … }`);
+ * - page blocks: a `type` field paired with a table binding (`{ type: "masonry",
+ *   source: "portfolio" }`). The `source` requirement keeps input descriptors out,
+ *   because they also carry a `type` (`{ type: "text" }`) that is not a component.
+ *
+ * A node may also declare `requires: ["form"]` for components it creates outside
+ * the static tree — for example inside an `onCreated` hook. Those cannot be seen by
+ * walking, so the node states them.
+ *
+ * The walk is depth-first, cycle-safe, and ignores everything it does not recog-
+ * nise, so it can be run on raw CMS output without validation.
+ *
+ * @param source - Page content, array, or any nested structure.
+ * @returns Unique component names, in the order they were first seen.
+ */
+export function collectComponentNames(source: unknown): string[] {
+  const found: string[] = [];
+  const seen = new Set<string>();
+  const visited = new Set<unknown>();
+
+  const walk = (value: unknown): void => {
+    if (typeof value !== "object" || value === null || visited.has(value)) return;
+    visited.add(value);
+
+    if (Array.isArray(value)) {
+      for (const item of value) walk(item);
+      return;
+    }
+
+    const record = value as Record<string, any>;
+    const builder = typeof record.builder === "string" ? record.builder : undefined;
+    const type = typeof record.type === "string" && "source" in record ? record.type : undefined;
+    const name = builder ?? type;
+
+    if (name && !seen.has(name)) {
+      seen.add(name);
+      found.push(name);
+    }
+
+    // `options` is a reserved key the renderer never turns into an element, so a
+    // declaration there cannot leak into the DOM.
+    const requires = Array.isArray(record.options?.requires) ? record.options.requires : [];
+    for (const required of requires) {
+      if (typeof required === "string" && !seen.has(required)) {
+        seen.add(required);
+        found.push(required);
+      }
+    }
+
+    for (const key of Object.keys(record)) walk(record[key]);
+  };
+
+  walk(source);
+  return found;
+}
+
 export class ComponentRegistry {
   /**
    * 🧱 Builder storage backed by the generic registry kernel.
@@ -145,6 +206,9 @@ export class ComponentRegistry {
   // serta janji pemuatan yang sedang berjalan agar build() paralel tidak dobel-fetch.
   private _stylesReady = new Set<string>();
   private _stylesLoading = new Map<string, Promise<void>>();
+
+  /** Components currently being loaded, so a `modules` cycle cannot recurse forever. */
+  private _loading = new Set<string>();
 
   /**
    * 🚀 POST-LAUNCH FLIPPER (O(1) RELEASE VIA POINTER data-loaded)
@@ -307,6 +371,22 @@ export class ComponentRegistry {
 
 
   /**
+   * Resolves every component a page source needs, without the caller listing them.
+   *
+   * This is the default entry point: a route only has to hand over its content,
+   * and the registry derives the set itself (see `collectComponentNames`). `load()`
+   * stays public for callers that already know the names, or need query data.
+   *
+   * @param source - Page content, block list, or any nested structure.
+   * @returns The component names that were resolved, in discovery order.
+   */
+  public async loadFor(source: unknown): Promise<string[]> {
+    const names = collectComponentNames(source);
+    if (names.length) await this.load(names, [source]);
+    return names;
+  }
+
+  /**
    * Resolves component modules and stylesheets ahead of a render pass.
    *
    * Paired with `build()`: `load()` is always asynchronous and fills the resolved
@@ -316,9 +396,6 @@ export class ComponentRegistry {
    * @param componentNames - Registered component names to resolve.
    * @param pagesData - Source tree used to find each component's node config.
    */
-  /** Components currently being loaded, so a `modules` cycle cannot recurse forever. */
-  private _loading = new Set<string>();
-
   public async load(componentNames: string[], pagesData: any[] = []): Promise<void> {
     for (const nameKey of componentNames) {
       const name = nameKey as keyof iBuilderRegistry;

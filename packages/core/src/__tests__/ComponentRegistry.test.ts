@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ComponentRegistry, type iComponentAssetMaps } from "../ComponentRegistry";
+import { collectComponentNames, ComponentRegistry, type iComponentAssetMaps } from "../ComponentRegistry";
 
 /**
  * Registry behaviour under the single-manifest contract.
@@ -41,8 +41,8 @@ function makeBuilderClass(sink: FakeInstance[]) {
   };
 }
 
-const Engine = class FakeEngine {};
-const TableAdapter = class FakeTableAdapter {};
+const Engine = class FakeEngine { };
+const TableAdapter = class FakeTableAdapter { };
 
 function makeAssets(overrides: Partial<iComponentAssetMaps["modules"]> = {}): iComponentAssetMaps {
   return {
@@ -131,7 +131,7 @@ describe("ComponentRegistry manifest contract", () => {
   });
 
   it("keeps the component usable when a declared module cannot be resolved", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => { });
     const registry = new ComponentRegistry(
       makeAssets({ "@fake/form": async () => ({ default: makeBuilderClass(instances) }) }),
     );
@@ -234,5 +234,54 @@ describe("ComponentRegistry manifest contract", () => {
     registry.build("form", {});
 
     expect(instances).toHaveLength(1);
+  });
+
+  it("loads every component a page source needs, without a name list", async () => {
+    const registry = new ComponentRegistry(
+      makeAssets({
+        "@fake/form": async () => ({ default: makeBuilderClass(instances) }),
+        "@fake/table": async () => ({ default: makeBuilderClass([]) }),
+      }),
+    );
+    registry.register("form", () => ({ path: "@fake/form" }));
+    registry.register("table", () => ({ path: "@fake/table" }));
+
+    const page = [{ builder: "form", content: [] }, { builder: "table", content: [] }];
+    const loaded = await registry.loadFor(page);
+
+    expect(loaded).toEqual(["form", "table"]);
+    expect(() => registry.build("form", {})).not.toThrow();
+    expect(() => registry.build("table", {})).not.toThrow();
+  });
+});
+
+describe("collectComponentNames", () => {
+  it("finds builder nodes in order and de-duplicates", () => {
+    const source = [
+      { builder: "form", content: [] },
+      { builder: "table", content: [] },
+      { builder: "form", content: [] },
+    ];
+
+    expect(collectComponentNames(source)).toEqual(["form", "table"]);
+  });
+
+  it("finds page blocks but not input descriptors", () => {
+    const source = {
+      blocks: [
+        { type: "masonry", source: "portfolio" },
+        { type: "hero", props: { title: "hi" } },
+      ],
+      fields: [{ type: "text" }, { type: "select" }],
+    };
+
+    expect(collectComponentNames(source)).toEqual(["masonry"]);
+  });
+
+  it("ignores primitives and survives cycles", () => {
+    const node: Record<string, unknown> = { builder: "form" };
+    node.self = node;
+
+    expect(collectComponentNames({ nested: [node, null, 42, "text"] })).toEqual(["form"]);
   });
 });

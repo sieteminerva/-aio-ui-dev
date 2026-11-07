@@ -53,24 +53,15 @@ let renderFn: (node: any) => HTMLElement | null;
 let currentRoot: HTMLElement | null = null;
 let renderSequence = 0;
 
-function buildersForRoute(route: string): string[] {
-  switch (route.trim().toLowerCase().replace(/^#|\/+$/g, '')) {
-    case 'home': return ['form', 'table'];
-    case 'form': return ['form', 'table'];
-    case 'gallery': return ['masonry'];
-    case 'blog': return ["article"];
-    default: return [];
-  }
-}
-
 /** Render satu halaman (rute) ke dalam #app — mengganti akar sebelumnya. */
 export async function renderPage(route: string): Promise<void> {
   const sequence = ++renderSequence;
-  // route based Lazy-load components 
-  await components.load(buildersForRoute(route));
+  // Content first: the registry derives which components it needs, so no route
+  // has to keep a hand-written list of component names.
+  const page = pageContentFor(route);
+  await components.loadFor(page);
   if (sequence !== renderSequence) return;
 
-  const page = pageContentFor(route);
   const tree = renderer.render(page, renderFn, buildBuilderFn);
   if (currentRoot && currentRoot.isConnected) {
     currentRoot.replaceWith(tree);
@@ -111,6 +102,9 @@ async function start(container: HTMLElement) {
         stylesheet: "@aio-ui/form/Form.css", // alternative style definition also didn't loaded
         config: Object.assign({}, data?.config || {}, { emit: (event: any, payload: any) => emitter.emit(event, payload as any) }),
         schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
+        // Form owns a table preview; the registry loads it with the form instead of
+        // requiring the route to list it.
+        modules: [{ id: "table" }],
       };
     })
 

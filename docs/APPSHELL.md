@@ -56,21 +56,32 @@ page controller (optional) ─────────────────�
 
 ## Preload derivation
 
-`buildersForRoute()` disappears. The name set is derived from the page tree:
+`buildersForRoute()` is gone. Implemented in `@aio-ui/core` as
+`collectComponentNames(source)` plus `registry.loadFor(source)`:
 
 ```ts
-// Walk the tree, collect every node whose `builder` is a string.
-function collectBuilderNames(node: unknown, out: Set<string>): void {
-  // arrays and plain objects are traversed; anything else is ignored
-}
+const page = pageContentFor(route);
+await registry.loadFor(page);        // derives the names, then loads them
+renderer.render(page, …);            // build() stays synchronous
 ```
 
-The derived set is the preload input. It is also exposed to `iPagePrepareContext.builders`
-so a controller can inspect it before the render, and to the debug channel.
+Recognised shapes:
 
-The rule must tolerate unknown builders: a name that is not registered is reported
-through the debug channel and skipped, not thrown. This keeps the LITE promise — a
-missing component is a normal state.
+| Shape | Recognised by |
+| --- | --- |
+| node trees | a string `builder` field |
+| page blocks | `type` paired with a table binding (`source`) |
+| dynamic mounts | `options: { requires: ["form"] }` on the node that creates them |
+
+The third row exists because a component created inside `onCreated` is invisible to a
+walk. `options` is used because the renderer never turns that key into an element; a
+top-level `requires` key leaked into the DOM during testing.
+
+The derived set is also exposed to `iPagePrepareContext.builders` so a controller can
+inspect it before the render, and to the debug channel.
+
+The rule tolerates unknown builders: a name that is not registered is reported and
+skipped, not thrown. This keeps the LITE promise — a missing component is a normal state.
 
 ## Debug channel
 

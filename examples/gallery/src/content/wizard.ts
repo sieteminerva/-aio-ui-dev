@@ -671,6 +671,10 @@ export const BuildPageContent: iNodeContent =
                 content: "Jawab beberapa pertanyaan lalu kami merajutnya menjadi website yang hidup — data, kode, dan hak miliknya langsung jadi milik Anda."
               },
               "#wizard": {
+                // The wizard builds its form at runtime, so the tree cannot reveal
+                // it. `options.requires` declares what the hook will create; it sits
+                // under `options` because the renderer never renders that key.
+                options: { requires: ["form"] },
                 onCreated: (el: HTMLElement, _renderFn: any, builderFn: any) => {
                   mountWizard(el, builderFn);
                 }

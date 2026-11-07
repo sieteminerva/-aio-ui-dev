@@ -362,3 +362,5 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-08 | Phase 2 tests: 9 registry tests (manifest, config merge, schema payload, module resolution, missing module, dedupe, unknown name). Fixed two Node-hostile spots found by the tests: `isPlainRecord` DOM guard and stylesheet derivation treating specifiers as file paths. 42 → 51 tests. |
 
 | 2026-11-08 | Module registry complete: `modules[].path` optional (falls back to a registered component), `modules[].export` selects a named export for adapters/handlers, cycle-safe loading. `iComponentSource` dropped as unnecessary. 54 tests. |
+
+| 2026-11-08 | Auto-load: `collectComponentNames()` + `registry.loadFor(source)`; `buildersForRoute` deleted from the example. Dynamic mounts declare `options.requires`. Form manifest declares `modules: [{ id: "table" }]`. 58 tests, all routes at baseline. |
