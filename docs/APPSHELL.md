@@ -7,17 +7,17 @@ no implementation exists yet.
 
 Today every responsibility below is hard-coded in `examples/gallery/src/main.ts`:
 
-| Responsibility | Current location |
-| --- | --- |
-| Resolve the mount point | `start(container)` |
-| Register components | inline `.register(...)` chain |
-| Build renderer callbacks | `renderFn`, `buildBuilderFn` |
-| Map route → content | `pageContentFor()` |
-| Decide what to preload | `buildersForRoute()` |
-| Preload, render, swap root | `renderPage()` |
-| Guard against overlapping renders | `renderSequence` |
-| Wire the router | `bootRouting()` |
-| Run animations after render | `animation.init()` |
+| Responsibility                    | Current location              |
+| --------------------------------- | ----------------------------- |
+| Resolve the mount point           | `start(container)`            |
+| Register components               | inline `.register(...)` chain |
+| Build renderer callbacks          | `renderFn`, `buildBuilderFn`  |
+| Map route → content               | `pageContentFor()`            |
+| Decide what to preload            | `buildersForRoute()`          |
+| Preload, render, swap root        | `renderPage()`                |
+| Guard against overlapping renders | `renderSequence`              |
+| Wire the router                   | `bootRouting()`               |
+| Run animations after render       | `animation.init()`            |
 
 Three of those entries (`pageContentFor`, `buildersForRoute`, `register`) must be
 edited by hand for every new route or component. A generated project cannot do
@@ -85,13 +85,13 @@ Without `debug`, the shell stays silent.
 
 ## Requirements this places on the registry (input for Phase 2)
 
-| Requirement | Reason |
-| --- | --- |
-| `preload(names, pagesData)` resolves stylesheets **and** modules before returning | `build` is synchronous |
-| `build(name, data)` is synchronous | it runs inside the renderer's node walk |
-| `has(name)` exists | the shell must report a miss without throwing |
-| Missing assets are recoverable | LITE edition ships without optional modules |
-| Component manifests carry their own sub-modules (`modules`) | the shell must not know that Form has engines |
+| Requirement                                                                       | Reason                                        |
+| --------------------------------------------------------------------------------- | --------------------------------------------- |
+| `preload(names, pagesData)` resolves stylesheets **and** modules before returning | `build` is synchronous                        |
+| `build(name, data)` is synchronous                                                | it runs inside the renderer's node walk       |
+| `has(name)` exists                                                                | the shell must report a miss without throwing |
+| Missing assets are recoverable                                                    | LITE edition ships without optional modules   |
+| Component manifests carry their own sub-modules (`modules`)                       | the shell must not know that Form has engines |
 
 ## Open questions
 

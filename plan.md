@@ -82,16 +82,16 @@ package has been extracted and verified.
 
 ## 5. Progress
 
-| Phase | Scope                                                  | Status                     |
-| ----- | ------------------------------------------------------ | -------------------------- |
-| 0     | Monorepo restructure, zero behavior change             | done                       |
-| 1     | AppShell contract (interfaces only)                    | done                       |
-| 2     | `ComponentRegistry` rewrite to the agreed contract     | not started                |
-| 3     | PageController contract + one reference implementation | not started                |
-| 4     | AppShell implementation, `main.ts` reduced             | not started                |
-| 5     | Port remaining FULL components                         | not started                |
-| 6     | Themes, `ThemeRenderer`, generator pipeline            | not started                |
-| —     | `DOMTreeMemory` / `EventBus` metadata layer            | deferred                   |
+| Phase | Scope                                                  | Status      |
+| ----- | ------------------------------------------------------ | ----------- |
+| 0     | Monorepo restructure, zero behavior change             | done        |
+| 1     | AppShell contract (interfaces only)                    | done        |
+| 2     | `ComponentRegistry` rewrite to the agreed contract     | not started |
+| 3     | PageController contract + one reference implementation | not started |
+| 4     | AppShell implementation, `main.ts` reduced             | not started |
+| 5     | Port remaining FULL components                         | not started |
+| 6     | Themes, `ThemeRenderer`, generator pipeline            | not started |
+| —     | `DOMTreeMemory` / `EventBus` metadata layer            | deferred    |
 
 ---
 
