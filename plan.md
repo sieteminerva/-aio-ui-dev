@@ -357,3 +357,5 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-08 | Phase 2 started: single `iComponentManifest` (`modules`, `iComponentModuleRef`), `LoadFn`/polymorphism removed, dead branches in `build()` deleted. `main` 71.03 → 69.94 kB, all routes identical. |
 
 | 2026-11-08 | Phase 2: `preloadComponents` renamed to `load`; `modules` resolved per component with namespaced cache keys (`form:table`) and handed to builders via `provideModules()`; `Base.module(id)` added with warn-once. Deliberately NOT on `config.modules` because Form already owns that key. |
+
+| 2026-11-08 | Phase 2 tests: 9 registry tests (manifest, config merge, schema payload, module resolution, missing module, dedupe, unknown name). Fixed two Node-hostile spots found by the tests: `isPlainRecord` DOM guard and stylesheet derivation treating specifiers as file paths. 42 → 51 tests. |

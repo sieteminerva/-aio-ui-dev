@@ -84,9 +84,15 @@ function findStyleLoader(map: Record<string, () => Promise<any>>, key: string): 
 
 const DEV = (import.meta as any).env?.DEV === true;
 
-/** Narrow a value to a plain object record (not array, element, or null). */
+/**
+ * Narrow a value to a plain object record (not array, element, or null).
+ *
+ * The `Element` guard is skipped when the global is absent, so the registry can be
+ * exercised outside a browser (tests, future server-side rendering).
+ */
 function isPlainRecord(value: unknown): value is Record<string, any> {
-  return typeof value === "object" && value !== null && !Array.isArray(value) && !(value instanceof Element);
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return false;
+  return typeof Element === "undefined" || !(value instanceof Element);
 }
 
 export class ComponentRegistry {
@@ -230,17 +236,16 @@ export class ComponentRegistry {
     if (!effectiveStyle && builderClass) {
       effectiveStyle = builderClass?.stylesheet || builderClass.prototype?.stylesheet;
     }
-    // 🩹 REGISTRY-SIDE DERIVATION: pola `abstract readonly stylesheet` (instance class
-    // field) tidak terlihat di level class (fields tidak pernah menempel di prototype),
-    // sehingga preload tanpa manifest.stylesheet sebelumnya SELALU melewatkan CSS.
     // Turunkan path stylesheet dari script — aturan yang sama dengan derivasi
-    // manifest di build() — agar load() ikut memuat stylesheet.
-    if (!effectiveStyle && script) {
-      effectiveStyle = script.replace(/\.(ts|tsx|js|jsx)$/, ".css");
+    // manifest di build() — agar load() ikut memuat stylesheet. Hanya berlaku
+    // bila `script` benar-benar berkas berskrip; specifier paket tidak punya CSS
+    // bersebelahan, dan dulu diperlakukan sebagai path CSS (lalu gagal).
+    if (!effectiveStyle && script && /\.[cm]?[jt]sx?$/.test(script)) {
+      effectiveStyle = script.replace(/\.[cm]?[jt]sx?$/, ".css");
     }
 
     if (effectiveStyle) {
-      if (effectiveStyle instanceof CSSStyleSheet) {
+      if (typeof CSSStyleSheet !== "undefined" && effectiveStyle instanceof CSSStyleSheet) {
         this.injectStyle(effectiveStyle);
       } else if (typeof effectiveStyle === "string") {
         const resolvedCssPath = script ? resolveRelativePath(script, effectiveStyle) : effectiveStyle;
