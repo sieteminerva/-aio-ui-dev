@@ -33,6 +33,14 @@ export interface iComponentRegistryPort {
   /** Registered builder names, in registration order. */
   getRegisteredNames(): string[];
 
+  /**
+   * Derives the component names a source needs, without loading anything.
+   *
+   * Lives on the port (not in the app) so the app never imports the collector:
+   * `@aio-ui/app` stays a type-only dependency on `@aio-ui/core`.
+   */
+  collect(source: unknown): string[];
+
   /** Resolves builder modules and stylesheets ahead of a render pass. */
   load(names: string[], pagesData?: unknown[]): Promise<void>;
 

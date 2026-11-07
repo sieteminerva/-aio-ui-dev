@@ -34,4 +34,14 @@ export class EventEmitter {
   public clear(): void {
     this.listeners = {};
   }
+
+  /**
+   * Releases every listener.
+   *
+   * Named `destroy` so a host that releases its modules generically
+   * (`port.destroy?.()`) does not need a special case for this class.
+   */
+  public destroy(): void {
+    this.clear();
+  }
 }

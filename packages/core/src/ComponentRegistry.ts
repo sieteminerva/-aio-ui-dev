@@ -386,6 +386,20 @@ export class ComponentRegistry {
   }
 
   /**
+   * Derives the component names a source needs, without loading anything.
+   *
+   * Exposed so a host (for example `@aio-ui/app`) can inspect a route before the
+   * render pass without importing `collectComponentNames` directly — that keeps the
+   * dependency between app and core type-only at runtime.
+   *
+   * @param source - Page content, block list, or any nested structure.
+   * @returns Unique component names, in discovery order.
+   */
+  public collect(source: unknown): string[] {
+    return collectComponentNames(source);
+  }
+
+  /**
    * Resolves component modules and stylesheets ahead of a render pass.
    *
    * Paired with `build()`: `load()` is always asynchronous and fills the resolved

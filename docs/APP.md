@@ -63,6 +63,7 @@ export class HashRouter {
 const app = new AioApp({ container, source: { pages } })
   .registerModule(components)                              // instance you assembled
   .registerModule(HashRouter)                              // class, no config
+  .registerModule(DOMRenderer)                             // required, no default
   .registerModule(AppStorage, { driver: localStorage })    // class + config
   .registerModule(AnimationsService)
   .registerModule(emitter);
@@ -81,7 +82,8 @@ A class with a different constructor shape still works — it just ignores the e
 argument. `registerModule(instance)` is accepted too: the slot is read from
 `instance.constructor.slot`, which lets a host assemble something the app should not
 build itself (the example passes the `ComponentRegistry` it already filled with
-manifests).
+manifests). A plain object or test double cannot carry a static, so it passes the slot
+explicitly: `registerModule(fakeRouter, "router")`.
 
 | Rule | Why |
 | --- | --- |
@@ -89,13 +91,15 @@ manifests).
 | config is `ConstructorParameters<M>[0]`, so it is typed by the class itself | no duplicated config interface; `AppStorage` infers `iStorageConfig` |
 | config lives at the registration, never in `iAppConfig` | `iAppConfig` stays general (`container`, `source`, `defaultRoute`, `theme`, `debug`) no matter how many modules exist |
 | modules are constructed in `mount()`, not at registration | a router needs the route list, the restored theme and the change callback, which only exist at mount time |
+| required slots are checked **before** anything is created | a missing slot is a configuration mistake, not a half-working app |
+| a module that throws mid-creation releases the ones already created | no port is left running unattended |
 | registering after `mount()` throws | "register first, use second" is enforced, not documented |
-| a module without a slot throws with a hint | an untagged object would otherwise land nowhere |
+| a module without a slot throws with a hint (mentioning the explicit-slot form) | an untagged object would otherwise land nowhere |
 | duplicate slot → warn + replace | a generated project that lists one slot twice must not silently lose behaviour |
-| teardown runs in reverse registration order, calling `port.destroy?.()` | no extra teardown convention; any port that owns resources exposes `destroy()` |
+| teardown runs in reverse registration order, calling `port.destroy?.()` | no extra teardown convention; any port that owns resources exposes `destroy()` (`EventEmitter.destroy()` → `clear()`) |
 
-`registry` and `router` are required; `renderer` defaults to `DOMRenderer`, `storage`
-falls back to memory, `animation` and `events` are skipped when absent.
+`registry`, `router` and `renderer` are required; `storage` falls back to memory,
+`animation` and `events` are skipped when absent.
 
 Creation order has one exception: **storage is created first**, because the persisted
 theme must be restored before the router is constructed with it. Everything after that
@@ -109,10 +113,15 @@ arguments a router cannot know by itself arrive through it.
 | --- | --- | --- |
 | `registry` | `ComponentRegistry` | `@aio-ui/core` |
 | `router` | `HashRouter` | `@aio-ui/router` |
-| `renderer` | `DOMRenderer` (default) | `@aio-ui/core` |
+| `renderer` | `DOMRenderer` | `@aio-ui/core` |
 | `animation` | `AnimationsService` | `@aio-ui/animations` |
 | `events` | `EventEmitter` | `@aio-ui/event-emitter` |
 | `storage` | `AppStorage` | `@aio-ui/app` |
+
+`@aio-ui/app` itself imports **types only** — no renderer, router, animation or
+collector is bundled with it. Deriving component names goes through
+`iComponentRegistryPort.collect(source)`, and the renderer must be registered like any
+other module, so the app adds zero bytes of core to a project that swaps it out.
 
 ## What `AioApp` owns
 

@@ -234,7 +234,7 @@ export interface iApp {
    * @param config - Configuration owned by that module, never by `iAppConfig`.
    */
   registerModule<M extends iAppModuleClass>(module: M, config?: ConstructorParameters<M>[0]): iApp;
-  registerModule<K extends iAppSlot>(instance: iAppSlots[K]): iApp;
+  registerModule(instance: iAppSlots[iAppSlot], slot?: iAppSlot): iApp;
 
   /** Resolves the container, creates the registered modules and renders the current route. */
   mount(): Promise<void>;

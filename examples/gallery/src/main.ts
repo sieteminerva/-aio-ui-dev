@@ -1,4 +1,5 @@
 import { ComponentRegistry } from '@aio-ui/core/ComponentRegistry';
+import { DOMRenderer } from '@aio-ui/core/DOMRenderer';
 import { AioApp, AppStorage } from '@aio-ui/app';
 import { AnimationsService } from '@aio-ui/animations';
 import { HashRouter } from '@aio-ui/router';
@@ -105,6 +106,8 @@ async function start(container: HTMLElement) {
     .registerModule(components)
     // kelas tanpa config: routes, theme dan onRouteChanged disuntik dari context
     .registerModule(HashRouter)
+    // renderer wajib: app tidak membawa renderer bawaan
+    .registerModule(DOMRenderer)
     .registerModule(AppStorage, { driver: themeStorage })
     .registerModule(AnimationsService)
     // instance yang sama dipakai manifest form di atas, jadi event-nya nyambung

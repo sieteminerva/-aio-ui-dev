@@ -24,8 +24,6 @@
  *   know are skipped and reported, never thrown (the LITE promise).
  */
 
-import { collectComponentNames } from "@aio-ui/core/ComponentRegistry";
-import { DOMRenderer } from "@aio-ui/core/DOMRenderer";
 import type { iBasicNode, iNodeContent } from "@aio-ui/core/node";
 import type { iBuilderRegistry } from "@aio-ui/core/registry";
 
@@ -59,6 +57,9 @@ const SHELL_CLASS = "aio-shell";
 
 /** Placeholder entry-file fallback. */
 const DEFAULT_ROUTE = "home";
+
+/** Slots that must be registered before `mount()` can run. */
+const REQUIRED_SLOTS = ["registry", "router", "renderer"] as const;
 
 // ====================================================
 // 1. PURE HELPERS (exported so callers and tests can use them)
@@ -207,6 +208,7 @@ export class AioApp implements iApp {
    * app.registerModule(HashRouter);                 // class, no config
    * app.registerModule(AppStorage, { driver });     // class + config
    * app.registerModule(components);                 // instance you already assembled
+   * app.registerModule(fakeRouter, "router");       // plain object / test double
    * ```
    *
    * Nothing is instantiated here: a class is constructed during `mount()`, because a
@@ -214,30 +216,32 @@ export class AioApp implements iApp {
    * do not exist yet. Registering the same slot twice replaces the earlier module and
    * says so, because that is almost always a mistake in a generated project.
    *
-   * @param module - Module class, or an already-built port instance.
-   * @param config - Configuration owned by that module, not by `iAppConfig`.
+   * @param module - Module class, or an already-built port instance/object.
+   * @param config - Class: the constructor config. Instance: the slot to fill, when
+   *   the object has no `constructor.slot` (plain literal, factory result, proxy).
    * @returns The app, for a fluent chain.
-   * @throws {Error} When called after `mount()`, or when the module declares no slot.
+   * @throws {Error} When called after `mount()`, or when no slot can be determined.
    */
   public registerModule<M extends iAppModuleClass>(
     module: M,
     config?: ConstructorParameters<M>[0]
   ): iApp;
-  public registerModule<K extends iAppSlot>(instance: iAppSlots[K]): iApp;
+  public registerModule(instance: iAppSlots[iAppSlot], slot?: iAppSlot): iApp;
   public registerModule(target: unknown, config?: unknown): iApp {
     if (this.#mounted) {
       throw new Error("[AioApp] registerModule() must be called before mount().");
     }
 
     const isClass = typeof target === "function";
-    const slot = (isClass ? (target as iAppModuleClass).slot : (target as any)?.constructor?.slot) as
-      | iAppSlot
-      | undefined;
+    const slot = (isClass
+      ? (target as iAppModuleClass).slot
+      : ((config as iAppSlot | undefined) ?? (target as any)?.constructor?.slot)) as iAppSlot | undefined;
 
     if (!slot) {
       throw new Error(
-        "[AioApp] Module declares no slot. Add `static readonly slot = \"<slot>\"` " +
-        "to the class, or pass a class instead of an untagged object."
+        "[AioApp] Cannot tell which slot this module fills. Add " +
+          '`static readonly slot = "<slot>"` to a class, or pass the slot as the ' +
+          "second argument: registerModule(instance, \"router\")."
       );
     }
 
@@ -247,7 +251,7 @@ export class AioApp implements iApp {
 
     this.#registrations.set(slot, {
       module: isClass ? (target as iAppModuleClass) : null,
-      config,
+      config: isClass ? config : undefined,
       instance: isClass ? null : target,
     });
     return this;
@@ -296,6 +300,16 @@ export class AioApp implements iApp {
       onRouteChanged: (state) => this.#onRouteChanged(state),
     };
 
+    // Fail before creating anything: a missing slot is a configuration mistake, and
+    // discovering it halfway leaves half a working app behind.
+    const missing = REQUIRED_SLOTS.filter((slot) => !this.#registrations.has(slot));
+    if (missing.length) {
+      throw new Error(
+        `[AioApp] Missing required module(s): ${missing.join(", ")}. ` +
+          `Register them with registerModule(...) before mount().`
+      );
+    }
+
     // Phase 1 — storage, so the theme can be restored before any consumer exists.
     const storage = this.#registrations.get("storage");
     if (storage) {
@@ -307,26 +321,26 @@ export class AioApp implements iApp {
       }
     }
 
-    // Phase 2 — the rest, in registration order.
-    for (const [slot, registration] of this.#registrations) {
-      if (slot === "storage") continue;
-      const port = this.#instantiate(slot, registration, context);
-      if (slot === "registry") this.#registry = port as iComponentRegistryPort;
-      else if (slot === "router") this.#router = port as iRouterPort;
-      else if (slot === "renderer") this.#renderer = port as iRendererPort;
-      else if (slot === "animation") this.#animation = port as iAnimationPort;
-      else if (slot === "events") this.#events = port as iEventPort;
+    // Phase 2 — the rest, in registration order. A module that throws mid-way must
+    // not leave the modules created before it running unattended.
+    const created: iAppSlot[] = storage ? ["storage"] : [];
+    try {
+      for (const [slot, registration] of this.#registrations) {
+        if (slot === "storage") continue;
+        const port = this.#instantiate(slot, registration, context);
+        created.push(slot);
+        if (slot === "registry") this.#registry = port as iComponentRegistryPort;
+        else if (slot === "router") this.#router = port as iRouterPort;
+        else if (slot === "renderer") this.#renderer = port as iRendererPort;
+        else if (slot === "animation") this.#animation = port as iAnimationPort;
+        else if (slot === "events") this.#events = port as iEventPort;
+      }
+    } catch (error) {
+      this.#releasePorts(created.reverse());
+      throw error;
     }
 
-    const missing = (["registry", "router"] as const).filter((slot) => !this.#registrations.has(slot));
-    if (missing.length) {
-      throw new Error(
-        `[AioApp] Missing required module(s): ${missing.join(", ")}. ` +
-        `Register them with registerModule(...) before mount().`
-      );
-    }
-
-    this.#log("modules:created", { slots: [...this.#registrations.keys()] });
+    this.#log("modules:created", { slots: created });
   }
 
   /**
@@ -354,17 +368,8 @@ export class AioApp implements iApp {
     const active = this.#controllers.get(this.#route);
     this.#runHook(active, "onDestroy");
 
-    // Reverse registration order: a module created last is released first. Any port
-    // may expose `destroy()`, so no extra teardown convention is needed.
-    for (const [slot] of [...this.#registrations].reverse()) {
-      const port = this.#portOf(slot) as { destroy?: () => void } | null;
-      if (!port || typeof port.destroy !== "function") continue;
-      try {
-        port.destroy();
-      } catch (error) {
-        console.error(`[AioApp] destroy of module "${slot}" failed:`, error);
-      }
-    }
+    // Reverse registration order: a module created last is released first.
+    this.#releasePorts([...this.#registrations.keys()].reverse());
 
     this.#registry = null;
     this.#router = null;
@@ -393,6 +398,24 @@ export class AioApp implements iApp {
       case "events": return this.#events;
       case "storage": return this.#storage;
       default: return null;
+    }
+  }
+
+  /**
+   * Releases ports in the given order.
+   *
+   * A port owns its resources when it exposes `destroy()`; nothing else is assumed,
+   * so a module that needs no teardown simply has no such method.
+   */
+  #releasePorts(slots: iAppSlot[]): void {
+    for (const slot of slots) {
+      const port = this.#portOf(slot) as { destroy?: () => void } | null;
+      if (!port || typeof port.destroy !== "function") continue;
+      try {
+        port.destroy();
+      } catch (error) {
+        console.error(`[AioApp] destroy of module "${slot}" failed:`, error);
+      }
     }
   }
 
@@ -438,7 +461,7 @@ export class AioApp implements iApp {
       if (sequence !== this.#sequence) return this.#log("render:superseded", { route: target, sequence });
 
       const node = this.#compose(pageToNode(prepared, target), target);
-      const names = collectComponentNames(node);
+      const names = this.#registry!.collect(node);
       const known = names.filter((name) => this.#registry!.has(name));
       const missing = names.filter((name) => !this.#registry!.has(name));
 
@@ -483,7 +506,7 @@ export class AioApp implements iApp {
       theme: this.#theme,
       // Derived from the authored tree, before any module is loaded, so a
       // controller can inspect what the route is about to need.
-      builders: collectComponentNames(pageToNode(page, route)),
+      builders: this.#registry!.collect(pageToNode(page, route)),
     };
 
     try {
@@ -531,7 +554,8 @@ export class AioApp implements iApp {
 
   /** Builds the renderer callbacks once and reuses them for nested nodes. */
   #renderNode(node: iNodeContent): HTMLElement | null {
-    const renderer = this.#renderer ?? (this.#renderer = new DOMRenderer() as iRendererPort);
+    const renderer = this.#renderer;
+    if (!renderer) throw new Error("[AioApp] No renderer module registered for slot \"renderer\".");
     const renderFn = (child: any) => renderer.render(child, renderFn, buildFn);
     const buildFn = (name: keyof iBuilderRegistry, data: any) => {
       if (!this.#registry!.has(name)) {
