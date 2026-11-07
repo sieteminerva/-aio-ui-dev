@@ -240,8 +240,8 @@ export class AioApp implements iApp {
     if (!slot) {
       throw new Error(
         "[AioApp] Cannot tell which slot this module fills. Add " +
-          '`static readonly slot = "<slot>"` to a class, or pass the slot as the ' +
-          "second argument: registerModule(instance, \"router\")."
+        '`static readonly slot = "<slot>"` to a class, or pass the slot as the ' +
+        "second argument: registerModule(instance, \"router\")."
       );
     }
 
@@ -306,7 +306,7 @@ export class AioApp implements iApp {
     if (missing.length) {
       throw new Error(
         `[AioApp] Missing required module(s): ${missing.join(", ")}. ` +
-          `Register them with registerModule(...) before mount().`
+        `Register them with registerModule(...) before mount().`
       );
     }
 

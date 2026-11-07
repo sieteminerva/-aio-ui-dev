@@ -13,12 +13,12 @@ describe("AioApp.registerModule", () => {
   it("reads the slot from a class instead of an identifier argument", () => {
     class FakeRouter {
       static readonly slot = "router" as const;
-      navigate() {}
+      navigate() { }
       parseUrlHash() {
         return { route: "home", theme: null, fragment: "" };
       }
-      updateValidRoutes() {}
-      destroy() {}
+      updateValidRoutes() { }
+      destroy() { }
     }
 
     expect(() => createApp().registerModule(FakeRouter)).not.toThrow();
@@ -30,7 +30,7 @@ describe("AioApp.registerModule", () => {
       get() {
         return null;
       }
-      set() {}
+      set() { }
     }
 
     expect(() => createApp().registerModule(new FakeStorage())).not.toThrow();

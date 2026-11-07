@@ -82,16 +82,16 @@ package has been extracted and verified.
 
 ## 5. Progress
 
-| Phase | Scope                                                  | Status      |
-| ----- | ------------------------------------------------------ | ----------- |
-| 0     | Monorepo restructure, zero behavior change             | done        |
-| 1     | AppShell contract (interfaces only)                    | done        |
-| 2     | `ComponentRegistry` rewrite to the agreed contract     | in progress |
-| 3     | PageController contract + one reference implementation | not started |
-| 4     | AppShell implementation, `main.ts` reduced             | not started |
-| 5     | Port remaining FULL components                         | not started |
-| 6     | Themes, `ThemeRenderer`, generator pipeline            | not started |
-| —     | `DOMTreeMemory` / `EventBus` metadata layer            | deferred    |
+| Phase | Scope                                                  | Status            |
+| ----- | ------------------------------------------------------ | ----------------- |
+| 0     | Monorepo restructure, zero behavior change             | done              |
+| 1     | `AioApp` — contract, module convention, implementation | done              |
+| 2     | `ComponentRegistry` rewrite to the agreed contract     | done              |
+| 3     | PageController contract + one reference implementation | **next**          |
+| 4     | Entry implementation, `main.ts` reduced                | done (merged → 1) |
+| 5     | Port remaining FULL components                         | not started       |
+| 6     | Themes, `ThemeRenderer`, generator pipeline            | not started       |
+| —     | `DOMTreeMemory` / `EventBus` metadata layer            | deferred          |
 
 ---
 
@@ -101,12 +101,13 @@ Goal: physical layout matches §4, application still runs, no behavior change.
 
 ### 0.1 Baseline
 
-- [ ] Create a restore point (`git add -A && git commit`)
+- [x] Create a restore point (`1116356`)
 - [x] Record `npx tsc --noEmit` output — clean (after fixing `Tab` `rootElement` collision)
 - [x] Record `npm test` output — 3 files, 42 tests passed
 - [x] Record `npm run build` output — succeeded in 592 ms, `dist/assets/main-*.js` 77.90 kB
-- [ ] Record all routes rendered at `http://localhost:5175/gallery/` (`#home`, `#form`, `#blog`, `#about`, `#gallery`)
-  - Verified: `home` 122 nodes, `form` 75, `blog` 115, `about` 63, `gallery` 31; lazy `<style>` count grows 2 → 3 → 4
+- [x] Record all routes rendered (`#home`, `#form`, `#blog`, `#about`, `#gallery`)
+  - Baseline: `home` 122 nodes, `form` 75, `blog` 115, `about` 63, `gallery` 31; lazy `<style>` count grows 2 → 3 → 4
+  - Current after the `.page` re-root: 123 / 76 / 116 / 64 / 32 (the container stays mounted, one extra node)
 
 ### 0.2 Inject Vite glob maps into `ComponentRegistry`
 
@@ -219,7 +220,9 @@ Notes:
 ### 0.10 Document the boundaries
 
 - [x] Write `docs/BOUNDARIES.md` with the import rules actually proven during migration
-- [ ] Add a boundary check to the verification gate
+- [x] Add a boundary check to the verification gate — `npm run check:bounds`
+  (`scripts/bounds.mjs`: edge matrix, type-only `app → core`, deep-import resolution,
+  `import.meta.glob` host-only, no `paths`/`alias`)
 - [x] Housekeeping: plan/task docs into `.guidance/`, technical docs into `docs/`, stale root `dist/` removed
 - [x] Split `packages/modules` into installable packages: `@aio-ui/router`, `@aio-ui/event-emitter`,
       `@aio-ui/http-service`, `@aio-ui/animations`, `@aio-ui/module-loader`
@@ -231,7 +234,8 @@ Notes:
 Deliverable is the entry itself: contract **and** implementation, so the mandatory
 logic has one home.
 
-- [x] Define `iAppConfig`: `container`, `source`, `deps`, `defaultRoute`, `theme`, `debug`
+- [x] Define `iAppConfig`: `container`, `source`, `defaultRoute`, `theme`, `debug`
+      (**no `deps`** — module config lives at `registerModule`, see Phase 1b)
 - [x] Define `iAppSource`: the shape the CMS/generator produces (`pages`, `menu`, `footer`)
 - [x] Define what the entry may know (registry, renderer, router, animation, events,
       storage) and what it must not
@@ -240,6 +244,20 @@ logic has one home.
       (`buildersForRoute` must disappear)
 - [x] Implement `AioApp`: mount, router wiring, sequence guard, preload, render, root
       swap, theme persistence, fragment scroll, controller lifecycle, event channel
+
+### Phase 1b — module convention
+
+- [x] Slots instead of a dependency bag: `registry`, `router`, `renderer`, `animation`,
+      `events`, `storage`
+- [x] The real class is the token (`static readonly slot` + `constructor(config, context)`);
+      no wrapper classes, no `defineModule()` alias, no factory object
+- [x] `registerModule(instance, "slot")` escape hatch for plain objects and test doubles
+- [x] Registering after `mount()` throws; duplicate slot warns and replaces
+- [x] Required slots (`registry`, `router`, `renderer`) validated **before** creation;
+      a throwing module releases the ones already created
+- [x] Teardown in reverse order through `port.destroy?.()`
+- [x] `@aio-ui/app` is a **type-only** dependency on `core` (`collect()` moved onto the
+      registry port, renderer is a required slot)
 
 Delivered:
 
@@ -264,23 +282,33 @@ Delivered:
 - [x] Make the load graph recursive (a module id may name another registered component)
 - [x] Namespace `_resolvedCache` keys per module (`form:table`)
 - [x] `Base.module(id)` with a single warn-once policy
-- [~] `iComponentSource` dropped: no longer needed once modules are handed to builders
+- [x] `iComponentSource` dropped: no longer needed once modules are handed to builders
   through `provideModules()`; `core` never asks `base` to resolve anything
+- [x] Tests: `Registry`, `ModuleRegistry`, `ModuleLoader`, `ComponentRegistry`
+- [x] Auto-load: `collect(source)` + `loadFor(source)`; `buildersForRoute` deleted
+- [x] Declaration key unified on `builder` (`string | string[]`)
 - [ ] Split asset loading into a `ComponentLoader` if the class keeps growing
-- [ ] Tests: manifest resolution, module preload, missing module policy
+      (deferred: finalization, not function)
 
 ## Phase 3 — PageController
 
+Blocked on two contract decisions (see open questions Q6, Q7).
+
 - [ ] Finalize `iPageController` (`onPrepare`, `onReady`, `onDestroy`, `attachMenu`)
-- [ ] Implement one reference controller for the wizard route
-- [ ] Verify the wizard route end to end
+- [ ] Decide what `onReady(elements)` receives — a named map (`menu`/`page`/`footer`)
+      or nothing at all
+- [ ] Implement one reference controller for the `form` route
+- [ ] Verify the `form` route end to end
 
-## Phase 4 — AppShell implementation
+## Phase 4 — AioApp implementation → merged into Phase 1
 
-- [ ] Implement the shell against the Phase 1 contract
-- [ ] Reduce `main.ts` to configuration plus registration
-- [ ] Add a `debug` channel: resolved manifests, preload graph, missing `sub()` lookups
-- [ ] Verify all routes, including route switching and re-render
+Done as `AioApp` (`packages/app/src/AioApp.ts`); see Phase 1 and `docs/APP.md`.
+
+- [x] Implement the entry against the Phase 1 contract
+- [x] Reduce `main.ts` to configuration plus registration
+- [x] Documentation channel: `debug: true` logs `mount`, `render:start`, `preload`,
+      `miss`, `render:superseded`, `render:done`, `modules:created`, `destroy`
+- [x] Verify all routes, including route switching, re-render, `destroy()`
 
 ## Phase 5 — Port remaining components
 
@@ -321,26 +349,30 @@ Ported into `src/lib/Components` already, pending review:
 
 ## 6. Verification gate
 
-Run after every step in Phase 0 and before marking any task complete.
+Run after every step and before marking any task complete.
 
 ```bash
-npx tsc --noEmit        # types
-npm test                # 42 registry/module tests
+npm run typecheck       # tsc --noEmit -p tsconfig.json
+npm run check:bounds    # docs/BOUNDARIES.md, enforced
+npm test                # 73 tests (registry, modules, app)
 npm run build           # production build, lightningcss must not fail
 ```
 
-Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#blog`,
-`#about`, `#gallery`.
+Plus a manual check of the dev server (port is whatever Vite picks, typically 5176)
+for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
+**123 / 64 / 32 / 116 / 76** inside `#app`, no console error or warning.
 
 ## 7. Open questions
 
-| #   | Question                                                                                                                                                                 | Affects    |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                                                                    | closed     |
-| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now.                                                   | closed     |
-| Q3  | Should `Menu` be remapped now or dropped from the port list until the shell exists?                                                                                      | Phase 5    |
-| Q4  | `docs/` target folder for technical documentation (currently `.archives/docs`)                                                                                           | Phase 0.10 |
-| Q5  | Component package naming — resolved: `@aio-ui/<name>`, so install name and import name are identical (`@aio-ui/form/Form`). The `@aio-ui/components/*` alias is retired. | closed     |
+| #   | Question                                                                                                                                                          | Affects   |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                                                             | closed    |
+| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now.                                            | closed    |
+| Q3  | Should `Menu` be remapped now or dropped? — resolved: the entry exists, so remap it to `config.slots` during Phase 5.                                             | Phase 5   |
+| Q4  | `docs/` target folder — resolved: repository `docs/`, technical docs named per contract (`API.md`, `FIELD-TYPES.md`, `APP.md`, `BOUNDARIES.md`).                  | closed    |
+| Q5  | Component package naming — resolved: `@aio-ui/<name>`, so install name and import name are identical (`@aio-ui/form/Form`). The `@aio-ui/components/*` alias is retired. | closed    |
+| Q6  | What does `onReady(elements)` receive — a named map (`menu`/`page`/`footer`) or nothing? Today it gets an empty `Map`, which is a lie.                             | Phase 3   |
+| Q7  | Who applies the theme to the DOM (`data-theme` on the root): `AioApp`, or a theme service that listens to `themeChanged`? The entry currently only emits.          | Phase 3/6 |
 
 ## 8. Change log
 
@@ -366,7 +398,7 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 
 | 2026-11-08 | Module convention: `iAppDeps` removed. Every collaborator is a registered module, and **the real class is the token** (`static readonly slot` + `constructor(config, context)`), so no wrapper classes exist: `registerModule(HashRouter)`, `registerModule(AppStorage, { driver })`, `registerModule(AnimationsService)`, `registerModule(componentRegistryInstance)`. `iAppConfig` keeps only general options; config types come from `ConstructorParameters<M>`. `HashRouter` now accepts `(config, context)`; `ComponentRegistry`, `DOMRenderer`, `AnimationsService`, `EventEmitter` carry `static slot`. Modules are constructed at `mount()` (storage first so the persisted theme exists before the router), duplicates warn+replace, teardown is `port.destroy?.()` in reverse order, registering after mount throws, and a module without a slot throws with a hint. 68 tests, all routes unchanged (123/64/32/116/76). |
 
-| 2026-11-08 | Module convention hardened, in priority order: (1) `@aio-ui/app` now imports **types only** — `ComponentRegistry.collect()` joins the registry port so the app no longer imports `collectComponentNames`, and the renderer is a required slot instead of a `DOMRenderer` default; (2) `EventEmitter.destroy()` releases listeners so generic `port.destroy?.()` teardown is complete; (3) `registerModule(instance, "<slot>")` lets plain objects and test doubles register without a static; (4) required slots are validated before anything is created and a throwing module releases the ones already created. 73 tests, all routes unchanged (123/64/32/116/76), `destroy()` verified in the browser. |
+| 2026-11-08 | Plan reconciled with the code, and the boundary gate landed: `scripts/bounds.mjs` + `npm run check:bounds` + `npm run verify` (typecheck → bounds → test → build). The gate checks the dependency matrix from `docs/BOUNDARIES.md`, type-only `app → core`, deep-import resolution against `exports` (file fallback for map-less component packages), `import.meta.glob` outside the host, and reintroduced `paths`/`alias`. Verified by a deliberate violation probe. Phase 4 merged into Phase 1; Q3/Q4 closed; Q6 (`onReady` element map) and Q7 (theme DOM application) opened for Phase 3. |
 
 | 2026-11-08 | Contracts written: `core/types/api.ts` (`iApiResponse`, `iFieldDescriptor`), app `iPageBlock`/`iPageDocument`, `docs/API.md` from a live response. |
 
