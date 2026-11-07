@@ -85,7 +85,7 @@ package has been extracted and verified.
 | Phase | Scope                                                  | Status                     |
 | ----- | ------------------------------------------------------ | -------------------------- |
 | 0     | Monorepo restructure, zero behavior change             | done                       |
-| 1     | AppShell contract (interfaces only)                    | not started                |
+| 1     | AppShell contract (interfaces only)                    | done                       |
 | 2     | `ComponentRegistry` rewrite to the agreed contract     | not started                |
 | 3     | PageController contract + one reference implementation | not started                |
 | 4     | AppShell implementation, `main.ts` reduced             | not started                |
@@ -230,12 +230,21 @@ Notes:
 
 Deliverable is a contract document plus interfaces. No implementation.
 
-- [ ] Define `iAppShellConfig`: `container`, `pages`, `menu`, `footer`, `defaultRoute`, `theme`, `debug`
-- [ ] Define `iAppShellSource`: the shape the CMS/generator produces
-- [ ] Define what the shell may know (registry, renderer, router, animation) and what it must not
-- [ ] Define the registry requirements demanded by the shell, as input for Phase 2
-- [ ] Decide how route content and the preload graph are derived from `pages`
+- [x] Define `iAppShellConfig`: `container`, `pages`, `menu`, `footer`, `defaultRoute`, `theme`, `debug`
+- [x] Define `iAppShellSource`: the shape the CMS/generator produces
+- [x] Define what the shell may know (registry, renderer, router, animation) and what it must not
+- [x] Define the registry requirements demanded by the shell, as input for Phase 2
+- [x] Decide how route content and the preload graph are derived from `pages`
       (`buildersForRoute` must disappear)
+
+Delivered:
+
+- `packages/app/src/types.ts` — `iAppShellSource`, `iAppShellOptions`, `iAppShellConfig`,
+  `iPageController`, `iPagePrepareContext`, `iAppShell`
+- `packages/app/src/ports.ts` — `iComponentRegistryPort`, `iRendererPort`, `iRouterPort`,
+  `iRouterFactory`, `iAnimationPort`, `iEventPort`, `iAppShellDeps`
+- `docs/APPSHELL.md` — responsibilities table, ownership boundary, preload derivation,
+  debug channel, registry requirements, four open questions
 
 ## Phase 2 — ComponentRegistry
 
@@ -339,3 +348,5 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-07 | Step 0.10 done: `docs/BOUNDARIES.md` written, plan/task docs moved to `.guidance/`, technical docs into `docs/`, stale `dist/` removed. `packages/modules` split into five installable packages. All routes verified. |
 
 | 2026-11-08 | Type split: `core/src/interface.ts` became a barrel over `types/{renderer,content,node,registry,builder,page}.ts`; `iPageEvents` moved to `@aio-ui/event-emitter/PageEvents`. Build hashes unchanged. |
+
+| 2026-11-08 | Phase 1 done: `@aio-ui/app` created with contract-only interfaces (`types.ts`, `ports.ts`) and `docs/APPSHELL.md`. No implementation yet. |
