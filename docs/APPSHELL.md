@@ -67,15 +67,15 @@ renderer.render(page, …);            // build() stays synchronous
 
 Recognised shapes:
 
-| Shape | Recognised by |
-| --- | --- |
-| node trees | a string `builder` field |
-| page blocks | `type` paired with a table binding (`source`) |
-| dynamic mounts | `options: { requires: ["form"] }` on the node that creates them |
+| Shape                         | Recognised by                                 |
+| ----------------------------- | --------------------------------------------- |
+| node trees                    | `builder: "form"`                             |
+| node trees that mount several | `builder: ["form", "table"]`                  |
+| page blocks                   | `type` paired with a table binding (`source`) |
 
-The third row exists because a component created inside `onCreated` is invisible to a
-walk. `options` is used because the renderer never turns that key into an element; a
-top-level `requires` key leaked into the DOM during testing.
+`builder` is already a reserved key, so declaring components there can never leak into
+the DOM. An earlier attempt used a top-level `requires` key and produced an extra element
+on every node that carried it; the array form of `builder` replaced it.
 
 The derived set is also exposed to `iPagePrepareContext.builders` so a controller can
 inspect it before the render, and to the debug channel.

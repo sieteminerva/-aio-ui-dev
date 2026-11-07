@@ -6,8 +6,8 @@ export const GalleryContent: iNodeContent = {
     content: {
       ...navigationMenu,
       "main#gallery": {
-        // Built inside onCreated, so the tree cannot reveal it.
-        options: { requires: ["masonry"] },
+        // Mounted inside onCreated; `builder` is reserved and never rendered.
+        builder: ["masonry"],
         onCreated: (el: HTMLElement, _renderFn: any, builderFn: any) => {
           el.mount(builderFn("masonry", GALLERY_RESPONSE.data));
         }

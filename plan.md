@@ -364,3 +364,5 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 | 2026-11-08 | Module registry complete: `modules[].path` optional (falls back to a registered component), `modules[].export` selects a named export for adapters/handlers, cycle-safe loading. `iComponentSource` dropped as unnecessary. 54 tests. |
 
 | 2026-11-08 | Auto-load: `collectComponentNames()` + `registry.loadFor(source)`; `buildersForRoute` deleted from the example. Dynamic mounts declare `options.requires`. Form manifest declares `modules: [{ id: "table" }]`. 58 tests, all routes at baseline. |
+
+| 2026-11-08 | Declaration key unified on `builder` (`string \| string[]`) instead of `options.requires`; DOMRenderer only treats a string `builder` as a template root. Docs and the three content nodes updated. 59 tests, all routes at baseline (122 / 75 / 115 / 63 / 31). |

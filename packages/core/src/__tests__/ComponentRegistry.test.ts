@@ -284,4 +284,13 @@ describe("collectComponentNames", () => {
 
     expect(collectComponentNames({ nested: [node, null, 42, "text"] })).toEqual(["form"]);
   });
+
+  it("accepts a builder array for nodes that mount several components", () => {
+    const source = {
+      "main#blog": { builder: ["article", "table"], onCreated: () => {} },
+      "#wizard": { builder: ["form"] },
+    };
+
+    expect(collectComponentNames(source)).toEqual(["article", "table", "form"]);
+  });
 });

@@ -7,8 +7,8 @@ export const BlogContent: iNodeContent = {
     content: {
       ...navigationMenu,
       "main#blog": {
-        // Built inside onCreated, so the tree cannot reveal it.
-        options: { requires: ["article"] },
+        // Mounted inside onCreated; `builder` is reserved and never rendered.
+        builder: ["article"],
         onCreated: (el: HTMLElement, _renderFn: any, builderFn: any) => {
           el.mount(builderFn("article", ARTICLE_RESPONSE));
         }

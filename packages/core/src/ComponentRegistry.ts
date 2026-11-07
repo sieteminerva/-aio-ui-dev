@@ -111,14 +111,13 @@ function isPlainRecord(value: unknown): value is Record<string, any> {
  *
  * Two shapes are recognised:
  *
- * - node trees: a string `builder` field (`{ builder: "form", content: … }`);
+ * - node trees: a `builder` field — a name, or an array of names for a node that
+ *   creates those components itself (for example inside an `onCreated` hook);
  * - page blocks: a `type` field paired with a table binding (`{ type: "masonry",
  *   source: "portfolio" }`). The `source` requirement keeps input descriptors out,
  *   because they also carry a `type` (`{ type: "text" }`) that is not a component.
  *
- * A node may also declare `requires: ["form"]` for components it creates outside
- * the static tree — for example inside an `onCreated` hook. Those cannot be seen by
- * walking, so the node states them.
+ * `builder` is a reserved key, so a declaration there can never leak into the DOM.
  *
  * The walk is depth-first, cycle-safe, and ignores everything it does not recog-
  * nise, so it can be run on raw CMS output without validation.
@@ -141,22 +140,19 @@ export function collectComponentNames(source: unknown): string[] {
     }
 
     const record = value as Record<string, any>;
-    const builder = typeof record.builder === "string" ? record.builder : undefined;
+    const declared = record.builder;
+    // `builder` is a reserved key the renderer never turns into an element, so a
+    // node can list several components it needs with `builder: ["form", "table"]`.
+    const declaredNames = typeof declared === "string"
+      ? [declared]
+      : Array.isArray(declared) ? declared.filter((entry): entry is string => typeof entry === "string") : [];
     const type = typeof record.type === "string" && "source" in record ? record.type : undefined;
-    const name = builder ?? type;
+    const names = type ? [...declaredNames, type] : declaredNames;
 
-    if (name && !seen.has(name)) {
-      seen.add(name);
-      found.push(name);
-    }
-
-    // `options` is a reserved key the renderer never turns into an element, so a
-    // declaration there cannot leak into the DOM.
-    const requires = Array.isArray(record.options?.requires) ? record.options.requires : [];
-    for (const required of requires) {
-      if (typeof required === "string" && !seen.has(required)) {
-        seen.add(required);
-        found.push(required);
+    for (const name of names) {
+      if (!seen.has(name)) {
+        seen.add(name);
+        found.push(name);
       }
     }
 

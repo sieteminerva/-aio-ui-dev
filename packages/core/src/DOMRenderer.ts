@@ -276,9 +276,12 @@ export class DOMRenderer<
       return `${tag}${idPart}${classPart}`;
     })();
 
-    const isBuilderRoot = !!val?.builder && !!val?.isRoot;
+    // `builder` may be a name or an array of names (a node that creates several
+    // components itself). Only a single named builder can be a template root.
+    const builderName = typeof val?.builder === "string" ? val.builder : null;
+    const isBuilderRoot = !!builderName && !!val?.isRoot;
     const effectiveGlobalKey = globalKey;
-    const builderTemplateKey = isBuilderRoot ? `@${String(val.builder)}` : null;
+    const builderTemplateKey = isBuilderRoot ? `@${builderName}` : null;
 
     const manualMarkupRecordItem: iNodeRecordItem = {
       key: globalKey,
