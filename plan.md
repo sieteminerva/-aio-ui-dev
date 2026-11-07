@@ -197,8 +197,24 @@ Supporting changes made in this step:
 
 ### 0.9 Move the application
 
-- [ ] Move `index.html`, `vite.config.ts`, `src/main.ts`, `src/content/**`, `public/` to `examples/gallery`
-- [ ] Verify all five routes
+- [x] Move `index.html`, `vite.config.ts`, `src/main.ts`, `src/content/**`, `public/` to `examples/gallery`
+- [x] Give the example its own `package.json`, `vite.config.ts`, `tsconfig.json` (own Vite root, mirroring a generated project)
+- [x] Add `package.json` to all 17 component packages (`@aio-ui/<name>`)
+- [x] Run `npm install` so workspaces link every package into `node_modules/@aio-ui/*`
+- [x] Remove `aliases.ts` and all `paths` mapping: resolution now goes through workspace links only
+- [x] Replace the host `import.meta.glob` maps with an explicit loader map (`examples/gallery/src/registry.assets.ts`)
+- [x] Switch manifests from file paths to module specifiers (`@aio-ui/form/Form`)
+- [x] Verify all five routes
+
+Notes:
+
+- A glob over `packages/**` cannot survive packaging: Vite resolves absolute glob patterns against
+  the app root and does not scan `node_modules`. The loader map is the durable form, and it is
+  exactly what the generator can emit for a generated project.
+- Because manifests now carry specifiers, `normalizeVitePath` only strips leading `./` and `/`;
+  lookup falls back to the exact key, so `@aio-ui/form/Form` and `/src/...` styles both work.
+- Chunk sizes shifted (inline `?inline` CSS is now code-split per component); runtime output is
+  unchanged: same node counts per route, same computed styles, no leftover `data-hydrating`.
 
 ### 0.10 Document the boundaries
 
@@ -295,22 +311,24 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 
 ## 7. Open questions
 
-| #   | Question                                                                                                               | Affects    |
-| --- | ---------------------------------------------------------------------------------------------------------------------- | ---------- |
-| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                  | closed     |
-| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now. | closed     |
-| Q3  | Should `Menu` be remapped now or dropped from the port list until the shell exists?                                    | Phase 5    |
-| Q4  | `docs/` target folder for technical documentation (currently `.archives/docs`)                                         | Phase 0.10 |
-| Q5  | Component packages have no `package.json` yet. Naming must be decided before `npm install`: `@aio-ui/component-form` (one canonical import path `@aio-ui/components/form/Form`) or `@aio-ui/form` (install name = import name)? | Phase 0.9  |
+| #   | Question                                                                                                                                                                                                                        | Affects    |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                                                                                                                           | closed     |
+| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now.                                                                                                          | closed     |
+| Q3  | Should `Menu` be remapped now or dropped from the port list until the shell exists?                                                                                                                                             | Phase 5    |
+| Q4  | `docs/` target folder for technical documentation (currently `.archives/docs`)                                                                                                                                                  | Phase 0.10 |
+| Q5  | Component package naming — resolved: `@aio-ui/<name>`, so install name and import name are identical (`@aio-ui/form/Form`). The `@aio-ui/components/*` alias is retired. | closed     |
 
 ## 8. Change log
 
-| Date       | Change                                                                                                                                                                                 |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-11-07 | Plan created. Reference material archived by the user into `.archives/`.                                                                                                               |
-| 2026-11-07 | Baseline recorded: `tsc --noEmit` clean, 42 tests pass, build succeeds. Renamed `Tab.tabRoot` (was `rootElement`) to resolve a collision with `Builder.rootElement`.                   |
-| 2026-11-07 | Step 0.2 done: `ComponentRegistry` now receives `{ modules, styles }` instead of owning `import.meta.glob`. All five routes verified.                                                  |
-| 2026-11-07 | Steps 0.3–0.5 done: workspace skeleton, `packages/styles`, `packages/utilities`, and `interface` moved to `packages/core`. Build output byte-identical.                                |
-| 2026-11-07 | Step 0.6 done: `packages/core` (`DOMRenderer`, `ComponentRegistry`, `Registry`, `BuilderPort`) and `packages/base` (`Base`, `BaseAdapters`). Shared `aliases.ts`. All routes verified. |
-| 2026-11-07 | Step 0.7 done: `packages/modules` (`HashRouter`, `EventEmitter`, `HttpService`, `ModuleRegistry`, `ModuleLoader`, `Animations`). `src/lib` now contains only `Components/`.            |
+| Date       | Change                                                                                                                                                                                                                                 |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-07 | Plan created. Reference material archived by the user into `.archives/`.                                                                                                                                                               |
+| 2026-11-07 | Baseline recorded: `tsc --noEmit` clean, 42 tests pass, build succeeds. Renamed `Tab.tabRoot` (was `rootElement`) to resolve a collision with `Builder.rootElement`.                                                                   |
+| 2026-11-07 | Step 0.2 done: `ComponentRegistry` now receives `{ modules, styles }` instead of owning `import.meta.glob`. All five routes verified.                                                                                                  |
+| 2026-11-07 | Steps 0.3–0.5 done: workspace skeleton, `packages/styles`, `packages/utilities`, and `interface` moved to `packages/core`. Build output byte-identical.                                                                                |
+| 2026-11-07 | Step 0.6 done: `packages/core` (`DOMRenderer`, `ComponentRegistry`, `Registry`, `BuilderPort`) and `packages/base` (`Base`, `BaseAdapters`). Shared `aliases.ts`. All routes verified.                                                 |
+| 2026-11-07 | Step 0.7 done: `packages/modules` (`HashRouter`, `EventEmitter`, `HttpService`, `ModuleRegistry`, `ModuleLoader`, `Animations`). `src/lib` now contains only `Components/`.                                                            |
 | 2026-11-07 | Step 0.8 done: all 17 components in `packages/components/<name>/`. Globs, manifests, `normalizeVitePath` and the Vite chunk rule retargeted. `src/lib` removed. All routes verified; lazy CSS now loads from `packages/components/**`. |
+
+| 2026-11-07 | Step 0.9 done: app moved to `examples/gallery` with its own Vite. Workspace links replace aliases; manifests carry module specifiers and the host supplies a loader map. All routes verified. |

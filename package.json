@@ -1,5 +1,5 @@
 {
-  "name": "@aio/gallery",
+  "name": "aio-ui",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,15 +9,15 @@
     "examples/*"
   ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
+    "dev": "npm --workspace @aio-ui/example-gallery run dev",
+    "build": "npm --workspace @aio-ui/example-gallery run build",
+    "preview": "npm --workspace @aio-ui/example-gallery run preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "devDependencies": {
     "typescript": "~6.0.2",
-    "vite": "^8.2.2",
     "vitest": "^4.1.12"
   }
 }

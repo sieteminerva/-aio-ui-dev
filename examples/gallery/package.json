@@ -1,0 +1,28 @@
+{
+  "name": "@aio-ui/example-gallery",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@aio-ui/article": "*",
+    "@aio-ui/base": "*",
+    "@aio-ui/core": "*",
+    "@aio-ui/form": "*",
+    "@aio-ui/masonry": "*",
+    "@aio-ui/message": "*",
+    "@aio-ui/modules": "*",
+    "@aio-ui/rating": "*",
+    "@aio-ui/styles": "*",
+    "@aio-ui/table": "*",
+    "@aio-ui/utilities": "*"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  }
+}

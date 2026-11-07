@@ -1,6 +1,6 @@
 import type { iModuleDefinition } from "@aio-ui/modules/ModuleRegistry";
-import type { iFormMessageTarget, iFormModuleContext } from "@aio-ui/components/form/FormModuleTypes";
-import { FORM_MODULE_IDS } from "@aio-ui/components/form/FormModuleTypes";
+import type { iFormMessageTarget, iFormModuleContext } from "@aio-ui/form/FormModuleTypes";
+import { FORM_MODULE_IDS } from "@aio-ui/form/FormModuleTypes";
 import type { iMessageContent } from "./Message";
 import { MessageBuilder } from "./Message";
 

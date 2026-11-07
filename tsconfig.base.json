@@ -20,19 +20,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-
-    /* Workspace packages are resolved through aliases so the example application
-       can import them before npm workspaces link them. */
-    "paths": {
-      "@aio-ui/styles/*": ["./packages/styles/src/*"],
-      "@aio-ui/core": ["./packages/core/src/index.ts"],
-      "@aio-ui/core/*": ["./packages/core/src/*"],
-      "@aio-ui/base": ["./packages/base/src/index.ts"],
-      "@aio-ui/base/*": ["./packages/base/src/*"],
-      "@aio-ui/utilities/*": ["./packages/utilities/src/*"],
-      "@aio-ui/modules/*": ["./packages/modules/src/*"],
-      "@aio-ui/components/*": ["./packages/components/*"]
-    }
+    "noFallthroughCasesInSwitch": true
   }
 }
