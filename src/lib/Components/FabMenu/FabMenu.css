@@ -1,0 +1,123 @@
+.fab {
+  position: fixed;
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+/* Coordinate Position */
+.fab.top-left {
+  top: 20px;
+  left: 20px;
+  align-items: flex-start;
+}
+.fab.top-right {
+  top: 20px;
+  right: 20px;
+  align-items: flex-end;
+}
+.fab.bottom-right {
+  bottom: 20px;
+  left: 20px;
+  align-items: flex-start;
+}
+.fab.bottom-left {
+  bottom: 20px;
+  right: 20px;
+  align-items: flex-end;
+}
+
+/* (FAB Rounded Button) */
+.fab .trigger {
+  width: 48px;
+  height: 48px;
+  line-height: 1em;
+  border-radius: 50%;
+  border: 1px solid #7b2cbf;
+  background: #7b2cbf;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(123, 44, 191, 0.3);
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab .trigger:hover {
+  transform: scale(1.05);
+  background: #6a1b9a;
+}
+
+/* (Panel State open) */
+.fab .panel {
+  display: none; /* Dikontrol via JS */
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.98);
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e0e0e0;
+  min-width: 180px;
+  backdrop-filter: blur(8px);
+  animation: themeWidgetFadeInSlide 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.fab .panel.is-open {
+  display: flex;
+}
+
+.fab .panel .title {
+  font-size: 10px;
+  font-weight: bold;
+  color: #888;
+  letter-spacing: 0.8px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+/* Panel Menu */
+.fab .panel .item.option {
+  padding: 8px 12px;
+  font-size: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  background: #f5f5f5;
+  color: #333333;
+}
+
+.fab .panel .item.option:hover {
+  background: #e8e8e8;
+}
+
+.fab .panel .item.option.active {
+  background: #7b2cbf;
+  color: #ffffff;
+}
+
+/* Animation */
+@keyframes themeWidgetFadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

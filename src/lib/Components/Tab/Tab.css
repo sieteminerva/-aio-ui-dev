@@ -1,0 +1,209 @@
+/* Tabs Component - The Premium Modern-Nesting Specification */
+.tab {
+  display: flex;
+  gap: 1.5rem;
+  position: relative;
+  width: 100%;
+
+  /* ====================================================
+     🌌 SINKRONISASI ORIENTASI STRUKTUR FLEXBOX TATA LETAK
+     ==================================================== */
+
+  /* POSISI ATAS (TOP) */
+  &.position-top {
+    flex-direction: column;
+    & .menu:not(.pagination) {
+      flex-direction: row;
+      border-bottom: 2px solid var(--accent-strong);
+    }
+  }
+
+  /* POSISI BAWAH (BOTTOM) */
+  &.position-bottom {
+    flex-direction: column;
+    & .menu:not(.pagination) {
+      flex-direction: row;
+      border-top: 2px solid var(--accent-strong);
+      order: 2; /* Turun ke lantai bawah secara visual */
+    }
+    & .body {
+      order: 1; /* Naik ke lantai atas secara visual */
+    }
+  }
+
+  /* POSISI KIRI (LEFT) */
+  &.position-left {
+    flex-direction: row;
+    & .menu:not(.pagination) {
+      flex-direction: column;
+      border-right: 2px solid var(--accent-strong);
+      width: 250px;
+      flex-shrink: 0;
+    }
+    & .body {
+      flex: 1;
+    }
+  }
+
+  /* POSISI KANAN (RIGHT) */
+  &.position-right {
+    flex-direction: row-reverse;
+    & .menu.menu:not(.pagination) {
+      flex-direction: column;
+      border-left: 2px solid var(--accent-strong);
+      width: 250px;
+      flex-shrink: 0;
+    }
+    & .body {
+      flex: 1;
+    }
+  }
+
+  /* ====================================================
+     🪐 MENU BUTTON STYLING (CORRECTED CLASSES)
+     ==================================================== */
+  & .menu:not(.pagination) {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+
+    /* 🟢 RE-ANCHOR: Mencari kelas .button ksatria, bukan .tab-btn purba! */
+    & .button {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      align-items: center;
+      padding: 0.5rem 0.5rem;
+      line-height: 1.4rem;
+
+      font-weight: bolder;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px; /* Sudut lengkung modern minimalis */
+      color: var(--accent-strong);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-align: center;
+      width: 100%;
+
+      & .btn-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        transition: color 0.3s ease;
+      }
+
+      & .btn-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-top: 0.15rem;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        transform: translateY(-1px);
+      }
+
+      /* 🟢 FASE NYALA AKTIF: Menyatu intim dengan warna aksen andalan */
+      &.active {
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        color: white; /* Memaksa kontras teks hitam premium di atas warna terang */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        & .btn-label {
+          color: var(--surface-bg);
+        }
+        & .btn-title {
+          color: var(--surface-bg);
+        }
+      }
+    }
+  }
+
+  /* ====================================================
+     🪐 BODY & PANEL STYLING (CORRECTED CLASSES)
+     ==================================================== */
+  & .body {
+    position: relative;
+    padding: 1rem 0;
+    height: 100%;
+    flex: 1;
+
+    /* 🟢 RE-ANCHOR: Mencari kelas .panel ksatria, bukan .tab-panel purba! */
+    & .panel {
+      animation: tabFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+      &.hidden {
+        display: none !important;
+      }
+
+      & .content {
+        & .eyebrow {
+          font-size: 0.8rem;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          color: var(--accent-strong);
+          text-transform: uppercase;
+          display: inline-block;
+          margin-bottom: 0.25rem;
+        }
+        & .title {
+          font-size: 1.85rem;
+          font-weight: 700;
+          margin: 0.25rem 0 0.75rem 0;
+          color: #fff;
+          letter-spacing: -0.02em;
+        }
+        & .desc {
+          font-size: 1rem;
+          line-height: 1.65;
+          color: var(--text-main);
+          max-width: 720px; /* Batas nyaman mata membaca artikel */
+        }
+      }
+    }
+  }
+
+  /* FOOTER STYLING */
+  & .footer {
+    padding: 1rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    width: 100%;
+  }
+
+  /* SPINNER LOADING STYLING */
+  & .spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background-image: var(--spinner-content);
+    background-size: contain;
+    background-repeat: no-repeat;
+    z-index: 10;
+    transition: opacity 0.2s ease;
+
+    &.hidden {
+      display: none !important;
+    }
+  }
+}
+
+/* 🛸 THE ULTRA-FLUID RETINA TRANSITION ANIMATION */
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

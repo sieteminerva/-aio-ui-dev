@@ -1,0 +1,124 @@
+.row.full-width:has(.product) {
+  justify-content: center;
+}
+.product {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-main);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+
+  /* ====================================================
+     🔮 THE HOVER BLEND MONITOR DISPLAY PIPELINE
+     ==================================================== */
+  & .display {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background-color: #f5f5f5; /* Fallback warna baju pertama */
+    border-radius: var(--radius-image);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+
+    /* 🟢 MAHKOTA UTAMAA TRIK JITU ANDA: Kunci perpaduan warna dan bayangan! */
+    & img.product-shadow-blend {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 1;
+      transition: opacity 0.5s cubic-bezier(0.5, 0, 0.5, 1);
+    }
+  }
+
+  /* OPTION BUBBLE COLOR SELECTORS */
+  & .option {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    padding: 0.25rem;
+    width: 100%;
+    overflow-x: auto;
+    align-items: center;
+    justify-content: center;
+    & .option-bubble {
+      display: block;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.1);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+
+      &.shape-round {
+        border-radius: 50%;
+      }
+      &.shape-square {
+        border-radius: 4px;
+      }
+
+      &:hover {
+        transform: scale(1.15);
+      }
+
+      /* State Terpilih: Beri cincin pembatas warna putih neon aksen yang menyala tajam */
+      &.active {
+        border-color: #fff;
+        transform: scale(1.1);
+        box-shadow: 0 0 0 2px var(--accent-strong, #00ffcc);
+      }
+    }
+  }
+
+  /* CAPTION TEXT TYPOGRAPHY */
+  & .caption {
+    margin-bottom: 0.75rem;
+    & .title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent-strong);
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.01em;
+    }
+    & .desc {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+  }
+
+  /* PRICE TAG STYLING */
+  & .price {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--accent-strong);
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+  }
+
+  /* CHECKOUT BUTTON ACTION */
+  & .btn-checkout {
+    width: 100%;
+    padding: 0.85rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    background: var(--accent-strong, #00ffcc);
+    color: #000;
+    border: none;
+    transition: all 0.2s ease;
+
+    &:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+  }
+}

@@ -5,9 +5,11 @@
 // dan delegasi listener berjalan di dalam engine, tanpa membebani Form.ts.
 // ======================================================================
 
-import { FileUploader } from "../FileUploader";
 import { InputBuilder } from "../Input";
 import type { CascadeBlockedInfo } from "./Validation";
+import type { iModuleDefinition } from "../../../Modules/ModuleRegistry";
+import { FORM_MODULE_IDS } from "../FormModuleTypes";
+import type { iFormModuleContext } from "../FormModuleTypes";
 
 /**
  * Aturan kaskade form: menentukan kapan sebuah input/group boleh "lahir" ke DOM.
@@ -203,6 +205,18 @@ export class FormCascade {
     this.host = host;
   }
 
+  /**
+   * Tells whether a schema item carries a cascade condition.
+   *
+   * @summary Delegates to {@link FormCascadeHandler.isCascadeItem} so hosts can
+   * ask the loaded engine instead of importing the handler class themselves.
+   * @param item - Schema item to inspect.
+   * @returns `true` when the item carries a `condition`.
+   */
+  public isCascadeItem(item: any): boolean {
+    return FormCascadeHandler.isCascadeItem(item);
+  }
+
   /** Tanam placeholder <template> di posisi skema (dipanggil prepare/renderGroup) */
   hold(parent: HTMLElement, path: string): void {
     const placeholder = document.createElement("template");
@@ -278,22 +292,20 @@ export class FormCascade {
           if (this.host.multistep && !path.includes(".")) {
             el.dataset.index = path;
           }
-          // Hidupkan uploader (file input CSV dsb.) di area yang baru lahir
-          try { if (typeof FileUploader !== "undefined") FileUploader.initAll(el); } catch (error) { console.warn("[Form Cascade] file uploader init failed:", error); }
+          // Hidupkan adapter input (uploader CSV dsb.) di area yang baru lahir —
+          // termasuk field HTML mentah yang tak melewati InputBuilder.
+          InputBuilder.initFileAdapters(el);
         }
       } else {
+        // InputBuilder memasang adapter-nya sendiri saat membangun field.
         el = new InputBuilder({ formId: form.id } as any).create(item) as HTMLElement;
-        // Hidupkan uploader untuk item tunggal yang baru lahir dari kaskade
-        // (mis. input file CSV yang dikondisikan) — item non-group tak pernah
-        // masuk jalur group di atas.
-        try { if (typeof FileUploader !== "undefined") FileUploader.initAll(el); } catch (error) { console.warn("[Form Cascade] file uploader init failed:", error); }
       }
       if (!el) {
         const label = item && (item.id || item.name || item.type);
         throw new Error(
           `[Form Cascade] Gagal membangun elemen kaskade pada path "${path}"` +
-            (label ? ` untuk "${label}"` : "") +
-            ". Pastikan selektor '@form>group' terkonfigurasi & InputBuilder mengembalikan elemen yang valid (render() mengembalikan undefined bila selektor tidak dikenal)."
+          (label ? ` untuk "${label}"` : "") +
+          ". Pastikan selektor '@form>group' terkonfigurasi & InputBuilder mengembalikan elemen yang valid (render() mengembalikan undefined bila selektor tidak dikenal)."
         );
       }
       el.dataset.cascade = path;
@@ -474,3 +486,43 @@ export class FormCascade {
     this.placeholders.clear();
   }
 }
+
+/**
+ * Form module definition for the cascade engine.
+ *
+ * @summary Active when the form declares `cascading` or pins the next button with
+ * `autoDisableNextStep`. Requires `validation`, because the cascade host reports a
+ * blocked next step through the validation feature.
+ *
+ * @example
+ * // registered by CORE_FORM_MODULES; no manual wiring needed
+ */
+export const cascadeFormAdapter: iModuleDefinition<iFormModuleContext, FormCascade> = {
+  id: FORM_MODULE_IDS.cascade,
+
+  requires: [FORM_MODULE_IDS.validation],
+
+  /**
+   * Cascade only runs when the schema uses conditions or the next button is gated.
+   *
+   * @param context - Host context.
+   * @returns `true` when the cascade engine should load.
+   */
+  matches: (context) => context.config.cascading === true || context.config.autoDisableNextStep === true,
+
+  /**
+   * Builds the cascade engine around the host contract.
+   *
+   * @param context - Host context.
+   * @returns The live cascade engine.
+   */
+  load: (context) => new FormCascade(context.cascadeHost()),
+
+  /**
+   * Detaches cascade listeners and drops held placeholders.
+   *
+   * @param cascade - The engine returned by `load()`.
+   * @returns Nothing.
+   */
+  destroy: (cascade) => cascade.dispose(),
+};

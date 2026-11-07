@@ -93,10 +93,10 @@ nav {
 main {
   display: flex !important;
   flex-direction: row !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
+  /* width: 100vw !important; */
+  /* height: 100vh !important; */
+  /* overflow-x: auto !important; */
+  /* overflow-y: hidden !important; */
   scroll-behavior: smooth;
   /* background: var(--sys-bg, #ffffff); */
   color: var(--sys-text, #111111);
@@ -228,6 +228,10 @@ section#home {
 }
 
 /* ─── Embedded Wizard Form in #home ─── */
+
+section#build {
+  overflow-y: auto !important;
+}
 section .form {
   width: 100%;
   max-width: 820px;

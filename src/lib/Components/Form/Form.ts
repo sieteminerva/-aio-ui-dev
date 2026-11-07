@@ -1,16 +1,17 @@
 import type { iBuilderConfig, iBuilderRegistry } from "../../interface";
 import { Builder } from "../Base";
-import { MessageBuilder, type iMessageContent } from "../Message/Message";
-import { TableBuilder } from "../Table/Table";
-import { FileUploader } from "./FileUploader";
-import { FormCascade, type FormCascadeHost, type iCascadeEventDetail, FormCascadeHandler } from "./Handlers/Cascade";
-import { FormMultistepHandler, type FormMultistepHost } from "./Handlers/Multistep";
-import { FormValidationHandler } from "./Handlers/Validation";
-import { FormCalculationHandler, type iFormCalculationConfig } from "./Handlers/Calculation";
-import { IdAddressBuilder } from "./IdAddress/id-address-builder";
-import { InputBuilder } from "./Input";
-import "./Dropdown.css";
-import "./inputControls.css";
+import type { iMessageContent } from "../Message/Message";
+import type { FormCascade, FormCascadeHost, iCascadeEventDetail } from "./Handlers/Cascade";
+import type { FormMultistepHandler, FormMultistepHost } from "./Handlers/Multistep";
+import type { FormValidationHandler } from "./Handlers/Validation";
+import { FORM_MODULE_IDS } from "./FormModuleTypes";
+import type { FormModulePhase, iFormCollaborator, iFormModuleContext } from "./FormModuleTypes";
+import { CORE_FORM_MODULES } from "./FormRegistry";
+import { ModuleLoader } from "../../Modules/ModuleLoader";
+// 🎨 Gaya baseline field milik form: adaptor input juga mengimpornya untuk
+// pemakaian mandiri, tetapi form tetap memuatnya agar tampilan tidak bergantung
+// pada modul input mana yang dipasang (mis. renderer kustom).
+
 
 export type FormElementType =
   | "@container"
@@ -46,6 +47,14 @@ export interface iFormConfig extends iBuilderConfig<FormElementType> {
   calculation?: boolean;
   footer?: HTMLElement | string | null;
   onSubmit?: null | Function;
+  /**
+   * Optional loader that supplies optional Form sub-modules.
+   *
+   * Leave it `null` (default) and every feature keeps its built-in handler, so
+   * existing forms are unaffected. An injected loader only replaces a feature
+   * when the matching module is registered in it.
+   */
+  modules?: ModuleLoader<iFormModuleContext, any> | null;
 }
 
 export class FormBuilder extends Builder<FormElementType, iFormConfig> {
@@ -68,12 +77,17 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
   // 🧾 Validasi terpusat (native + kaskade): emit + toast. Lihat Handlers/Validation.ts.
   #validation: FormValidationHandler | null = null;
 
-  // 🧮 Optional formula engine owned by this FormBuilder instance.
-  #calculation: FormCalculationHandler | null = null;
-
   // Inisialisasi komponen (uploader, IdAddress, dsb.) untuk step yang baru
   // lahir — engine memanggil ini lewat host hook onStepMount.
   #onStepMounted: ((fieldset: HTMLElement) => void) | null = null;
+
+  // 🧩 Loader modul: satu-satunya pemilik siklus hidup validation, cascade,
+  // multistep, dan calculation. Form tidak meng-`new` handler apa pun.
+  readonly #loader: ModuleLoader<iFormModuleContext, any>;
+
+  // 🧩 Modul yang sudah dimuat pada siklus render berjalan. Form hanya memanggil
+  // hook opsionalnya (mount/beforeSubmit/renderTable), tanpa tahu isinya.
+  #features: iFormCollaborator[] = [];
 
   constructor(config: Partial<iFormConfig> = {}) {
     super();
@@ -117,8 +131,12 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       namespace: null,
       emit: null,
       onSubmit: (_data: any) => { },
+      modules: null,
     };
     this.config = this.resolveConfig(defaultConfig, config);
+
+    // Step 1: Loader efektif — preset inti bila consumer tidak menyuntik loader sendiri.
+    this.#loader = this.config.modules ?? new ModuleLoader<iFormModuleContext, any>("form", CORE_FORM_MODULES);
   }
 
   /**
@@ -133,12 +151,12 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     }
     this.#inputs = Array.isArray(inputs) ? inputs : [inputs];
 
-    // 🌊 Reset engine kaskade (siklus hidup baru per prepare)
+    // 🌊 Siklus hidup baru per prepare: seluruh modul dilepas lalu dimuat ulang.
+    this.#loader.unloadAll();
+    this.#features = [];
     this.#cascade = null;
     this.#multistep = null;
     this.#validation = null;
-    this.#calculation?.destroy();
-    this.#calculation = null;
     this.#onStepMounted = null;
 
     // const wrapper = this.render("@container", inputs);
@@ -150,16 +168,13 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     // next diminta eksplisit (autoDisableNextStep:true, mis. untuk kondisi眼
     // manual pada group schema tanpa cascading), agar gate() tetap berjalan.
 
-    if (isCascading || this.config.autoDisableNextStep === true) this.#cascade = new FormCascade(this._buildCascadeHost());
-    if (this.config.multistep) this.#multistep = new FormMultistepHandler(this._buildMultistepHost());
-
-    // 🧾 Jalur validasi terpusat: emit("formValidation") + CustomEvent di <form>
-    // + tampilkan info lewat createMessage(form, false, content).
-    this.#validation = new FormValidationHandler({
-      builder: this.builderId,
-      emit: typeof this.config.emit === "function" ? (this.config.emit as any) : null,
-      showMessage: (content) => this.createMessage(form, false, content),
-    });
+    // 🧩 Semua modul fase prepare dimuat lewat loader: definisi yang memutuskan
+    // apakah ia aktif (cascading/autoDisableNextStep, multistep), bukan Form.
+    const moduleContext = this._buildModuleContext(form, "prepare");
+    this.#features = this.#loader.resolveAll(moduleContext);
+    this.#validation = this.#loader.loaded(FORM_MODULE_IDS.validation);
+    this.#cascade = this.#loader.loaded(FORM_MODULE_IDS.cascade);
+    this.#multistep = this.#loader.loaded(FORM_MODULE_IDS.multistep);
 
     // Iterasi dan transformasikan setiap input secara murni
     for (const [index, input] of Object.entries(this.#inputs)) {
@@ -195,7 +210,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       else if (input && typeof input === "object" && "group" in input) {
         // 🌊 CASCADE: group pembawa .condition ditahan — placeholder <template>
         // ditanam di posisinya, dibangun sungguhan saat kondisinya terpenuhi
-        if (isCascading && FormCascadeHandler.isCascadeItem(input)) {
+        if (isCascading && this.#cascade?.isCascadeItem(input)) {
           this.#cascade?.hold(form, String(index));
           continue;
         }
@@ -220,13 +235,13 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       // ==========================================
       else {
         // 🌊 CASCADE: input tunggal pembawa .condition juga ditahan seperti group
-        if (isCascading && FormCascadeHandler.isCascadeItem(input)) {
+        if (isCascading && this.#cascade?.isCascadeItem(input)) {
           this.#cascade?.hold(form, String(index));
           continue;
         }
 
         // InputBuilder.prepare() mengelola isRoot dan melahirkan <div class="field"> murni
-        const inputEl = new InputBuilder({ formId: formId } as any).create(input);
+        const inputEl = this._renderField(input, formId);
         form.append(inputEl as any);
       }
 
@@ -274,7 +289,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
         // 🌊 CASCADE: item anak pembawa .condition ditahan — placeholder <template>
         // ditanam di posisinya (terdaftar otomatis di #nodes) lalu rendering dilewati
-        if (cascadeActive && FormCascadeHandler.isCascadeItem(innerInput)) {
+        if (cascadeActive && this.#cascade?.isCascadeItem(innerInput)) {
           this.#cascade?.hold(fieldset, `${cascadePath}.group.${_index}`);
           return;
         }
@@ -293,33 +308,20 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
           const nestedFieldset = this.renderGroup(innerInput, formId, cascadeActive ? `${cascadePath}.group.${_index}` : undefined);
           if (innerInput.id) nestedFieldset.id = innerInput.id;
           if (innerInput.table !== undefined) {
-            console.log(innerInput.table.content)
             const groupSubmitBtn = this.render("@form>actions>submit", { isGroupBtn: false, groupId: innerInput.id }) as HTMLButtonElement;
-            const table = new TableBuilder()
-            const tableEl = table.create(innerInput.table.content)
 
-            if (innerInput.table.id) tableEl.id = innerInput.table.id;
-
-            groupSubmitBtn.onclick = (e) => {
-              e.preventDefault();
-              const is = (nestedFieldset as HTMLFieldSetElement).elements
-              // console.log(is)
-              const groupValues = [];
-              for (const element of (is as any)) {
-                if (!element) break;
-                if (element instanceof HTMLInputElement && (element.type === "checkbox" || element.type === "radio")) {
-                  if ((element as HTMLInputElement).checked) {
-                    groupValues.push(element.value);
-                  }
-                } else {
-                  groupValues.push((element as HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement).value);
-                  // data[element.name] = element.value;
-                }
+            // 🧩 Modul pemilik tabel yang membangunnya dan menyambungkan tombol grup.
+            for (const feature of this.#features) {
+              const nodes = feature.renderTable?.(innerInput.table, {
+                fieldset: nestedFieldset,
+                submitButton: groupSubmitBtn,
+                groupId: innerInput.id,
+              });
+              if (nodes && nodes.length) {
+                nestedFieldset.append(groupSubmitBtn, ...nodes);
+                break;
               }
-              table.addRow(groupValues as any[])
             }
-            // console.log(tableEl)
-            nestedFieldset.append(groupSubmitBtn, tableEl);
           }
 
           fieldset.appendChild(nestedFieldset);
@@ -329,7 +331,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
         else {
           const inputEl = innerInput instanceof HTMLElement
             ? innerInput
-            : new InputBuilder({ formId: formId } as any).create(innerInput);
+            : this._renderField(innerInput, formId);
 
           const btn = this.scanForSubmitButton(inputEl, formId);
           if (btn) this.submitButtonId = btn.id;
@@ -347,6 +349,45 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     }
 
     return fieldset;
+  }
+
+  /**
+   * Renders one field through the loaded input module.
+   *
+   * @summary Keeps `InputBuilder` out of the builder: the module owns field
+   * creation, the form only asks for an element.
+   * @param input - Input schema or raw descriptor.
+   * @param formId - Id of the owning form.
+   * @returns The rendered field element.
+   * @throws {Error} When no loaded module can render fields, meaning the `input`
+   *   module is missing from the presets.
+   */
+  private _renderField(input: any, formId: string): HTMLElement {
+    for (const feature of this.#features) {
+      const element = feature.renderField?.(input, formId);
+      if (element) return element;
+    }
+
+    throw new Error("[FormBuilder] No module rendered the field. Register the input module in the loader preset.");
+  }
+
+  // ==================================================================
+  // 🧩 HOST MODULE — kontrak sempit untuk sub-modul Form. Sub-modul tidak
+  // pernah menerima instance FormBuilder: hanya form element, emitter, host
+  // pesan, dan config yang sudah diresolve.
+  // ==================================================================
+  private _buildModuleContext(form: HTMLFormElement, phase: FormModulePhase): iFormModuleContext {
+    return {
+      builder: String(this.builderId),
+      form,
+      inputs: this.#inputs,
+      phase,
+      emit: typeof this.config.emit === "function" ? (this.config.emit as (event: string, payload: any) => void) : null,
+      showMessage: (content) => this._notify(form, false, content),
+      config: this.config,
+      cascadeHost: () => this._buildCascadeHost(),
+      multistepHost: () => this._buildMultistepHost(),
+    };
   }
 
   // ==================================================================
@@ -408,37 +449,11 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       this.attachFormListener(formElement);
     }
 
-    if (formElement && this.config.calculation) {
-      const formulas = this.collectCalculationFormulas(this.#inputs);
-      const calculationConfig: iFormCalculationConfig = { strategies: { formula: formulas } };
-      this.#calculation = new FormCalculationHandler(formElement, calculationConfig).create();
-      formElement.calculator = this.#calculation;
-    }
+    // 🧮 Fase initialize: modul yang membaca DOM final (calculation) baru layak dimuat
+    // sekarang, setelah step multistep lahir dari attach() di atas.
+    this.#features.push(...this.#loader.resolveAll(this._buildModuleContext(formElement, "initialize")));
 
     // console.log(`[Form Engine v2] Form ID "${formElement?.id}" successfully compiled with active listeners.`);
-  }
-
-  /** Collect per-input calculation strategies, inferring the nearest group id. */
-  private collectCalculationFormulas(inputs: any[]): iFormCalculationConfig["strategies"]["formula"] {
-    const formulas: iFormCalculationConfig["strategies"]["formula"] = [];
-    const visit = (items: any[], parentGroupId?: string): void => {
-      for (const item of items ?? []) {
-        if (!item || typeof item !== "object" || item instanceof Node) continue;
-        const formula = item.config?.calculator;
-        if (formula && typeof formula.formula === "function") {
-          formulas.push({
-            ...formula,
-            groupId: formula.groupId ?? parentGroupId,
-            outputId: formula.outputId ?? item.id,
-          });
-        }
-        if (Array.isArray(item.group)) {
-          visit(item.group, item.id ?? parentGroupId);
-        }
-      }
-    };
-    visit(inputs);
-    return formulas;
   }
 
 
@@ -551,18 +566,18 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
 
   public unmount(): void {
-    this.#cascade?.dispose(); // Lepas listener delegasi + placeholder engine
+    // Loader memiliki siklus hidup modul: dispose/destroy dipanggil oleh definisi.
+    this.#loader.unloadAll();
+    this.#features = [];
+    this.#validation = null;
     this.#cascade = null;
-    this.#multistep?.dispose(); // Lepas listener delegasi + langkah tertahan
     this.#multistep = null;
-    this.#calculation?.destroy();
-    this.#calculation = null;
     this.#onStepMounted = null;
     this.destroy();
   }
 
   /**
-   * Logika Listener asinkronus (FileUploader, Event submit, CustomEvent) tetap aman terisolasi di sini
+   * Listener submit/klik + orkestrasi hook kolaborator (mount, beforeSubmit).
    */
 
   /* 
@@ -595,67 +610,8 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
   * 
   */
   private attachFormListener(form: HTMLFormElement): void {
-    // console.log("Form Listeners Attached")
-    let table: any = null;
-    let IdAddress: any = null;
-    // 🪜 Uploader dihidupkan MALAS dan IDEMPOTEN: FileUploader.initAll melewati
-    // input yang sudah bertanda data-uploader-initialized, jadi aman dipanggil
-    // berulang. Form biasa dihidupkan sekali di ekor metode ini (semua input
-    // sudah ada di DOM sejak prepare); setiap step lazy multistep yang baru
-    // lahir dihidupkan ulang lewat onStepMount di bawah.
-    const ensureUploaders = (root: HTMLElement): void => {
-      if (typeof FileUploader === "undefined" || typeof FileUploader.initAll !== "function") return;
-      try { FileUploader.initAll(root); } catch (error) { console.warn("[Form] file uploader init failed:", error); }
-    };
-
-    if (typeof FileUploader !== "undefined" && typeof FileUploader.initAll === "function") {
-      // Delegasi di level form — input file CSV dari step kaskade yang baru
-      // lahir (ecommerce/gallery) ikut membangun tabel, bukan hanya yang awal.
-      form.addEventListener("change", async (event: Event) => {
-        const csvInput = (event.target as HTMLElement)?.closest?.("input[type='file'][data-uploader-csv]") as HTMLInputElement | null;
-        if (!csvInput || !form.contains(csvInput)) return;
-
-        // 1. Hapus tabel lama terlebih dahulu jika sudah ada (supaya tidak menumpuk)
-        const existingTable = form.querySelector(".table-container");
-        if (existingTable) existingTable.remove();
-
-        // 2. File dihapus pengguna → jangan buat tabel baru
-        if (!csvInput.files || csvInput.files.length === 0) {
-          if (table && typeof table.destroy === "function") table.destroy();
-          table = null;
-          return;
-        }
-
-        // 3. Bangun tabel dari CSV yang baru dipilih
-        const tableData = await FileUploader.parseCSVToTable(form.id);
-        if (TableBuilder !== undefined && typeof TableBuilder === "function") {
-          table = new TableBuilder({
-            renderAsCard: false,
-            autoFreezeAt: 0
-          });
-
-          const tableEl = table.create(tableData);
-          (csvInput.parentElement as HTMLElement)?.insertAdjacentElement("afterend", tableEl);
-        }
-      });
-    }
-
-    // 🪜 IdAddress dibangun MALAS: pada form multistep, field [data-level] bisa
-    // berada di step yang belum lahir (lazy mount) — pemeriksaan DOM saat init
-    // belum tentu menemukannya. Cek ulang setiap kali sebuah step lahir.
-    const ensureIdAddress = (): any => {
-      if (IdAddress) return IdAddress;
-      if (form.querySelectorAll("[data-level]").length <= 1) return null;
-      const DEPLOYMENT_ID = "AKfycbwjQ_iNQClJuyf5z1ZlJcJ-j6LEnINfvbBmjBFlE4T3X4dVAoxF_GzUCCv6TXZ_apfhpA";
-      const API_URL = `https://script.google.com/macros/s/${DEPLOYMENT_ID}/exec`;
-      IdAddress = new IdAddressBuilder({
-        container: form,
-        url: API_URL,
-        geocode: false,
-      });
-      IdAddress.init();
-      return IdAddress;
-    };
+    // 🧩 Kolaborator (uploader, IdAddress, tabel grup) dimuat sebagai modul; form
+    // hanya memanggil hook mount/beforeSubmit/renderTable miliknya.
 
     const toggleLoadingState = (success: boolean) => {
       form.classList.remove("loading");
@@ -666,11 +622,11 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     };
 
     // 🪜 Multistep: engine melahirkan langkah awal + memasang delegasi next/back.
-    // Setiap fieldset step yang lahir (termasuk step 0) dihidupkan uploader-nya
-    // dan memicu IdAddress bila [data-level] kini ada.
+    // Setiap fieldset step yang lahir (termasuk step 0) ditawarkan ke seluruh
+    // modul kolaborator lewat hook mount, lalu kaskade mengevaluasi ulang.
     this.#onStepMounted = (fieldset: HTMLElement) => {
-      ensureUploaders(fieldset);
-      ensureIdAddress();
+      // 🧩 Setiap area DOM yang baru lahir ditawarkan ke seluruh modul kolaborator.
+      for (const feature of this.#features) feature.mount?.(fieldset);
       // 🌊 Kaskade: langkah yang baru lahir membawa placeholder anak
       // ber-condition (ditahan saat renderGroup) — evaluasi segera agar
       // yang kondisinya sudah terpenuhi langsung lahir, tanpa menunggu
@@ -679,13 +635,10 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     };
     this.#multistep?.attach(form);
 
-    // 🪜 Form biasa (non-multistep): seluruh input sudah berada di DOM sejak
-    // prepare — hidupkan uploader & IdAddress sekali di sini. Pada form
-    // multistep, langkah masih tertahan sebagai <template> (tak terlihat
-    // querySelector) sehingga pemindaian ini no-op; penggantinya adalah
-    // onStepMount di atas yang mengiringi tiap kelahiran langkah.
-    ensureUploaders(form);
-    ensureIdAddress();
+    // � Form biasa (non-multistep): seluruh input sudah ada di DOM sejak prepare —
+    // hook mount dijalankan sekali di sini. Pada form multistep, langkah masih
+    // tertahan sebagai <template> sehingga mount-nya menyusul via onStepMount.
+    for (const feature of this.#features) feature.mount?.(form);
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -702,38 +655,19 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       const formData = new FormData(form);
       const data = Object.fromEntries(formData as any);
 
-      let files = {};
-      if (typeof FileUploader !== "undefined" && typeof FileUploader.getFilesForGoogleDrive === "function") {
-        files = await FileUploader.getFilesForGoogleDrive(form.id);
-      }
-      // if (typeof FileUploader !== "undefined" && typeof FileUploader.getFiles === "function") {
-      //   files = await FileUploader.getFiles(form.id);
-      // }
-      if (IdAddress && IdAddress.detail) {
-        // console.log("detail:", IdAddress.detail)
-        Object.keys(IdAddress.detail).forEach((inputKey) => {
-          if (inputKey.endsWith("_name")) {
-            const outputKey = inputKey.replace("_name", "");
-            if (outputKey in data) {
-              data[outputKey] = String((IdAddress.detail as any)[inputKey]).toLowerCase();
-            }
-          }
-        });
-      }
+      // 🧩 Kolaborator menyumbang datanya (file, alamat, tabel) sebelum event rilis.
+      for (const feature of this.#features) await feature.beforeSubmit?.(data);
 
-      const dataWithFiles = Object.keys(files).length > 0 ? Object.assign({}, data, files) : data;
-      if (table) dataWithFiles.product = table.toJson();
-      console.log({ dataWithFiles })
       form.dispatchEvent(
         new CustomEvent("formSubmit", {
           bubbles: true,
           detail: {
             formId: form.id,
-            data: dataWithFiles,
+            data,
             complete: (success: boolean, messageConfig: any, resetForm: boolean) => {
-              // TODO reset / destroy table & idAddress if available
+              // TODO: beri tahu modul kolaborator saat form di-reset agar state-nya ikut bersih
               toggleLoadingState(success);
-              this.createMessage(form, success, messageConfig);
+              this._notify(form, success, messageConfig);
               if (resetForm || this.config.resetOnComplete) form.reset();
             },
             reset: () => form.reset()
@@ -762,31 +696,27 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
   }
 
-  private createMessage(form: HTMLFormElement, success: boolean, messageConfig: iMessageContent) {
-    // Jika server atau router mengirimkan konfigurasi konten pesan status
-    if (messageConfig && typeof MessageBuilder !== "undefined") {
+  /**
+   * Presents a status message through the loaded message module.
+   *
+   * @summary `FormBuilder` owns no message renderer: the module that implements
+   * `notify` decides how the message appears. Without such a module the builder
+   * warns instead of failing, so plugging the module out never breaks rendering.
+   * @param form - Form the message belongs to.
+   * @param success - Whether the action that produced the message succeeded.
+   * @param content - Message content, possibly already filled by the caller.
+   * @returns Nothing.
+   */
+  private _notify(form: HTMLFormElement, success: boolean, content: iMessageContent): void {
+    if (!content) return;
 
-      // Lahirkan notifikasi instan menggunakan engine terisolasi Anda!
-      // Target kontainer diset dinamis menempel di atas form, atau default body jika kosong
-      const toast = new MessageBuilder({
-        id: `msg-${form.id}`, // Id unik berbasis form agar anti-menumpuk kembung
-        element: form,        // Selipkan pesan tepat di lantai teratas boks form terkait
-        duration: success ? 4000 : 6000 // Beri waktu membaca lebih lama jika status error
-      });
-
-      // Memicu kompilasi DOM 5-Fase secara otonom
-      toast.prepare({
-        header: messageConfig.header || (success ? "Operasi Sukses!" : "Terjadi Kendala"),
-        message: messageConfig.message || "Data Anda telah diproses oleh orkestrator.",
-        type: messageConfig.type || (success ? "success" : "error"),
-        icon: messageConfig.icon || (success ? "checkmark circle icon" : "icon error")
-      });
-
-      // Amankan fungsi interaktivitas click silang internal tombol close
-      toast.initialize();
-    } else {
+    for (const feature of this.#features) {
+      if (!feature.notify) continue;
+      feature.notify(content, { form, success });
       return;
     }
+
+    console.warn("[FormBuilder] No module handles messages. Register the message module in the loader preset.");
   }
 
 

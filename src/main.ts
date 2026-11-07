@@ -16,6 +16,7 @@ import { EventEmitter } from './lib/Modules/EventEmitter';
 import { AboutContent } from './content/about';
 import { GalleryContent } from './content/gallery';
 import { BlogContent } from './content/blog';
+import { BuildPageContent } from './content/wizard';
 
 // 🔐 Daftarkan Service Worker supaya id_token disimpan di variabel SW.
 // BASE_URL mengikuti base vite ("/rajutan/") agar cocok dengan scope GitHub Pages.
@@ -38,6 +39,7 @@ function pageContentFor(route: string): iNodeContent {
   const key = route.trim().toLowerCase().replace(/^#|\/+$/g, '') || 'home';
   switch (key) {
     case "home": return HomepageContent;
+    case "form": return BuildPageContent;
     case "blog": return BlogContent;
     case "about": return AboutContent;
     case "gallery": return GalleryContent;
@@ -57,6 +59,7 @@ let renderSequence = 0;
 function buildersForRoute(route: string): string[] {
   switch (route.trim().toLowerCase().replace(/^#|\/+$/g, '')) {
     case 'home': return ['form', 'table'];
+    case 'form': return ['form', 'table'];
     case 'gallery': return ['masonry'];
     case 'blog': return ["article"];
     default: return [];
@@ -86,9 +89,9 @@ export async function renderPage(route: string): Promise<void> {
 /** Pasang HashRouter + jalankan render awal sesuai hash URL. */
 function bootRouting(): void {
   const router = new HashRouter(
-    "home",
-    "default",
-    ["home", "about", "blog", "gallery"],
+    "home", // default page
+    "default", // theme name
+    ["home", "about", "blog", "gallery", "form"],
     (state: iRouteState) => renderPage(state.route)
   );
 
@@ -104,7 +107,12 @@ async function start(container: HTMLElement) {
   // @ts-ignore
   const emitter = new EventEmitter();
   animation = new AnimationsService();
-  components = new ComponentRegistry()
+  components = new ComponentRegistry({
+    // Asset maps belong to the host: a glob pattern is resolved against the
+    // application that declares it, never against the framework package.
+    modules: import.meta.glob("/src/lib/Components/**/*.{ts,tsx,js,jsx}", { eager: false }),
+    styles: import.meta.glob("/src/lib/Components/**/*.css", { query: "?inline", import: "default" }),
+  })
     .register("form", (data: any) => {
       return {
         path: "lib/Components/Form/Form.ts",

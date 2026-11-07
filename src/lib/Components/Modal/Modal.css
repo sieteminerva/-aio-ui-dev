@@ -1,0 +1,74 @@
+/* Dialog */
+.dialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--padding-layout);
+
+  background: rgba(31, 20, 49, 0.85);
+  /* backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); */
+
+  /* Smooth state fade transition */
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 180ms ease,
+    visibility 180ms ease;
+}
+
+/* The structural layout wrapper inside the fixed view */
+.dialog .modal {
+  width: min(92vw, 900px);
+  max-height: 90vh;
+  overflow-y: auto;
+
+  padding: calc(var(--padding-component) * 2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-component);
+  background: var(--page-bg);
+  box-shadow: var(--shadow-soft);
+
+  scrollbar-color: var(--primary-light-color) transparent;
+  scrollbar-width: thin;
+}
+
+/* The Atomic Hidden Utility Class */
+.dialog.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none; /* Stops any invisible unselectable selections */
+}
+
+/* Shallow utility component rules */
+.modal .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modal .title {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 1.2rem;
+}
+
+.modal .close {
+  text-align: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 999px;
+  background: rgba(91, 63, 134, 0.1);
+  color: red;
+  font-size: 1.42rem;
+  border: none;
+  cursor: pointer;
+}

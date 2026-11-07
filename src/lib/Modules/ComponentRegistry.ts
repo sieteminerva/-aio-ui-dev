@@ -1,6 +1,7 @@
 import type { ComponentBuilderFn, iBasicNode, iBuilderRegistry } from "../interface";
 import { Builder } from "../Components/Base";
 import { HydrationGate } from "../Components/BaseAdapters/HydrationGate";
+import { Registry } from "../Registry";
 
 
 // 💡 DEKLARASI KONTAK LAZY LOAD UNTUK MODEL METADATA (STYLE 3)
@@ -20,9 +21,20 @@ export type RegisterFn<K extends keyof iBuilderRegistry> =
   | ((data: iBuilderRegistry[K], load: LoadFn) => Promise<HTMLElement | null>) // ConfigurableWayFn (Style 2)
   | ((data: iBuilderRegistry[K], config?: any) => iSimpleWayManifest); // SimpleWayFn Manifest (Style 3)
 
-// 💡 PETA REGISTER VITE: Hanya aktif dan dibaca saat masa development lokal!
-const viteModules = import.meta.glob("/src/lib/Components/**/*.{ts,tsx,js,jsx}", { eager: false });
-const viteStyles = import.meta.glob("/src/lib/Components/**/*.css", { query: '?inline', import: 'default' });
+/**
+ * Asset loader maps supplied by the HOST application.
+ *
+ * `import.meta.glob` resolves patterns relative to the application that declares
+ * them, so a reusable package cannot own these maps: the keys belong to the host
+ * layout. The host passes both maps in the constructor, which also lets a
+ * generated project point at its own component directory.
+ */
+export interface iComponentAssetMaps {
+  /** Script loaders keyed by Vite module path, e.g. `/src/lib/Components/Table/Table.ts`. */
+  modules: Record<string, () => Promise<any>>;
+  /** Inline stylesheet loaders keyed by Vite CSS path. */
+  styles: Record<string, () => Promise<any>>;
+}
 
 function normalizeVitePath(pathStr: string): string {
   if (!pathStr) return "";
@@ -45,9 +57,8 @@ function resolveRelativePath(baseScriptPath: string, stylePath: string): string 
 
 // 🔎 Lookup helper untuk peta glob CSS: exact match dulu, lalu scan case-insensitive
 // (Windows FS longgar soal case, tapi KEYS hasil import.meta.glob tidak toleran salah case)
-function findStyleLoader(key: string): (() => Promise<any>) | undefined {
+function findStyleLoader(map: Record<string, () => Promise<any>>, key: string): (() => Promise<any>) | undefined {
   if (!key) return undefined;
-  const map = viteStyles as Record<string, () => Promise<any>>;
   if (typeof map[key] === "function") return map[key];
   const lower = key.toLowerCase();
   const matched = Object.keys(map).find(k => k.toLowerCase() === lower);
@@ -57,7 +68,26 @@ function findStyleLoader(key: string): (() => Promise<any>) | undefined {
 const DEV = (import.meta as any).env?.DEV === true;
 
 export class ComponentRegistry {
-  private builders = new Map<keyof iBuilderRegistry, RegisterFn<any>>();
+  /**
+   * 🧱 Builder storage backed by the generic registry kernel.
+   *
+   * `duplicate: "replace"` preserves the previous silent-overwrite behaviour
+   * that HMR and preset rebuilds depend on. Lazy loading, stylesheet injection,
+   * and hydration gating stay in this adapter — the kernel only stores values.
+   */
+  private builders = new Registry<RegisterFn<any>>("component", { duplicate: "replace" });
+
+  /** Host-supplied lazy loaders for component scripts and stylesheets. */
+  #assets: iComponentAssetMaps;
+
+  /**
+   * @summary Stores the host asset maps used for every lazy component load.
+   * @param assets - Vite glob maps declared by the host application.
+   */
+  constructor(assets: iComponentAssetMaps) {
+    this.#assets = assets;
+  }
+
   private registeredSheets = new Set<CSSStyleSheet>();
   // 🧯 Fallback <style> tags saat CSSStyleSheet.replaceSync() melempar
   // (CSS modern mentah — nesting, @starting-style, ::picker — yang belum
@@ -107,23 +137,53 @@ export class ComponentRegistry {
     });
   }
 
+  /**
+   * Registers a component factory under a stable name.
+   *
+   * @summary Delegates storage to the registry kernel, then returns this instance for fluent registration.
+   * @param name - Public component identifier.
+   * @param builderFn - Polymorphic registration function (direct builder, loadable builder, or manifest).
+   * @returns The current registry instance.
+   * @example
+   * registry.register("masonry", masonryBuilder);
+   */
   public register<K extends keyof iBuilderRegistry>(name: K, builderFn: RegisterFn<K>): this {
-    this.builders.set(name, builderFn);
+    // Step 1: Delegate storage; the kernel applies the `replace` duplicate policy.
+    this.builders.register(String(name), builderFn);
     return this;
   }
 
+  /**
+   * Lists every registered component name.
+   *
+   * @summary Exposes the kernel's insertion-ordered ids so callers can preload components.
+   * @returns Registered component names in registration order.
+   */
   public getRegisteredNames(): string[] {
-    return Array.from(this.builders.keys()) as string[];
+    return this.builders.ids();
   }
 
+  /**
+   * Resolves a registered component factory.
+   *
+   * @summary Returns `undefined` for unknown names so legacy call sites that test the result keep working.
+   * @param name - Public component identifier.
+   * @returns The registration function, or `undefined` when the name is not registered.
+   */
   public get(name: string) {
     if (this.has(name)) {
-      return this.builders.get(name as keyof iBuilderRegistry);
+      return this.builders.resolve(name) ?? undefined;
     }
   }
 
+  /**
+   * Checks whether a component name is registered.
+   *
+   * @param name - Public component identifier.
+   * @returns `true` when a factory is registered under `name`.
+   */
   public has(name: string): boolean {
-    return this.builders.has(name as keyof iBuilderRegistry);
+    return this.builders.has(name);
   }
 
   private async loadModule(script?: string, stylesheet?: string, componentName?: string): Promise<any> {
@@ -134,7 +194,7 @@ export class ComponentRegistry {
     if (script) {
       const normScript = normalizeVitePath(script);
       // Mencari di dalam modul glob yang sudah dipaksa pecah chunk oleh Vite
-      const jsLoader = viteModules[normScript] || viteModules[script];
+      const jsLoader = this.#assets.modules[normScript] || this.#assets.modules[script];
 
       if (typeof jsLoader === "function") {
         jsModule = await jsLoader(); // HMR aktif di dev, Code-split aktif di prod build!
@@ -166,7 +226,9 @@ export class ComponentRegistry {
         const normCss = normalizeVitePath(resolvedCssPath);
 
         // Ambil loader CSS inline (exact → case-insensitive scan via findStyleLoader)
-        const cssLoader = findStyleLoader(normCss) || findStyleLoader(resolvedCssPath) || findStyleLoader(effectiveStyle);
+        const cssLoader = findStyleLoader(this.#assets.styles, normCss)
+          || findStyleLoader(this.#assets.styles, resolvedCssPath)
+          || findStyleLoader(this.#assets.styles, effectiveStyle);
 
         if (typeof cssLoader === "function") {
           rawCss = await cssLoader(); // Mengembalikan string CSS mentah berkat properti ?inline
@@ -207,7 +269,7 @@ export class ComponentRegistry {
   public async preloadComponents(componentNames: string[], pagesData: any[]): Promise<void> {
     for (const nameKey of componentNames) {
       const name = nameKey as keyof iBuilderRegistry;
-      const fn = this.builders.get(name);
+      const fn = this.builders.resolve(String(name));
       if (!fn) continue;
 
       // @ts-ignore (Mempertahankan fungsionalitas pencarian framework bawaan Anda)
@@ -249,7 +311,7 @@ export class ComponentRegistry {
 
 
   public build<K extends keyof iBuilderRegistry>(name: K, data: any): HTMLElement {
-    const fn = this.builders.get(name);
+    const fn = this.builders.resolve(String(name));
     if (!fn) {
       throw new Error(`[ComponentRegistry] No builder registered for "${String(name)}".`);
     }
@@ -476,6 +538,9 @@ export class ComponentRegistry {
     this._dynamicConfigs.clear();
     this.registeredSheets = new Set<CSSStyleSheet>();
 
+    // NOTE: builder registrations are intentionally preserved. The previous
+    // implementation never cleared them either; wiping them here would break
+    // route changes and preset rebuilds that rely on existing registrations.
 
     if (typeof Builder !== "undefined" && typeof Builder.resetCounters === "function") {
       Builder.resetCounters();

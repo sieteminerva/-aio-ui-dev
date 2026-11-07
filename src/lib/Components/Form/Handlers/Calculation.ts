@@ -1,3 +1,7 @@
+import type { iModuleDefinition } from "../../../Modules/ModuleRegistry";
+import { FORM_MODULE_IDS } from "../FormModuleTypes";
+import type { iFormModuleContext } from "../FormModuleTypes";
+
 export type CalculationPrimitive = string | number | boolean | null;
 export type CalculationValues = Record<string, CalculationPrimitive>;
 
@@ -241,3 +245,82 @@ declare global {
     calculator?: FormCalculationHandler;
   }
 }
+
+/**
+ * Collects per-input calculation strategies, inferring the nearest group id.
+ *
+ * @summary Walks the raw schema tree and turns every `config.calculator` entry
+ * into a typed formula.
+ * @param inputs - Raw input schema passed to `prepare()`.
+ * @returns Formula definitions in schema order.
+ */
+function collectFormulas(inputs: any[]): iCalculationFormula<any>[] {
+  const formulas: iCalculationFormula<any>[] = [];
+
+  const visit = (items: any[], parentGroupId?: string): void => {
+    for (const item of items ?? []) {
+      if (!item || typeof item !== "object" || item instanceof Node) continue;
+
+      const formula = item.config?.calculator;
+      if (formula && typeof formula.formula === "function") {
+        formulas.push({
+          ...formula,
+          groupId: formula.groupId ?? parentGroupId,
+          outputId: formula.outputId ?? item.id,
+        });
+      }
+
+      if (Array.isArray(item.group)) visit(item.group, item.id ?? parentGroupId);
+    }
+  };
+
+  visit(inputs);
+  return formulas;
+}
+
+/**
+ * Form module definition for the calculation engine.
+ *
+ * @summary Active when the form declares `calculation`, and only in the
+ * initialize phase, because it reads DOM that exists after submit listeners are
+ * attached.
+ *
+ * @example
+ * // registered by CORE_FORM_MODULES; no manual wiring needed
+ */
+export const calculationFormAdapter: iModuleDefinition<iFormModuleContext, FormCalculationHandler> = {
+  id: FORM_MODULE_IDS.calculation,
+
+  /**
+   * Calculation only runs when the form opts in, in the initialize phase.
+   *
+   * @param context - Host context.
+   * @returns `true` when the calculation engine should load.
+   */
+  matches: (context) => context.config.calculation === true && context.phase === "initialize",
+
+  /**
+   * Attaches the calculation engine to the live form and exposes it on the element.
+   *
+   * @param context - Host context.
+   * @returns The running calculation engine.
+   */
+  load: (context) => {
+    // Step 1: Build the formula set from the schema.
+    const handler = new FormCalculationHandler(context.form, {
+      strategies: { formula: collectFormulas(context.inputs) },
+    }).create();
+
+    // Step 2: Expose the engine on the form element, as the legacy path did.
+    context.form.calculator = handler;
+    return handler;
+  },
+
+  /**
+   * Removes calculation listeners and computed state.
+   *
+   * @param handler - The engine returned by `load()`.
+   * @returns Nothing.
+   */
+  destroy: (handler) => handler.destroy(),
+};

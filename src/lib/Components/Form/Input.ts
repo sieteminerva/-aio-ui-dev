@@ -1,7 +1,8 @@
 import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "../../interface";
 import { Builder } from "../Base";
-import { DropdownBuilder, type iDropdownConfig, type iDropdownContent } from "./Dropdown";
-import { InputControlsBuilder, type InputControlsElementType } from "./InputControls";
+import { DropdownBuilder, type iDropdownConfig, type iDropdownContent } from "./Dropdown/Dropdown";
+import { InputControlsBuilder, type InputControlsElementType } from "./InputControls/InputControls";
+import { FileUploader } from "./FileUploader/FileUploader";
 import type { iCalculationFormula } from "./Handlers/Calculation";
 
 export type InputType =
@@ -98,6 +99,8 @@ export interface iBasicInputNode extends iBuilderConfig<InputElementType> {
   formId?: string | null;
   name?: string;
   title?: string;
+  /** Alternatif `title` untuk teks label; dipakai lebih dulu bila ada. */
+  label?: string;
   placeholder?: string;
   value?: any;
   /** Numeric increment; defaults to "any" so decimal values pass native validation. */
@@ -135,7 +138,7 @@ export class InputBuilder extends Builder<InputElementType> {
       "@field>textarea": { tagName: "textarea" },
       "@field>select": { tagName: "select" },
       "@field>select>option": { tagName: "option" },
-      "@field>checkbox": { tagName: "input", type: "checkbox" as InputType, wrapper: ".control" },
+      "@field>checkbox": { tagName: "input", type: "checkbox" as InputType, wrapper: ".switch.control" },
       "@field>radio": { tagName: "input", type: "radio" as InputType },
       "@field>file": { tagName: "input", type: "file" as InputType },
       "@field>info": { tagName: "small", className: "info" }
@@ -193,6 +196,64 @@ export class InputBuilder extends Builder<InputElementType> {
 
 
 
+  /**
+   * Attaches the file uploader adapter to a file input this builder produced.
+   *
+   * @summary `FileUploader` is an input-level adapter, not a Form concern.
+   * Its constructor is idempotent per element, so repeated builds are safe.
+   * @param input - File input element created by this builder.
+   * @returns Nothing.
+   */
+  private _mountFileAdapter(input: HTMLInputElement): void {
+    try {
+      new FileUploader(input);
+    } catch (error) {
+      console.warn("[InputBuilder] file adapter init failed:", error);
+    }
+  }
+
+  /**
+   * Initializes file adapters inside an arbitrary DOM subtree.
+   *
+   * @summary Raw HTML fields bypass `prepare()`, so the Form layer needs a way to
+   * cover them without importing `FileUploader` itself. That is the purpose of
+   * this boundary.
+   * @param root - Form element or freshly mounted fieldset.
+   * @returns Nothing.
+   */
+  public static initFileAdapters(root: Document | HTMLFormElement | HTMLElement): void {
+    try {
+      FileUploader.initAll(root);
+    } catch (error) {
+      console.warn("[InputBuilder] file adapter init failed:", error);
+    }
+  }
+
+  /**
+   * Serializes the files currently selected in a form.
+   *
+   * @summary Keeps `FileUploader` internal to the input layer while letting the
+   * submission path collect uploads.
+   * @param formId - Id of the form that owns the file inputs.
+   * @returns Payload keyed by input name; empty when nothing was selected.
+   */
+  public static async collectFiles(formId: string): Promise<Record<string, any>> {
+    if (typeof FileUploader.getFilesForGoogleDrive !== "function") return {};
+    return FileUploader.getFilesForGoogleDrive(formId);
+  }
+
+  /**
+   * Parses the CSV or JSON file selected inside a form into table data.
+   *
+   * @summary Same boundary as {@link collectFiles}: table consumers get parsed
+   * data without depending on the uploader implementation.
+   * @param formId - Id of the form that owns the file inputs.
+   * @returns Normalized `{ header, body, footer }` table data.
+   */
+  public static async parseCsvTable(formId: string): Promise<{ header: any[]; body: any[]; footer: any }> {
+    return FileUploader.parseCSVToTable(formId);
+  }
+
   public prepare(inputObj: Partial<iBasicInputNode>, _config?: Required<iBuilderConfig<InputElementType>> | undefined): HTMLElement | Record<string, any | HTMLElement> {
 
     this.#input = this.resolvePayload(inputObj);
@@ -200,9 +261,10 @@ export class InputBuilder extends Builder<InputElementType> {
     const cfg = this.#input.config;
 
     const wrapper = this.render("@field", this.#input)!;
+    const ltext = this.#input.label ?? this.#input.title;
 
-    if (this.#input.title && this.#input.config?.useLabel && this.#input.type !== "dropdown") {
-      const label = this.render("@field>label", { text: this.#input.title, position: this.#input.position, id: this.#input.id })!
+    if (ltext && this.#input.config?.useLabel && this.#input.type !== "dropdown") {
+      const label = this.render("@field>label", { text: ltext, position: this.#input.position, id: this.#input.id })!
       wrapper?.appendChild(label);
     }
 
@@ -222,7 +284,6 @@ export class InputBuilder extends Builder<InputElementType> {
         break;
 
       case "checkbox":
-        wrapper.classList.add("toggle-switch");
         inputEl = this.render("@field>checkbox", this.#input)!;
         break;
 
@@ -243,18 +304,18 @@ export class InputBuilder extends Builder<InputElementType> {
         break;
     }
 
+    // Dropdown & checkbox mencetak label kedua sendiri (posisi diambil dari config).
+    if (ltext && this.#input.config?.useLabel && (this.#input.type === "dropdown" || this.#input.type === "checkbox")) {
+      const label = this.render("@field>label", {
+        text: ltext,
+        position: this.#input.config.position,
+        id: this.#input.id,
+      })!;
+      wrapper.append(label);
+    }
+
     if (inputEl) {
       this.applyAttributes(inputEl, this.#input);
-
-      if (this.#input.type === "dropdown" && inputEl.classList.contains("field")) {
-        inputEl.classList.forEach((className) => {
-          if (className !== "field") wrapper.classList.add(className);
-        });
-        Object.entries(inputEl.dataset).forEach(([key, value]) => {
-          wrapper.dataset[key] = value;
-        });
-        wrapper.append(...Array.from(inputEl.childNodes));
-      }
     }
 
     // C. Render Info Tambahan di bagian bawah jika ada
@@ -264,6 +325,7 @@ export class InputBuilder extends Builder<InputElementType> {
     }
 
 
+    // Dropdown mencetak root `.dropdown` sendiri, jadi root itu yang ditempel apa adanya.
     inputEl.__outer ? wrapper.appendChild(inputEl.__outer) : wrapper.appendChild(inputEl);
 
     if (cfg?.actions && inputEl) {
@@ -277,6 +339,13 @@ export class InputBuilder extends Builder<InputElementType> {
       this._attachGenericPopover(inputEl, cfg.popover);
     }
 
+    // 🧩 Adapter input: uploader dipasang SETELAH elemen menempel ke `.field`.
+    // FileUploader mencari parent `.field` saat konstruksi untuk menaruh daftar
+    // berkas + view container; dipasang lebih awal, container-nya null dan
+    // fungsinya diam-diam mati (hanya elemen yang terlihat).
+    if (this.#input.type === "file" && inputEl instanceof HTMLInputElement) {
+      this._mountFileAdapter(inputEl);
+    }
 
     return wrapper!;
   }

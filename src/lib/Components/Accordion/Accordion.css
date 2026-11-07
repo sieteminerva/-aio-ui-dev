@@ -1,0 +1,33 @@
+/* Accordion Component */
+.accordion details {
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 0.85rem 1rem;
+  background: var(--surface-strong);
+  margin-bottom: 0.75rem;
+}
+.accordion summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text-heading);
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+}
+.accordion summary::-webkit-details-marker {
+  display: none;
+}
+.accordion summary::after {
+  content: var(--dropdown-arrow-content);
+  transition: transform 180ms ease;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+}
+.accordion details[open] summary::after {
+  transform: rotate(180deg);
+}
+.accordion .content {
+  padding-top: 0.55rem;
+  color: var(--text-muted);
+}

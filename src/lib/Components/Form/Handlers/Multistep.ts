@@ -8,6 +8,10 @@
 // berjalan di dalam engine, tanpa membebani Form.ts.
 // ======================================================================
 
+import type { iModuleDefinition } from "../../../Modules/ModuleRegistry";
+import { FORM_MODULE_IDS } from "../FormModuleTypes";
+import type { iFormModuleContext } from "../FormModuleTypes";
+
 /** Kontrak minimal yang wajib dipenuhi host (FormBuilder) agar engine bekerja */
 export interface FormMultistepHost {
   builder: string;
@@ -125,7 +129,7 @@ export class FormMultistepHandler {
     if (!entry) {
       throw new Error(
         `[Form Multistep] Langkah ke-${index} tidak dikenal: tidak ada placeholder tertahan ` +
-          "dan belum terpasang di DOM. Pastikan setiap langkah group diteruskan lewat hold() pada skema form."
+        "dan belum terpasang di DOM. Pastikan setiap langkah group diteruskan lewat hold() pada skema form."
       );
     }
 
@@ -138,8 +142,8 @@ export class FormMultistepHandler {
       const label = group && (group.id || group.title || group.legend);
       throw new Error(
         `[Form Multistep] Gagal membangun fieldset langkah ke-${index}` +
-          (label ? ` untuk "${label}"` : "") +
-          ". Pastikan selektor '@form>group' terkonfigurasi & renderGroup mengembalikan elemen (render() mengembalikan undefined bila selektor tidak dikenal)."
+        (label ? ` untuk "${label}"` : "") +
+        ". Pastikan selektor '@form>group' terkonfigurasi & renderGroup mengembalikan elemen (render() mengembalikan undefined bila selektor tidak dikenal)."
       );
     }
 
@@ -255,3 +259,40 @@ export class FormMultistepHandler {
     this.pending.clear();
   }
 }
+
+/**
+ * Form module definition for the multistep engine.
+ *
+ * @summary Active when the form declares `multistep`. Steps are held as
+ * `<template data-step>` placeholders and mounted on demand.
+ *
+ * @example
+ * // registered by CORE_FORM_MODULES; no manual wiring needed
+ */
+export const multistepFormAdapter: iModuleDefinition<iFormModuleContext, FormMultistepHandler> = {
+  id: FORM_MODULE_IDS.multistep,
+
+  /**
+   * Multistep only runs when the form is a wizard.
+   *
+   * @param context - Host context.
+   * @returns `true` when the multistep engine should load.
+   */
+  matches: (context) => context.config.multistep === true,
+
+  /**
+   * Builds the multistep engine around the host contract.
+   *
+   * @param context - Host context.
+   * @returns The live multistep engine.
+   */
+  load: (context) => new FormMultistepHandler(context.multistepHost()),
+
+  /**
+   * Detaches navigation listeners and discards held steps.
+   *
+   * @param multistep - The engine returned by `load()`.
+   * @returns Nothing.
+   */
+  destroy: (multistep) => multistep.dispose(),
+};

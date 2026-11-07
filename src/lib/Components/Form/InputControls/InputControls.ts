@@ -1,6 +1,13 @@
-import type { iActionType, iBasicInputNode, iInputActionContext, iInputActionDefinition } from "./Input";
-import type { iBuilderConfig, iElementProperty } from "../../interface";
-import { Builder } from "../Base";
+/**
+ * 🧩 INPUT ADAPTER — interactive control set for `InputBuilder`.
+ *
+ * Owned by the input layer, not by `FormBuilder`: an input that declares actions
+ * delegates its button set and click behaviour to this builder.
+ */
+import type { iActionType, iBasicInputNode, iInputActionContext, iInputActionDefinition } from "../Input";
+import type { iBuilderConfig, iElementProperty } from "../../../interface";
+import { Builder } from "../../Base";
+import "./inputControls.css";
 
 export type InputControlsElementType =
   | "@controls"       // Kontainer pembungkus input + tombol aksi (.ui.action.input)

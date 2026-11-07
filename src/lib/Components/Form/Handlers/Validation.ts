@@ -14,6 +14,9 @@
 
 import type { iMessageContent } from "../../Message/Message";
 import type { iFormCondition } from "./Cascade";
+import type { iModuleDefinition } from "../../../Modules/ModuleRegistry";
+import { FORM_MODULE_IDS } from "../FormModuleTypes";
+import type { iFormModuleContext } from "../FormModuleTypes";
 
 export interface iInvalidField {
   name?: string;
@@ -59,6 +62,17 @@ export class FormValidationHandler {
 
   constructor(options: FormValidationOptions = {}) {
     this.options = options;
+  }
+
+  /**
+   * Releases host references so the handler does not outlive its form.
+   *
+   * @summary Drops the emit and message callbacks. Safe to call more than once.
+   * @returns Nothing.
+   */
+  public dispose(): void {
+    // Step 1: Replace the option bag so closures over the host become collectable.
+    this.options = {};
   }
 
   /** Ambil label ramah-manusia dari sebuah kontrol (label[for] → .field label → id/name/type). */
@@ -184,3 +198,39 @@ export class FormValidationHandler {
     return this.report(this.buildCascadeDetail(info), info.form);
   }
 }
+
+/**
+ * Form module definition for the validation handler.
+ *
+ * @summary Loads the centralized validation handler from the host context. The
+ * handler keeps its own single `report()` path, so native and cascade failures
+ * still emit, dispatch a `CustomEvent`, and show a message.
+ *
+ * @example
+ * // registered by CORE_FORM_MODULES; no manual wiring needed
+ */
+export const validationFormAdapter: iModuleDefinition<iFormModuleContext, FormValidationHandler> = {
+  id: FORM_MODULE_IDS.validation,
+
+  /**
+   * Builds the validation handler for the supplied host.
+   *
+   * @param context - Host context carrying the form, emitter, and message host.
+   * @returns The live validation handler.
+   */
+  load: (context) =>
+    new FormValidationHandler({
+      builder: context.builder,
+      // `undefined` is what the handler checks for, so a missing emitter stays inert.
+      emit: context.emit ?? undefined,
+      showMessage: context.showMessage,
+    }),
+
+  /**
+   * Releases the handler by dropping its host callbacks.
+   *
+   * @param handler - The handler returned by `load()`.
+   * @returns Nothing.
+   */
+  destroy: (handler) => handler.dispose(),
+};
