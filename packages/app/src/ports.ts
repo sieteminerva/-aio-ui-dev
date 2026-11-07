@@ -34,7 +34,7 @@ export interface iComponentRegistryPort {
   getRegisteredNames(): string[];
 
   /** Resolves builder modules and stylesheets ahead of a render pass. */
-  preload(names: string[], pagesData: unknown[]): Promise<void>;
+  load(names: string[], pagesData?: unknown[]): Promise<void>;
 
   /** Builds one component element synchronously from already-preloaded assets. */
   build(name: keyof iBuilderRegistry, data: any): HTMLElement;

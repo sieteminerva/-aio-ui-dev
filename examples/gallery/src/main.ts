@@ -67,7 +67,7 @@ function buildersForRoute(route: string): string[] {
 export async function renderPage(route: string): Promise<void> {
   const sequence = ++renderSequence;
   // route based Lazy-load components 
-  await components.preloadComponents(buildersForRoute(route), []);
+  await components.load(buildersForRoute(route));
   if (sequence !== renderSequence) return;
 
   const page = pageContentFor(route);

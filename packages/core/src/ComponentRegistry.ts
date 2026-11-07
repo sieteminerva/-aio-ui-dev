@@ -231,7 +231,7 @@ export class ComponentRegistry {
     // field) tidak terlihat di level class (fields tidak pernah menempel di prototype),
     // sehingga preload tanpa manifest.stylesheet sebelumnya SELALU melewatkan CSS.
     // Turunkan path stylesheet dari script — aturan yang sama dengan derivasi
-    // manifest di build() — agar preloadComponents ikut memuat stylesheet.
+    // manifest di build() — agar load() ikut memuat stylesheet.
     if (!effectiveStyle && script) {
       effectiveStyle = script.replace(/\.(ts|tsx|js|jsx)$/, ".css");
     }
@@ -282,9 +282,16 @@ export class ComponentRegistry {
 
 
   /**
-   * 🧙‍♂️ THE PRE-LOAD HYDRATOR
+   * Resolves component modules and stylesheets ahead of a render pass.
+   *
+   * Paired with `build()`: `load()` is always asynchronous and fills the resolved
+   * cache, while `build()` stays synchronous and reads from it. A component that
+   * was never loaded cannot be built.
+   *
+   * @param componentNames - Registered component names to resolve.
+   * @param pagesData - Source tree used to find each component's node config.
    */
-  public async preloadComponents(componentNames: string[], pagesData: any[]): Promise<void> {
+  public async load(componentNames: string[], pagesData: any[] = []): Promise<void> {
     for (const nameKey of componentNames) {
       const name = nameKey as keyof iBuilderRegistry;
       const fn = this.builders.resolve(String(name));
