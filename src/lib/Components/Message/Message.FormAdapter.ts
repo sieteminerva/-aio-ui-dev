@@ -1,4 +1,4 @@
-import type { iModuleDefinition } from "../../Modules/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/modules/ModuleRegistry";
 import type { iFormMessageTarget, iFormModuleContext } from "../Form/FormModuleTypes";
 import { FORM_MODULE_IDS } from "../Form/FormModuleTypes";
 import type { iMessageContent } from "./Message";

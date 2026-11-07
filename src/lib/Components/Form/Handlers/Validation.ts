@@ -14,7 +14,7 @@
 
 import type { iMessageContent } from "../../Message/Message";
 import type { iFormCondition } from "./Cascade";
-import type { iModuleDefinition } from "../../../Modules/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/modules/ModuleRegistry";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
 import type { iFormModuleContext } from "../FormModuleTypes";
 

@@ -1,14 +1,14 @@
 import type { iBuilderRegistry, iNodeContent } from '@aio-ui/core/interface';
 import { ComponentRegistry } from '@aio-ui/core/ComponentRegistry';
 import { DOMRenderer } from '@aio-ui/core/DOMRenderer';
-import { AnimationsService } from './lib/Modules/Animations/Animations';
-import { HashRouter, type iRouteState } from './lib/Modules/HashRouter';
+import { AnimationsService } from '@aio-ui/modules/Animations/Animations';
+import { HashRouter, type iRouteState } from '@aio-ui/modules/HashRouter';
 import { HomepageContent } from './content/home';
 
 import '@aio-ui/styles/index.css';
 import './style.css';
 
-import { EventEmitter } from './lib/Modules/EventEmitter';
+import { EventEmitter } from '@aio-ui/modules/EventEmitter';
 import { AboutContent } from './content/about';
 import { GalleryContent } from './content/gallery';
 import { BlogContent } from './content/blog';

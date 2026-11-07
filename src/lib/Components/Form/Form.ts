@@ -7,7 +7,7 @@ import type { FormValidationHandler } from "./Handlers/Validation";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
 import type { FormModulePhase, iFormCollaborator, iFormModuleContext } from "./FormModuleTypes";
 import { CORE_FORM_MODULES } from "./FormRegistry";
-import { ModuleLoader } from "../../Modules/ModuleLoader";
+import { ModuleLoader } from "@aio-ui/modules/ModuleLoader";
 // 🎨 Gaya baseline field milik form: adaptor input juga mengimpornya untuk
 // pemakaian mandiri, tetapi form tetap memuatnya agar tampilan tidak bergantung
 // pada modul input mana yang dipasang (mis. renderer kustom).

@@ -1,4 +1,4 @@
-import type { iModuleDefinition } from "../../Modules/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/modules/ModuleRegistry";
 import type { iFormModuleContext } from "./FormModuleTypes";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
 import { InputBuilder } from "./Input";

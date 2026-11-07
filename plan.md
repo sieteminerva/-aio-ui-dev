@@ -160,13 +160,19 @@ Notes:
 
 ### 0.7 Move `modules`
 
-- [ ] Move `HashRouter`, `EventEmitter`, `HttpService`, `Animations` to `packages/modules`
-- [ ] Verify the animation behaviours still bundle
+- [x] Move `HashRouter`, `EventEmitter`, `HttpService`, `Animations` to `packages/modules`
+- [x] Move `ModuleRegistry` / `ModuleLoader` there too (they depend on `@aio-ui/core/Registry`, direction stays correct)
+- [x] Archive the unused `AuthService.ts` + `AuthServiceConcept.md` into `.archives/modules/`
+- [x] Move `ComponentRegistry.md` next to its code in `packages/core/`
+- [x] Verify the animation behaviours still bundle — 12 `@aio-ui/modules/*` imports rewritten, all routes identical
 
 ### 0.8 Move components one at a time
 
 Order: `message` → `rating` → `masonry` → `article` → `table` → `form`.
 Each component is its own gate: the route that uses it must render identically.
+
+Must be done here: rewrite the Vite `codeSplitting` rule, which currently matches
+`/src/lib/Components/` and therefore no longer covers `Base` or any package.
 
 - [ ] `message`
 - [ ] `rating`
@@ -275,19 +281,20 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 
 ## 7. Open questions
 
-| #   | Question                                                                                     | Affects       |
-| --- | -------------------------------------------------------------------------------------------- | ------------- |
-| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose. | closed        |
-| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now. | closed |
-| Q3  | Should `Menu` be remapped now or dropped from the port list until the shell exists?          | Phase 5       |
-| Q4  | `docs/` target folder for technical documentation (currently `.archives/docs`)               | Phase 0.10    |
+| #   | Question                                                                                                               | Affects    |
+| --- | ---------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                  | closed     |
+| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now. | closed     |
+| Q3  | Should `Menu` be remapped now or dropped from the port list until the shell exists?                                    | Phase 5    |
+| Q4  | `docs/` target folder for technical documentation (currently `.archives/docs`)                                         | Phase 0.10 |
 
 ## 8. Change log
 
-| Date       | Change                                                                                                                                                               |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-11-07 | Plan created. Reference material archived by the user into `.archives/`.                                                                                             |
-| 2026-11-07 | Baseline recorded: `tsc --noEmit` clean, 42 tests pass, build succeeds. Renamed `Tab.tabRoot` (was `rootElement`) to resolve a collision with `Builder.rootElement`. |
-| 2026-11-07 | Step 0.2 done: `ComponentRegistry` now receives `{ modules, styles }` instead of owning `import.meta.glob`. All five routes verified.                                |
-| 2026-11-07 | Steps 0.3–0.5 done: workspace skeleton, `packages/styles`, `packages/utilities`, and `interface` moved to `packages/core`. Build output byte-identical.               |
+| Date       | Change                                                                                                                                                                                 |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-07 | Plan created. Reference material archived by the user into `.archives/`.                                                                                                               |
+| 2026-11-07 | Baseline recorded: `tsc --noEmit` clean, 42 tests pass, build succeeds. Renamed `Tab.tabRoot` (was `rootElement`) to resolve a collision with `Builder.rootElement`.                   |
+| 2026-11-07 | Step 0.2 done: `ComponentRegistry` now receives `{ modules, styles }` instead of owning `import.meta.glob`. All five routes verified.                                                  |
+| 2026-11-07 | Steps 0.3–0.5 done: workspace skeleton, `packages/styles`, `packages/utilities`, and `interface` moved to `packages/core`. Build output byte-identical.                                |
 | 2026-11-07 | Step 0.6 done: `packages/core` (`DOMRenderer`, `ComponentRegistry`, `Registry`, `BuilderPort`) and `packages/base` (`Base`, `BaseAdapters`). Shared `aliases.ts`. All routes verified. |
+| 2026-11-07 | Step 0.7 done: `packages/modules` (`HashRouter`, `EventEmitter`, `HttpService`, `ModuleRegistry`, `ModuleLoader`, `Animations`). `src/lib` now contains only `Components/`. |

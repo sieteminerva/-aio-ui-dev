@@ -1,4 +1,4 @@
-import type { iModuleDefinition } from "../../Modules/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/modules/ModuleRegistry";
 import type { iFormModuleContext } from "./FormModuleTypes";
 import { calculationFormAdapter } from "./Handlers/Calculation";
 import { cascadeFormAdapter } from "./Handlers/Cascade";
