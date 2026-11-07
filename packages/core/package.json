@@ -1,0 +1,14 @@
+{
+  "name": "@aio-ui/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./interface": "./src/interface.ts",
+    "./ComponentRegistry": "./src/ComponentRegistry.ts",
+    "./DOMRenderer": "./src/DOMRenderer.ts",
+    "./BuilderPort": "./src/BuilderPort.ts",
+    "./Registry": "./src/Registry/index.ts"
+  }
+}

@@ -1,4 +1,4 @@
-import type { iNodeContent } from "../lib/interface";
+import type { iNodeContent } from "@aio-ui/core/interface";
 import { navigationMenu } from "./shared";
 import ARTICLE_RESPONSE from "./blog.json";
 

@@ -1,7 +1,6 @@
-import type { ComponentBuilderFn, iBasicNode, iBuilderRegistry } from "../interface";
-import { Builder } from "../Components/Base";
-import { HydrationGate } from "../Components/BaseAdapters/HydrationGate";
-import { Registry } from "../Registry";
+import type { ComponentBuilderFn, iBasicNode, iBuilderRegistry } from "./interface";
+import { Registry } from "./Registry";
+import { getBuilderAdapter } from "./BuilderPort";
 
 
 // 💡 DEKLARASI KONTAK LAZY LOAD UNTUK MODEL METADATA (STYLE 3)
@@ -122,13 +121,9 @@ export class ComponentRegistry {
     // agar konten tidak mati selamanya di balik shimmer.
     stylePending.catch(() => null).finally(() => {
       try {
-        if (instance.hydration instanceof HydrationGate) {
-          // Builder instance → delegate to its gate (releases its held root too).
-          instance.hydration.release(actualElement);
-        } else {
-          // 🛟 Instance eksotis tanpa gate: tulis marker langsung.
-          if (actualElement instanceof HTMLElement) HydrationGate.releaseMarkers(actualElement);
-        }
+        // Builder package plugged in through the port: it owns the gate type and
+        // the fallback marker writer, so core never learns about either.
+        getBuilderAdapter()?.releaseHydration(instance, actualElement);
       } catch (releaseError) {
         console.warn("[ComponentRegistry] Hydration release skipped:", releaseError);
       }
@@ -542,9 +537,7 @@ export class ComponentRegistry {
     // implementation never cleared them either; wiping them here would break
     // route changes and preset rebuilds that rely on existing registrations.
 
-    if (typeof Builder !== "undefined" && typeof Builder.resetCounters === "function") {
-      Builder.resetCounters();
-    }
+    getBuilderAdapter()?.resetCounters();
 
     // console.log(`🧹 [ComponentRegistry]: Cleaned node registries and instance identity counters.`);
   }

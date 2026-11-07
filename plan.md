@@ -35,18 +35,18 @@ Hard rules taken from `.guidance/` and from the design discussion:
 
 ## 3. Decisions already made
 
-| # | Decision | Rationale |
-|---|---|---|
-| D1 | LITE (`gallery`) is the trunk; FULL is not a superset | FULL is the older generation: no registry kernel, inline validation/cascade/multistep, legacy `EventBus`/`TemplateRegistry` slotting |
-| D2 | Physical restructure happens before the rewrite | Rewriting first would move files twice and hide which failure belongs to which change |
-| D3 | Package scope is `@aio-ui/*` | Middle ground between `@aio-ui/framework/core` and `@aio/core` |
-| D4 | App shell lives in its own package, not `core` | `LandingPage` level code touches registry, renderer, router and animation |
-| D5 | Component manifest keeps exactly one shape | Only the Style 3 manifest stays; the direct-builder, loadable-builder and promise variants are dropped |
-| D6 | `ComponentRegistry` receives its `import.meta.glob` maps from the host | A package cannot own an absolute Vite glob rooted at the host application |
-| D7 | A component declares its sub-components through `modules` in its manifest | Required for `packages/components/*` to be self-contained |
-| D8 | `Base` exposes a static port (`iComponentSource`) that the registry plugs into | `ComponentRegistry` already imports `Builder`; the inverse import would be a cycle |
-| D9 | `DOMTreeMemory` / `EventBus` metadata layer is deferred | It requires rewriting every component to emit intents instead of mutating the DOM |
-| D10 | `examples/gallery` is the live example application | Keeps one runnable end-to-end target at all times |
+| #   | Decision                                                                       | Rationale                                                                                                                            |
+| --- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| D1  | LITE (`gallery`) is the trunk; FULL is not a superset                          | FULL is the older generation: no registry kernel, inline validation/cascade/multistep, legacy `EventBus`/`TemplateRegistry` slotting |
+| D2  | Physical restructure happens before the rewrite                                | Rewriting first would move files twice and hide which failure belongs to which change                                                |
+| D3  | Package scope is `@aio-ui/*`                                                   | Middle ground between `@aio-ui/framework/core` and `@aio/core`                                                                       |
+| D4  | App shell lives in its own package, not `core`                                 | `LandingPage` level code touches registry, renderer, router and animation                                                            |
+| D5  | Component manifest keeps exactly one shape                                     | Only the Style 3 manifest stays; the direct-builder, loadable-builder and promise variants are dropped                               |
+| D6  | `ComponentRegistry` receives its `import.meta.glob` maps from the host         | A package cannot own an absolute Vite glob rooted at the host application                                                            |
+| D7  | A component declares its sub-components through `modules` in its manifest      | Required for `packages/components/*` to be self-contained                                                                            |
+| D8  | `Base` exposes a static port (`iComponentSource`) that the registry plugs into | `ComponentRegistry` already imports `Builder`; the inverse import would be a cycle                                                   |
+| D9  | `DOMTreeMemory` / `EventBus` metadata layer is deferred                        | It requires rewriting every component to emit intents instead of mutating the DOM                                                    |
+| D10 | `examples/gallery` is the live example application                             | Keeps one runnable end-to-end target at all times                                                                                    |
 
 ## 4. Target structure
 
@@ -82,16 +82,16 @@ package has been extracted and verified.
 
 ## 5. Progress
 
-| Phase | Scope | Status |
-|---|---|---|
-| 0 | Monorepo restructure, zero behavior change | in progress (0.1–0.2 done) |
-| 1 | AppShell contract (interfaces only) | not started |
-| 2 | `ComponentRegistry` rewrite to the agreed contract | not started |
-| 3 | PageController contract + one reference implementation | not started |
-| 4 | AppShell implementation, `main.ts` reduced | not started |
-| 5 | Port remaining FULL components | not started |
-| 6 | Themes, `ThemeRenderer`, generator pipeline | not started |
-| — | `DOMTreeMemory` / `EventBus` metadata layer | deferred |
+| Phase | Scope                                                  | Status                     |
+| ----- | ------------------------------------------------------ | -------------------------- |
+| 0     | Monorepo restructure, zero behavior change             | in progress (0.1–0.2 done) |
+| 1     | AppShell contract (interfaces only)                    | not started                |
+| 2     | `ComponentRegistry` rewrite to the agreed contract     | not started                |
+| 3     | PageController contract + one reference implementation | not started                |
+| 4     | AppShell implementation, `main.ts` reduced             | not started                |
+| 5     | Port remaining FULL components                         | not started                |
+| 6     | Themes, `ThemeRenderer`, generator pipeline            | not started                |
+| —     | `DOMTreeMemory` / `EventBus` metadata layer            | deferred                   |
 
 ---
 
@@ -118,28 +118,45 @@ Goal: physical layout matches §4, application still runs, no behavior change.
 
 ### 0.3 Monorepo skeleton
 
-- [ ] Root `package.json` with `workspaces: ["packages/*", "packages/components/*", "examples/*"]`
-- [ ] `tsconfig.base.json` plus per-package `tsconfig.json` if required
-- [ ] `@aio-ui/*` path aliases in `tsconfig.json` and `vite.config.ts`
-- [ ] Application still runs from the repository root
+- [x] Root `package.json` with `workspaces: ["packages/*", "packages/components/*", "examples/*"]`
+- [x] `tsconfig.base.json`, with the root `tsconfig.json` extending it
+- [x] `@aio-ui/*` path aliases in `tsconfig.base.json` and `vite.config.ts` (added per package as it lands, to avoid dead config)
+- [x] Application still runs from the repository root
 
 ### 0.4 Move `styles`
 
-- [ ] Create `packages/styles`, move `src/lib/Styles/*`
-- [ ] Update imports; verify build
+- [x] Create `packages/styles`, move `src/lib/Styles/*` (git mv, history preserved)
+- [x] Add `packages/styles/src/index.css` importing the five sheets in presentation order
+- [x] Update imports; verify build — bundled CSS is byte-identical (`style-Cg4RrwdU.css`, 508658 B)
 
 ### 0.5 Move `utilities`
 
-- [ ] Move `Metadata`, `SelectorToTree`, `AttributeUtils`, `helper`, `color.utils`, `DomUtils`
-- [ ] Resolve the duplicate `Metadata` in `.archives/travel-trip/Utils` (keep one)
-- [ ] Verify build
+- [x] Move `Metadata`, `SelectorToTree`, `AttributeUtils`, `DomUtils`, `color.utils`, `helper`
+- [x] Move `interface.ts` to `packages/core` early — `Metadata` and `SelectorToTree` depend on it,
+      and the dependency direction must stay `utilities → core`
+- [x] Rewrite 32 relative `interface` imports and 8 `Utility/*` imports to `@aio-ui/*` aliases
+- [x] Verify build — `main-*.js` unchanged (`main-CK5ubGIe.js`, 78.00 kB)
 
 ### 0.6 Move `core` and `base`
 
-- [ ] Move `DOMRenderer`, `ComponentRegistry`, `interface` to `packages/core`
-- [ ] Move `Base`, `BaseAdapters/` to `packages/base`
-- [ ] Break the `core` → `base` import in `ComponentRegistry` via the `iComponentSource` port
-- [ ] Verify build and tests
+- [x] Move `interface` to `packages/core`
+- [x] Move `DOMRenderer`, `ComponentRegistry` to `packages/core`
+- [x] Move `Registry/*` to `packages/core` (generic kernel used by `ComponentRegistry`)
+- [x] Move `Base`, `BaseAdapters/` to `packages/base`
+- [x] Break the `core` → `base` import in `ComponentRegistry` via the `iComponentSource` port
+- [x] Verify build and tests — `tsc` clean, 42 tests, all five routes identical to baseline
+
+Notes:
+
+- Option A was implemented as `BuilderPort` (`iBuilderAdapter`, `setBuilderAdapter`, `getBuilderAdapter`).
+  `packages/base` registers the adapter at module evaluation; `ComponentRegistry` never imports `base`.
+- `instance.hydration` is never assigned anywhere in the codebase today, so the gate branch was dead;
+  its semantics are preserved inside the adapter for when a builder starts exposing one.
+- `vitest.config.ts` had no alias resolution; aliases moved to a shared `aliases.ts` used by both
+  `vite.config.ts` and `vitest.config.ts`.
+- Chunk hashes changed because the Vite `codeSplitting` rule matches `/src/lib/Components/`, which no
+  longer contains `Base`. Chunk grouping must be reworked in 0.8 when components move to
+  `packages/components/*`.
 
 ### 0.7 Move `modules`
 
@@ -210,19 +227,19 @@ Deliverable is a contract document plus interfaces. No implementation.
 
 Ported into `src/lib/Components` already, pending review:
 
-| Component | Files | CSS | Notes |
-|---|---|---|---|
-| Accordion | `Accordion.ts` | yes | |
-| Carousel | `Carousel.ts` | yes | manual verification needed |
-| FabMenu | `FabMenu.ts` | yes | |
-| Footer | `Footer.ts` | **no CSS** | verify whether it relies on global styles |
-| Menu | `Menu.ts` | yes | uses legacy `ElementCreatedEventBus` / `TemplateRegistry` — must be remapped to `config.slots` |
-| Modal | `Modal.ts` | yes | |
-| ModeSwitcher | `ModeSwitcher.ts` | yes | |
-| PricingCard | `PricingCard.ts` | yes | |
-| Product | `ProductCard.ts`, `ProductDetail.ts`, `ProductGrid.ts` | `ProductCard.css` only | differs from FULL (single `ProductCard.ts`); confirm intended split |
-| Section | `Section.ts` | **no CSS** | verify whether it relies on global styles |
-| Tab | `Tab.ts` | yes | |
+| Component    | Files                                                  | CSS                    | Notes                                                                                          |
+| ------------ | ------------------------------------------------------ | ---------------------- | ---------------------------------------------------------------------------------------------- |
+| Accordion    | `Accordion.ts`                                         | yes                    |                                                                                                |
+| Carousel     | `Carousel.ts`                                          | yes                    | manual verification needed                                                                     |
+| FabMenu      | `FabMenu.ts`                                           | yes                    |                                                                                                |
+| Footer       | `Footer.ts`                                            | **no CSS**             | verify whether it relies on global styles                                                      |
+| Menu         | `Menu.ts`                                              | yes                    | uses legacy `ElementCreatedEventBus` / `TemplateRegistry` — must be remapped to `config.slots` |
+| Modal        | `Modal.ts`                                             | yes                    |                                                                                                |
+| ModeSwitcher | `ModeSwitcher.ts`                                      | yes                    |                                                                                                |
+| PricingCard  | `PricingCard.ts`                                       | yes                    |                                                                                                |
+| Product      | `ProductCard.ts`, `ProductDetail.ts`, `ProductGrid.ts` | `ProductCard.css` only | differs from FULL (single `ProductCard.ts`); confirm intended split                            |
+| Section      | `Section.ts`                                           | **no CSS**             | verify whether it relies on global styles                                                      |
+| Tab          | `Tab.ts`                                               | yes                    |                                                                                                |
 
 - [ ] Resolve the missing CSS for `Footer` and `Section`
 - [ ] Confirm the `Product` split and its CSS coverage
@@ -258,17 +275,19 @@ Plus a manual check of `http://localhost:5174/gallery/` for `#home`, `#form`, `#
 
 ## 7. Open questions
 
-| # | Question | Affects |
-|---|---|---|
-| Q1 | `Footer` and `Section` ship without CSS — is that intended, or was the CSS left behind? | Phase 0.8 / 5 |
-| Q2 | `Product` is split into three builders instead of FULL's single `ProductCard.ts` — intended? | Phase 5 |
-| Q3 | Should `Menu` be remapped now or dropped from the port list until the shell exists? | Phase 5 |
-| Q4 | `docs/` target folder for technical documentation (currently `.archives/docs`) | Phase 0.10 |
+| #   | Question                                                                                     | Affects       |
+| --- | -------------------------------------------------------------------------------------------- | ------------- |
+| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose. | closed        |
+| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now. | closed |
+| Q3  | Should `Menu` be remapped now or dropped from the port list until the shell exists?          | Phase 5       |
+| Q4  | `docs/` target folder for technical documentation (currently `.archives/docs`)               | Phase 0.10    |
 
 ## 8. Change log
 
-| Date | Change |
-|---|---|
-| 2026-11-07 | Plan created. Reference material archived by the user into `.archives/`. |
+| Date       | Change                                                                                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-07 | Plan created. Reference material archived by the user into `.archives/`.                                                                                             |
 | 2026-11-07 | Baseline recorded: `tsc --noEmit` clean, 42 tests pass, build succeeds. Renamed `Tab.tabRoot` (was `rootElement`) to resolve a collision with `Builder.rootElement`. |
-| 2026-11-07 | Step 0.2 done: `ComponentRegistry` now receives `{ modules, styles }` instead of owning `import.meta.glob`. All five routes verified. |
+| 2026-11-07 | Step 0.2 done: `ComponentRegistry` now receives `{ modules, styles }` instead of owning `import.meta.glob`. All five routes verified.                                |
+| 2026-11-07 | Steps 0.3–0.5 done: workspace skeleton, `packages/styles`, `packages/utilities`, and `interface` moved to `packages/core`. Build output byte-identical.               |
+| 2026-11-07 | Step 0.6 done: `packages/core` (`DOMRenderer`, `ComponentRegistry`, `Registry`, `BuilderPort`) and `packages/base` (`Base`, `BaseAdapters`). Shared `aliases.ts`. All routes verified. |

@@ -1,5 +1,5 @@
-import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "../../interface";
-import { Builder } from "../Base";
+import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import { Builder } from "@aio-ui/base/Base";
 import {
   __applyTableClasses,
   __normalizeCell,

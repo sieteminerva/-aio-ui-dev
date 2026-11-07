@@ -1,6 +1,6 @@
 // ABOUT — the story behind the work
 
-import type { iNodeContent } from "../lib/interface";
+import type { iNodeContent } from "@aio-ui/core/interface";
 import { navigationMenu } from "./shared";
 
 export const AboutContent: iNodeContent = {

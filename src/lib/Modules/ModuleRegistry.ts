@@ -1,5 +1,5 @@
-import { Registry } from "../Registry";
-import type { RegistryDuplicatePolicy } from "../Registry";
+import { Registry } from "@aio-ui/core/Registry";
+import type { RegistryDuplicatePolicy } from "@aio-ui/core/Registry";
 
 /**
  * A loadable module definition.

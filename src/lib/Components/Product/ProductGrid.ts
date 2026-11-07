@@ -1,5 +1,5 @@
 // Components/ProductCardComponent.ts (The Pure Grid List Factory Component)
-import { Builder } from "../Base";
+import { Builder } from "@aio-ui/base/Base";
 import { ProductCardBuilder } from "./ProductCard";
 
 export class ProductGridBuilder extends Builder<"@grid" | "@grid>container", any> {

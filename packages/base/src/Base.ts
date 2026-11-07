@@ -1,10 +1,12 @@
-import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iActionProperty, iNodeRecordItem, iNodeRecordRelations } from "../interface";
+import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iActionProperty, iNodeRecordItem, iNodeRecordRelations } from "@aio-ui/core/interface";
 // import { TemplateRegistry } from "../Modules/TemplateRegistry";
 // import { ElementCreatedEventBus } from "../Services/EventBus";
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
-import { buildNamespace, setMetadata } from "../Utility/Metadata";
-import { selectorToTree } from "../Utility/SelectorToTree";
-import { applyAttrDictionary, applyAttributeList } from "../Utility/AttributeUtils";
+import { HydrationGate } from "./BaseAdapters/HydrationGate";
+import { setBuilderAdapter } from "@aio-ui/core/BuilderPort";
+import { buildNamespace, setMetadata } from "@aio-ui/utilities/Metadata";
+import { selectorToTree } from "@aio-ui/utilities/SelectorToTree";
+import { applyAttrDictionary, applyAttributeList } from "@aio-ui/utilities/AttributeUtils";
 
 export const GLOBAL_INSTANCE_COUNTER = new Map<string, number>();
 
@@ -936,3 +938,24 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
 // Hacker/script luar GARANSI 100% tidak akan bisa mengganti jeroan .create atau .render!
 // ====================================================
 Object.freeze(Builder.prototype);
+
+// ====================================================
+// 🔌 BUILDER PORT — plug this package into `@aio-ui/core`.
+// `ComponentRegistry` needs exactly two things from a builder: a counter reset
+// when the registry is cleared, and a hydration release when a lazy build
+// finishes. Core declares them in `BuilderPort`; this package supplies them, so
+// the import direction stays base → core and `core` never learns about `base`.
+// ====================================================
+setBuilderAdapter({
+  resetCounters: () => Builder.resetCounters(),
+  releaseHydration: (instance, element) => {
+    // A builder instance may expose its own gate; reuse it so the held root is
+    // released together with the element. Otherwise write the markers directly.
+    const gate = (instance as { hydration?: HydrationGate } | null | undefined)?.hydration;
+    if (gate instanceof HydrationGate) {
+      gate.release(element);
+      return;
+    }
+    if (element instanceof HTMLElement) HydrationGate.releaseMarkers(element);
+  },
+});

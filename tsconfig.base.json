@@ -1,0 +1,36 @@
+{
+  // Shared compiler options for the monorepo. Every package and the example
+  // application extends this file; only `include` / `exclude` differ per project.
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "lib": ["ES2023", "DOM"],
+    "types": ["vite/client"],
+    "allowArbitraryExtensions": true,
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true,
+
+    /* Workspace packages are resolved through aliases so the example application
+       can import them before npm workspaces link them. */
+    "paths": {
+      "@aio-ui/styles/*": ["./packages/styles/src/*"],
+      "@aio-ui/core": ["./packages/core/src/index.ts"],
+      "@aio-ui/core/*": ["./packages/core/src/*"],
+      "@aio-ui/base": ["./packages/base/src/index.ts"],
+      "@aio-ui/base/*": ["./packages/base/src/*"],
+      "@aio-ui/utilities/*": ["./packages/utilities/src/*"]
+    }
+  }
+}

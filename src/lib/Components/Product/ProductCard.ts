@@ -1,6 +1,6 @@
 // Components/ProductCardBuilder.ts (The Purely Integrated Polymorphic Product Card Specification)
-import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "../../interface";
-import { Builder } from "../Base";
+import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import { Builder } from "@aio-ui/base/Base";
 import "./ProductCard.css";
 
 export type ProductCardElementType =

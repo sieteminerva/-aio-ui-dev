@@ -2,7 +2,7 @@
 // WIZARD — halaman build wizard (rute #/build)
 // ================================================================
 
-import type { iNodeContent } from "../lib/interface";
+import type { iNodeContent } from "@aio-ui/core/interface";
 
 // ======================================================================
 // BuildStore — jembatan data antar-halaman untuk alur pembangunan website.

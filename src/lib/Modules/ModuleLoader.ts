@@ -1,5 +1,5 @@
-import { RegistryError } from "../Registry";
-import type { RegistryDuplicatePolicy } from "../Registry";
+import { RegistryError } from "@aio-ui/core/Registry";
+import type { RegistryDuplicatePolicy } from "@aio-ui/core/Registry";
 import { ModuleRegistry } from "./ModuleRegistry";
 import type { iModuleDefinition } from "./ModuleRegistry";
 

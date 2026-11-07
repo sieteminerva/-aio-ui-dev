@@ -1,4 +1,4 @@
-import { generateRandomColor, hexToRgba } from '../../../Utility/color.utils';
+import { generateRandomColor, hexToRgba } from "@aio-ui/utilities/color.utils";
 
 export function BackgroundCircleAnimation(canvas: HTMLCanvasElement) {
   /*--------------------

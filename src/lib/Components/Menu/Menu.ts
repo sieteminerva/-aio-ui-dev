@@ -1,6 +1,6 @@
 
-import type { iActionProperty, iBasicNode, iBuilderConfig } from "../../interface";
-import { Builder } from "../Base";
+import type { iActionProperty, iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
+import { Builder } from "@aio-ui/base/Base";
 // import "./Menu.css";
 
 

@@ -1,4 +1,4 @@
-import type { iNodeRecordItem } from "../interface";
+import type { iNodeRecordItem } from "@aio-ui/core/interface";
 
 /**
    * 👑 THE SOVEREIGN SELECTOR GRAPH PARSER (SIHIR KILAT HASIL IDE DEWA ANDA!)

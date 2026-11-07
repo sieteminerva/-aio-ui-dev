@@ -1,7 +1,7 @@
-import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "../../interface";
-import { createImageError } from "../../Utility/DomUtils";
+import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import { createImageError } from "@aio-ui/utilities/DomUtils";
 
-import { Builder } from "../Base";
+import { Builder } from "@aio-ui/base/Base";
 
 export type ArticleElementType =
   | "@container"

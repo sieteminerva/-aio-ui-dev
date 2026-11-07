@@ -1,5 +1,5 @@
-import type { iBasicNode, iBuilderConfig } from "../../interface";
-import { Builder } from "../Base";
+import type { iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
+import { Builder } from "@aio-ui/base/Base";
 // import "./PricingCard.css";
 
 export type PricingCardElementType =

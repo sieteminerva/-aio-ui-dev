@@ -1,7 +1,13 @@
 import { defineConfig } from 'vite';
+import { workspaceAliases } from './aliases.ts';
 
 export default defineConfig({
   base: "/gallery/",
+  resolve: {
+    // Workspace aliases: the example application imports packages by name so the
+    // same imports keep working once the app moves to `examples/gallery`.
+    alias: workspaceAliases,
+  },
   css: {
     lightningcss: {
       targets: {

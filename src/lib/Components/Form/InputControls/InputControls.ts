@@ -5,8 +5,8 @@
  * delegates its button set and click behaviour to this builder.
  */
 import type { iActionType, iBasicInputNode, iInputActionContext, iInputActionDefinition } from "../Input";
-import type { iBuilderConfig, iElementProperty } from "../../../interface";
-import { Builder } from "../../Base";
+import type { iBuilderConfig, iElementProperty } from "@aio-ui/core/interface";
+import { Builder } from "@aio-ui/base/Base";
 import "./inputControls.css";
 
 export type InputControlsElementType =

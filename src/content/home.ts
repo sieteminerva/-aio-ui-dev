@@ -2,7 +2,7 @@
 // HOME — halaman presentasi (rute #/home)
 // ================================================================
 
-import type { iNodeContent } from "../lib/interface";
+import type { iNodeContent } from "@aio-ui/core/interface";
 import { HomepageContent_id } from "./home_id";
 import { HorizontalScrollingPage } from "./horizontal";
 import { navigationMenu, navScroll, requestStart } from "./shared";

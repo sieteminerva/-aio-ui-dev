@@ -1,7 +1,7 @@
 
-import type { DefaultSelectors, iBuilderRegistry, iNodeContent, iNodeRecordItem } from "../interface";
-import { applyAttrDictionary, applyAttributeList } from "../Utility/AttributeUtils";
-import { ensureMetadataIdentity, setMetadata } from "../Utility/Metadata";
+import type { DefaultSelectors, iBuilderRegistry, iNodeContent, iNodeRecordItem } from "./interface";
+import { applyAttrDictionary, applyAttributeList } from "@aio-ui/utilities/AttributeUtils";
+import { ensureMetadataIdentity, setMetadata } from "@aio-ui/utilities/Metadata";
 
 type BuildContext = {
   scopeId: string;
