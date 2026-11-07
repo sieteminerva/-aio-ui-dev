@@ -132,7 +132,7 @@ const FooterSection = {
 };
 
 export const HomepageContent_id: iNodeContent = {
-  "#app": {
+  ".page": {
     content: {
       nav: {
         content: {

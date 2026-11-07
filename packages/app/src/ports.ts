@@ -14,7 +14,7 @@ import type { iBuilderRegistry } from "@aio-ui/core/registry";
 import type { iNodeContent } from "@aio-ui/core/node";
 
 /** Minimal route state the shell consumes. Mirrors `iRouteState` in `@aio-ui/router`. */
-export interface iShellRouteState {
+export interface iAppRouteState {
   route: string;
   theme: string | null;
   fragment: string;
@@ -53,7 +53,7 @@ export interface iRendererPort {
 /** What the shell needs from a router instance. */
 export interface iRouterPort {
   navigate(routeId: string, themeId?: string | null, fragmentId?: string): void;
-  parseUrlHash(): iShellRouteState;
+  parseUrlHash(): iAppRouteState;
   updateValidRoutes(validRoutes: string[]): void;
   destroy(): void;
 }
@@ -66,7 +66,7 @@ export type iRouterFactory = (
   defaultRoute: string,
   initialTheme: string,
   validRoutes: string[],
-  onRouteChanged: (state: iShellRouteState) => void | Promise<void>
+  onRouteChanged: (state: iAppRouteState) => void | Promise<void>
 ) => iRouterPort;
 
 /** What the shell needs from the animation service. */
@@ -81,11 +81,24 @@ export interface iEventPort {
   on(event: string, callback: (data: any) => void): void;
 }
 
+/**
+ * What the shell needs from persistent storage.
+ *
+ * Only the theme id is persisted today. The port exists so the shell never
+ * touches `localStorage` directly: a generated project may run in a privacy mode,
+ * in an iframe, or in a Node test, where `localStorage` is either absent or throws.
+ */
+export interface iStoragePort {
+  get(key: string): string | null;
+  set(key: string, value: string): void;
+}
+
 /** Every collaborator the shell accepts. Only `registry` and `routerFactory` are required. */
-export interface iAppShellDeps {
+export interface iAppDeps {
   registry: iComponentRegistryPort;
   routerFactory: iRouterFactory;
   renderer?: iRendererPort;
   animation?: iAnimationPort;
   events?: iEventPort;
+  storage?: iStoragePort;
 }

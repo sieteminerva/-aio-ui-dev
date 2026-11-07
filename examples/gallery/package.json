@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@aio-ui/animations": "*",
+    "@aio-ui/app": "*",
     "@aio-ui/article": "*",
     "@aio-ui/base": "*",
     "@aio-ui/core": "*",

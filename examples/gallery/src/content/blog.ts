@@ -3,7 +3,7 @@ import { navigationMenu } from "./shared";
 import ARTICLE_RESPONSE from "./blog.json";
 
 export const BlogContent: iNodeContent = {
-  "#app": {
+  ".page": {
     content: {
       ...navigationMenu,
       "main#blog": {

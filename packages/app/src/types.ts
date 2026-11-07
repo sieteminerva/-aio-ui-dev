@@ -6,11 +6,11 @@
  * the page, swaps the root element, and runs page lifecycle hooks.
  *
  * The shape is deliberately narrow. Whatever the shell must know is declared
- * here; anything else belongs to a package it receives through `iAppShellDeps`.
+ * here; anything else belongs to a package it receives through `iAppDeps`.
  */
 
-import type { iBasicNode } from "@aio-ui/core/node";
-import type { iAppShellDeps } from "./ports";
+import type { iBasicNode, iNodeContent } from "@aio-ui/core/node";
+import type { iAppDeps } from "./ports";
 
 /**
  * One piece of a page.
@@ -43,20 +43,41 @@ export interface iPageDocument {
 }
 
 /**
+ * Content of one route.
+ *
+ * Two shapes are accepted because the same shell must serve both editions:
+ *
+ * - a **node tree** (`iNodeContent`) — what a hand-written LITE page is. The
+ *   renderer understands it as-is, so nothing is transformed on the way in.
+ * - a **page document** (`iPageDocument`) — a list of blocks. Generated projects
+ *   get this straight from an editor or a CMS; the shell converts each block into
+ *   a builder root before rendering.
+ *
+ * Detection is structural (`Array.isArray(page.blocks)`), not nominal, so a plain
+ * object coming from JSON works without being branded.
+ */
+export type iPageContent = iNodeContent | iPageDocument;
+
+/**
  * Source of truth for the application content.
  *
  * In the LITE edition this is written by hand (`src/content/*`). In a generated
- * project it is produced by transforming the CMS response into node trees.
+ * project it is produced by transforming the CMS response into page documents.
+ *
+ * `menu` and `footer` are optional slots. A hand-written page tree normally
+ * already contains its own nav and footer, so leaving the slots empty keeps the
+ * authored DOM untouched; a generated project fills them and the shell wraps the
+ * page with them.
  */
-export interface iAppShellSource {
-  /** Route name to page document. */
-  pages: Record<string, iPageDocument>;
+export interface iAppSource {
+  /** Route name to page content. Keys are normalised (trim, no `#`, lower case). */
+  pages: Record<string, iPageContent>;
   menu?: iBasicNode | HTMLElement | null;
   footer?: iBasicNode | HTMLElement | null;
 }
 
 /** Construction options that are not content. */
-export interface iAppShellOptions {
+export interface iAppOptions {
   /** Mount point, resolved once at construction. */
   container: HTMLElement | string;
   /** Route used when the hash is empty or invalid. Defaults to `home`. */
@@ -68,15 +89,15 @@ export interface iAppShellOptions {
 }
 
 /** Full configuration: content, options and injected collaborators. */
-export interface iAppShellConfig extends iAppShellOptions {
-  source: iAppShellSource;
-  deps: iAppShellDeps;
+export interface iAppConfig extends iAppOptions {
+  source: iAppSource;
+  deps: iAppDeps;
 }
 
 /** Context passed to a page controller before its route is rendered. */
 export interface iPagePrepareContext {
   route: string;
-  page: iPageDocument;
+  page: iPageContent;
   menu: iBasicNode | HTMLElement | null;
   footer: iBasicNode | HTMLElement | null;
   theme: string | null;
@@ -95,7 +116,7 @@ export interface iPageController {
   readonly route: string;
 
   /** Runs once per route render, before preload and render. May return a page tree to use instead. */
-  onPrepare?(context: iPagePrepareContext): iPageDocument | void | Promise<iPageDocument | void>;
+  onPrepare?(context: iPagePrepareContext): iPageContent | void | Promise<iPageContent | void>;
 
   /** Runs after the new page tree is attached to the DOM. */
   onReady?(elements: Map<string, HTMLElement>, shell: HTMLElement): void;
@@ -108,7 +129,7 @@ export interface iPageController {
 }
 
 /** Public surface of a mounted shell. */
-export interface iAppShell {
+export interface iApp {
   /** Route currently rendered. */
   readonly currentRoute: string;
   /** Root element of the mounted shell, `null` before `mount()`. */

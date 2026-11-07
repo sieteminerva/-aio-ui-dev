@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./AioApp": "./src/AioApp.ts",
     "./ports": "./src/ports.ts",
     "./types": "./src/types.ts"
   },

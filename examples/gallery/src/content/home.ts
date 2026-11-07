@@ -217,7 +217,7 @@ const FooterSection = {
 };
 export const HomepageContent_en: iNodeContent =
 {
-  "#app": {
+  ".page": {
     content: {
       ...navigationMenu,
       "main": {

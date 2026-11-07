@@ -4,7 +4,7 @@ import type { iNodeContent } from "@aio-ui/core/interface";
 import { navigationMenu } from "./shared";
 
 export const AboutContent: iNodeContent = {
-  "#app": {
+  ".page": {
     content: {
       ...navigationMenu,
       "main": {

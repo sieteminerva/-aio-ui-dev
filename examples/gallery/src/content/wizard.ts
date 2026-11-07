@@ -656,7 +656,7 @@ function mountWizard(container: HTMLElement, builderFn: any): void {
 }
 export const BuildPageContent: iNodeContent =
 {
-  "#app": {
+  ".page": {
     content: {
       // ...navigationMenu,
       "main": {

@@ -2,7 +2,7 @@ import type { iNodeContent } from "@aio-ui/core/interface";
 import { navigationMenu } from "./shared";
 import GALLERY_RESPONSE from "./gallery.json";
 export const GalleryContent: iNodeContent = {
-  "#app": {
+  ".page": {
     content: {
       ...navigationMenu,
       "main#gallery": {
