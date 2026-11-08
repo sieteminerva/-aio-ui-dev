@@ -32,6 +32,22 @@ describe("InputBuilder label", () => {
     const { container } = build({ type: "checkbox", id: "agree", title: "Saya setuju" });
 
     expect(container.querySelectorAll("label")).toHaveLength(1);
+  });
+
+  it("defaults a toggle label to the right so it cannot sit on the switch", () => {
+    const { container } = build({ type: "checkbox", id: "agree", title: "Saya setuju" });
+
+    expect(container.querySelector("label")?.getAttribute("data-position")).toBe("right");
+  });
+
+  it("takes an explicit position from the field or from its config", () => {
+    expect(build({ type: "checkbox", id: "a", title: "A", position: "left" }).container.querySelector("label")?.getAttribute("data-position")).toBe("left");
+    expect(build({ type: "text", id: "b", title: "B", config: { position: "right" } }).container.querySelector("label")?.getAttribute("data-position")).toBe("right");
+  });
+
+  it("leaves a plain text label without a position hint", () => {
+    const { container } = build({ type: "text", id: "name", title: "Nama" });
+
     expect(container.querySelector("label")?.hasAttribute("data-position")).toBe(false);
   });
 

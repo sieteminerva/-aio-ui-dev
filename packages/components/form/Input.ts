@@ -292,11 +292,17 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
     // 🏷️ One label, one place. `useLabel` is an on/off switch (default on, set in
     // `resolvePayload`); `position` is a CSS hint (`data-position`), never an order change.
     //
-    // Read from `config` only: a top-level `position` on the schema resolves through the
-    // reactive payload proxy to an inherited value (the demo checkbox came back `"right"`
-    // without asking for it), and `config.position` is the typed home anyway.
+    // Both spellings are accepted — `{ position }` on the field and `config.position` —
+    // because the schema shape predates the config bag. A toggle (`checkbox`/`radio`) has
+    // no sensible "above the control" layout, so it defaults to `right`; without any
+    // `data-position` its `:has(> label[…])` grid rules never match and the label stacks
+    // on top of the switch.
     const labelText = this.#input.label ?? this.#input.title;
-    const labelPosition = this.#input.config?.position;
+    const isToggle = this.#input.type === "checkbox" || this.#input.type === "radio";
+    const labelPosition =
+      this.#input.config?.position
+      ?? (this.#input.position as "top" | "left" | "right" | "bottom" | undefined)
+      ?? (isToggle ? "right" : undefined);
 
     const label = labelText && this.#input.config?.useLabel !== false
       ? this.render("@field>label", { text: labelText, position: labelPosition, id: this.#input.id }) as HTMLElement
