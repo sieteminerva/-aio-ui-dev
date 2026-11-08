@@ -1,15 +1,25 @@
 interface iHttpServiceConfig {
-  url: string;
-  timeout: number;
-  delay: number;
-  cacheEnabled: boolean;
-  cachePrefix: string;
-  cacheTtlDays: number;
+  url?: string;
+  /**
+   * Builds the request URL for a query.
+   *
+   * The mock transport uses it to point at static JSON (`/mock/blog.json`) without
+   * changing a single controller: switching to a real backend means removing this
+   * hook and setting `url`.
+   */
+  endpoint?: (query: Record<string, any>) => string;
+  timeout?: number;
+  delay?: number;
+  cacheEnabled?: boolean;
+  cachePrefix?: string;
+  cacheTtlDays?: number;
 }
 
 type iCacheEntry = Record<"data" | "expire", any | number>;
 
 export class HttpService {
+  /** Slot this class fills when registered as an app module. */
+  static readonly slot = "http" as const;
 
   /**
    * @property {boolean} _destroyed
@@ -27,10 +37,13 @@ export class HttpService {
    * @property {iHttpServiceConfig} _config
    * @description Merged runtime configuration for API, cache, text, container, and adapter behavior.
    */
-  config;
+  config: iHttpServiceConfig &
+    Required<Pick<iHttpServiceConfig, "url" | "timeout" | "delay" | "cacheEnabled" | "cachePrefix" | "cacheTtlDays">>;
 
-  constructor(config: iHttpServiceConfig) {
-    const defaultConfig: Required<iHttpServiceConfig> = {
+  constructor(config: iHttpServiceConfig = {}) {
+    const defaultConfig: Required<
+      Pick<iHttpServiceConfig, "url" | "timeout" | "delay" | "cacheEnabled" | "cachePrefix" | "cacheTtlDays">
+    > = {
       url: "",
       cacheEnabled: false,
       cacheTtlDays: 1,
@@ -60,7 +73,7 @@ export class HttpService {
    * To ensure a consistent UI experience, it introduces a configurable artificial delay
    * when serving data from the cache.
    */
-  async get(query: any): Promise<any[] | Object> {
+  async get(query: any): Promise<any> {
 
     // Step 1: Generate a unique key based on query.
     const cacheKey = this._constructCacheKey(query, "get");
@@ -108,7 +121,7 @@ export class HttpService {
    * @returns {Promise<Array|Object>} A promise that resolves to the processed data returned by the API.
    * @throws {Error} If the API request fails.
    */
-  async post(query: any, payload: any): Promise<any[] | Object> {
+  async post(query: any, payload: any): Promise<any> {
     // 1. Jalankan request POST ke API menggunakan core fetch service Anda
     const fetchOptions: RequestInit = {
       method: "POST",
@@ -141,6 +154,23 @@ export class HttpService {
   private _constructCacheKey(query: any, suffix: string): string {
     const key = Object.keys(query).join("-");
     return `${key}-${suffix}`;
+  }
+
+  /**
+   * Default URL builder: the configured base plus every defined query parameter.
+   *
+   * Kept separate so `config.endpoint` can replace it without duplicating the
+   * parameter sanitising.
+   */
+  private _buildUrl(query: Record<string, any>): string {
+    const baseUrl = (this.config.url ?? "").replace(/\/+$/, "");
+    const params = new URLSearchParams();
+
+    for (const [k, v] of Object.entries(query)) {
+      if (v !== undefined && v !== null) params.append(k, v as string);
+    }
+
+    return params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
   }
   /**
    * Performs a network request to the configured API endpoint with automatic timeout and abort handling.
@@ -183,14 +213,9 @@ export class HttpService {
       options.signal = controller.signal;
     }
 
-    // Step 4: Construct the final URL by appending sanitized query parameters.
-    const baseUrl = this.config.url.replace(/\/+$/, "");
-    const params = new URLSearchParams();
-
-    for (const [k, v] of Object.entries(query)) {
-      if (v !== undefined && v !== null) params.append(k, v as string);
-    }
-    const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+    // Step 4: Construct the final URL. A host-supplied `endpoint` wins, so a mock
+    // transport can point at static files while controllers stay unchanged.
+    const url = this.config.endpoint?.(query) ?? this._buildUrl(query);
     console.log(`[Query]:`, query);
     console.log(`[Endpoint]:`, url);
     try {
@@ -205,10 +230,12 @@ export class HttpService {
         throw new Error(res.statusText || `HTTP Error ${res.status}`);
       }
 
-      // Step 8: Parse JSON and validate the application-level success flag.
+      // Step 8: Parse JSON and validate the application-level success flag. The whole
+      // envelope is returned (not just `.data`), because consumers need `meta` for
+      // pagination — see `docs/API.md`.
       const json = await res.json();
-      if (json && json.success) {
-        return json.data;
+      if (json && (json.success === true || json.status === "success")) {
+        return json;
       }
       throw new Error(json?.message || "Invalid response");
     } catch (err) {

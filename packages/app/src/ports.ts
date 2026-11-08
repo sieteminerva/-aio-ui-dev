@@ -98,6 +98,20 @@ export interface iEventPort {
 }
 
 /**
+ * What the app hands to a page controller for data access.
+ *
+ * Every byte a page loads goes through here — including mock JSON, which is fetched
+ * as a real request so switching to a live backend is a configuration change, not a
+ * code rewrite.
+ */
+export interface iHttpPort {
+  /** Reads records. `query` names the table (or whatever the backend expects). */
+  get(query: Record<string, any>): Promise<any>;
+  /** Writes records. */
+  post(query: Record<string, any>, payload: unknown): Promise<any>;
+}
+
+/**
  * What the app needs from persistent storage.
  *
  * Only the theme id is persisted today. The port exists so the app never touches

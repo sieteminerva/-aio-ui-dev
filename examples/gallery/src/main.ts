@@ -9,10 +9,11 @@ import '@aio-ui/styles/index.css';
 import './style.css';
 
 import { EventEmitter } from '@aio-ui/event-emitter';
+import { HttpService } from '@aio-ui/http-service';
 import { AboutContent } from './content/about';
 import { GalleryContent } from './content/gallery';
-import { BlogContent } from './content/blog';
 import { BuildPageContent } from './content/wizard';
+import { BlogPage } from './pages/blog';
 import { componentAssets } from './registry.assets';
 
 // 🔐 Daftarkan Service Worker supaya id_token disimpan di variabel SW.
@@ -40,9 +41,17 @@ export function registerServiceWorker() {
 const pages = {
   home: HomepageContent,
   about: AboutContent,
-  blog: BlogContent,
   gallery: GalleryContent,
   form: BuildPageContent,
+};
+
+/**
+ * Endpoint mock: setiap tabel dilayani sebagai file JSON statis yang benar-benar
+ * di-fetch. Pindah ke backend asli = hapus `endpoint`, isi `url` dengan URL GAS.
+ */
+const mockApi = {
+  url: '',
+  endpoint: (query: Record<string, any>) => `${import.meta.env.BASE_URL}mock/${query.sheetName}.json`,
 };
 
 /** `localStorage` bisa ada tapi melempar (mode privat / iframe); `StorageModule` yang membungkusnya. */
@@ -110,8 +119,12 @@ async function start(container: HTMLElement) {
     .registerModule(DOMRenderer)
     .registerModule(AppStorage, { driver: themeStorage })
     .registerModule(AnimationsService)
+    // satu-satunya pintu data untuk halaman
+    .registerModule(HttpService, mockApi)
     // instance yang sama dipakai manifest form di atas, jadi event-nya nyambung
-    .registerModule(emitter);
+    .registerModule(emitter)
+    // perilaku per-route; kontennya datang dari controller
+    .registerPage('blog', BlogPage);
 
   await app.mount();
 

@@ -1,5 +1,6 @@
 {
-  "status": "success",
+  "success": true,
+  "message": "Data retrieved successfully.",
   "meta": {
     "currentPage": 1,
     "perPage": 5,

@@ -89,7 +89,7 @@ function subpathResolves(name, sub) {
     if (manifest.exports) return Boolean(manifest.exports[`./${clean}`]);
   }
 
-  return (["", ".ts", ".tsx", ".css"].some((ext) => existsSync(join(dir, `${clean}${ext}`))));
+  return ["", ".ts", ".tsx", ".css"].some((ext) => existsSync(join(dir, `${clean}${ext}`)));
 }
 
 /** Drops block comments and full-line comments, so prose is never mistaken for code. */

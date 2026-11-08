@@ -87,7 +87,7 @@ package has been extracted and verified.
 | 0     | Monorepo restructure, zero behavior change             | done              |
 | 1     | `AioApp` — contract, module convention, implementation | done              |
 | 2     | `ComponentRegistry` rewrite to the agreed contract     | done              |
-| 3     | PageController contract + one reference implementation | **next**          |
+| 3     | PageController contract + one reference implementation | done              |
 | 4     | Entry implementation, `main.ts` reduced                | done (merged → 1) |
 | 5     | Port remaining FULL components                         | not started       |
 | 6     | Themes, `ThemeRenderer`, generator pipeline            | not started       |
@@ -221,8 +221,8 @@ Notes:
 
 - [x] Write `docs/BOUNDARIES.md` with the import rules actually proven during migration
 - [x] Add a boundary check to the verification gate — `npm run check:bounds`
-  (`scripts/bounds.mjs`: edge matrix, type-only `app → core`, deep-import resolution,
-  `import.meta.glob` host-only, no `paths`/`alias`)
+      (`scripts/bounds.mjs`: edge matrix, type-only `app → core`, deep-import resolution,
+      `import.meta.glob` host-only, no `paths`/`alias`)
 - [x] Housekeeping: plan/task docs into `.guidance/`, technical docs into `docs/`, stale root `dist/` removed
 - [x] Split `packages/modules` into installable packages: `@aio-ui/router`, `@aio-ui/event-emitter`,
       `@aio-ui/http-service`, `@aio-ui/animations`, `@aio-ui/module-loader`
@@ -283,7 +283,7 @@ Delivered:
 - [x] Namespace `_resolvedCache` keys per module (`form:table`)
 - [x] `Base.module(id)` with a single warn-once policy
 - [x] `iComponentSource` dropped: no longer needed once modules are handed to builders
-  through `provideModules()`; `core` never asks `base` to resolve anything
+      through `provideModules()`; `core` never asks `base` to resolve anything
 - [x] Tests: `Registry`, `ModuleRegistry`, `ModuleLoader`, `ComponentRegistry`
 - [x] Auto-load: `collect(source)` + `loadFor(source)`; `buildersForRoute` deleted
 - [x] Declaration key unified on `builder` (`string | string[]`)
@@ -292,13 +292,19 @@ Delivered:
 
 ## Phase 3 — PageController
 
-Blocked on two contract decisions (see open questions Q6, Q7).
-
-- [ ] Finalize `iPageController` (`onPrepare`, `onReady`, `onDestroy`, `attachMenu`)
-- [ ] Decide what `onReady(elements)` receives — a named map (`menu`/`page`/`footer`)
-      or nothing at all
-- [ ] Implement one reference controller for the `form` route
-- [ ] Verify the `form` route end to end
+- [x] Finalize `iPageController` (`onPrepare`, `onReady`, `onDestroy`, `attachMenu`)
+- [x] `onReady(elements)` replaced by `iPageReadyContext` (`shell`, `menu`, `footer`,
+      `blocks`) — Q6 closed
+- [x] Register with `registerPage(route, Controller, config)`; one instance per render
+- [x] Page may come from `source.pages` **or** `onPrepare`; neither → explicit error
+- [x] `attachMenu` is called by the app, not by the controller (legacy duplicated it 3×)
+- [x] `iPageContext.signal` aborts when navigation moves on; superseded renders are dropped
+- [x] Data through `ctx.http` only; `HttpService.endpoint(query)` serves mock JSON as a
+      real request (`public/mock/*.json`), live backend is a config change
+- [x] Reference controller: `examples/gallery/src/pages/blog.ts`
+- [x] Verify the `form` and `blog` routes end to end
+- [ ] Reference controller for `form` (wizard) — deliberately deferred until the
+      Form module owns its sub-modules
 
 ## Phase 4 — AioApp implementation → merged into Phase 1
 
@@ -364,15 +370,15 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 
 ## 7. Open questions
 
-| #   | Question                                                                                                                                                          | Affects   |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                                                             | closed    |
-| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now.                                            | closed    |
-| Q3  | Should `Menu` be remapped now or dropped? — resolved: the entry exists, so remap it to `config.slots` during Phase 5.                                             | Phase 5   |
-| Q4  | `docs/` target folder — resolved: repository `docs/`, technical docs named per contract (`API.md`, `FIELD-TYPES.md`, `APP.md`, `BOUNDARIES.md`).                  | closed    |
+| #   | Question                                                                                                                                                                 | Affects   |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                                                                    | closed    |
+| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now.                                                   | closed    |
+| Q3  | Should `Menu` be remapped now or dropped? — resolved: the entry exists, so remap it to `config.slots` during Phase 5.                                                    | Phase 5   |
+| Q4  | `docs/` target folder — resolved: repository `docs/`, technical docs named per contract (`API.md`, `FIELD-TYPES.md`, `APP.md`, `BOUNDARIES.md`).                         | closed    |
 | Q5  | Component package naming — resolved: `@aio-ui/<name>`, so install name and import name are identical (`@aio-ui/form/Form`). The `@aio-ui/components/*` alias is retired. | closed    |
-| Q6  | What does `onReady(elements)` receive — a named map (`menu`/`page`/`footer`) or nothing? Today it gets an empty `Map`, which is a lie.                             | Phase 3   |
-| Q7  | Who applies the theme to the DOM (`data-theme` on the root): `AioApp`, or a theme service that listens to `themeChanged`? The entry currently only emits.          | Phase 3/6 |
+| Q6  | What does `onReady(elements)` receive — resolved: `iPageReadyContext` with `shell`, `menu`, `footer`, `blocks` (every element carrying an `id`).                                | closed    |
+| Q7  | Who applies the theme to the DOM (`data-theme` on the root): `AioApp`, or a theme service that listens to `themeChanged`? The entry currently only emits.                | Phase 3/6 |
 
 ## 8. Change log
 
@@ -399,6 +405,9 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 | 2026-11-08 | Module convention: `iAppDeps` removed. Every collaborator is a registered module, and **the real class is the token** (`static readonly slot` + `constructor(config, context)`), so no wrapper classes exist: `registerModule(HashRouter)`, `registerModule(AppStorage, { driver })`, `registerModule(AnimationsService)`, `registerModule(componentRegistryInstance)`. `iAppConfig` keeps only general options; config types come from `ConstructorParameters<M>`. `HashRouter` now accepts `(config, context)`; `ComponentRegistry`, `DOMRenderer`, `AnimationsService`, `EventEmitter` carry `static slot`. Modules are constructed at `mount()` (storage first so the persisted theme exists before the router), duplicates warn+replace, teardown is `port.destroy?.()` in reverse order, registering after mount throws, and a module without a slot throws with a hint. 68 tests, all routes unchanged (123/64/32/116/76). |
 
 | 2026-11-08 | Plan reconciled with the code, and the boundary gate landed: `scripts/bounds.mjs` + `npm run check:bounds` + `npm run verify` (typecheck → bounds → test → build). The gate checks the dependency matrix from `docs/BOUNDARIES.md`, type-only `app → core`, deep-import resolution against `exports` (file fallback for map-less component packages), `import.meta.glob` outside the host, and reintroduced `paths`/`alias`. Verified by a deliberate violation probe. Phase 4 merged into Phase 1; Q3/Q4 closed; Q6 (`onReady` element map) and Q7 (theme DOM application) opened for Phase 3. |
+
+| 2026-11-08 | Phase 3 done. `registerController` → `registerPage(route, Controller, config)`; one controller instance per render. `iPagePrepareContext` → `iPageContext` (`route`, `page`, `fragment`, `theme`, `builders`, `http`, `signal`); `onReady(Map, shell)` → `iPageReadyContext` (`shell`, `menu`, `footer`, `blocks`). A route's page may now come from `source.pages` **or** `onPrepare`. `attachMenu` is invoked by the app. Navigation aborts the in-flight pass via `AbortController`, and a superseded render is dropped instead of painting. New slot `http` (`HttpService`); `HttpService` gained `endpoint(query)` (mock JSON as a real request), returns the whole envelope (`docs/API.md`), accepts the legacy `status` envelope, and its config is fully optional. `blog` became the reference controller, reading `public/mock/blog.json`; `blog.json` no longer lives in `src/content`. 78 tests, routes unchanged (123/64/32/116/76). |
+
 
 | 2026-11-08 | Contracts written: `core/types/api.ts` (`iApiResponse`, `iFieldDescriptor`), app `iPageBlock`/`iPageDocument`, `docs/API.md` from a live response. |
 

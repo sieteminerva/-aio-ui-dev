@@ -116,6 +116,7 @@ arguments a router cannot know by itself arrive through it.
 | `renderer`  | `DOMRenderer`       | `@aio-ui/core`          |
 | `animation` | `AnimationsService` | `@aio-ui/animations`    |
 | `events`    | `EventEmitter`      | `@aio-ui/event-emitter` |
+| `http`      | `HttpService`       | `@aio-ui/http-service`  |
 | `storage`   | `AppStorage`        | `@aio-ui/app`           |
 
 `@aio-ui/app` itself imports **types only** — no renderer, router, animation or
@@ -134,16 +135,71 @@ page controller (optional) ─────────────────�
 
 1. Resolve the container once, at `mount()`.
 2. Create every registered module (storage first, then registration order).
-3. Derive the component names of the page (see "Preload derivation").
-4. Run the controller's `onPrepare`, use its returned page when provided.
+3. Create the route's controller for this pass (`new Controller(config, ctx)`), then run
+   its `onPrepare`; the page is whatever it returns, or the one in `source.pages`.
+4. Derive the component names from the page (and the menu/footer nodes).
 5. Await `registry.load(names)` before rendering. `registry.build` is synchronous, so
    an unloaded component cannot be built.
 6. Render through the renderer port, replace the container's children, keep one root.
-7. Drop a render that was superseded by a newer navigation.
+7. Drop a render that was superseded by a newer navigation, and abort its `signal`.
 8. Run `animation.init(root)` on the new root when an animation port is provided.
-9. Scroll to the URL fragment, then run `onReady` for the active controller.
+9. Scroll to the URL fragment, then run `onReady` with the mounted elements.
 10. Run the outgoing controller's `onDestroy` before its DOM is replaced.
+## Page controller
 
+A route may be described by **content** (`source.pages[route]`), by a **controller**, or
+by both. One of them must supply the page; otherwise the render fails with an explicit
+message. The controller is bound to a route at registration, and one instance is created
+per render — so `onDestroy` genuinely releases what `onPrepare` acquired:
+
+```ts
+class BlogPage implements iPageController {
+  async onPrepare({ http, signal }: iPageContext): Promise<iPageContent | void> {
+    const article = await http.get({ sheetName: "blog" });
+    if (signal.aborted) return; // a newer navigation already started
+    return { ".page": { content: { ...navigationMenu, "main#blog": { … } } } };
+  }
+}
+
+app.registerPage("blog", BlogPage, { limit: 5 });
+```
+
+| Hook | Receives | Purpose |
+| --- | --- | --- |
+| `onPrepare` | `iPageContext` | load data, return the page to render |
+| `onReady` | `iPageReadyContext` | attach listeners once the DOM exists |
+| `onDestroy` | — | release what the controller acquired |
+| `attachMenu` | `iBasicNode` | rewrite the menu node; **called by the app**, not by the controller |
+
+`iPageContext` = `{ route, page, fragment, theme, builders, http, signal }`.
+`iPageReadyContext` = `{ route, page, shell, menu, footer, blocks }`, where `blocks` maps
+every rendered element that carries an `id`.
+
+Three rules keep a controller from becoming the legacy god object:
+
+1. **No shell, no builder.** It never touches the router, renderer or registry — it
+   receives a context, not the application.
+2. **Data goes through `ctx.http`** — never `fetch`, never a JSON import.
+3. **Registration owns the route.** The class does not declare `route`; `registerPage`
+   does, so a route has exactly one definition of where it comes from.
+
+### Data — mock and live behave the same
+
+The `http` slot is filled by `HttpService`. Its config has an optional `endpoint(query)`,
+so a project can serve mock JSON as a **real request**:
+
+```ts
+.registerModule(HttpService, {
+  endpoint: (q) => `${import.meta.env.BASE_URL}mock/${q.sheetName}.json`,
+})
+```
+
+Moving to the deployed backend means deleting `endpoint` and setting `url`. No controller
+changes — that is the whole point of routing mock data through the same port.
+
+`get()` resolves with the **whole envelope** (`{ success, message, data, meta }`, see
+`docs/API.md`), because consumers need `meta` for pagination. A legacy
+`{ status: "success" }` payload is still accepted.
 ## The mount-point rule
 
 The container element is a **stable mount point**: `#app` survives a route change,

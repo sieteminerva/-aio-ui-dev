@@ -15,6 +15,7 @@ import type {
   iAppRouteState,
   iComponentRegistryPort,
   iEventPort,
+  iHttpPort,
   iRendererPort,
   iRouterPort,
   iStoragePort,
@@ -123,6 +124,7 @@ export interface iAppSlots {
   renderer: iRendererPort;
   animation: iAnimationPort;
   events: iEventPort;
+  http: iHttpPort;
   storage: iStoragePort;
 }
 
@@ -175,41 +177,72 @@ export interface iAppModuleClass<K extends iAppSlot = iAppSlot> {
   /** Slot this class fills. */
   readonly slot: K;
   /** Builds the port. Called once, during `mount()`, with the registered config. */
-  new (...args: any[]): iAppSlots[K];
+  new(...args: any[]): iAppSlots[K];
 }
 
-/** Context passed to a page controller before its route is rendered. */
-export interface iPagePrepareContext {
+/** Context passed to a page controller when the app instantiates it. */
+export interface iPageContext {
+  /** Route being rendered (normalised). */
   route: string;
-  page: iPageContent;
-  menu: iBasicNode | HTMLElement | null;
-  footer: iBasicNode | HTMLElement | null;
-  theme: string | null;
-  /** Builder names derived from the page tree, before any module is loaded. */
+  /** Content declared in `iAppSource.pages`, or `null` when the controller owns it. */
+  page: iPageContent | null;
+  /** Deep-link fragment, for example `post-2` from `#blog/post-2`. */
+  fragment: string;
+  /** Theme id the router resolved for this visit. */
+  theme: string;
+  /** Component names derived from the declared content, before anything is loaded. */
   builders: string[];
+  /** The only supported way to load data. */
+  http: iHttpPort;
+  /** Aborted when the visitor navigates away before the page finished preparing. */
+  signal: AbortSignal;
+}
+
+/** Context handed to a controller after its page is attached to the DOM. */
+export interface iPageReadyContext {
+  route: string;
+  /** The page that ended up rendered — from `source.pages` or from `onPrepare`. */
+  page: iPageContent;
+  /** Mounted root: the page itself, or the wrapper when menu/footer slots exist. */
+  shell: HTMLElement;
+  /** Menu element, only when the source declares a menu slot. */
+  menu: HTMLElement | null;
+  /** Footer element, only when the source declares a footer slot. */
+  footer: HTMLElement | null;
+  /** Every rendered element that carries an `id`, keyed by that id. */
+  blocks: Map<string, HTMLElement>;
 }
 
 /**
- * Optional per-route behaviour.
+ * Per-route behaviour.
  *
- * A controller never renders anything itself: it may adjust the page tree before
- * the render pass, and observes the result afterwards.
+ * A controller never renders anything itself. It prepares (or fetches) the page
+ * tree before the render pass, may rewrite the menu node, and observes the result
+ * afterwards. One instance is created per render, so `onDestroy` genuinely releases
+ * what `onPrepare` acquired.
  */
 export interface iPageController {
-  /** Route this controller belongs to. */
-  readonly route: string;
+  /**
+   * Runs once per render, before preload. Returns the page to render.
+   *
+   * When it returns nothing, the page declared in `iAppSource.pages` is used. When
+   * neither exists, the render fails with an explicit message.
+   */
+  onPrepare?(context: iPageContext): iPageContent | void | Promise<iPageContent | void>;
 
-  /** Runs once per route render, before preload and render. May return a page tree to use instead. */
-  onPrepare?(context: iPagePrepareContext): iPageContent | void | Promise<iPageContent | void>;
+  /** Runs after the page is attached to the DOM. */
+  onReady?(context: iPageReadyContext): void;
 
-  /** Runs after the new page tree is attached to the DOM. */
-  onReady?(elements: Map<string, HTMLElement>, shell: HTMLElement): void;
-
-  /** Runs before the route's DOM is replaced or the shell is destroyed. */
+  /** Runs before the route's DOM is replaced, or when the app is destroyed. */
   onDestroy?(): void;
 
-  /** May rewrite the menu node before it is rendered. */
+  /** May rewrite the menu node before it is rendered. Called by the app, not by the controller. */
   attachMenu?(menu: iBasicNode): iBasicNode;
+}
+
+/** A page controller class; the route is given at registration, not by the class. */
+export interface iPageControllerClass<C = unknown> {
+  new(config: C, context: iPageContext): iPageController;
 }
 
 /** Public surface of a mounted app. */
@@ -242,8 +275,12 @@ export interface iApp {
   /** Navigates to a route through the router. */
   navigate(route: string): void;
 
-  /** Registers a controller for its `route`. */
-  registerController(controller: iPageController): void;
+  /** Registers a controller for a route. */
+  registerPage<M extends iPageControllerClass>(
+    route: string,
+    controller: M,
+    config?: ConstructorParameters<M>[0]
+  ): iApp;
 
   /** Releases modules in reverse registration order and unmounts the page. */
   destroy(): void;

@@ -31,6 +31,7 @@ import type {
   iAnimationPort,
   iComponentRegistryPort,
   iEventPort,
+  iHttpPort,
   iRendererPort,
   iRouterPort,
   iStoragePort,
@@ -44,9 +45,11 @@ import type {
   iAppSlot,
   iPageBlock,
   iPageContent,
+  iPageContext,
   iPageController,
+  iPageControllerClass,
   iPageDocument,
-  iPagePrepareContext,
+  iPageReadyContext,
 } from "./types";
 
 /** Storage key of the persisted theme id. Kept identical to the legacy key. */
@@ -150,12 +153,28 @@ export class AioApp implements iApp {
     { module: iAppModuleClass | null; config: unknown; instance: unknown }
   >();
 
-  #controllers = new Map<string, iPageController>();
+  /**
+   * Page behaviour, keyed by route.
+   *
+   * Separate from `#pages` (content) on purpose: a route may have content, a
+   * controller, or both. One of the two must supply the page.
+   */
+  #controllers = new Map<string, { module: iPageControllerClass; config: unknown }>();
+
+  /** Controller created for the current render pass. */
+  #active: iPageController | null = null;
+
+  /** Cancels work of the previous pass when navigation moves on. */
+  #abort: AbortController | null = null;
   #registry: iComponentRegistryPort | null = null;
   #router: iRouterPort | null = null;
   #renderer: iRendererPort | null = null;
   #animation: iAnimationPort | null = null;
   #events: iEventPort | null = null;
+  #http: iHttpPort = {
+    get: () => Promise.reject(new Error("[AioApp] No module registered for slot \"http\" (HttpService).")),
+    post: () => Promise.reject(new Error("[AioApp] No module registered for slot \"http\" (HttpService).")),
+  };
   #storage: iStoragePort | null = null;
   #container: HTMLElement | null = null;
   #root: HTMLElement | null = null;
@@ -189,14 +208,28 @@ export class AioApp implements iApp {
     return this.#root;
   }
 
-  /** Route list derived from the source — this is what the router validates against. */
+  /** Route list derived from content and controllers — what the router validates. */
   public get routes(): string[] {
-    return [...this.#pages.keys()];
+    return [...new Set([...this.#pages.keys(), ...this.#controllers.keys()])];
   }
 
   /** Registers per-route behaviour. Registering the same route twice replaces it. */
-  public registerController(controller: iPageController): void {
-    this.#controllers.set(normalizeRoute(controller.route), controller);
+  public registerPage<M extends iPageControllerClass>(
+    route: string,
+    controller: M,
+    config?: ConstructorParameters<M>[0]
+  ): iApp {
+    if (this.#mounted) {
+      throw new Error("[AioApp] registerPage() must be called before mount().");
+    }
+
+    const key = normalizeRoute(route);
+    if (this.#controllers.has(key)) {
+      console.warn(`[AioApp] Route "${key}" already has a controller; replacing it.`);
+    }
+
+    this.#controllers.set(key, { module: controller, config });
+    return this;
   }
 
   /**
@@ -313,7 +346,7 @@ export class AioApp implements iApp {
     // Phase 1 — storage, so the theme can be restored before any consumer exists.
     const storage = this.#registrations.get("storage");
     if (storage) {
-      this.#storage = this.#instantiate("storage", storage, context) as iStoragePort;
+      this.#storage = this.#createPort("storage", storage, context) as iStoragePort;
       const persisted = this.#storage.get(THEME_STORAGE_KEY);
       if (persisted) {
         this.#theme = persisted;
@@ -327,13 +360,14 @@ export class AioApp implements iApp {
     try {
       for (const [slot, registration] of this.#registrations) {
         if (slot === "storage") continue;
-        const port = this.#instantiate(slot, registration, context);
+        const port = this.#createPort(slot, registration, context);
         created.push(slot);
         if (slot === "registry") this.#registry = port as iComponentRegistryPort;
         else if (slot === "router") this.#router = port as iRouterPort;
         else if (slot === "renderer") this.#renderer = port as iRendererPort;
         else if (slot === "animation") this.#animation = port as iAnimationPort;
         else if (slot === "events") this.#events = port as iEventPort;
+        else if (slot === "http") this.#http = port as iHttpPort;
       }
     } catch (error) {
       this.#releasePorts(created.reverse());
@@ -349,7 +383,7 @@ export class AioApp implements iApp {
    * An instance registration is used as-is; a class registration is constructed with
    * `(config, context)` — the single constructor rule of the module convention.
    */
-  #instantiate(
+  #createPort(
     slot: iAppSlot,
     registration: { module: iAppModuleClass | null; config: unknown; instance: unknown },
     context: iAppModuleContext
@@ -363,10 +397,10 @@ export class AioApp implements iApp {
     }
   }
 
-  /** Runs the active controller's teardown, releases modules and unmounts the page. */
+  /** Runs controller teardown, cancels in-flight work, releases modules, unmounts. */
   public destroy(): void {
-    const active = this.#controllers.get(this.#route);
-    this.#runHook(active, "onDestroy");
+    this.#abort?.abort();
+    this.#release();
 
     // Reverse registration order: a module created last is released first.
     this.#releasePorts([...this.#registrations.keys()].reverse());
@@ -437,118 +471,185 @@ export class AioApp implements iApp {
   }
 
   /**
-   * One complete render pass: prepare, preload, render, swap, decorate.
+   * One complete render pass: instantiate controller, prepare, preload, render, swap.
    *
-   * Every step after an `await` re-checks the sequence number, so a slower pass
-   * can never overwrite a newer one.
+   * Every step after an `await` re-checks the sequence number, and the pass carries an
+   * `AbortSignal` that fires as soon as a newer navigation starts — so a slow fetch can
+   * never paint over the route the visitor already moved to.
    */
   async #renderRoute(route: string, fragment: string): Promise<void> {
     const sequence = ++this.#sequence;
     const target = this.#resolveRoute(route);
-    const page = this.#pages.get(target);
 
     this.#events?.emit("pageChanged", { route: target });
     this.#log("render:start", { route: target, sequence });
 
+    this.#abort?.abort();
+    const abort = (this.#abort = new AbortController());
+
     try {
-      if (!page) throw new Error(`[AioApp] No page registered for route "${target}"`);
+      if (this.#route && this.#route !== target) this.#release();
 
-      if (this.#route && this.#route !== target) {
-        this.#runHook(this.#controllers.get(this.#route), "onDestroy");
-      }
-
-      const prepared = await this.#prepare(target, page);
+      const { controller, context } = this.#createPage(target, fragment, abort.signal);
+      const prepared = await this.#prepare(target, context, controller);
       if (sequence !== this.#sequence) return this.#log("render:superseded", { route: target, sequence });
 
-      const node = this.#compose(pageToNode(prepared, target), target);
-      const names = this.#registry!.collect(node);
+      const page = prepared ?? context.page;
+      if (!page) {
+        throw new Error(
+          `[AioApp] Route "${target}" has no page: declare it in source.pages or return one from onPrepare().`
+        );
+      }
+
+      const pageNode = pageToNode(page, target);
+      const menuNode = this.#menu(controller);
+      const footerNode = this.#source.footer ?? null;
+      const nodes = [menuNode, pageNode, footerNode].filter(Boolean) as iNodeContent[];
+
+      const names = this.#registry!.collect(nodes);
       const known = names.filter((name) => this.#registry!.has(name));
       const missing = names.filter((name) => !this.#registry!.has(name));
 
       this.#log("preload", { route: target, components: names, missing, sequence });
       this.#events?.emit("beforeRender", { route: target, components: names, missing });
-      if (known.length) await this.#registry!.load(known, [node]);
+      if (known.length) await this.#registry!.load(known, nodes);
       if (sequence !== this.#sequence) return this.#log("render:superseded", { route: target, sequence });
 
-      const tree = this.#renderNode(node);
-      if (!tree) throw new Error(`[AioApp] Renderer returned no element for route "${target}"`);
+      const pageEl = this.#renderNode(pageNode);
+      if (!pageEl) throw new Error(`[AioApp] Renderer returned no element for route "${target}"`);
 
-      this.#commit(tree, prepared);
+      const menuEl = menuNode ? this.#renderNode(menuNode) : null;
+      const footerEl = footerNode ? this.#renderNode(footerNode) : null;
+      const tree = this.#assemble(menuEl, pageEl, footerEl);
+
+      this.#commit(tree, page);
       this.#route = target;
       this.#fragment = fragment || "";
-      await this.#afterCommit(target, tree);
+      this.#afterCommit(tree);
       if (sequence !== this.#sequence) return;
 
       this.#events?.emit("ready", { route: target, shell: tree });
+      this.#ready(target, page, tree, controller, menuEl, footerEl);
       this.#log("render:done", { route: target, sequence });
     } catch (error) {
+      if (abort.signal.aborted) return this.#log("render:aborted", { route: target, sequence });
+
       // The previous DOM stays mounted on purpose: a broken route must not blank
       // the application.
       console.error(`[AioApp] Render failed for route "${target}":`, error);
-      this.#events?.emit("error", {
-        message: "Render failed",
-        route: target,
-        error,
-      });
+      this.#events?.emit("error", { message: "Render failed", route: target, error });
     }
   }
 
-  /** Runs the controller's `onPrepare` and returns the page tree to render. */
-  async #prepare(route: string, page: iPageContent): Promise<iPageContent> {
-    const controller = this.#controllers.get(route);
-    if (!controller?.onPrepare) return page;
-
-    const context: iPagePrepareContext = {
+  /** Creates the controller for this pass and the context handed to it. */
+  #createPage(
+    route: string,
+    fragment: string,
+    signal: AbortSignal
+  ): { controller: iPageController | null; context: iPageContext } {
+    const declared = this.#pages.get(route) ?? null;
+    const context: iPageContext = {
       route,
-      page,
-      menu: this.#source.menu ?? null,
-      footer: this.#source.footer ?? null,
+      page: declared,
+      fragment,
       theme: this.#theme,
-      // Derived from the authored tree, before any module is loaded, so a
-      // controller can inspect what the route is about to need.
-      builders: this.#registry!.collect(pageToNode(page, route)),
+      builders: declared ? this.#registry!.collect(pageToNode(declared, route)) : [],
+      http: this.#http,
+      signal,
     };
 
+    const entry = this.#controllers.get(route);
+    if (!entry) return { controller: null, context };
+
+    const controller = new entry.module(entry.config, context);
+    this.#active = controller;
+    return { controller, context };
+  }
+
+  /** Runs `onPrepare`; a failure is reported but never blanks the route. */
+  async #prepare(
+    route: string,
+    context: iPageContext,
+    controller: iPageController | null
+  ): Promise<iPageContent | void> {
+    if (!controller?.onPrepare) return undefined;
+
     try {
-      const prepared = await controller.onPrepare(context);
-      return prepared || page;
+      return await controller.onPrepare(context);
     } catch (error) {
+      if (context.signal.aborted) return undefined;
       console.error(`[AioApp] onPrepare failed for route "${route}":`, error);
       this.#events?.emit("error", { message: "onPrepare failed", route, error });
-      return page;
+      return undefined;
+    }
+  }
+
+  /** Lets the controller rewrite the menu node. The app calls it, once per render. */
+  #menu(controller: iPageController | null): iBasicNode | HTMLElement | null {
+    const menu = this.#source.menu ?? null;
+    if (!menu || !controller?.attachMenu) return menu;
+    if (menu instanceof HTMLElement) return menu;
+
+    try {
+      return controller.attachMenu(menu);
+    } catch (error) {
+      console.error("[AioApp] attachMenu failed:", error);
+      return menu;
     }
   }
 
   /**
-   * Wraps the page with the optional menu/footer slots.
+   * Builds the mounted root.
    *
-   * A LITE content tree usually already contains its own nav and footer, so the
-   * shell only builds a wrapper when the source actually declares a slot. This
-   * keeps the hand-written DOM byte-identical and gives a generated project the
-   * place it needs.
+   * A LITE page tree usually contains its own nav and footer, so no wrapper is created
+   * unless the source declares a slot. Keeping the page itself as the root is what makes
+   * the authored DOM byte-identical.
    */
-  #compose(pageNode: iNodeContent, route: string): iNodeContent {
-    const controller = this.#controllers.get(route);
-    const menu = this.#source.menu ?? null;
-    const footer = this.#source.footer ?? null;
-    if (!menu && !footer) return pageNode;
+  #assemble(menu: HTMLElement | null, page: HTMLElement, footer: HTMLElement | null): HTMLElement {
+    if (!menu && !footer) return page;
 
-    const children: unknown[] = [];
-    if (menu) children.push(this.#menuNode(menu, controller));
-    children.push(pageNode);
-    if (footer) children.push(footer);
-
-    return { tagName: "div", className: SHELL_CLASS, content: children } as unknown as iNodeContent;
+    const shell = document.createElement("div");
+    shell.className = SHELL_CLASS;
+    if (menu) shell.appendChild(menu);
+    shell.appendChild(page);
+    if (footer) shell.appendChild(footer);
+    return shell;
   }
 
-  /** Lets a controller rewrite the menu node before it is rendered. */
-  #menuNode(menu: iBasicNode | HTMLElement, controller?: iPageController): iBasicNode | HTMLElement {
-    if (!controller?.attachMenu || !(menu instanceof Object) || menu instanceof HTMLElement) return menu;
+  /** Reports the mounted page to its controller. */
+  #ready(
+    route: string,
+    page: iPageContent,
+    shell: HTMLElement,
+    controller: iPageController | null,
+    menu: HTMLElement | null,
+    footer: HTMLElement | null
+  ): void {
+    if (!controller?.onReady) return;
+
+    const blocks = new Map<string, HTMLElement>();
+    for (const element of shell.querySelectorAll<HTMLElement>("[id]")) blocks.set(element.id, element);
+
+    const context: iPageReadyContext = { route, page, shell, menu, footer, blocks };
+
     try {
-      return controller.attachMenu(menu as iBasicNode);
+      controller.onReady(context);
     } catch (error) {
-      console.error("[AioApp] attachMenu failed:", error);
-      return menu;
+      console.error(`[AioApp] onReady failed for route "${route}":`, error);
+      this.#events?.emit("error", { message: "onReady failed", route, error });
+    }
+  }
+
+  /** Releases the controller of the route being left. */
+  #release(): void {
+    const controller = this.#active;
+    this.#active = null;
+    if (!controller?.onDestroy) return;
+
+    try {
+      controller.onDestroy();
+    } catch (error) {
+      console.error("[AioApp] onDestroy failed:", error);
     }
   }
 
@@ -583,20 +684,9 @@ export class AioApp implements iApp {
     if (title) document.title = title;
   }
 
-  /** Post-commit work that needs the DOM to be live: animation, anchor, onReady. */
-  async #afterCommit(route: string, tree: HTMLElement): Promise<void> {
+  /** Post-commit work that needs the DOM to be live: animation, anchor. */
+  #afterCommit(tree: HTMLElement): void {
     this.#animation?.init(tree);
-
-    const controller = this.#controllers.get(route);
-    if (controller?.onReady) {
-      try {
-        controller.onReady(new Map(), tree);
-      } catch (error) {
-        console.error(`[AioApp] onReady failed for route "${route}":`, error);
-        this.#events?.emit("error", { message: "onReady failed", route, error });
-      }
-    }
-
     this.#scrollToFragment();
   }
 
@@ -612,21 +702,17 @@ export class AioApp implements iApp {
     });
   }
 
-  /** Falls back to the default route, then to the first page, for an unknown hash. */
+  /** Falls back to the default route, then to the first known route, for an unknown hash. */
   #resolveRoute(route: string): string {
     const candidate = normalizeRoute(route, this.#defaultRoute);
-    if (this.#pages.has(candidate)) return candidate;
-    if (this.#pages.has(this.#defaultRoute)) return this.#defaultRoute;
+    if (this.#known(candidate)) return candidate;
+    if (this.#known(this.#defaultRoute)) return this.#defaultRoute;
     return this.routes[0] ?? this.#defaultRoute;
   }
 
-  #runHook(controller: iPageController | undefined, hook: "onDestroy"): void {
-    if (!controller?.[hook]) return;
-    try {
-      controller[hook]!();
-    } catch (error) {
-      console.error(`[AioApp] ${hook} failed for route "${controller.route}":`, error);
-    }
+  /** A route exists when it has content, a controller, or both. */
+  #known(route: string): boolean {
+    return this.#pages.has(route) || this.#controllers.has(route);
   }
 
   #log(event: string, payload: unknown): void {
