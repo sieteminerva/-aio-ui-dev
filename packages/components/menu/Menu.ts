@@ -4,16 +4,31 @@ import { Builder } from "@aio-ui/base/Base";
 // import "./Menu.css";
 
 
-export type MenuElementType =
-  | "@container"
-  | "@menu"
-  | "@menu>brand"
-  | "@menu>hamburger"
-  | "@menu>navigations"
-  | "@menu>navigations>item"
-  | "@menu>actions"
-  | "@menu>item>link"
-  | "@menu>item>icon";
+export const ELEMENT_KEYS = [
+  "@container",
+  "@menu",
+  "@menu>brand",
+  "@menu>hamburger",
+  "@menu>navigations",
+  "@menu>navigations>item",
+  "@menu>actions",
+  "@menu>item>link",
+  "@menu>item>icon",
+] as const;
+
+export type MenuElementType = (typeof ELEMENT_KEYS)[number];
+
+export const DEFAULT_MENU_SELECTORS: Record<MenuElementType, iActionProperty> = {
+  "@container": { tagName: "aside", className: "sidebar" },
+  "@menu": { tagName: "nav", className: "nav" },
+  "@menu>brand": { tagName: "div", className: "brand", attrs: { src: "" } },
+  "@menu>hamburger": { tagName: "button", className: "hamburger-btn", attrs: { "aria-label": "Toggle menu" } },
+  "@menu>navigations": { tagName: "ul", className: "navigations" },
+  "@menu>navigations>item": { tagName: "li", className: "item" },
+  "@menu>actions": { tagName: "div", className: "actions" },
+  "@menu>item>link": { tagName: "a" },
+  "@menu>item>icon": { tagName: "i", className: "icon" },
+};
 
 export interface iMenuConfig extends iBuilderConfig<MenuElementType> {
   /** 
@@ -33,6 +48,50 @@ export interface iMenuConfig extends iBuilderConfig<MenuElementType> {
   onNavigate?: (href?: string) => boolean
 }
 
+export interface iMenuSplit {
+  brand: iActionProperty;
+  navigations: iActionProperty[];
+  actions: iActionProperty[];
+}
+
+/**
+ * Split one flat navigation list into three sections.
+ *
+ * The source data is linear (a header row plus links plus a CTA), so the split is a
+ * convention rather than a structure:
+ *
+ * - the **first** entry is the brand,
+ * - an entry whose `className` is `button`, or whose `href` is a `tel:` link, is an action,
+ * - everything else is a navigation link.
+ *
+ * Exported and pure so the rule is testable without a DOM.
+ */
+export function splitMenuContent(content: any): iMenuSplit {
+  const navigations: iActionProperty[] = Array.isArray(content?.navigations)
+    ? content.navigations
+    : content?.navigations
+      ? [content.navigations]
+      : [];
+
+  const brand = navigations[0] ?? { label: "Brand", href: "#home" };
+  const rest = navigations.slice(1);
+
+  const isAction = (link: iActionProperty): boolean =>
+    link?.className === "button" || Boolean(link?.href?.includes("tel:"));
+
+  const actions = Array.isArray(content?.actions)
+    ? [...content.actions]
+    : content?.actions
+      ? [content.actions]
+      : [];
+
+  const cta = rest.find(isAction);
+  // The CTA may already be listed under `actions`; adding it twice was the old behaviour.
+  if (cta && !actions.includes(cta)) actions.push(cta);
+
+  return { brand, navigations: rest.filter((link) => !isAction(link)), actions };
+}
+
 export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
   readonly builderId = "menu";
   readonly name = "menu";
@@ -43,17 +102,7 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
   constructor(config: Partial<iMenuConfig> = {}) {
     super(); // Wajib mengetuk pintu rahim induk BuilderBase
 
-    const defaultSelectors: Record<MenuElementType, iActionProperty> = {
-      "@container": { tagName: "aside", className: "sidebar" },
-      "@menu": { tagName: "nav", className: "nav" },
-      "@menu>brand": { tagName: "div", className: "brand", attrs: { src: "" } },
-      "@menu>hamburger": { tagName: "button", className: "hamburger-btn", attrs: { "aria-label": "Toggle menu" } },
-      "@menu>navigations": { tagName: "ul", className: "navigations" },
-      "@menu>navigations>item": { tagName: "li", className: "item" },
-      "@menu>actions": { tagName: "div", className: "actions" },
-      "@menu>item>link": { tagName: "a" },
-      "@menu>item>icon": { tagName: "i", className: "icon" }
-    };
+    const defaultSelectors = DEFAULT_MENU_SELECTORS;
 
     const defaultConfig: Required<iMenuConfig> = {
       type: "top",
@@ -79,109 +128,105 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
   }
 
   public prepare(content: iBasicNode, _config?: Partial<iMenuConfig>): HTMLElement {
+    // Accepts `{ content: { navigations } }` and `{ navigations }`: the registry unwraps
+    // `node.content`, but a manifest `schema` hands the whole record over.
+    const source: any = (content as any)?.content ?? content;
+    const payload = this.resolvePayload(source);
 
-    if (_config?.type === "sidebar") {
-      const sidebar = this.render("@container", content)!;
-      const nav = this.render("@menu", content)!;
-      nav.className = "nav vertical";
+    const nav = this.render("@menu", payload["@menu"])!;
+    const brand = this.render("@menu>brand", payload["@menu>brand"]);
+    const hamburger = this.render("@menu>hamburger", payload["@menu>hamburger"]);
+    const navigations = this.render("@menu>navigations", payload["@menu>navigations"]);
+    const actions = this.render("@menu>actions", payload["@menu>actions"]);
 
-      const navigations = this.render("@menu>navigations", content.navigations)!;
+    if (brand) nav.appendChild(brand);
+    if (hamburger) nav.appendChild(hamburger);
+    if (navigations) {
+      // The toggle needs a target to point at, and both sides must agree on the id.
+      navigations.id = "primary-navigations";
       nav.appendChild(navigations);
+      hamburger?.setAttribute("aria-controls", navigations.id);
+    }
+    if (actions) nav.appendChild(actions);
 
-      sidebar?.appendChild(nav);
+    // `type` decides the shell, not the content: a sidebar is the same nav in a wrapper.
+    if (this.config.type === "sidebar") {
+      nav.classList.add("vertical");
+      const sidebar = this.render("@container", source)!;
+      sidebar.appendChild(nav);
       return sidebar;
-    } else {
-      const payload = this.resolvePayload(content);
-      const nav = this.render("@menu", payload)!;
-      const brand = this.render("@menu>brand", payload["@menu>brand"])!;
-      const navigations = this.render("@menu>navigations", payload["@menu>navigations"])!;
-      const actions = this.render("@menu>actions", payload["@menu>actions"])!;
-      nav.append(brand, navigations, actions);
-      return nav!;
     }
 
+    return nav;
   }
 
   // ====================================================
   // 🧙‍♂️ OVERRIDE 1: ABSTRAKSI PETA DATA (MURNI KHUSUS UNTUK DATA MENU)
   // ====================================================
-  // Inside MenuBuilder.ts
 
   /**
-   * 🏗️ RE-ENGINEERING DATA RESOLVER (PERBAIKAN KUNCI UTAMA ANDA!)
-   * Memotong, mengiris (slice), dan memisahkan data linear Sheets menjadi 3 seksi bersih.
-   * Menjamin level TemplateRegistry dan Tema Kustom murni hanya menerima data yang sudah matang!
+   * Maps one flat navigation list onto the keys `template()` expects. The splitting rule
+   * itself lives in `splitMenuContent()` so it can be tested on its own.
    */
   protected resolvePayload(content: iBasicNode): Record<MenuElementType, any> {
-    const navigations: iActionProperty[] = Array.isArray(content.navigations)
-      ? content.navigations
-      : content.navigations ? [content.navigations] : [];
-
-    // 🔬 SEKSI 1: Ekstrak Brand Data (Murni hanya mengambil indeks pertama)
-    const brandPayload = navigations[0] || { label: "Brand", href: "#home" };
-
-    // 🔬 SEKSI 2: Ekstrak Link Navigasi (Buang indeks [0] logo, dan buang tombol CTA)
-    const navigationLinksPayload = navigations.slice(1).filter(
-      link => link.className !== "button" && !link.href?.includes("tel:")
-    );
-
-    // 🔬 SEKSI 3: Ekstrak Tombol Aksi CTA (Murni hanya mengambil objek tombol)
-    const ctaPayload = navigations.slice(1).find(
-      link => link.className === "button" || link.href?.includes("tel:")
-    ) || null;
-
-
-    const actions = Array.isArray(content.actions)
-      ? content.actions
-      : content.actions ? [content.actions] : [];
-
-    if (ctaPayload) actions.push(ctaPayload)
+    const { brand, navigations, actions } = splitMenuContent(content);
 
     return {
       "@menu": content,
-      "@menu>brand": brandPayload,
+      "@menu>brand": brand,
       "@menu>hamburger": {},
-      "@menu>navigations": navigationLinksPayload,
+      "@menu>navigations": navigations,
       "@menu>navigations>item": null,
-      "@menu>actions": actions
+      "@menu>actions": actions,
     } as Record<MenuElementType, any>;
-
   }
 
-  public initialize(el: HTMLElement, _payload: any): void {
-    // ====================================================
-    // 🧙‍♂️ DIRECT ELEMENT REF RETRIEVAL (SIHIR MAP OBJECT ANDA!)
-    // Karena _nodes mengembalikan Array (mendukung multi-instance), 
-    // ambil indeks ke-0 secara aman karena Menu bersifat singleton makro halaman!
-    // ====================================================
-    const hamburger = this.render("@menu>hamburger") as HTMLButtonElement;
-    const navigations = el.querySelector("ul.navigations");
+  public initialize(root?: HTMLElement): void {
+    const nav = root ?? (this.load("@menu") as HTMLElement);
+    if (!nav) return;
 
-    // Kunci gerbang interaksi jika kedua elemen fisik hidup sukses terambil dari saku RAM
-    if (hamburger && navigations) {
-      hamburger.addEventListener("click", () => {
-        console.log("clicked")
-        this.isMenuOpened = !this.isMenuOpened;
-        let isDefaultPrevented = false;
+    const hamburger = nav.querySelector(".hamburger-btn") as HTMLButtonElement | null;
+    const navigations = nav.querySelector(".navigations") as HTMLElement | null;
 
-        // Picu emisi event eksternal framework kustom Anda
-        this.config.emit?.("builder:menu-toggle" as any, {
-          opened: this.isMenuOpened,
-          element: hamburger,
-          preventDefault: () => { isDefaultPrevented = true; }
-        });
+    // A menu without a toggle is a valid menu (desktop-only, or a sidebar). No warning.
+    if (!hamburger || !navigations) return;
 
-        if (isDefaultPrevented) return;
+    this.hamburger = hamburger;
+    this.navigations = navigations;
 
-        // Manipulasi kelas visual secara lurus, linear, dan direct!
-        navigations.classList.toggle("open", this.isMenuOpened);
-        hamburger.classList.toggle("active", this.isMenuOpened);
-      });
+    hamburger.removeEventListener("click", this.handleToggle);
+    hamburger.addEventListener("click", this.handleToggle);
 
-      // console.log("[Menu Lifecycle] Interactive hamburger event bindings attached securely.");
-    } else {
-      console.warn("[Menu Lifecycle] Initialization skipped. Hamburger or navigation node missing in _nodes storage.");
+    // Reflect the current state on first paint, so `aria-expanded` is never a lie.
+    this.setOpen(this.isMenuOpened);
+  }
+
+  private hamburger: HTMLButtonElement | null = null;
+  private navigations: HTMLElement | null = null;
+
+  private handleToggle = (): void => {
+    this.isMenuOpened = !this.isMenuOpened;
+
+    let isDefaultPrevented = false;
+    this.config.emit?.("builder:menu-toggle" as any, {
+      opened: this.isMenuOpened,
+      element: this.hamburger,
+      preventDefault: () => { isDefaultPrevented = true; },
+    });
+
+    if (isDefaultPrevented) {
+      // The listener already answered: keep internal state where the host expects it.
+      this.isMenuOpened = !this.isMenuOpened;
+      return;
     }
+
+    this.setOpen(this.isMenuOpened);
+  };
+
+  private setOpen(open: boolean): void {
+    this.navigations?.classList.toggle("open", open);
+    this.hamburger?.classList.toggle("active", open);
+    this.hamburger?.setAttribute("aria-expanded", open ? "true" : "false");
   }
 
   // ====================================================
@@ -201,18 +246,9 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
         break;
 
       case "@menu>brand":
-        const l = this.render("@menu>item>link") as HTMLAnchorElement;
-        l.href = payload.href || "#home";
-
-        if (payload.src) {
-          const img = document.createElement("img");
-          img.src = payload.src;
-          img.alt = payload.label || "logo";
-          l?.appendChild(img);
-        } else {
-          l.textContent = payload.label || "Brand";
-        }
-        el.append(l);
+        // The brand is a link like any other: one key, no bespoke anchor.
+        const brandLink = this.render("@menu>item>link", payload);
+        if (brandLink) el.appendChild(brandLink);
         break;
 
       case "@menu>navigations":
@@ -229,13 +265,26 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
         el.appendChild(a)
         break;
 
-      case "@menu>item>link":
-        // console.log({ payload })
-        if (payload?.label) el.textContent = payload?.label || "";
+      case "@menu>item>link": {
+        if (payload?.className) {
+          for (const token of String(payload.className).split(/\s+/).filter(Boolean)) {
+            el.classList.add(token);
+          }
+        }
+
+        if (payload?.src) {
+          const img = document.createElement("img");
+          img.src = payload.src;
+          img.alt = payload.label || "logo";
+          img.className = "brand-image";
+          el.appendChild(img);
+        } else if (payload?.label) {
+          el.textContent = payload.label;
+        }
 
         if (payload?.icon) {
-          const i = this.render("@menu>item>icon", payload.icon) as HTMLElement;
-          el.appendChild(i);
+          const icon = this.render("@menu>item>icon", payload.icon) as HTMLElement;
+          el.appendChild(icon);
         }
         if (payload?.attrs) {
           for (const key in payload.attrs) {
@@ -250,41 +299,46 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
           this.bindNavigation(el as HTMLAnchorElement, payload?.href);
         }
         break;
+      }
 
       case "@menu>item>icon":
         // console.log({ el, payload })
         el.className = payload;
         break;
 
-      case "@menu>actions":
-
-        const ctaPayload = payload.find((link: HTMLAnchorElement) => link.className === "button" || link.href?.includes("tel:"));
-
-        if (ctaPayload) {
-          const btn = document.createElement("a");
-          btn.className = ctaPayload.className || "button small";
-          btn.href = ctaPayload.href || "#form";
-          btn.textContent = ctaPayload.label || "Hubungi";
-
-          if (ctaPayload.id) btn.id = ctaPayload.id;
-
-          this.bindNavigation(btn, btn.href);
-          el.appendChild(btn);
+      case "@menu>actions": {
+        // One link per action, flat: `div.actions` is not a list, so nesting `li` in it
+        // (the previous behaviour) produced invalid markup and duplicated the CTA.
+        const actions: iActionProperty[] = Array.isArray(payload) ? payload : [];
+        for (const action of actions) {
+          const link = this.render("@menu>item>link", action);
+          if (link) {
+            link.classList.add("item");
+            el.appendChild(link);
+          }
         }
-
-        for (const item in payload) {
-          if (!Object.hasOwn(payload, item)) continue;
-          const pItem = payload[item];
-          const i = this.render("@menu>navigations>item", pItem) as HTMLElement;
-          el.appendChild(i);
-        }
-
         break;
+      }
 
       case ("@menu>hamburger"):
         if (props.tagName?.toLowerCase() === "button") (el as HTMLButtonElement).type = "button";
-        if (!el.innerHTML) {
-          el.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>';
+        el.setAttribute("aria-expanded", "false");
+        // Built as nodes rather than an innerHTML literal: the icon is markup, and markup
+        // does not belong in a component's template hook.
+        if (!el.firstChild) {
+          const svgNs = "http://www.w3.org/2000/svg";
+          const svg = document.createElementNS(svgNs, "svg");
+          svg.setAttribute("width", "24");
+          svg.setAttribute("height", "24");
+          svg.setAttribute("viewBox", "0 0 24 24");
+          svg.setAttribute("fill", "none");
+          svg.setAttribute("stroke", "currentColor");
+          svg.setAttribute("stroke-width", "2");
+          svg.setAttribute("aria-hidden", "true");
+          const path = document.createElementNS(svgNs, "path");
+          path.setAttribute("d", "M3 12h18M3 6h18M3 18h18");
+          svg.appendChild(path);
+          el.appendChild(svg);
         }
         break;
 

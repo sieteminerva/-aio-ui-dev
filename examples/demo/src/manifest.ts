@@ -162,9 +162,16 @@ export const DEMO: iDemoEntry[] = [
     stylesheet: "@aio-ui/menu/Menu.css",
     category: "navigation",
     kind: "element",
+    // Flat list: first entry is the brand, an entry with `className: "button"` is the
+    // action, the rest are navigation links. The hamburger is rendered by the builder.
     payload: {
       content: {
-        navigations: [{ href: "#kitchen", label: "Kitchen", title: "Kitchen" }],
+        navigations: [
+          { href: "#kitchen", label: "@aio demo" },
+          { href: "#product", label: "Product", title: "Product" },
+          { href: "#article", label: "Article", title: "Article" },
+          { href: "#form", label: "Pesan", className: "button" },
+        ],
         actions: [],
       },
     },
