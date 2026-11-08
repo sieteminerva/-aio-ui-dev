@@ -55,6 +55,12 @@ export const INPUT_STRUCTURAL_KEYS: readonly string[] = [
   "info",
   "input",
   "group",
+  // Layout containers and their knobs: `row` is a grid, `column` its column count,
+  // `wide` the share of a row a child takes. Never DOM attributes.
+  "row",
+  "column",
+  "wide",
+  "span",
   "condition",
   "then",
   "table",

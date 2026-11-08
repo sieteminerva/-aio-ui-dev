@@ -279,6 +279,18 @@ const schema = [
       { type: "checkbox", id: "agree", position: "right", title: "Saya setuju dengan ketentuan pesanan" },
     ] as iBasicInputNode[],
   },
+  // Inline row: `column` is the column count, `config.wide` the share a field takes
+  // (50 = half, "auto" = full row). A row is layout, not a fieldset — `group` above.
+  {
+    id: "identity",
+    label: "Identitas pemesan",
+    column: 2,
+    row: [
+      { type: "text", id: "first", title: "Nama depan", config: { wide: 50 } },
+      { type: "text", id: "last", title: "Nama belakang", config: { wide: 50 } },
+      { type: "textarea", id: "street", title: "Alamat lengkap", config: { wide: "auto" } },
+    ] as iBasicInputNode[],
+  },
 ];
 
 const formConfig = {

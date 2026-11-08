@@ -113,7 +113,13 @@ export interface iBasicInputConfig {
   content?: string | Record<string, unknown>;
   actions?: iInputActionDefinition[] | Partial<Record<iActionType, Omit<iInputActionDefinition, "type">>> | null;
   actionMode?: string;
-  wide?: number | null;
+  /**
+   * Width hint when the field sits inside a row.
+   *
+   * `50` → half the row, `0.5` → the same thing as a fraction, `"auto"` → the whole row.
+   * Ignored outside a row (a plain field is always full width).
+   */
+  wide?: number | string | null;
   useLabel?: boolean;
   view?: string;
   thumbnail?: boolean;
@@ -139,6 +145,7 @@ export interface iBasicInputConfig {
   /** Calculation strategy attached to this input (usually a readonly total field). */
   calculator?: iCalculationFormula<any>;
 }
+
 
 export interface iBasicInputNode extends iBuilderConfig<InputElementType> {
   type?: InputType;

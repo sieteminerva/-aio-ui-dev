@@ -76,9 +76,13 @@ export class FormCascadeHandler {
     items?.forEach((item: any, i: number) => {
       if (!item || typeof item !== "object" || item instanceof Node) return;
       const path = `${prefix}${i}`;
-      if (visit(item, path) !== false && Array.isArray(item.group)) {
-        this.walkInputs(item.group, `${path}.group.`, visit);
-      }
+      if (visit(item, path) === false) return;
+
+      // Containers: a fieldset group and a layout row both hold children, and a
+      // conditional child inside either one must be walked with the same path shape
+      // `renderGroup`/`renderRow` used when they held it.
+      if (Array.isArray(item.group)) this.walkInputs(item.group, `${path}.group.`, visit);
+      if (Array.isArray(item.row)) this.walkInputs(item.row, `${path}.row.`, visit);
     });
   }
 
@@ -90,6 +94,7 @@ export class FormCascadeHandler {
       const key = item.name ?? item.id;
       if (key) map.set(String(key), step);
       if (Array.isArray(item.group)) item.group.forEach((child: string | HTMLElement | any) => visit(child, step));
+      if (Array.isArray(item.row)) item.row.forEach((child: string | HTMLElement | any) => visit(child, step));
     };
     inputs.forEach((item, step) => visit(item, step));
     return map;

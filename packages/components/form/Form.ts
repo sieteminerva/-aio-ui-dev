@@ -8,6 +8,7 @@ import { FORM_MODULE_IDS } from "./FormModuleTypes";
 import type { FormModulePhase, iFormCollaborator, iFormModuleContext } from "./FormModuleTypes";
 import { CORE_FORM_MODULES } from "./FormRegistry";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
+import { applyRowColumns, applyRowSpan, childSpanOf, columnsOf } from "./FormLayout";
 // 🎨 Gaya baseline field milik form: adaptor input juga mengimpornya untuk
 // pemakaian mandiri, tetapi form tetap memuatnya agar tampilan tidak bergantung
 // pada modul input mana yang dipasang (mis. renderer kustom).
@@ -19,6 +20,8 @@ export type FormElementType =
   | "@form>group"
   | "@form>group>legend"
   | "@form>group>desc"
+  | "@form>row"
+  | "@form>row>title"
   | "@form>actions"
   | "@form>actions>submit"
   | "@form>actions>submit-group"
@@ -111,6 +114,9 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       "@form>group": { tagName: "fieldset", className: "form-group" },
       "@form>group>legend": { tagName: "legend", className: "group-title" },
       "@form>group>desc": { tagName: "p", className: "group-desc" },
+      // A row is layout, not a fieldset: fields + nested rows in a CSS grid.
+      "@form>row": { tagName: "div", className: "field group row" },
+      "@form>row>title": { tagName: "p", className: "group-title" },
       "@form>actions": { tagName: "div", className: "form-actions" },
       "@form>actions>submit": { tagName: "button", className: "submit", type: "submit" as "submit" },
       "@form>actions>submit-group": { tagName: "button", className: "submit", type: "button" as "button" },
@@ -245,6 +251,19 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       }
 
       // ==========================================
+      // KASUS B2: Row — container layout, bukan fieldset
+      // ==========================================
+      else if (input && typeof input === "object" && "row" in input) {
+        // A row carries no field data, but its children may still be conditional.
+        if (isCascading && this.#cascade?.isCascadeItem(input)) {
+          this.#cascade?.hold(form, String(index));
+          continue;
+        }
+
+        form.appendChild(this.renderRow(input, formId, isCascading ? String(index) : undefined));
+      }
+
+      // ==========================================
       // KASUS D: Input berupa Parameter Objek Basic Tunggal
       // ==========================================
       else {
@@ -363,6 +382,74 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     }
 
     return fieldset;
+  }
+
+  /**
+   * Renders a row: fields side by side in a CSS grid.
+   *
+   * A row is **layout only** — it produces no legend, no fieldset and no field data, which
+   * is why `group` (fieldset + legend) stays a separate word in the schema. Children wrap
+   * on their own once the declared column count is exhausted; a child's width comes from
+   * its `wide` hint (`50` → half, `"auto"` → full row) or an explicit `span`.
+   *
+   * Nesting works: a row inside a row is just another grid cell, so a stacked column is
+   * `{ column: 1, wide: 50, row: [...] }`.
+   *
+   * @param rowInput - Row node (`{ label, column, row: [...] }`).
+   * @param formId - Id of the owning form.
+   * @param cascadePath - Path segment when cascade is active, so a conditional child can
+   *   be held and mounted later with the same key the engine walks.
+   * @returns The row container element.
+   */
+  private renderRow(rowInput: any, formId: string, cascadePath?: string): HTMLElement {
+    const container = this.render("@form>row", rowInput) as HTMLElement;
+    const columns = columnsOf(rowInput.column);
+
+    applyRowColumns(container, columns);
+    if (rowInput.id) container.id = rowInput.id;
+    if (rowInput.className) container.classList.add(...String(rowInput.className).split(" ").filter(Boolean));
+
+    // Heading and note span the whole row, like a fieldset legend would.
+    if (rowInput.label) container.appendChild(this.render("@form>row>title", rowInput.label)!);
+    if (rowInput.description) container.appendChild(this.render("@form>group>desc", rowInput.description)!);
+
+    const cascadeActive = this.config.cascading === true && cascadePath !== undefined;
+    const children: any[] = Array.isArray(rowInput.row) ? rowInput.row : [];
+
+    children.forEach((child, index) => {
+      const childPath = `${cascadePath}.row.${index}`;
+
+      // Cascade: a conditional child is held in place and mounted when its rule passes.
+      if (cascadeActive && this.#cascade?.isCascadeItem(child)) {
+        this.#cascade?.hold(container, childPath);
+        return;
+      }
+
+      let element: HTMLElement | null = null;
+
+      if (typeof child === "string") {
+        container.insertAdjacentHTML("beforeend", child);
+        element = container.lastElementChild as HTMLElement | null;
+      } else if (child instanceof HTMLElement) {
+        element = child;
+      } else if (child && typeof child === "object" && "row" in child) {
+        element = this.renderRow(child, formId, cascadeActive ? childPath : undefined);
+      } else if (child && typeof child === "object" && "group" in child) {
+        element = this.renderGroup(child, formId, cascadeActive ? childPath : undefined);
+      } else {
+        element = this._renderField(child, formId) as HTMLElement;
+      }
+
+      if (!element) return;
+
+      const submitBtn = this.scanForSubmitButton(element, formId);
+      if (submitBtn) this.submitButtonId = submitBtn.id;
+
+      applyRowSpan(element, childSpanOf(child, columns));
+      container.appendChild(element);
+    });
+
+    return container;
   }
 
   /**
@@ -521,6 +608,14 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
         }
         break;
       }
+
+      case "@form>row>title":
+        el.textContent = typeof payload === "string" ? payload : String(payload?.label ?? "");
+        break;
+
+      case "@form>group>desc":
+        el.textContent = typeof payload === "string" ? payload : String(payload?.description ?? "");
+        break;
 
       case "@form>actions>submit": {
         const btn = el as HTMLButtonElement;
