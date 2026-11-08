@@ -54,7 +54,7 @@ Hard rules taken from `.guidance/` and from the design discussion:
 | D15 | No `globalThis` state — `core` owns the store and exports it                          | `BuilderPort` is the seam pattern where a cycle must be broken; `TemplateRegistry` needs no seam, so it simply lives in core         |
 | D16 | Registries are built per need on the shared kernel; no universal hub                  | Each registry resolves differently; forcing one API produced adapters that existed only to satisfy the pattern                       |
 | D17 | `TemplateRegistry` lives in `core`, not in `theme`                                    | Its only readers are `DOMRenderer` (core) and `Base` (depends on core); a package plus a port was more machinery than the class      |
-| D18 | Each theme becomes its own package (`@aio-ui/theme-<id>`) later                       | Install on demand: a project that only wants the default theme should not ship the horizontal scroll engine                          |
+| D18 | Each theme is its own package (`@aio-ui/theme-<id>`) under `packages/themes/<id>` | Install on demand: a project that only wants the default theme should not ship the horizontal scroll engine. Done — engine stays in `modules/theme`, themes in `packages/themes/*` |
 
 ## 4. Target structure
 
@@ -367,10 +367,10 @@ Ported into `src/lib/Components` already, pending review:
       `Base`); `globalThis.TemplateRegistry` is gone
 - [x] Theme is a slot (`iThemePort`), not an event subscriber: `prepare` → `activate` →
       `deactivate` are called by the entry — Q7 closed
-- [ ] `CyberpunkTheme`
-- [ ] Split each theme into its own package (`@aio-ui/theme-default`, `-horizontal`,
-      `-cyberpunk`) so a project installs only what it uses; the current single package is
-      a staging area
+- [x] `CyberpunkTheme` (tokens only: neon cyan/magenta, sharp radii, night surfaces)
+- [x] Split each theme into its own package under `packages/themes/<id>`
+      (`@aio-ui/theme-default`, `-horizontal`, `-cyberpunk`); the engine remains
+      `@aio-ui/theme` in `modules/`, and themes depend on `core` types only
 - [ ] Theme switcher UI (needs `fab-menu` registered first)
 - [ ] Themes that override templates (`templates()`) — the store exists, nothing uses it yet
 - [ ] Port `BuilderTransformer` (no imports) and `FormSchemaTransformer` as `@aio-ui/utilities`
@@ -515,8 +515,9 @@ Green: `npm run verify` (106 tests / 12 files), both builds, four demo routes.
    reading an argument nobody passes, `li` inside `div.actions`, and never unwrapping
    `content`. Its toggle now reports `aria-expanded`, which is what a theme-switcher
    button needs.
-2. `CyberpunkTheme` + per-theme packages (`@aio-ui/theme-default`, `-horizontal`,
-   `-cyberpunk`); the single theme package is a staging area.
+2. ~~`CyberpunkTheme` + per-theme packages~~ — done: `packages/themes/{default,horizontal,cyberpunk}`,
+   engine stays `@aio-ui/theme`. Next natural step: the theme switcher UI, which now has
+   `Menu`'s `aria-expanded` and a third theme to switch to.
 3. `IdAddress` → `@aio-ui/http-service` (drop its own `_fetchAPI`), when Form work resumes.
 4. Styling pass — fixed `nav` overlaps `#gallery`'s filter row; deferred until logic was done.
 5. `BuilderTransformer`/`FormSchemaTransformer` → `@aio-ui/utilities`, then `aio.config.json`
