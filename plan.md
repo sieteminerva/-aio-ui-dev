@@ -371,7 +371,8 @@ Ported into `src/lib/Components` already, pending review:
 - [x] Split each theme into its own package under `packages/themes/<id>`
       (`@aio-ui/theme-default`, `-horizontal`, `-cyberpunk`); the engine remains
       `@aio-ui/theme` in `modules/`, and themes depend on `core` types only
-- [ ] Theme switcher UI (needs `fab-menu` registered first)
+- [x] Theme switcher UI — a fab menu whose items move the hash (`?theme=`), see
+      `docs/DEMO.md`; it belongs to the host, not to the framework
 - [ ] Themes that override templates (`templates()`) — the store exists, nothing uses it yet
 - [ ] Port `BuilderTransformer` (no imports) and `FormSchemaTransformer` as `@aio-ui/utilities`
 - [ ] Add `aio.config.json` manifest handling
