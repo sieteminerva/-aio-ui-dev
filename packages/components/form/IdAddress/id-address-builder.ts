@@ -296,6 +296,14 @@ export class IdAddressBuilder {
   _kodeposRunId: number = 0;
 
   /**
+   * @property {Set<string>} _loadedLevels
+   * @description Levels that actually rendered rows in the current cascade run.
+   * `_settleLevels` uses it to tell "filled" apart from "asked but came back empty" —
+   * an empty level still has an id in the detail, so the id alone cannot decide.
+   */
+  _loadedLevels: Set<string> = new Set();
+
+  /**
    * @property {Array<string>} _levelOrder
    * @description Ordered administrative levels used to build and traverse the cascade.
    */
@@ -684,6 +692,11 @@ export class IdAddressBuilder {
           state: "complete",
         });
 
+        // Step 7b: Retire the visible chain before the round trip. The address on
+        // screen belongs to the previous code, so it is cleared and flagged as
+        // loading now; `_updateLevelsByKodepos` refills it top-down afterwards.
+        this._setLevelsState("loading");
+
         try {
           // Step 8: Fetch full administrative details based on the postal code.
           const detail = await this.getDetailByKodepos(kodeposValue, this.config.geocode);
@@ -709,6 +722,8 @@ export class IdAddressBuilder {
           // Step 13: Handle lookup failures via the error reporting system.
           if (runId !== this._kodeposRunId) return; // stale run — keep the newest error state
           lastProcessed = null; // allow retrying the same code after a failed lookup
+          // Nothing will be filled: hand the levels back instead of leaving them spinning.
+          this._settleLevels(runId);
           this._throwError(
             schema,
             "Failed lookup detail from kodepos",
@@ -842,6 +857,7 @@ export class IdAddressBuilder {
     levelSchema.select = onLevelChangeFn;
 
     // Step 11: Notify listeners that data is ready and provide the change handler.
+    this._loadedLevels.add(level);
     this.__emitChange("onLevelLoaded", {
       schema: levelSchema,
       data: options,
@@ -930,6 +946,9 @@ export class IdAddressBuilder {
       // newer kodepos lookup is mid-fill (shared-flag race protection).
       if (runId === undefined || runId === this._kodeposRunId) {
         this._skipChangeListener = false;
+        // Step 11: Levels the detail object had no id for are still flagged as
+        // loading from `_setLevelsState`; release them once the fill is done.
+        this._settleLevels(runId);
       }
     }
   }
@@ -1015,6 +1034,79 @@ export class IdAddressBuilder {
 
       // Step 7: Move to the next level in the chain.
       nextLevelSchema = nextLevelSchema.next;
+    }
+  }
+
+  /**
+   * Puts every dropdown level into, or out of, the loading state without touching
+   * which level is loading next.
+   *
+   * @param state - `"loading"` clears the current rows and flags the level busy;
+   *   `"idle"` only drops the busy marker so the level shows its placeholder again.
+   *
+   * @example
+   * picker._setLevelsState("loading"); // kodepos typed — old address must go
+   *
+   * @description
+   * A kodepos change invalidates the entire chain above it, but resolving the new
+   * hierarchy costs a round trip. Without this step the previous province, city and
+   * district stay on screen looking valid while the new ones are being fetched — the
+   * user reads a complete address that does not belong to the code they just typed.
+   * Clearing them up front (and saying "loading" while doing it) makes that gap
+   * honest; `_updateLevelsByKodepos` then refills the chain top-down, so each level
+   * swaps its spinner for real rows in the order the user reads them.
+   */
+  _setLevelsState(state: "loading" | "idle"): void {
+    for (const item of this.schema) {
+      // Step 1: The kodepos input itself holds the value being typed — never touch it.
+      if (!item.isDropdown) continue;
+
+      // Step 2: Drop the stale selection from the internal detail state and from
+      // the "what has rendered" tally this run.
+      this._setDetail({ [`${item.name}_id`]: null, [`${item.name}_name`]: null } as IdAddressDetail);
+      this._loadedLevels.delete(item.name);
+
+      if (state === "loading") {
+        // Step 3a: Reuse the normal load event, so whichever adapter is installed
+        // renders its own spinner; a leftover handler must not fire from a dying row.
+        this.__emitChange("onLevelLoaded", {
+          schema: item,
+          data: [],
+          state: "start",
+          complete: () => "start",
+        });
+        delete (item.el as any).__onLevelChange;
+      } else {
+        // Step 3b: Back to the plain placeholder, no options, no spinner.
+        item.adapter.clear?.(item.el);
+      }
+    }
+  }
+
+  /**
+   * Releases the dropdown levels a kodepos fill never got to.
+   *
+   * @param runId - Token of the fill that asked, so an older run cannot un-load
+   *   levels a newer one is still filling (omit for programmatic calls).
+   *
+   * @example
+   * picker._settleLevels(runId); // after _updateLevelsByKodepos finished
+   *
+   * @description
+   * The endpoint answers with the hierarchy it knows; a parent without districts
+   * leaves `kecamatan` — and everything under it — with no rows. Those levels were
+   * flagged loading by `_setLevelsState("loading")` and would otherwise keep the
+   * "Loading …" placeholder forever, so anything that did not actually render goes
+   * back to its idle placeholder. Membership is decided by `_loadedLevels`, not by
+   * the detail object: an empty level is still recorded in the detail.
+   */
+  _settleLevels(runId?: number): void {
+    if (runId !== undefined && runId !== this._kodeposRunId) return;
+
+    for (const item of this.schema) {
+      if (!item.isDropdown) continue;
+      if (this._loadedLevels.has(item.name)) continue;
+      item.adapter.clear?.(item.el);
     }
   }
 

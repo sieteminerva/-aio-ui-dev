@@ -110,9 +110,11 @@ export const IdAddressAdapterNative: IAddressAdapter = {
     }
     el.value = value; // set value both input / select
     if (el.tagName === "SELECT" && el instanceof HTMLSelectElement) {
+      // A value that is not among the loaded rows simply does not get marked —
+      // throwing here would abort the whole cascade for one mismatched id.
       const selectedOptEl = el.selectedOptions?.[0];
-      selectedOptEl.setAttribute("selected", "");
-      selectedOptEl.classList.add("active", "selected");
+      selectedOptEl?.setAttribute("selected", "");
+      selectedOptEl?.classList.add("active", "selected");
     }
   },
 
