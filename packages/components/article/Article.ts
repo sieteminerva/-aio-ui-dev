@@ -424,8 +424,11 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
 
 
       case "@article>detail":
-        if (payload.largeCover || payload.thumbnail) {
-          const cover = this.render("@article>figure", payload.largeCover || payload.imageUrl);
+        // `thumbnail` is the only image field the list payload carries, so it is the
+        // detail cover unless a larger one was provided.
+        const coverSource = payload.largeCover || payload.imageUrl || payload.thumbnail;
+        if (coverSource) {
+          const cover = this.render("@article>figure", coverSource);
           cover!.className = "cover"
           if (cover) el.appendChild(cover);
         }

@@ -2,6 +2,7 @@ import type { iNodeContent } from "@aio-ui/core/interface";
 
 import { DEMO } from "../manifest";
 import type { iDemoEntry } from "../manifest";
+import { demoNav, pageIntro } from "../nav";
 
 /**
  * Kitchen-sink page, generated from the demo table.
@@ -66,12 +67,8 @@ export function kitchenContent(): iNodeContent {
   return {
     ".page": {
       content: {
-        "header.intro": {
-          content: {
-            "h1": { content: "Component demo" },
-            "p": { content: `${DEMO.length} komponen dirender dari satu tabel manifest.` },
-          },
-        },
+        ...demoNav,
+        ...pageIntro("Elements", `${DEMO.length} komponen elemen · satu builder, satu node`),
         "main.kitchen": { content: sections },
       },
     },

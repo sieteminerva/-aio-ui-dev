@@ -1,0 +1,40 @@
+/* ==========================================================================
+   PRODUCT GRID — the list module
+   `.grid` / `.row` come from @aio-ui/styles; this only guarantees a sensible
+   behaviour when the package is used on its own.
+   ========================================================================== */
+
+.grid .row.full-width {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: var(--app-gap);
+  align-items: stretch;
+  width: 100%;
+}
+
+/* A card is a clickable unit in the catalogue: make that visible. */
+.grid .row.full-width > .product {
+  cursor: pointer;
+  transition:
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.grid .row.full-width > .product:hover {
+  transform: translateY(-3px);
+}
+
+.grid .row.full-width > .product:focus-within {
+  outline: 2px solid var(--app-border-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grid .row.full-width > .product {
+    transition: none;
+  }
+
+  .grid .row.full-width > .product:hover {
+    transform: none;
+  }
+}

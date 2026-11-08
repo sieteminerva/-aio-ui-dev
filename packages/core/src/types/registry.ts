@@ -54,6 +54,7 @@ export interface iBuilderRegistry {
   input: iBasicInputNode;
   "product-card": iBasicNode;
   "product-card-grid": any;
+  "product-detail": any;
   "input-controls": Array<iBasicInputNode>;
   table: any[];
   dropdown: iBasicInputNode;

@@ -28,26 +28,26 @@ A column whose own fields look like a block is treated as one block, so
 
 ## Actions
 
-| Field     | Meaning                                                              |
-| --------- | -------------------------------------------------------------------- |
-| `label`   | Button text                                                          |
-| `href`    | Renders the CTA as a link                                            |
-| `onClick` | Used only when `href` is absent; the CTA then gets `role="button"`    |
+| Field     | Meaning                                                            |
+| --------- | ------------------------------------------------------------------ |
+| `label`   | Button text                                                        |
+| `href`    | Renders the CTA as a link                                          |
+| `onClick` | Used only when `href` is absent; the CTA then gets `role="button"` |
 
 The second CTA is styled as secondary (outline) automatically.
 
 ## Nodes
 
-| Key                              | Tag  | Class             |
-| -------------------------------- | ---- | ----------------- |
-| `@section`                       | `section` | `section`    |
-| `@section>content`               | `div`     | `section-column` |
-| `@section>content>image`         | `img`     | `section-image` |
-| `@section>content>eyebrow`       | `div`     | `section-eyebrow` |
-| `@section>content>header`        | `h2`      | `section-title` |
-| `@section>content>desc`          | `p`       | `section-desc` |
-| `@section>content>actions`       | `div`     | `section-actions` |
-| `@section>content>actions>item`  | `a`       | `section-cta` |
+| Key                             | Tag       | Class             |
+| ------------------------------- | --------- | ----------------- |
+| `@section`                      | `section` | `section`         |
+| `@section>content`              | `div`     | `section-column`  |
+| `@section>content>image`        | `img`     | `section-image`   |
+| `@section>content>eyebrow`      | `div`     | `section-eyebrow` |
+| `@section>content>header`       | `h2`      | `section-title`   |
+| `@section>content>desc`         | `p`       | `section-desc`    |
+| `@section>content>actions`      | `div`     | `section-actions` |
+| `@section>content>actions>item` | `a`       | `section-cta`     |
 
 ## Notes
 

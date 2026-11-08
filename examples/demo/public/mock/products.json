@@ -1,0 +1,81 @@
+{
+  "success": true,
+  "message": "Products retrieved successfully.",
+  "data": [
+    {
+      "uid": "apparel-01",
+      "name": "tshirt-standard",
+      "category": "apparel",
+      "title": "Standard O-neck",
+      "description": "Kaos katun combed 30s dengan potongan standar. Bahan adem, jahitan rapi, cocok dipakai harian.",
+      "price": 85000,
+      "currency": "Rp",
+      "colors": [
+        { "name": "white", "value": "#ffffff" },
+        { "name": "black", "value": "#212121" }
+      ],
+      "artwork": { "src": "apparel/man_tshirt_standard_o-neck.png" }
+    },
+    {
+      "uid": "apparel-02",
+      "name": "shirt-long-sleeve",
+      "category": "apparel",
+      "title": "Long sleeve shirt",
+      "description": "Kemeja lengan panjang dengan bahan katun premium. Potongan santai untuk kerja maupun jalan.",
+      "price": 165000,
+      "currency": "Rp",
+      "colors": [
+        { "name": "navy", "value": "#22384f" },
+        { "name": "sand", "value": "#d8c7ab" }
+      ],
+      "artwork": { "src": "apparel/man_shirt_long_slevee.png" }
+    },
+    {
+      "uid": "merch-01",
+      "name": "mug",
+      "category": "merchandise",
+      "title": "Promotion mug",
+      "description": "Mug keramik 320ml sablon satu sisi. Aman untuk microwave dan dishwasher.",
+      "price": 75000,
+      "currency": "Rp",
+      "colors": [{ "name": "ivory", "value": "#f4efe6" }],
+      "artwork": { "src": "apparel/Promotion_Mug.png" }
+    },
+    {
+      "uid": "merch-02",
+      "name": "cushion",
+      "category": "merchandise",
+      "title": "Promotion cushion",
+      "description": "Bantal sofa 40×40cm dengan sarung yang bisa dilepas dan dicuci.",
+      "price": 115000,
+      "currency": "Rp",
+      "colors": [
+        { "name": "ochre", "value": "#c98a32" },
+        { "name": "olive", "value": "#6b7a4a" }
+      ],
+      "artwork": { "src": "apparel/Promotion_Cushion.png" }
+    },
+    {
+      "uid": "merch-03",
+      "name": "balloon",
+      "category": "merchandise",
+      "title": "Promotion balloon",
+      "description": "Balon promosi 12 inci, cetak dua warna. Cocok untuk pembukaan toko dan acara keluarga.",
+      "price": 15000,
+      "currency": "Rp",
+      "colors": [{ "name": "clay", "value": "#b47828" }],
+      "artwork": { "src": "apparel/Promotion_Balloon.png" }
+    },
+    {
+      "uid": "merch-04",
+      "name": "pin",
+      "category": "merchandise",
+      "title": "Promotion pin",
+      "description": "Pin enamel 38mm dengan pengunci logam. Bisa dipakai sebagai merchandise maupun hadiah kecil.",
+      "price": 25000,
+      "currency": "Rp",
+      "colors": [{ "name": "brass", "value": "#925408" }],
+      "artwork": { "src": "apparel/Promotion_Pin.png" }
+    }
+  ]
+}

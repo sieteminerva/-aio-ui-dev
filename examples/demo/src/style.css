@@ -67,3 +67,106 @@ button.open {
   font-family: ui-monospace, monospace;
   font-size: 0.8rem;
 }
+
+/*
+ * Route shell — the demo now has four routes, so the page needs a nav and a couple of
+ * layout hooks. Still zero overrides of component internals.
+ */
+nav.demo-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 2rem;
+  background: #fff;
+  border-bottom: 1px solid #e2e2e6;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+nav.demo-nav .brand {
+  font-weight: 700;
+  color: #111;
+  text-decoration: none;
+}
+
+nav.demo-nav .navigations {
+  display: flex;
+  gap: 0.25rem;
+}
+
+nav.demo-nav .item {
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  color: #444;
+  text-decoration: none;
+}
+
+nav.demo-nav .item:hover {
+  background: #f0f0f2;
+  color: #111;
+}
+
+/* Product page: filter block + list + detail */
+.catalog {
+  display: grid;
+  gap: 1rem;
+}
+
+.catalog .filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.catalog .filter {
+  padding: 0.4rem 0.9rem;
+  font: inherit;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  background: #fff;
+  color: #444;
+  border: 1px solid #dcdce2;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.catalog .filter.active {
+  background: #111;
+  border-color: #111;
+  color: #fff;
+}
+
+.catalog .catalog-status {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 0.85rem;
+  color: #2a7a45;
+}
+
+.catalog .catalog-detail {
+  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #e2e2e6;
+  border-radius: 6px;
+}
+
+/* Article + form hosts */
+.article-host,
+.form-host {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-log {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: #111;
+  color: #d6d6d6;
+  border-radius: 6px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.75rem;
+  overflow-x: auto;
+}

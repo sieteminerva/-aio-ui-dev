@@ -1,0 +1,55 @@
+{
+  "success": true,
+  "message": "Articles retrieved successfully.",
+  "meta": {
+    "currentPage": 1,
+    "perPage": 4,
+    "totalItems": 4,
+    "totalPages": 1,
+    "links": {
+      "first": null,
+      "prev": null,
+      "self": null,
+      "next": null,
+      "last": null
+    }
+  },
+  "data": [
+    {
+      "uid": "art-001",
+      "slug": "merawat-kaos-katun",
+      "title": "Merawat kaos katun agar tidak melar",
+      "summary": "Tiga kebiasaan kecil yang membuat kaos combed 30s bertahan bertahun-tahun: suhu air, cara menjemur, dan cara melipat.",
+      "author": "Rina",
+      "date": "12 Januari 2026",
+      "thumbnail": "apparel/man_tshirt_standard_o-neck.png"
+    },
+    {
+      "uid": "art-002",
+      "slug": "memilih-bahan-kemeja",
+      "title": "Memilih bahan kemeja untuk iklim tropis",
+      "summary": "Katun, linen, dan campuran poliester punya karakter berbeda. Ini panduan singkat memilih sesuai pemakaian.",
+      "author": "Bagas",
+      "date": "28 Februari 2026",
+      "thumbnail": "apparel/man_shirt_long_slevee.png"
+    },
+    {
+      "uid": "art-003",
+      "slug": "merchandise-yang-dipakai",
+      "title": "Merchandise yang benar-benar dipakai orang",
+      "summary": "Mug dan cushion lebih sering dipakai daripada pin. Memilih merchandise berarti memilih kebiasaan penggunanya.",
+      "author": "Rina",
+      "date": "4 Maret 2026",
+      "thumbnail": "apparel/Promotion_Cushion.png"
+    },
+    {
+      "uid": "art-004",
+      "slug": "sablon-vs-bordir",
+      "title": "Sablon atau bordir? Menimbang biaya dan daya tahan",
+      "summary": "Sablon menang di warna, bordir menang di ketahanan. Untuk pesanan kecil, biaya awal sering jadi penentu.",
+      "author": "Bagas",
+      "date": "19 Maret 2026",
+      "thumbnail": "apparel/Promotion_Pin.png"
+    }
+  ]
+}

@@ -1,32 +1,63 @@
-// Components/ProductCardComponent.ts (The Pure Grid List Factory Component)
+// Components/ProductGrid.ts — the list module: builds one card per record.
+import type { iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 import { ProductCardBuilder } from "./ProductCard";
+import type { iProductCardConfig } from "./ProductCard";
 
-export class ProductGridBuilder extends Builder<"@grid" | "@grid>container", any> {
-  readonly builderId = "product-card-grid" as any;
-  readonly name = "product-card-grid" as any;
-  stylesheet: string = "";
+export type ProductGridElementType = "@grid" | "@grid>container";
 
-  constructor() {
+export interface iProductGridConfig extends iBuilderConfig<ProductGridElementType> {
+  /** Forwarded to every card (shape, autoplay, button text…). */
+  card?: Partial<iProductCardConfig>;
+  /** A card was activated: open its detail view. */
+  onOpen?: (product: any) => void;
+  /** A card's checkout button was pressed. */
+  onCheckout?: (payload: any) => void;
+}
+
+/** `{ content: { data: [...] } }`, `{ content: [...] }`, `[...]`, `{ data: [...] }`. */
+export function normalizeProducts(data: any): any[] {
+  const content = data?.content ?? data;
+  if (Array.isArray(content)) return content.filter(Boolean);
+  if (Array.isArray(content?.data)) return content.data.filter(Boolean);
+  if (Array.isArray(data?.data)) return data.data.filter(Boolean);
+  return [];
+}
+
+export class ProductGridBuilder extends Builder<ProductGridElementType, iProductGridConfig> {
+  readonly builderId = "product-card-grid" as const;
+  readonly name = "product-card-grid" as const;
+  stylesheet: string = "./ProductGrid.css";
+  public config: Required<iProductGridConfig>;
+
+  constructor(config: Partial<iProductGridConfig> = {}) {
     super();
-    this.config = {
+
+    const defaultConfig: Required<iProductGridConfig> = {
+      themeId: "default",
+      namespace: null,
+      emit: () => { },
       selectors: {
         "@grid": { tagName: "section", className: "grid" },
-        "@grid>container": { tagName: "div", className: "row full-width" }
-      }
+        "@grid>container": { tagName: "div", className: "row full-width" },
+      },
+      card: {},
+      onOpen: () => { },
+      onCheckout: () => { },
     };
+
+    this.config = this.resolveConfig(defaultConfig, config);
   }
 
   /**
    * 👑 PINTU PREPARE: Melumat array massal kiriman dari ProductController pusat
    */
   public prepare(data: any): HTMLElement {
-    const rawData = data.content.data ? data.content.data : data.content;
-    // console.log({ rawData })
-    const rawList = Array.isArray(rawData) ? rawData : [];
+    const list = normalizeProducts(data);
+
     // 1. Lahirkan cangkang luar grid list
-    const gridRoot = this.render("@grid", rawList);
-    const container = this.render("@grid>container", rawList);
+    const gridRoot = this.render("@grid", list);
+    const container = this.render("@grid>container", list);
 
     // ====================================================
     // 🧱 COMPONENT INSTANTIATION LOOP (PARADE KELAHIRAN KARTU KAOS)
@@ -34,22 +65,26 @@ export class ProductGridBuilder extends Builder<"@grid" | "@grid>container", any
     // lalu menancapkan fisiknya ke rahim kolom grid secara linear!
     // ====================================================
 
-    rawList.forEach((productData: any) => {
+    list.forEach((productData: any) => {
       // Nyalakan instansi kartu produk kustom terisolasi bawaan resep kemarin malam
       const cardComponent = new ProductCardBuilder({
         optionShape: "round",
         autoplay: false,
         duration: 3500,
-        mode: "auto"
+        mode: "auto",
+        ...this.config.card,
       });
 
       const rawFabrics = Array.isArray(productData.colors) ? productData.colors : [];
-      const baseImage = productData.imageUrl || productData.src || "";
+      const baseImage = productData.imageUrl || productData.src || productData.artwork?.src || "";
 
+      // Variants must carry BOTH keys: `imageUrl` is read on first paint
+      // (`${BASE_URL}${imageUrl}`), `src` is read when navigating between colours.
       const mappedVariants = rawFabrics.map((color: any) => ({
         name: color.name,
-        color: color.value,      // Ambil kode HEX untuk disiram ke background-color bapak
-        src: baseImage       // Gunakan aset gambar transparan yang sama untuk di-multiply!
+        color: color.value,
+        imageUrl: color.imageUrl || baseImage,
+        src: color.imageUrl || baseImage,
       }));
 
       // Bungkus kembali ke dalam properti internal state
@@ -57,14 +92,21 @@ export class ProductGridBuilder extends Builder<"@grid" | "@grid>container", any
         id: productData.uid || `prod-${Math.random().toString(36).substring(7)}`,
         title: productData.title || productData.name || "T-Shirt",
         description: productData.description || "",
-        price: productData.price === "getPrice" ? "Rp 85.000" : String(productData.price), // Fallback sample price tag
-        variants: mappedVariants
+        imageUrl: baseImage,
+        price: typeof productData.price === "number"
+          ? `Rp ${productData.price.toLocaleString("id-ID")}`
+          : String(productData.price ?? ""),
+        variants: mappedVariants,
       };
 
       // Tembakkan pembuatan bodi fisik JIT membawa data pakaian
       const cardDOMElement = cardComponent.create(productItem);
 
       if (cardDOMElement instanceof HTMLElement && container) {
+        cardDOMElement.dataset.uid = productItem.id;
+        // Opening the detail is a list-level decision: the card stays reusable and
+        // knows nothing about where it is mounted.
+        cardDOMElement.addEventListener("click", () => this.config.onOpen(productData));
         container.appendChild(cardDOMElement);
       }
     });

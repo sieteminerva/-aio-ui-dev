@@ -21,8 +21,7 @@ Status is what the demo reports, not what the docs wish.
 | `mode-switcher` | `{}`                                                                                                                 | self-contained                                  |
 | `pricing-card`  | **array** of `{ header, body: [{ title, className? }], price, action: { label } }`                                   | `content.ts:531`                                |
 | `product-card`  | `{ uid, name, category, title, description, price, colors: [{ name, value }], artwork: { src } }`                    | `content.ts:692`                                |
-| `product-grid`  | `{ content: { data: [<product-card payload>] } }`                                                                    | `ProductGrid.prepare` reads `data.content.data` |
-| `modal`         | `{ content }` (string or nodes) + `config: { id, title, destroyOnClose?, onReady? }`                                 | `Modal.ts` — `prepare()` returns the element    |
+| `product-grid`  | `{ content: { data: [<product-card payload>] } }`                                                                    | `ProductGrid.prepare` reads `data.content.data` || `product-detail`| `{ uid, category, title, description, price, currency, colors: [{ name, value }], artwork: { src } }`               | `pages/product.ts` — one record, `onBack`/`onAddToCart` || `modal`         | `{ content }` (string or nodes) + `config: { id, title, destroyOnClose?, onReady? }`                                 | `Modal.ts` — `prepare()` returns the element    |
 
 ## Rules that came out of measuring
 
@@ -51,7 +50,7 @@ Status is what the demo reports, not what the docs wish.
    and a non-addressable value (a street address) stays visible text with an inert `#`.
 7. **`carousel` view state lives in config, not payload.** `slidesPerView` rewrites both the
    track width (`slides / perView × 100%`) and the navigation count (`maxDots = slides −
-   perView + 1`), so with 4 slides and `slidesPerView: 2` there are 2 stops and 3 dots.
+perView + 1`), so with 4 slides and `slidesPerView: 2` there are 2 stops and 3 dots.
    `animation: "fade"` is forced to `slide-left` when `slidesPerView > 1`, and to
    `slide-up` when `vertical`. `loop: false` clamps at the ends instead of wrapping.
    `showControl`/`showNavigation` accept `"auto"`, which adds `.auto-controls` (hover to
@@ -67,13 +66,14 @@ Status is what the demo reports, not what the docs wish.
 
 New components start from the scaffold, not from an existing file:
 `node scripts/new-component.mjs <name>` → [`COMPONENT-TEMPLATE.md`](./COMPONENT-TEMPLATE.md),
-conventions in [`COMPONENT-CONVENTIONS.md`](./COMPONENT-CONVENTIONS.md).
+conventions in [`COMPONENT-CONVENTIONS.md`](./COMPONENT-CONVENTIONS.md). The demo's route
+split (element vs page components) is described in [`DEMO.md`](./DEMO.md).
 
 ## Known gaps
 
-| Gap              | Detail                                                                                                                                         |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `product-detail` | `packages/components/product/ProductDetail.ts` exports no Builder class — it cannot be registered until it is rewritten.                       |
+| Gap              | Detail                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `product-card`   | `ProductCard` reads `variants[].imageUrl` on first paint and `variants[].src` when switching colours, so a caller must supply both — `ProductGrid` now does, a hand-built payload must too. |
 
 ## Analysis — can this be universal?
 
