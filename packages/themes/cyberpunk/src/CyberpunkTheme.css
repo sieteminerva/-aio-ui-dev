@@ -1,0 +1,65 @@
+/* ==========================================================================
+   CYBERPUNK THEME
+   Token overrides only. `CyberpunkTheme.activate()` puts `data-theme="cyberpunk"`
+   on the shell, and everything below re-points the global tokens that every
+   component already reads. No selectors reach into a component's internals.
+   ========================================================================== */
+
+/* The token block is declared twice on purpose:
+   - `[data-theme="cyberpunk"]` is the shell the theme marks, so every component inside
+     it inherits the values;
+   - `body:has(...)` is an ANCESTOR of the shell, and custom properties inherit downward
+     only — without this, `body { background: var(--app-page-background) }` would resolve
+     the default gradient and the page behind the shell would stay light. */
+[data-theme="cyberpunk"],
+body:has([data-theme="cyberpunk"]) {
+  /* Cool neon primary, hot magenta accent */
+  --app-primary-color: #00e5ff;
+  --app-primary-hover: #6df6ff;
+  --app-accent-color: #ff2fb9;
+  --app-accent-strong: #ff6ad5;
+  --app-accent-subtle: rgba(255, 47, 185, 0.16);
+
+  /* Night-city surfaces */
+  --app-page-background: radial-gradient(circle at 50% 0%, #0b0a1a 0%, #060512 60%, #020208 100%);
+  --app-surface-background-color: rgba(15, 14, 34, 0.86);
+  --app-surface-strong: #12112b;
+  --app-surface-muted: rgba(24, 22, 52, 0.72);
+
+  /* Cold light on dark */
+  --app-text-color: #e7e9ff;
+  --app-text-accent-color: #9aa0d0;
+  --app-text-heading-color: #ffffff;
+
+  --app-border-color: rgba(0, 229, 255, 0.28);
+  --app-border-focus: #00e5ff;
+
+  /* Neon bloom instead of soft paper shadows */
+  --app-shadow-soft: 0 10px 30px -10px rgba(0, 229, 255, 0.35);
+  --app-shadow-elevated: 0 18px 44px -12px rgba(255, 47, 185, 0.45);
+
+  /* Sharper geometry reads as "machine"; the default theme is rounded. */
+  --app-component-border-radius: 0.25rem;
+  --app-image-border-radius: 0.25rem;
+}
+
+/* Shell + page paint, using the tokens declared above on each of them. */
+[data-theme="cyberpunk"] {
+  background: var(--app-page-background);
+  color: var(--app-text-color);
+}
+
+body:has([data-theme="cyberpunk"]) {
+  background: var(--app-page-background);
+  color: var(--app-text-color);
+}
+
+[data-theme="cyberpunk"] :is(a, button, summary, input, select, textarea):focus-visible {
+  outline: 2px solid var(--app-primary-color);
+  outline-offset: 2px;
+}
+
+/* A hairline glow on panels, using the token components already style their borders with. */
+[data-theme="cyberpunk"] :is(section, article, aside) {
+  border-color: var(--app-border-color);
+}

@@ -17,12 +17,19 @@ utilities  →  core (types only)
 core       →  utilities
 base       →  core, utilities
 modules/*  →  core, utilities
-components/* → base, core, utilities, module-loader
+themes/*   →  core, utilities
+components/* → base, core, utilities, module-loader, themes
 examples/* →  anything
 ```
 
 `module-loader` is split out of `modules/` on purpose: it is the plug-in kernel used by
 components that have sub-modules, not an app-level utility.
+
+`themes/` is a group of its own (not a sub-folder of `modules/`) because a theme is an
+**add-on**, not a service: a project installs the themes it ships and nothing else. The
+engine (`@aio-ui/theme`, `ThemeRegistry` + `ThemeRenderer`) stays in `modules/` — it is a
+slot like any other. The engine consumes themes; **themes never import the engine**, which
+keeps the graph a tree and lets anyone publish `@aio-ui/theme-<their-own>`.
 
 ## Rules
 
@@ -41,7 +48,12 @@ components that have sub-modules, not an app-level utility.
 
 5. Module packages are single-purpose and installable on demand:
    `@aio-ui/router`, `@aio-ui/event-emitter`, `@aio-ui/http-service`,
-   `@aio-ui/animations`, `@aio-ui/module-loader`.
+   `@aio-ui/animations`, `@aio-ui/module-loader`, `@aio-ui/theme`.
+
+5b. Theme packages are add-ons under `packages/themes/<id>/` with the package name
+    `@aio-ui/theme-<id>`. They depend on `core` types only (`iThemeModule`). A theme that
+    needs a stylesheet ships it in its own package (`CyberpunkTheme.css`) and the host
+    imports it once.
 
 6. Component packages are flat (`packages/components/<name>/<File>.ts`), so an
    application imports `@aio-ui/form/Form`. Install name and import name are identical.

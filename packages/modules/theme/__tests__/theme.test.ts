@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DefaultTheme, ThemeRenderer, ThemeRegistry } from "@aio-ui/theme";
+import { ThemeRenderer, ThemeRegistry } from "@aio-ui/theme";
 import { getTemplates, TemplateRegistry } from "@aio-ui/core/TemplateRegistry";
 
 /** A theme that rewrites the page and records its lifecycle calls. */
@@ -50,7 +50,7 @@ describe("TemplateRegistry", () => {
 
 describe("ThemeRegistry", () => {
   it("stores themes by id and lists them in order", () => {
-    const themes = new ThemeRegistry().register(new DefaultTheme()).register(createSpyTheme("spy"));
+    const themes = new ThemeRegistry().register(createSpyTheme("default")).register(createSpyTheme("spy"));
 
     expect(themes.ids()).toEqual(["default", "spy"]);
     expect(themes.has("spy")).toBe(true);
@@ -60,9 +60,9 @@ describe("ThemeRegistry", () => {
 
 describe("ThemeRenderer", () => {
   it("applies the first registered theme and installs the template store on destroy", () => {
-    const renderer = new ThemeRenderer({ themes: [new DefaultTheme()] });
+    const renderer = new ThemeRenderer({ themes: [createSpyTheme("first")] });
 
-    expect(renderer.current).toBe("default");
+    expect(renderer.current).toBe("first");
     expect(getTemplates()).toBeInstanceOf(TemplateRegistry);
 
     renderer.destroy();
@@ -95,7 +95,7 @@ describe("ThemeRenderer", () => {
 
   it("keeps the current theme when asked for an unknown id", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    const renderer = new ThemeRenderer({ themes: [new DefaultTheme()] });
+    const renderer = new ThemeRenderer({ themes: [createSpyTheme("default")] });
 
     renderer.use("does-not-exist");
 
@@ -106,7 +106,7 @@ describe("ThemeRenderer", () => {
   });
 
   it("switches theme without needing a reload", () => {
-    const renderer = new ThemeRenderer({ themes: [new DefaultTheme(), createSpyTheme("spy")] });
+    const renderer = new ThemeRenderer({ themes: [createSpyTheme("default"), createSpyTheme("spy")] });
 
     renderer.use("spy");
 

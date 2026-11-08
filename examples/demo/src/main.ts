@@ -5,7 +5,11 @@ import { AnimationsService } from '@aio-ui/animations';
 import { EventEmitter } from '@aio-ui/event-emitter';
 import { HttpService } from '@aio-ui/http-service';
 import { HashRouter } from '@aio-ui/router';
-import { DefaultTheme, ThemeRenderer } from '@aio-ui/theme';
+import { DefaultTheme } from '@aio-ui/theme-default';
+import { CyberpunkTheme } from '@aio-ui/theme-cyberpunk';
+import { ThemeRenderer } from '@aio-ui/theme';
+
+import '@aio-ui/theme-cyberpunk/CyberpunkTheme.css';
 
 import '@aio-ui/styles/index.css';
 import './style.css';
@@ -85,7 +89,7 @@ async function start(container: HTMLElement) {
     .registerModule(AnimationsService)
     // One door for data, on every route.
     .registerModule(HttpService, mockApi)
-    .registerModule(ThemeRenderer, { themes: [new DefaultTheme()] })
+    .registerModule(ThemeRenderer, { themes: [new DefaultTheme(), new CyberpunkTheme()] })
     .registerModule(emitter)
     // Behavior per route; their content comes from the controller.
     .registerPage('product', ProductPage)

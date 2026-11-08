@@ -10,7 +10,9 @@ import './style.css';
 
 import { EventEmitter } from '@aio-ui/event-emitter';
 import { HttpService } from '@aio-ui/http-service';
-import { DefaultTheme, HorizontalTheme, ThemeRenderer } from '@aio-ui/theme';
+import { DefaultTheme } from '@aio-ui/theme-default';
+import { HorizontalTheme } from '@aio-ui/theme-horizontal';
+import { ThemeRenderer } from '@aio-ui/theme';
 import { AboutContent } from './content/about';
 import { BuildPageContent } from './content/wizard';
 import { BlogPage } from './pages/blog';

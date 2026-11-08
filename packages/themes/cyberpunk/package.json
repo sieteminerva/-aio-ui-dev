@@ -1,0 +1,14 @@
+{
+  "name": "@aio-ui/theme-cyberpunk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/CyberpunkTheme.ts",
+    "./CyberpunkTheme": "./src/CyberpunkTheme.ts",
+    "./CyberpunkTheme.css": "./src/CyberpunkTheme.css"
+  },
+  "dependencies": {
+    "@aio-ui/core": "*"
+  }
+}

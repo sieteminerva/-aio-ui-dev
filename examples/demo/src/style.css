@@ -5,8 +5,9 @@
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  background: #f7f7f8;
-  color: #111;
+  /* Tokens (not literals) so `?theme=cyberpunk` restyles the demo shell too. */
+  background: var(--app-page-background, #f7f7f8);
+  color: var(--app-text-color, #111);
 }
 
 .page {
@@ -33,10 +34,11 @@ main.kitchen {
 }
 
 section {
-  background: #fff;
-  border: 1px solid #e2e2e6;
+  background: var(--app-surface-background-color, #fff);
+  border: 1px solid var(--app-border-color, #e2e2e6);
   border-radius: 4px;
   padding: 1rem;
+  color: var(--app-text-color, #111);
 }
 
 section h2 {
@@ -78,8 +80,9 @@ nav.demo-nav {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 2rem;
-  background: #fff;
-  border-bottom: 1px solid #e2e2e6;
+  background: var(--app-surface-strong, #fff);
+  border-bottom: 1px solid var(--app-border-color, #e2e2e6);
+  color: var(--app-text-color, #111);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -87,7 +90,7 @@ nav.demo-nav {
 
 nav.demo-nav .brand {
   font-weight: 700;
-  color: #111;
+  color: var(--app-text-color, #111);
   text-decoration: none;
 }
 
@@ -100,13 +103,13 @@ nav.demo-nav .item {
   padding: 0.35rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.85rem;
-  color: #444;
+  color: var(--app-text-accent-color, #444);
   text-decoration: none;
 }
 
 nav.demo-nav .item:hover {
-  background: #f0f0f2;
-  color: #111;
+  background: var(--app-surface-muted, #f0f0f2);
+  color: var(--app-text-color, #111);
 }
 
 /* Product page: filter block + list + detail */

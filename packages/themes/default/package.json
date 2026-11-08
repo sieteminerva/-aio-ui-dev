@@ -1,0 +1,13 @@
+{
+  "name": "@aio-ui/theme-default",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/DefaultTheme.ts",
+    "./DefaultTheme": "./src/DefaultTheme.ts"
+  },
+  "dependencies": {
+    "@aio-ui/core": "*"
+  }
+}

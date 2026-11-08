@@ -1,0 +1,14 @@
+{
+  "name": "@aio-ui/theme-horizontal",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/HorizontalTheme.ts",
+    "./HorizontalTheme": "./src/HorizontalTheme.ts",
+    "./HorizontalScrolling": "./src/HorizontalScrolling.ts"
+  },
+  "dependencies": {
+    "@aio-ui/core": "*"
+  }
+}

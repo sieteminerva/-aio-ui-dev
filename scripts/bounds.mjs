@@ -28,7 +28,10 @@ const ALLOWED = {
   core: ["utilities"],
   base: ["core", "utilities"],
   modules: ["core", "utilities"],
-  components: ["base", "core", "utilities", "modules", "components"],
+  // A theme is an installable add-on: it may use core types and nothing else. The theme
+  // engine (`@aio-ui/theme`) consumes themes; themes never consume the engine.
+  themes: ["core", "utilities"],
+  components: ["base", "core", "utilities", "modules", "themes", "components"],
   app: ["core"],
   examples: "*",
 };
@@ -46,6 +49,7 @@ function describe(path) {
   if (root !== "packages" || !group) return null;
 
   if (group === "modules") return { category: "modules", dir: join(ROOT, "packages", "modules", leaf ?? "") };
+  if (group === "themes") return { category: "themes", dir: join(ROOT, "packages", "themes", leaf ?? "") };
   if (group === "components") return { category: "components", dir: join(ROOT, "packages", "components", leaf ?? "") };
   return { category: group, dir: join(ROOT, "packages", group) };
 }
@@ -70,9 +74,11 @@ function categoryOf(specifier) {
   const category =
     name === "module-loader"
       ? "modules"
-      : ["core", "base", "app", "utilities", "styles"].includes(name)
-        ? name
-        : "components";
+      : name === "theme" || name.startsWith("theme-")
+        ? "themes"
+        : ["core", "base", "app", "utilities", "styles"].includes(name)
+          ? name
+          : "components";
 
   return { category, package: name, sub: rest.join("/") || undefined };
 }
@@ -81,7 +87,11 @@ function categoryOf(specifier) {
 function subpathResolves(name, sub) {
   const clean = sub.replace(/\?.*$/, "");
   const mounted = join(ROOT, "node_modules", "@aio-ui", name);
-  const dir = existsSync(mounted) ? mounted : join(ROOT, "packages", "components", name);
+  const dir = existsSync(mounted)
+    ? mounted
+    : ["components", "modules", "themes"]
+      .map((group) => join(ROOT, "packages", group, name))
+      .find((candidate) => existsSync(candidate)) ?? join(ROOT, "packages", "components", name);
 
   const manifestPath = join(dir, "package.json");
   if (existsSync(manifestPath)) {

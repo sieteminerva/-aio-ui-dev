@@ -510,8 +510,11 @@ Green: `npm run verify` (106 tests / 12 files), both builds, four demo routes.
 
 ### Next, in order
 
-1. `Menu` slotting — last component on the legacy `ElementCreatedEventBus`; unblocks the
-   theme switcher UI.
+1. ~~`Menu` finished~~ — done (see change log). The "legacy `ElementCreatedEventBus`"
+   note was stale; the real bugs were a duplicated orphan hamburger, `sidebar` mode
+   reading an argument nobody passes, `li` inside `div.actions`, and never unwrapping
+   `content`. Its toggle now reports `aria-expanded`, which is what a theme-switcher
+   button needs.
 2. `CyberpunkTheme` + per-theme packages (`@aio-ui/theme-default`, `-horizontal`,
    `-cyberpunk`); the single theme package is a staging area.
 3. `IdAddress` → `@aio-ui/http-service` (drop its own `_fetchAPI`), when Form work resumes.
@@ -523,3 +526,5 @@ Green: `npm run verify` (106 tests / 12 files), both builds, four demo routes.
    `ComponentRegistry`.
 
 | 2026-11-08 | `Menu` finished (the handoff's task #1 — and the note "still uses `ElementCreatedEventBus`" was stale: nothing in `Menu.ts` touched it, only a commented import in `Base` and a `globalThis` relay in `DOMRenderer`). Real defects fixed: the hamburger was rendered a **second time** inside `initialize()` and wired there, so the click handler was attached to an orphan element and the toggle never worked; `prepare()` never appended a hamburger at all; `sidebar` mode read `_config?.type` (an argument the registry never passes) instead of `this.config.type`; `div.actions` was filled with `li` nodes by looping array indices, duplicating the CTA that had just been appended as an `<a>`; `content` was never unwrapped, so a `{ content: { navigations } }` payload rendered an empty menu; the payload split mutated `content.actions`. Now: one `prepare()` for both types (`type` only wraps the shell), `splitMenuContent()` exported and tested, brand rendered through the shared `@menu>item>link` key, actions rendered flat, hamburger icon built with `createElementNS` instead of `innerHTML`, stable toggle handler with `aria-expanded`/`aria-controls` kept truthful on first paint, no `console.log`/`warn`. Verified: brand + 2 links + CTA, `ul#primary-navigations`, toggle `false→true→false`, no `li` inside `.actions`, zero console output. 7 new tests (113 total). |
+
+| 2026-11-08 | Themes split into their own package group and a third theme added. `packages/themes/<id>/` now holds `default`, `horizontal`, `cyberpunk` (`@aio-ui/theme-*`); the engine (`ThemeRegistry` + `ThemeRenderer`) stays in `modules/theme` as `@aio-ui/theme`. A theme package depends on `core` types only — never on the engine — so the graph stays a tree and anyone can publish `@aio-ui/theme-<own>`. `bounds.mjs` learned the group (`themes: [core, utilities]`, components may reach themes, `theme*` specifiers categorised as `themes`, deep-import resolution searches the new folder); `docs/BOUNDARIES.md` documents it. New `CyberpunkTheme`: tokens only — `activate()` sets `data-theme="cyberpunk"` and `CyberpunkTheme.css` re-points the `--app-*` tokens (neon cyan/magenta, sharp 0.25rem radii, night surfaces), so every component restyles itself with no per-component code; the token block is declared on both the shell and `body:has(...)` because custom properties inherit downward only, otherwise the page behind the shell stayed light. Demo registers it and its chrome now reads tokens instead of literals. Verified `#kitchen?theme=cyberpunk`: shell `--app-primary-color: #00e5ff`, radius `0.25rem`, body/shell cyberpunk gradient, panel borders `rgba(0,229,255,0.28)`, 11/11 sections ok, no console output; switching back to `?theme=default` removes the marker. 124 tests / 16 files. Note: directory-level `git mv` on Windows fails while `node_modules/@aio-ui/*` junctions point into the folder — the files were moved individually and links refreshed with `npm install`. |
