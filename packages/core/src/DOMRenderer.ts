@@ -1,6 +1,6 @@
 
 import type { DefaultSelectors, iBuilderRegistry, iNodeContent, iNodeRecordItem } from "./interface";
-import { getTemplatePort } from "./TemplatePort";
+import { getTemplates } from "./TemplateRegistry";
 import { applyAttrDictionary, applyAttributeList } from "@aio-ui/utilities/AttributeUtils";
 import { ensureMetadataIdentity, setMetadata } from "@aio-ui/utilities/Metadata";
 
@@ -475,16 +475,14 @@ export class DOMRenderer<
          * Lets a component register its own template override from inside `onCreated`.
          */
         register: (themeId: string, selectorKey: string, handler: any) => {
-          const templates = getTemplatePort();
-          if (!templates) return;
           console.log(`[DOMRenderer Lifecycle] Manual template registration triggered for token: "${selectorKey}"`);
-          templates.register(themeId, selectorKey, handler);
+          getTemplates().register(themeId, selectorKey, handler);
         },
         /**
          * Lets a component withdraw its template override on unmount.
          */
         unregister: (themeId: string, selectorKey: string) => {
-          getTemplatePort()?.unregister(themeId, selectorKey);
+          getTemplates().unregister(themeId, selectorKey);
         }
       };
 

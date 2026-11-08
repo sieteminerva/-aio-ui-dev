@@ -1,7 +1,6 @@
 import type { iBasicNode, iThemeModule } from "@aio-ui/core/interface";
-import { setTemplatePort } from "@aio-ui/core/TemplatePort";
+import { setTemplates, TemplateRegistry } from "@aio-ui/core/TemplateRegistry";
 
-import { TemplateRegistry } from "./TemplateRegistry";
 import { ThemeRegistry } from "./ThemeRegistry";
 
 /** Config of `ThemeRenderer`, passed as the second argument of `registerModule`. */
@@ -42,7 +41,7 @@ export class ThemeRenderer {
     for (const theme of config.themes ?? []) this.#themes.register(theme);
 
     // One store per app instance, installed where `core` looks for it.
-    setTemplatePort(this.#templates);
+    setTemplates(this.#templates);
     for (const theme of this.#themes.all()) this.#registerTemplates(theme);
 
     this.#id = this.#themes.ids()[0] ?? "default";
@@ -98,7 +97,7 @@ export class ThemeRenderer {
 
   /** Releases the template store so a destroyed app leaves nothing installed. */
   public destroy(): void {
-    setTemplatePort(null);
+    setTemplates(null);
     this.#templates.clear();
     this.#themes.clear();
   }

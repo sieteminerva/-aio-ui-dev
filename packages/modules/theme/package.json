@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./TemplateRegistry": "./src/TemplateRegistry.ts",
     "./ThemeRegistry": "./src/ThemeRegistry.ts",
     "./ThemeRenderer": "./src/ThemeRenderer.ts",
     "./DefaultTheme": "./src/themes/DefaultTheme.ts",

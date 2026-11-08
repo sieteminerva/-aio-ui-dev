@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { DefaultTheme, TemplateRegistry, ThemeRenderer, ThemeRegistry } from "@aio-ui/theme";
-import { getTemplatePort } from "@aio-ui/core/TemplatePort";
+import { DefaultTheme, ThemeRenderer, ThemeRegistry } from "@aio-ui/theme";
+import { getTemplates, TemplateRegistry } from "@aio-ui/core/TemplateRegistry";
 
 /** A theme that rewrites the page and records its lifecycle calls. */
 function createSpyTheme(id = "spy") {
@@ -59,14 +59,14 @@ describe("ThemeRegistry", () => {
 });
 
 describe("ThemeRenderer", () => {
-  it("applies the first registered theme and installs the template port on destroy", () => {
+  it("applies the first registered theme and installs the template store on destroy", () => {
     const renderer = new ThemeRenderer({ themes: [new DefaultTheme()] });
 
     expect(renderer.current).toBe("default");
-    expect(getTemplatePort()).not.toBeNull();
+    expect(getTemplates()).toBeInstanceOf(TemplateRegistry);
 
     renderer.destroy();
-    expect(getTemplatePort()).toBeNull();
+    expect(getTemplates().size).toBe(0);
   });
 
   it("prepares a node tree through the active theme", () => {

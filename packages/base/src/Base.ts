@@ -4,7 +4,7 @@ import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iActionPropert
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
 import { HydrationGate } from "./BaseAdapters/HydrationGate";
 import { setBuilderAdapter } from "@aio-ui/core/BuilderPort";
-import { getTemplatePort } from "@aio-ui/core/TemplatePort";
+import { getTemplates } from "@aio-ui/core/TemplateRegistry";
 import { buildNamespace, setMetadata } from "@aio-ui/utilities/Metadata";
 import { selectorToTree } from "@aio-ui/utilities/SelectorToTree";
 import { applyAttrDictionary, applyAttributeList } from "@aio-ui/utilities/AttributeUtils";
@@ -564,11 +564,9 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
    * @protected
    */
   render(typeKey: TType, payload?: any): HTMLElement | undefined {
-    const templates = getTemplatePort();
+    const templates = getTemplates();
 
     const registerTheme = (key: TType, element: HTMLElement, payload: any, selector: any) => {
-      if (!templates) return;
-
       try {
         const registryLookupKey = (key === "@container") ? `@${String(this.builderId)}:container` : key;
         const activeHandler = templates.resolve(this.config.themeId ?? "default", registryLookupKey as string, null);

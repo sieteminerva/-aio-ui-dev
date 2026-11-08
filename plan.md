@@ -51,7 +51,10 @@ Hard rules taken from `.guidance/` and from the design discussion:
 | D12 | A route is content **or** a controller: `registerPage(route, Controller, config)` | One instance per render, so `onDestroy` really releases; page may come from either side, never from both                           |
 | D13 | Data is read only through `ctx.http`                                           | Mock JSON is fetched the same way the live backend will be; migration is a config change                                             |
 | D14 | The theme is a slot with three phases, not an event subscriber                  | Removes the "who applies the theme" guesswork; two apps on one page cannot fight over DOM state                                      |
-| D15 | No `globalThis` ports — `core` declares the seam, the feature package installs it | `BuilderPort` and `TemplatePort` are the pattern; a static global hides the dependency and blocks two apps/tests                      |
+| D15 | No `globalThis` state — `core` owns the store and exports it                 | `BuilderPort` is the seam pattern where a cycle must be broken; `TemplateRegistry` needs no seam, so it simply lives in core                |
+| D16 | Registries are built per need on the shared kernel; no universal hub         | Each registry resolves differently; forcing one API produced adapters that existed only to satisfy the pattern                           |
+| D17 | `TemplateRegistry` lives in `core`, not in `theme`                           | Its only readers are `DOMRenderer` (core) and `Base` (depends on core); a package plus a port was more machinery than the class          |
+| D18 | Each theme becomes its own package (`@aio-ui/theme-<id>`) later               | Install on demand: a project that only wants the default theme should not ship the horizontal scroll engine                             |
 
 ## 4. Target structure
 
@@ -350,16 +353,18 @@ Ported into `src/lib/Components` already, pending review:
 
 ## Phase 6 — Themes and generator
 
-- [x] `@aio-ui/theme` package: `ThemeRegistry`, `TemplateRegistry`, `ThemeRenderer`
-- [x] `DefaultTheme`, `HorizontalTheme` (`HorizontalScrollingPage` moved out of the example
-      and wrapped, not rewritten)
-- [x] `TemplateRegistry` is an **instance** implementing the new `core/TemplatePort`;
-      `Base` and `DOMRenderer` no longer read `globalThis.TemplateRegistry`
+- [x] `@aio-ui/theme` package: `ThemeRegistry`, `ThemeRenderer`, `DefaultTheme`,
+      `HorizontalTheme` (`HorizontalScrollingPage` moved out of the example and wrapped)
+- [x] `TemplateRegistry` moved into **core** (its only readers are `DOMRenderer` and
+      `Base`); `globalThis.TemplateRegistry` is gone
 - [x] Theme is a slot (`iThemePort`), not an event subscriber: `prepare` → `activate` →
       `deactivate` are called by the entry — Q7 closed
 - [ ] `CyberpunkTheme`
+- [ ] Split each theme into its own package (`@aio-ui/theme-default`, `-horizontal`,
+      `-cyberpunk`) so a project installs only what it uses; the current single package is
+      a staging area
 - [ ] Theme switcher UI (needs `fab-menu` registered first)
-- [ ] Themes that override templates (`templates()`) — the port exists, nothing uses it yet
+- [ ] Themes that override templates (`templates()`) — the store exists, nothing uses it yet
 - [ ] Port `BuilderTransformer` (no imports) and `FormSchemaTransformer` as `@aio-ui/utilities`
 - [ ] Add `aio.config.json` manifest handling
 - [ ] Generate `main.ts` from the manifest
