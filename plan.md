@@ -482,3 +482,42 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 | 2026-11-08 | Cleanup pass on the article/product path. `ArticleBuilder`: removed the payload `console.log`, replaced the hand-made `document.createElement("div")` grid with the already-declared `@article>list` key, dropped the `el._articlePayload` expandos in favour of `data-article-id` + a `Map` of records (one source, stamped in `template()` for list and aside items alike), moved click delegation out of `prepare()` into `initialize()` with a stable handler and remove-before-add, and removed both `insertAdjacentHTML` sites — meta is now built from nodes, and `detail>body` accepts a node or plain text and refuses to parse markup. Deleted the empty `ArticleController.ts` stub. `ProductCard`: dropped its own `import "./ProductCard.css"` (the registry injects it) after making `ProductGrid.css` `@import` the card sheet, since the grid instantiates cards directly and would otherwise lose the styles; deleted the dead `_navigate`/`select`/`_handleChange` trio, and `onSelected` — documented but never called — now fires from `navigate()`. `FabMenu` no longer logs on its idle timer, and `HttpService` request logging is behind a new `debug` flag (off by default). Convention recorded: never import a component's own CSS, except a parent that nests a builder directly, which `@import`s the child sheet. Verified: kitchen 13/13, product open/colour/back, article open/back — **zero console output of any level**. |
 
 | 2026-11-08 | Removed `product-card` and `product-grid` from the `#kitchen` element table. Since `#product` renders both with real data (and its own explicit registrations), the catalogue rows duplicated a route and had already drifted from the shipped payload (`artwork.src` was never read, so those cards had no image). Kitchen: 13 → 11 sections, all `ok`; `ProductCard`/`ProductCard.css` loader entries dropped from the demo asset map because the grid imports the card module and its CSS directly. Rule recorded in `docs/DEMO.md`: a component is demonstrated in exactly one place. |
+
+---
+
+## 9. Handoff — 2026-11-08
+
+Green: `npm run verify` (106 tests / 12 files), both builds, four demo routes.
+
+### Done
+
+- **Shell**: `AioApp` + module convention (`registerModule(Class, config)`, `static slot`),
+  `registerPage(route, Controller, config)`, `HttpService` slot, contract-grade page context.
+- **Registries**: `ComponentRegistry` on the shared `Registry` kernel; `TemplateRegistry`
+  in `core`; per-need registries, no hub.
+- **Theme**: `@aio-ui/theme` (`ThemeRenderer`, `DefaultTheme`, `HorizontalTheme`); theme is
+  a slot with `prepare`/`activate`/`deactivate`.
+- **Components**: `Modal` lifecycle fixed; `Footer` two-row contract; `Section` 2–3 columns
+  with its own CSS; `Carousel` hardened (loop clamp, normalisation, a11y); `ProductDetail`
+  written from scratch; `ProductGrid` config + normalisation + working images; `Article`
+  cleaned (no `innerHTML`, no payload expandos, delegation in `initialize`).
+- **Demo**: `#kitchen` (11 elements), `#product`, `#article`, `#form`; data via
+  `HttpService` (`public/mock/*.json`); assets in `public/apparel/`.
+- **Tooling**: `scripts/new-component.mjs` + `templates/component/*.tpl`,
+  `scripts/bounds.mjs`.
+- **Docs**: `APP.md`, `API.md`, `BOUNDARIES.md`, `COMPONENT-DATA.md`,
+  `COMPONENT-CONVENTIONS.md`, `COMPONENT-TEMPLATE.md`, `DEMO.md`.
+
+### Next, in order
+
+1. `Menu` slotting — last component on the legacy `ElementCreatedEventBus`; unblocks the
+   theme switcher UI.
+2. `CyberpunkTheme` + per-theme packages (`@aio-ui/theme-default`, `-horizontal`,
+   `-cyberpunk`); the single theme package is a staging area.
+3. `IdAddress` → `@aio-ui/http-service` (drop its own `_fetchAPI`), when Form work resumes.
+4. Styling pass — fixed `nav` overlaps `#gallery`'s filter row; deferred until logic was done.
+5. `BuilderTransformer`/`FormSchemaTransformer` → `@aio-ui/utilities`, then `aio.config.json`
+   + generating `main.ts` from the manifest.
+6. Small debt: `Base.destroy()` logs on every teardown; `Carousel.run()` is a manual
+   bootstrapper full of `console.log`, unused by the registry; `ComponentLoader` split from
+   `ComponentRegistry`.
