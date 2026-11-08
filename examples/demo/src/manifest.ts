@@ -34,10 +34,11 @@ export const DEMO: iDemoEntry[] = [
     stylesheet: "@aio-ui/accordion/Accordion.css",
     category: "content",
     kind: "element",
+    // Shape from `.archives/travel-trip/content.ts:308` — items are `title` + `description`.
     payload: {
       content: [
-        { title: "Pertama", content: "Isi panel pertama." },
-        { title: "Kedua", content: "Isi panel kedua." },
+        { title: "Apakah ada batas minimal peserta?", description: "Tidak. Kami siap membantu rombongan kecil maupun besar." },
+        { title: "Apakah bisa reschedule?", description: "Ya, jika operasional dibatalkan karena cuaca." },
       ],
     },
   },
@@ -47,14 +48,14 @@ export const DEMO: iDemoEntry[] = [
     stylesheet: "@aio-ui/carousel/Carousel.css",
     category: "content",
     kind: "element",
+    // Shape from `content.ts:37` — slides are `title` + `description` + `image`.
     payload: {
       content: [
-        { image: image("Slide 1"), title: "Slide 1" },
-        { image: image("Slide 2"), title: "Slide 2" },
-        { image: image("Slide 3"), title: "Slide 3" },
+        { title: "Eksplorasi Keindahan", description: "Perjalanan privat yang tenang.", image: image("Slide 1") },
+        { title: "Pantai Pasir Putih", description: "Pemandangan sunset yang luar biasa.", image: image("Slide 2") },
+        { title: "Aktivitas Menyenangkan", description: "Snorkeling untuk semua umur.", image: image("Slide 3") },
       ],
     },
-    note: "renders the first slide; multi-slide needs a verified payload",
   },
   {
     name: "tab",
@@ -74,16 +75,21 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/section/Section",
     category: "layout",
     kind: "element",
+    // Shape from `.archives/travel-trip/content.ts:296` — one section, content is an
+    // array of columns, and each column has its own `content` array.
     payload: {
       id: "demo-section",
-      content: {
-        eyebrow: "Eyebrow",
-        header: "Judul section",
-        description: "Deskripsi section dari payload demo.",
-        image: image("Section"),
-      },
+      className: "demo",
+      content: [
+        {
+          className: "column full",
+          content: [
+            { eyebrow: "Eyebrow", title: "Judul section", description: "Deskripsi section.", imageUrl: image("Section") },
+          ],
+        },
+      ],
     },
-    note: "builds, but renders empty with this payload",
+    note: "no stylesheet; needs global styles",
   },
   {
     name: "footer",
@@ -112,13 +118,11 @@ export const DEMO: iDemoEntry[] = [
     stylesheet: "@aio-ui/fabmenu/FabMenu.css",
     category: "navigation",
     kind: "element",
+    // `FabMenu.prepare` reads `content.actions` and `content.title` — no wrapper.
     payload: {
-      content: {
-        title: "Actions",
-        actions: [{ label: "Satu" }, { label: "Dua" }, { label: "Tiga" }],
-      },
+      title: "Actions",
+      actions: [{ label: "Satu" }, { label: "Dua" }, { label: "Tiga" }],
     },
-    note: "FAILS: 'payload is not iterable' on this actions shape",
   },
   {
     name: "mode-switcher",
@@ -134,12 +138,31 @@ export const DEMO: iDemoEntry[] = [
     stylesheet: "@aio-ui/pricingcard/PricingCard.css",
     category: "content",
     kind: "element",
-    payload: {
-      title: "Paket Dasar",
-      price: "Rp 100.000",
-      features: ["Fitur satu", "Fitur dua"],
-    },
-    note: "payload shape unverified",
+    // Shape from `content.ts:531` — an **array** of cards: `header`, `body[]`, `price`.
+    payload: [
+      {
+        header: "Standard",
+        body: [
+          { title: "Kapal Kayu Tradisional" },
+          { title: "Snorkeling Session" },
+          { title: "Dokumentasi Drone", className: "disabled" },
+          { title: "Mulai dari Rp 450.000 / pax", className: "price-tag" },
+        ],
+        price: 450000,
+        action: { label: "Pilih" },
+      },
+      {
+        header: "Medium",
+        className: "is-featured",
+        body: [
+          { title: "Speedboat Kilat (Ancol)" },
+          { title: "Snorkeling & Island Tour" },
+          { title: "Mulai dari Rp 750.000 / pax", className: "price-tag" },
+        ],
+        price: 750000,
+        action: { label: "Pilih" },
+      },
+    ],
   },
   {
     name: "product-card",
@@ -147,20 +170,37 @@ export const DEMO: iDemoEntry[] = [
     stylesheet: "@aio-ui/product/ProductCard.css",
     category: "content",
     kind: "element",
+    // Shape from `content.ts:692` — a flat product row.
     payload: {
-      title: "Produk contoh",
-      price: "Rp 50.000",
-      image: image("Product"),
+      uid: "dsr7524x",
+      name: "O-Neck Standard",
+      category: "T-Shirt",
+      title: "Standard O-neck",
+      description: "Kaos katun combed 30s.",
+      price: 85000,
+      colors: [
+        { name: "white", value: "#ffffff" },
+        { name: "black", value: "#212121" },
+        { name: "violet", value: "#9966cc" },
+      ],
+      artwork: { src: image("Product") },
     },
-    note: "payload shape unverified",
   },
   {
     name: "product-grid",
     path: "@aio-ui/product/ProductGrid",
     category: "content",
     kind: "element",
-    payload: { data: [], content: [] },
-    note: "builds empty; list payload needs a verified shape",
+    // `ProductGrid.prepare` reads `data.content.data ?? data.content`.
+    payload: {
+      content: {
+        data: [
+          { uid: "p1", title: "Standard O-neck", price: 85000, colors: [{ name: "white", value: "#ffffff" }], artwork: { src: image("Grid 1") } },
+          { uid: "p2", title: "Premium Tee", price: 120000, colors: [{ name: "black", value: "#212121" }], artwork: { src: image("Grid 2") } },
+        ],
+      },
+    },
+    note: "no stylesheet",
   },
   {
     name: "modal",
