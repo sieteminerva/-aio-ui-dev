@@ -50,6 +50,7 @@ import type {
   iPageControllerClass,
   iPageDocument,
   iPageReadyContext,
+  iThemePort,
 } from "./types";
 
 /** Storage key of the persisted theme id. Kept identical to the legacy key. */
@@ -176,6 +177,7 @@ export class AioApp implements iApp {
     post: () => Promise.reject(new Error("[AioApp] No module registered for slot \"http\" (HttpService).")),
   };
   #storage: iStoragePort | null = null;
+  #themes: iThemePort | null = null;
   #container: HTMLElement | null = null;
   #root: HTMLElement | null = null;
 
@@ -368,6 +370,7 @@ export class AioApp implements iApp {
         else if (slot === "animation") this.#animation = port as iAnimationPort;
         else if (slot === "events") this.#events = port as iEventPort;
         else if (slot === "http") this.#http = port as iHttpPort;
+        else if (slot === "theme") this.#themes = port as iThemePort;
       }
     } catch (error) {
       this.#releasePorts(created.reverse());
@@ -411,6 +414,7 @@ export class AioApp implements iApp {
     this.#animation = null;
     this.#events = null;
     this.#storage = null;
+    this.#themes = null;
 
     this.#root?.remove();
     this.#root = null;
@@ -461,6 +465,11 @@ export class AioApp implements iApp {
     if (state.theme && state.theme !== this.#theme) {
       this.#theme = state.theme;
       this.#storage?.set(THEME_STORAGE_KEY, state.theme);
+      try {
+        this.#themes?.use?.(state.theme);
+      } catch (error) {
+        console.error("[AioApp] theme switch failed:", error);
+      }
       this.#events?.emit("themeChanged", {
         theme: state.theme,
         shell: this.#root,
@@ -501,7 +510,8 @@ export class AioApp implements iApp {
         );
       }
 
-      const pageNode = pageToNode(page, target);
+      const themed = this.#themes?.prepare(page, target, this.#theme) ?? page;
+      const pageNode = pageToNode(themed, target);
       const menuNode = this.#menu(controller);
       const footerNode = this.#source.footer ?? null;
       const nodes = [menuNode, pageNode, footerNode].filter(Boolean) as iNodeContent[];
@@ -522,14 +532,14 @@ export class AioApp implements iApp {
       const footerEl = footerNode ? this.#renderNode(footerNode) : null;
       const tree = this.#assemble(menuEl, pageEl, footerEl);
 
-      this.#commit(tree, page);
+      this.#commit(tree, themed);
       this.#route = target;
       this.#fragment = fragment || "";
       this.#afterCommit(tree);
       if (sequence !== this.#sequence) return;
 
       this.#events?.emit("ready", { route: target, shell: tree });
-      this.#ready(target, page, tree, controller, menuEl, footerEl);
+      this.#ready(target, themed, tree, controller, menuEl, footerEl);
       this.#log("render:done", { route: target, sequence });
     } catch (error) {
       if (abort.signal.aborted) return this.#log("render:aborted", { route: target, sequence });
@@ -616,7 +626,7 @@ export class AioApp implements iApp {
     return shell;
   }
 
-  /** Reports the mounted page to its controller. */
+  /** Reports the mounted page to its controller and to the theme. */
   #ready(
     route: string,
     page: iPageContent,
@@ -625,10 +635,16 @@ export class AioApp implements iApp {
     menu: HTMLElement | null,
     footer: HTMLElement | null
   ): void {
-    if (!controller?.onReady) return;
-
     const blocks = new Map<string, HTMLElement>();
     for (const element of shell.querySelectorAll<HTMLElement>("[id]")) blocks.set(element.id, element);
+
+    try {
+      this.#themes?.activate(shell, blocks, route);
+    } catch (error) {
+      console.error(`[AioApp] theme activate failed for route "${route}":`, error);
+    }
+
+    if (!controller?.onReady) return;
 
     const context: iPageReadyContext = { route, page, shell, menu, footer, blocks };
 
@@ -644,6 +660,15 @@ export class AioApp implements iApp {
   #release(): void {
     const controller = this.#active;
     this.#active = null;
+
+    if (this.#root) {
+      try {
+        this.#themes?.deactivate?.(this.#root);
+      } catch (error) {
+        console.error("[AioApp] theme deactivate failed:", error);
+      }
+    }
+
     if (!controller?.onDestroy) return;
 
     try {

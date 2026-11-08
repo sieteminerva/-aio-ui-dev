@@ -1,5 +1,6 @@
 
 import type { DefaultSelectors, iBuilderRegistry, iNodeContent, iNodeRecordItem } from "./interface";
+import { getTemplatePort } from "./TemplatePort";
 import { applyAttrDictionary, applyAttributeList } from "@aio-ui/utilities/AttributeUtils";
 import { ensureMetadataIdentity, setMetadata } from "@aio-ui/utilities/Metadata";
 
@@ -471,21 +472,19 @@ export class DOMRenderer<
 
       const templateProxy = {
         /**
-         * Mengizinkan komponen mendaftarkan fungsi template override secara manual dari dalam onCreated
+         * Lets a component register its own template override from inside `onCreated`.
          */
         register: (themeId: string, selectorKey: string, handler: any) => {
-          if ((globalThis as any).TemplateRegistry && typeof (globalThis as any).TemplateRegistry.register === "function") {
-            console.log(`[DOMRenderer Lifecycle] Manual template registration triggered for token: "${selectorKey}"`);
-            (globalThis as any).TemplateRegistry.register(themeId, selectorKey, handler);
-          }
+          const templates = getTemplatePort();
+          if (!templates) return;
+          console.log(`[DOMRenderer Lifecycle] Manual template registration triggered for token: "${selectorKey}"`);
+          templates.register(themeId, selectorKey, handler);
         },
         /**
-         * Mengizinkan komponen mencabut fungsi template miliknya saat unmount jika dibutuhkan
+         * Lets a component withdraw its template override on unmount.
          */
         unregister: (themeId: string, selectorKey: string) => {
-          if ((globalThis as any).TemplateRegistry && typeof (globalThis as any).TemplateRegistry.unregister === "function") {
-            (globalThis as any).TemplateRegistry.unregister(themeId, selectorKey);
-          }
+          getTemplatePort()?.unregister(themeId, selectorKey);
         }
       };
 

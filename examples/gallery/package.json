@@ -23,6 +23,7 @@
     "@aio-ui/router": "*",
     "@aio-ui/styles": "*",
     "@aio-ui/table": "*",
+    "@aio-ui/theme": "*",
     "@aio-ui/utilities": "*"
   },
   "devDependencies": {

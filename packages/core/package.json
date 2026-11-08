@@ -16,6 +16,7 @@
     "./ComponentRegistry": "./src/ComponentRegistry.ts",
     "./DOMRenderer": "./src/DOMRenderer.ts",
     "./BuilderPort": "./src/BuilderPort.ts",
+    "./TemplatePort": "./src/TemplatePort.ts",
     "./Registry": "./src/Registry/index.ts"
   }
 }

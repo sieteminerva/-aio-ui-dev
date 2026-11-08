@@ -10,6 +10,7 @@ import './style.css';
 
 import { EventEmitter } from '@aio-ui/event-emitter';
 import { HttpService } from '@aio-ui/http-service';
+import { DefaultTheme, HorizontalTheme, ThemeRenderer } from '@aio-ui/theme';
 import { AboutContent } from './content/about';
 import { BuildPageContent } from './content/wizard';
 import { BlogPage } from './pages/blog';
@@ -120,6 +121,8 @@ async function start(container: HTMLElement) {
     .registerModule(AnimationsService)
     // satu-satunya pintu data untuk halaman
     .registerModule(HttpService, mockApi)
+    // tema: phase prepare/activate/deactivate, tanpa event subscriber
+    .registerModule(ThemeRenderer, { themes: [new DefaultTheme(), new HorizontalTheme()] })
     // instance yang sama dipakai manifest form di atas, jadi event-nya nyambung
     .registerModule(emitter)
     // perilaku per-route; kontennya datang dari controller

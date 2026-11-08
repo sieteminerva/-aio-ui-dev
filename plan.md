@@ -47,6 +47,11 @@ Hard rules taken from `.guidance/` and from the design discussion:
 | D8  | `Base` exposes a static port (`iComponentSource`) that the registry plugs into | `ComponentRegistry` already imports `Builder`; the inverse import would be a cycle                                                   |
 | D9  | `DOMTreeMemory` / `EventBus` metadata layer is deferred                        | It requires rewriting every component to emit intents instead of mutating the DOM                                                    |
 | D10 | `examples/gallery` is the live example application                             | Keeps one runnable end-to-end target at all times                                                                                    |
+| D11 | Modules are registered, never injected as a deps bag: `registerModule(Class, config)` | The class is the token (`static slot` + `constructor(config, context)`); config lives with the registration                        |
+| D12 | A route is content **or** a controller: `registerPage(route, Controller, config)` | One instance per render, so `onDestroy` really releases; page may come from either side, never from both                           |
+| D13 | Data is read only through `ctx.http`                                           | Mock JSON is fetched the same way the live backend will be; migration is a config change                                             |
+| D14 | The theme is a slot with three phases, not an event subscriber                  | Removes the "who applies the theme" guesswork; two apps on one page cannot fight over DOM state                                      |
+| D15 | No `globalThis` ports — `core` declares the seam, the feature package installs it | `BuilderPort` and `TemplatePort` are the pattern; a static global hides the dependency and blocks two apps/tests                      |
 
 ## 4. Target structure
 
@@ -345,7 +350,16 @@ Ported into `src/lib/Components` already, pending review:
 
 ## Phase 6 — Themes and generator
 
-- [ ] Port `ThemeRenderer` and the three themes (`Default`, `Cyberpunk`, `Horizontal`)
+- [x] `@aio-ui/theme` package: `ThemeRegistry`, `TemplateRegistry`, `ThemeRenderer`
+- [x] `DefaultTheme`, `HorizontalTheme` (`HorizontalScrollingPage` moved out of the example
+      and wrapped, not rewritten)
+- [x] `TemplateRegistry` is an **instance** implementing the new `core/TemplatePort`;
+      `Base` and `DOMRenderer` no longer read `globalThis.TemplateRegistry`
+- [x] Theme is a slot (`iThemePort`), not an event subscriber: `prepare` → `activate` →
+      `deactivate` are called by the entry — Q7 closed
+- [ ] `CyberpunkTheme`
+- [ ] Theme switcher UI (needs `fab-menu` registered first)
+- [ ] Themes that override templates (`templates()`) — the port exists, nothing uses it yet
 - [ ] Port `BuilderTransformer` (no imports) and `FormSchemaTransformer` as `@aio-ui/utilities`
 - [ ] Add `aio.config.json` manifest handling
 - [ ] Generate `main.ts` from the manifest
@@ -392,7 +406,7 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 | Q4  | `docs/` target folder — resolved: repository `docs/`, technical docs named per contract (`API.md`, `FIELD-TYPES.md`, `APP.md`, `BOUNDARIES.md`).                         | closed    |
 | Q5  | Component package naming — resolved: `@aio-ui/<name>`, so install name and import name are identical (`@aio-ui/form/Form`). The `@aio-ui/components/*` alias is retired. | closed    |
 | Q6  | What does `onReady(elements)` receive — resolved: `iPageReadyContext` with `shell`, `menu`, `footer`, `blocks` (every element carrying an `id`).                         | closed    |
-| Q7  | Who applies the theme to the DOM (`data-theme` on the root): `AioApp`, or a theme service that listens to `themeChanged`? The entry currently only emits.                | Phase 3/6 |
+| Q7  | Who applies the theme to the DOM — resolved: a `theme` slot. `AioApp` calls `prepare` before render, `activate` after attach, `deactivate` before swap. No event guessing. | closed    |
 
 ## 8. Change log
 
@@ -425,8 +439,6 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 | 2026-11-08 | `gallery` became the second reference controller. Masonry already exposed `loadFn(page, category) => items`, so the controller passes `http` straight into that hook instead of pre-fetching everything; page 1 is fetched in `onPrepare`, further pages resolve to `[]` against the single-page mock. `gallery.json` moved to `public/mock/` and its envelope matched `docs/API.md`. Two findings recorded: Masonry defaults `selectedCategory` to the first category (not "All"), and the fixed nav overlaps the filter row on `#gallery`, so filter clicks are intercepted — both pre-existing, neither caused by the data change. |
 
 | 2026-11-08 | Masonry: the initially active category became configurable (`defaultCategory`), defaulting to `null` = "All", so a visitor sees every item on first paint. A configured name that is absent from the data also resolves to `null` rather than an empty grid. Gallery now opens with 5 items and `All` active (route count 32 → 41). Deferred items recorded: IdAddress should depend on `@aio-ui/http-service` instead of its own `_fetchAPI` (to be done with the Form module), and the styling pass stays queued. |
-
-
 
 | 2026-11-08 | Contracts written: `core/types/api.ts` (`iApiResponse`, `iFieldDescriptor`), app `iPageBlock`/`iPageDocument`, `docs/API.md` from a live response. |
 

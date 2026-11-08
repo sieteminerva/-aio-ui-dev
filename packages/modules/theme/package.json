@@ -1,0 +1,19 @@
+{
+  "name": "@aio-ui/theme",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./TemplateRegistry": "./src/TemplateRegistry.ts",
+    "./ThemeRegistry": "./src/ThemeRegistry.ts",
+    "./ThemeRenderer": "./src/ThemeRenderer.ts",
+    "./DefaultTheme": "./src/themes/DefaultTheme.ts",
+    "./HorizontalTheme": "./src/themes/HorizontalTheme.ts",
+    "./HorizontalScrolling": "./src/themes/HorizontalScrolling.ts",
+    "./DefaultTheme.css": "./src/themes/DefaultTheme.css"
+  },
+  "dependencies": {
+    "@aio-ui/core": "*"
+  }
+}

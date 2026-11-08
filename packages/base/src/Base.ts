@@ -4,6 +4,7 @@ import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iActionPropert
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
 import { HydrationGate } from "./BaseAdapters/HydrationGate";
 import { setBuilderAdapter } from "@aio-ui/core/BuilderPort";
+import { getTemplatePort } from "@aio-ui/core/TemplatePort";
 import { buildNamespace, setMetadata } from "@aio-ui/utilities/Metadata";
 import { selectorToTree } from "@aio-ui/utilities/SelectorToTree";
 import { applyAttrDictionary, applyAttributeList } from "@aio-ui/utilities/AttributeUtils";
@@ -563,18 +564,20 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
    * @protected
    */
   render(typeKey: TType, payload?: any): HTMLElement | undefined {
-    const registerTheme = (key: TType, element: HTMLElement, payload: any, selector: any) => {
-      if (typeof (globalThis as any).TemplateRegistry !== "undefined" && typeof (globalThis as any).TemplateRegistry.resolve === "function") {
-        try {
-          const registryLookupKey = (key === "@container") ? `@${String(this.builderId)}:container` : key;
-          const activeHandler = (globalThis as any).TemplateRegistry.resolve("default", registryLookupKey as string, null);
+    const templates = getTemplatePort();
 
-          if (typeof activeHandler === "function") {
-            activeHandler(registryLookupKey as string, element, payload, selector);
-          }
-        } catch (securityError) {
-          console.warn(`[Builder Security Bypass] TemplateRegistry evaluation skipped for key "${String(key)}":`, securityError);
+    const registerTheme = (key: TType, element: HTMLElement, payload: any, selector: any) => {
+      if (!templates) return;
+
+      try {
+        const registryLookupKey = (key === "@container") ? `@${String(this.builderId)}:container` : key;
+        const activeHandler = templates.resolve(this.config.themeId ?? "default", registryLookupKey as string, null);
+
+        if (typeof activeHandler === "function") {
+          activeHandler(registryLookupKey as string, element, payload, selector);
         }
+      } catch (securityError) {
+        console.warn(`[Builder Security Bypass] template evaluation skipped for key "${String(key)}":`, securityError);
       }
       return;
     };

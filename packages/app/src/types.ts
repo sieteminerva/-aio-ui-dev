@@ -126,6 +126,7 @@ export interface iAppSlots {
   events: iEventPort;
   http: iHttpPort;
   storage: iStoragePort;
+  theme: iThemePort;
 }
 
 /** Slot name, for example `"router"`. */
@@ -244,7 +245,24 @@ export interface iPageController {
 export interface iPageControllerClass<C = unknown> {
   new(config: C, context: iPageContext): iPageController;
 }
-
+/**
+ * What the app asks a theme for.
+ *
+ * A theme is a slot, not an event subscriber: the app calls `prepare` before the DOM is
+ * built, `activate` right after it is attached, and `deactivate` before the page is
+ * replaced. That answers "who applies the theme" without making the entry know any
+ * theme, and without a listener that has to guess when to run.
+ */
+export interface iThemePort {
+  /** Structural hook: may return a different page tree (same reference is fine). */
+  prepare(page: iPageContent, route: string, themeId: string): iPageContent;
+  /** Behavioural hook: runs once the page is live. */
+  activate(shell: HTMLElement, blocks: Map<string, HTMLElement>, route: string): void;
+  /** Cleanup hook: runs before the live page is replaced or the app is destroyed. */
+  deactivate?(shell: HTMLElement): void;
+  /** Applies a theme id selected after mount (the router reported a new theme). */
+  use?(themeId: string): void;
+}
 /** Public surface of a mounted app. */
 export interface iApp {
   /** Route currently rendered. */
