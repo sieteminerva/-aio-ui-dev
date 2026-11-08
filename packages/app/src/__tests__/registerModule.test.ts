@@ -3,7 +3,7 @@ import { AioApp } from "@aio-ui/app";
 
 /**
  * Registration is pure: it never touches the DOM, so its rules can be pinned down
- * without mounting. Anything that needs a container belongs to `mount()`.
+ * without mounting. Anything that needs a container belongs to `render()`.
  */
 function createApp() {
   return new AioApp({ container: "#app", source: { pages: { home: { ".page": {} } } } });

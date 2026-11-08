@@ -97,7 +97,7 @@ async function start(container: HTMLElement) {
     .registerPage('product', ProductPage)
     .registerPage('article', ArticlePage);
 
-  await app.mount();
+  await app.render();
   (globalThis as any).__app = app;
 }
 

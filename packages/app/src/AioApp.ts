@@ -64,7 +64,7 @@ const SHELL_CLASS = "aio-shell";
 /** Placeholder entry-file fallback. */
 const DEFAULT_ROUTE = "home";
 
-/** Slots that must be registered before `mount()` can run. */
+/** Slots that must be registered before `render()` can run. */
 const REQUIRED_SLOTS = ["registry", "router", "renderer"] as const;
 
 // ====================================================
@@ -256,7 +256,7 @@ export class AioApp implements iApp {
   #theme: string;
   #fragment = "";
   #sequence = 0;
-  #mounted = false;
+  #rendered = false;
 
   /** Themes registered through `app.theme.register()` before the port existed. */
   #pendingThemes: iThemeModule[] = [];
@@ -279,7 +279,7 @@ export class AioApp implements iApp {
    *
    * A namespace rather than another `register*` method, because adding a theme does not
    * fill a slot or own a route — it appends to a collection that already has an owner.
-   * `register()` works before or after `mount()`; `use()` re-renders the current route
+   * `register()` works before or after `render()`; `use()` re-renders the current route
    * through the router so the URL and the stored choice stay truthful.
    */
   public get theme(): iAppThemeFacade {
@@ -331,12 +331,12 @@ export class AioApp implements iApp {
     this.#log("theme:registered", { themeId: theme.themeId });
   }
 
-  /** Route currently rendered. Empty until `mount()` finishes. */
+  /** Route currently rendered. Empty until `render()` finishes. */
   public get currentRoute(): string {
     return this.#route;
   }
 
-  /** Root element of the mounted page, `null` before `mount()`. */
+  /** Root element of the mounted page, `null` before `render()`. */
   public get shell(): HTMLElement | null {
     return this.#root;
   }
@@ -352,8 +352,8 @@ export class AioApp implements iApp {
     controller: M,
     config?: ConstructorParameters<M>[0]
   ): iApp {
-    if (this.#mounted) {
-      throw new Error("[AioApp] registerPage() must be called before mount().");
+    if (this.#rendered) {
+      throw new Error("[AioApp] registerPage() must be called before render().");
     }
 
     const key = normalizeRoute(route);
@@ -377,7 +377,7 @@ export class AioApp implements iApp {
    * app.registerModule(fakeRouter, "router");       // plain object / test double
    * ```
    *
-   * Nothing is instantiated here: a class is constructed during `mount()`, because a
+   * Nothing is instantiated here: a class is constructed during `render()`, because a
    * module may need the route list, the restored theme or the change callback, which
    * do not exist yet. Registering the same slot twice replaces the earlier module and
    * says so, because that is almost always a mistake in a generated project.
@@ -386,7 +386,7 @@ export class AioApp implements iApp {
    * @param config - Class: the constructor config. Instance: the slot to fill, when
    *   the object has no `constructor.slot` (plain literal, factory result, proxy).
    * @returns The app, for a fluent chain.
-   * @throws {Error} When called after `mount()`, or when no slot can be determined.
+   * @throws {Error} When called after `render()`, or when no slot can be determined.
    */
   public registerModule<M extends iAppModuleClass>(
     module: M,
@@ -394,8 +394,8 @@ export class AioApp implements iApp {
   ): iApp;
   public registerModule(instance: iAppSlots[iAppSlot], slot?: iAppSlot): iApp;
   public registerModule(target: unknown, config?: unknown): iApp {
-    if (this.#mounted) {
-      throw new Error("[AioApp] registerModule() must be called before mount().");
+    if (this.#rendered) {
+      throw new Error("[AioApp] registerModule() must be called before render().");
     }
 
     const isClass = typeof target === "function";
@@ -424,21 +424,24 @@ export class AioApp implements iApp {
   }
 
   /**
-   * Resolves the container, creates the registered modules and renders the route
-   * the URL already points at.
+   * Resolves the container, creates the registered modules and renders the route the URL
+   * already points at.
    *
-   * Modules are created here, not at registration, because a module may need data
-   * that only exists at mount time (the route list, the restored theme, the
-   * route-changed callback).
+   * `render`, not `mount`: this call does not attach something that already exists — it is
+   * the entry point that turns a source description plus a URL into a live DOM tree. It runs
+   * once; later route changes go through the router.
+   *
+   * Modules are created here, not at registration, because a module may need data that only
+   * exists at this moment (the route list, the restored theme, the change callback).
    */
-  public async mount(): Promise<void> {
-    if (this.#mounted) return;
+  public async render(): Promise<void> {
+    if (this.#rendered) return;
 
     this.#container = resolveContainer(this.#containerTarget);
     this.#createModules();
 
-    this.#mounted = true;
-    this.#log("mount", { routes: this.routes, theme: this.#theme, slots: [...this.#registrations.keys()] });
+    this.#rendered = true;
+    this.#log("render:init", { routes: this.routes, theme: this.#theme, slots: [...this.#registrations.keys()] });
 
     const initial = this.#router!.parseUrlHash();
     await this.#renderRoute(initial.route, initial.fragment);
@@ -472,7 +475,7 @@ export class AioApp implements iApp {
     if (missing.length) {
       throw new Error(
         `[AioApp] Missing required module(s): ${missing.join(", ")}. ` +
-        `Register them with registerModule(...) before mount().`
+        `Register them with registerModule(...) before render().`
       );
     }
 
@@ -521,7 +524,7 @@ export class AioApp implements iApp {
     this.#root = null;
     this.#container = null;
     this.#controllers.clear();
-    this.#mounted = false;
+    this.#rendered = false;
     this.#route = "";
 
     this.#log("destroy", {});

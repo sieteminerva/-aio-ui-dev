@@ -16,7 +16,7 @@ const app = new AioApp({
   .registerModule(AnimationsService)
   .registerModule(emitter);
 
-await app.mount();
+await app.render();
 ```
 
 The contract lives beside it: `iApp` (public surface), `iAppConfig`, `iAppSource`,
@@ -29,9 +29,9 @@ Before it, every mandatory step was hard-coded in `examples/gallery/src/main.ts`
 
 | Responsibility                    | Before (entry file)         | Now                                       |
 | --------------------------------- | --------------------------- | ----------------------------------------- |
-| Resolve the mount point           | `start(container)`          | `AioApp.mount()`                          |
+| Resolve the mount point           | `start(container)`          | `AioApp.render()`                         |
 | Map route → content               | `pageContentFor()`          | `iAppSource.pages`                        |
-| Wire the router + valid routes    | `bootRouting()`             | `AioApp.mount()`                          |
+| Wire the router + valid routes    | `bootRouting()`             | `AioApp.render()`                         |
 | Decide what to preload            | `buildersForRoute()`        | `collectComponentNames` + `registry.load` |
 | Preload, render, swap root        | `renderPage()`              | `#renderRoute()`                          |
 | Guard against overlapping renders | `renderSequence`            | `#sequence`                               |
@@ -68,7 +68,7 @@ const app = new AioApp({ container, source: { pages } })
   .registerModule(AnimationsService)
   .registerModule(emitter);
 
-await app.mount();
+await app.render();
 ```
 
 Two members are the whole convention:
@@ -90,10 +90,10 @@ explicitly: `registerModule(fakeRouter, "router")`.
 | the class decides the slot                                                     | registering a storage class for the router slot is rejected by the type system, not discovered at runtime             |
 | config is `ConstructorParameters<M>[0]`, so it is typed by the class itself    | no duplicated config interface; `AppStorage` infers `iStorageConfig`                                                  |
 | config lives at the registration, never in `iAppConfig`                        | `iAppConfig` stays general (`container`, `source`, `defaultRoute`, `theme`, `debug`) no matter how many modules exist |
-| modules are constructed in `mount()`, not at registration                      | a router needs the route list, the restored theme and the change callback, which only exist at mount time             |
+| modules are constructed in `render()`, not at registration                     | a router needs the route list, the restored theme and the change callback, which only exist when the entry runs      |
 | required slots are checked **before** anything is created                      | a missing slot is a configuration mistake, not a half-working app                                                     |
 | a module that throws mid-creation releases the ones already created            | no port is left running unattended                                                                                    |
-| registering after `mount()` throws                                             | "register first, use second" is enforced, not documented                                                              |
+| registering after `render()` throws                                            | "register first, use second" is enforced, not documented                                                              |
 | a module without a slot throws with a hint (mentioning the explicit-slot form) | an untagged object would otherwise land nowhere                                                                       |
 | duplicate slot → warn + replace                                                | a generated project that lists one slot twice must not silently lose behaviour                                        |
 | teardown runs in reverse registration order, calling `port.destroy?.()`        | no extra teardown convention; any port that owns resources exposes `destroy()` (`EventEmitter.destroy()` → `clear()`) |
@@ -133,7 +133,7 @@ router (injected) ───────────┘                        �
 page controller (optional) ──────────────────────────┘
 ```
 
-1. Resolve the container once, at `mount()`.
+1. Resolve the container once, at `render()`.
 2. Create every registered module (storage first, then registration order).
 3. Create the route's controller for this pass (`new Controller(config, ctx)`), then run
    its `onPrepare`; the page is whatever it returns, or the one in `source.pages`.
@@ -159,11 +159,11 @@ const app = new AioApp({ … })
   .registerModule(HashRouter)
   .registerModule(ThemeRenderer, { themes: [new DefaultTheme()] }); // the port + its initial set
 
-app.theme.register(new CyberpunkTheme());   // add one — before or after mount()
+app.theme.register(new CyberpunkTheme());   // add one — before or after render()
 app.theme.ids;                              // ["default", "cyberpunk"]  (empty if the port can't list)
 app.theme.current;                          // "default"
 
-await app.mount();
+await app.render();
 
 app.theme.use("cyberpunk");                 // switch + re-render the current route
 ```
@@ -171,10 +171,9 @@ app.theme.use("cyberpunk");                 // switch + re-render the current ro
 Why `use()` goes through the router: a theme is part of the URL (`#route?theme=id`). Routing
 the switch through `router.navigate(route, themeId, fragment)` keeps three things truthful
 at once — the address bar, the persisted `active_theme`, and the render — and reuses the
-path a visitor takes when they open a shared link. `use()` without a router (nothing
-mounted yet) just records the id.
+path a visitor takes when they open a shared link. `use()` without a router (nothing rendered yet) just records the id.
 
-`register()` before `mount()` is queued and flushed while modules are created, because the
+`register()` before `render()` is queued and flushed while modules are created, because the
 theme port does not exist yet. It throws a clear error if the registered port cannot accept
 themes (a custom port without `register`); pass the initial set to
 `registerModule(ThemeRenderer, { themes })` in that case.

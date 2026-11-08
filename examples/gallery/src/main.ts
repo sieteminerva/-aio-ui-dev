@@ -131,7 +131,7 @@ async function start(container: HTMLElement) {
     .registerPage('blog', BlogPage)
     .registerPage('gallery', GalleryPage);
 
-  await app.mount();
+  await app.render();
 
   // Debug manual di console: `__app.navigate('blog')`.
   (globalThis as any).__app = app;

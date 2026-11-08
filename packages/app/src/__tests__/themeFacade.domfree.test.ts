@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { AioApp } from "@aio-ui/app";
 
 /**
- * The theme facade is registration plus one navigation call. `mount()` needs a real
+ * The theme facade is registration plus one navigation call. `render()` needs a real
  * container, so this suite pins the DOM-free half — queueing, reading, and the fallback
  * path when no router exists. The mounted half (router-driven switch + re-render) is
  * verified in the demo, where an app really is mounted.

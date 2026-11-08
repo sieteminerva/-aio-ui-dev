@@ -88,7 +88,7 @@ export interface iAppSource {
 
 /** Construction options that are not content. */
 export interface iAppOptions {
-  /** Mount point, resolved once at `mount()`. */
+  /** Mount point, resolved once at `render()`. */
   container: HTMLElement | string;
   /** Route used when the hash is empty or invalid. Defaults to `home`. */
   defaultRoute?: string;
@@ -178,7 +178,7 @@ export interface iAppModuleContext {
 export interface iAppModuleClass<K extends iAppSlot = iAppSlot> {
   /** Slot this class fills. */
   readonly slot: K;
-  /** Builds the port. Called once, during `mount()`, with the registered config. */
+  /** Builds the port. Called once, during `render()`, with the registered config. */
   new(...args: any[]): iAppSlots[K];
 }
 
@@ -281,7 +281,7 @@ export interface iThemePort {
  */
 export interface iAppThemeFacade {
   /**
-   * Adds a theme. Safe before or after `mount()`; a pre-mount call is queued and applied
+   * Adds a theme. Safe before or after `render()`; a pre-mount call is queued and applied
    * once the theme port exists.
    */
   register(theme: iThemeModule): iApp;
@@ -299,14 +299,14 @@ export interface iAppThemeFacade {
 export interface iApp {
   /** Route currently rendered. */
   readonly currentRoute: string;
-  /** Root element of the mounted page, `null` before `mount()`. */
+  /** Root element of the mounted page, `null` before `render()`. */
   readonly shell: HTMLElement | null;
 
   /** Theme controls — `register(theme)` / `use(id)`. See `iAppThemeFacade`. */
   readonly theme: iAppThemeFacade;
 
   /**
-   * Registers the module that fills a slot. Must be called before `mount()`.
+   * Registers the module that fills a slot. Must be called before `render()`.
    *
    * Two shapes, one rule — the class (or instance) declares `slot`:
    *
@@ -322,8 +322,14 @@ export interface iApp {
   registerModule<M extends iAppModuleClass>(module: M, config?: ConstructorParameters<M>[0]): iApp;
   registerModule(instance: iAppSlots[iAppSlot], slot?: iAppSlot): iApp;
 
-  /** Resolves the container, creates the registered modules and renders the current route. */
-  mount(): Promise<void>;
+  /**
+   * Renders the app: resolves the container, creates the modules and paints the route the
+   * URL points at. It runs once — later changes go through the router.
+   *
+   * Named `render` rather than `mount` because nothing pre-existing is being attached: this
+   * is where the source description plus the URL become a live DOM tree.
+   */
+  render(): Promise<void>;
 
   /** Navigates to a route through the router. */
   navigate(route: string): void;
