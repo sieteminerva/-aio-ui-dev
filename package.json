@@ -17,6 +17,7 @@
     "preview": "npm --workspace @aio-ui/example-gallery run preview",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "check:bounds": "node scripts/bounds.mjs",
+    "new:component": "node scripts/new-component.mjs",
     "verify": "npm run typecheck && npm run check:bounds && npm test && npm run build",
     "test": "vitest run",
     "test:watch": "vitest"

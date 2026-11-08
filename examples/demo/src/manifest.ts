@@ -31,6 +31,23 @@ const image = (label: string) => `https://placehold.co/600x400/222/fff?text=${en
 
 export const DEMO: iDemoEntry[] = [
   {
+    // First row is the output of `node scripts/new-component.mjs badge` — kept in the
+    // table so the scaffold stays proven against the real registry, not just typechecked.
+    name: "badge",
+    path: "@aio-ui/badge/Badge",
+    stylesheet: "@aio-ui/badge/Badge.css",
+    category: "content",
+    kind: "element",
+    payload: {
+      content: [
+        { label: "Template", description: "Dihasilkan oleh scripts/new-component.mjs" },
+        { label: "Konvensi", description: "ELEMENT_KEYS, selectors, prepare, template, initialize" },
+      ],
+    },
+    config: { emphasis: true },
+    note: "scaffolded: node scripts/new-component.mjs badge",
+  },
+  {
     name: "accordion",
     path: "@aio-ui/accordion/Accordion",
     stylesheet: "@aio-ui/accordion/Accordion.css",
@@ -56,8 +73,13 @@ export const DEMO: iDemoEntry[] = [
         { title: "Eksplorasi Keindahan", description: "Perjalanan privat yang tenang.", image: image("Slide 1") },
         { title: "Pantai Pasir Putih", description: "Pemandangan sunset yang luar biasa.", image: image("Slide 2") },
         { title: "Aktivitas Menyenangkan", description: "Snorkeling untuk semua umur.", image: image("Slide 3") },
+        { title: "Pulau Pramuka", description: "Penangkaran penyu dan mangrove.", image: image("Slide 4") },
       ],
     },
+    // Two slides per view, so the sliding path and the reduced dot count are exercised
+    // instead of the default single-slide fade.
+    config: { slidesPerView: 2, animation: "slide-left", showControl: true, showNavigation: true },
+    note: "config: { slidesPerView: 2, animation: slide-left } → maxIndex = slides - perView",
   },
   {
     name: "tab",

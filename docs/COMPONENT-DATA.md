@@ -49,13 +49,23 @@ Status is what the demo reports, not what the docs wish.
    without `columns` is read as a single column (`title`/`description`/`actions` flat).
    Action `href` values are scheme-inferred: an email becomes `mailto:`, a phone `tel:`,
    and a non-addressable value (a street address) stays visible text with an inert `#`.
+7. **`carousel` view state lives in config, not payload.** `slidesPerView` rewrites both the
+   track width (`slides / perView × 100%`) and the navigation count (`maxDots = slides −
+   perView + 1`), so with 4 slides and `slidesPerView: 2` there are 2 stops and 3 dots.
+   `animation: "fade"` is forced to `slide-left` when `slidesPerView > 1`, and to
+   `slide-up` when `vertical`. `loop: false` clamps at the ends instead of wrapping.
+   `showControl`/`showNavigation` accept `"auto"`, which adds `.auto-controls` (hover to
+   reveal); `true` keeps them visible.
+
+New components start from the scaffold, not from an existing file:
+`node scripts/new-component.mjs <name>` → [`COMPONENT-TEMPLATE.md`](./COMPONENT-TEMPLATE.md),
+conventions in [`COMPONENT-CONVENTIONS.md`](./COMPONENT-CONVENTIONS.md).
 
 ## Known gaps
 
 | Gap              | Detail                                                                                                                                                                                                                                               |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `section`        | No stylesheet of its own; relies on `@aio-ui/styles`. Payload is a _column of columns_, which is more nesting than the visual result suggests.                                                                                                       |
-| `carousel`       | Three slides mount, but slide count/`auto-controls` behaviour depends on `config.showControl`/`showNavigation` which the demo does not set.                                                                                                          |
 | `product-detail` | `packages/components/product/ProductDetail.ts` exports no Builder class — it cannot be registered until it is rewritten.                                                                                                                             |
 
 ## Analysis — can this be universal?

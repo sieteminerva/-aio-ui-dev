@@ -8,6 +8,7 @@
 export const componentAssets = {
   modules: {
     "@aio-ui/accordion/Accordion": () => import("@aio-ui/accordion/Accordion"),
+    "@aio-ui/badge/Badge": () => import("@aio-ui/badge/Badge"),
     "@aio-ui/carousel/Carousel": () => import("@aio-ui/carousel/Carousel"),
     "@aio-ui/fabmenu/FabMenu": () => import("@aio-ui/fabmenu/FabMenu"),
     "@aio-ui/footer/Footer": () => import("@aio-ui/footer/Footer"),
@@ -23,6 +24,7 @@ export const componentAssets = {
   } as Record<string, () => Promise<unknown>>,
   styles: {
     "@aio-ui/accordion/Accordion.css": () => import("@aio-ui/accordion/Accordion.css?inline"),
+    "@aio-ui/badge/Badge.css": () => import("@aio-ui/badge/Badge.css?inline"),
     "@aio-ui/carousel/Carousel.css": () => import("@aio-ui/carousel/Carousel.css?inline"),
     "@aio-ui/fabmenu/FabMenu.css": () => import("@aio-ui/fabmenu/FabMenu.css?inline"),
     "@aio-ui/footer/Footer.css": () => import("@aio-ui/footer/Footer.css?inline"),

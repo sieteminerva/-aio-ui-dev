@@ -95,7 +95,6 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
 
   // Instance State Variables
   private currentIndex = 0;
-  private isTransitioning = false;
   private autoPlayTimer: number | undefined;
 
   private rConfig!: iResolvedConfig;
@@ -159,18 +158,22 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
     this.dots = [];
     this.buttons = [];
 
-    if (data.config) {
+    if (data?.config) {
       this.config = this.resolveConfig(this.config, data.config);
-      console.log("carousel config: Updated from data params")
     }
+
+    // `container` may be an element, a selector, or nothing. Resolve it once here so the
+    // render path never has to care which form the caller used.
+    const host = this.resolveContainer(this.config.container);
 
     // Bangun seluruh pohon DOM secara rekursif & deklaratif lewat template()
     // (satu-satunya pusat logika pembuatan DOM — sejalan dengan pola Accordion).
     const carousel = this.render("@carousel", data) as HTMLElement;
 
     // Pasang elemen hidup ke kontainer fisik sesuai konfigurasi pengguna.
-    if (this.config.container) {
-      this.container.appendChild(carousel);
+    if (host) {
+      host.appendChild(carousel);
+      this.container = host;
     } else {
       this.container = carousel;
     }
@@ -178,7 +181,19 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
     return this.container;
   }
 
+  /** Accept `"#id"`, `".class"`, an element, or nothing. Nothing means "I am the root". */
+  private resolveContainer(target: iCarouselConfig["container"]): HTMLElement | null {
+    if (!target) return null;
+    if (target instanceof HTMLElement) return target;
+    if (typeof target === "string") return document.querySelector(target) as HTMLElement | null;
+    return null;
+  }
+
   public initialize(carousel: HTMLElement): void {
+    // Standalone bootstrapping (`run()`) may reach initialize() before any template ran.
+    if (!this.rConfig) {
+      this.rConfig = this.resolveRuntimeConfig(carousel, {}, this.slides.length);
+    }
 
     if (this.rConfig.showControl && this.slides.length > 1) {
       this.attachControls(carousel!);
@@ -201,23 +216,32 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
       this.startAutoPlay();
     }
 
-    // 9. Bind hover events for pauseOnHover and auto controls (Aman Terisolasi)
+    // 9. Hover wiring. Stable refs + remove-before-add: calling initialize() twice on the
+    // same element must not stack listeners (a stale listener would pause forever).
+    carousel.removeEventListener("mouseenter", this.handleEnter);
+    carousel.removeEventListener("mouseleave", this.handleLeave);
     if (this.config.pauseOnHover || this.config.showControl === 'auto' || this.config.showNavigation === 'auto') {
-      carousel.addEventListener('mouseenter', () => {
-        if (this.config.pauseOnHover && this.autoPlayTimer) {
-          window.clearInterval(this.autoPlayTimer);
-          this.autoPlayTimer = undefined;
-        }
-        carousel.classList.add('hovering');
-      });
-      carousel.addEventListener('mouseleave', () => {
-        if (this.config.pauseOnHover && this.rConfig.autoPlay) {
-          this.startAutoPlay();
-        }
-        carousel.classList.remove('hovering');
-      });
+      carousel.addEventListener("mouseenter", this.handleEnter);
+      carousel.addEventListener("mouseleave", this.handleLeave);
     }
   }
+
+  private handleEnter = (event: Event): void => {
+    const el = event.currentTarget as HTMLElement;
+    if (this.config.pauseOnHover && this.autoPlayTimer) {
+      window.clearInterval(this.autoPlayTimer);
+      this.autoPlayTimer = undefined;
+    }
+    el.classList.add('hovering');
+  };
+
+  private handleLeave = (event: Event): void => {
+    const el = event.currentTarget as HTMLElement;
+    if (this.config.pauseOnHover && this.rConfig.autoPlay) {
+      this.startAutoPlay();
+    }
+    el.classList.remove('hovering');
+  };
 
   protected template(typeKey: CarouselElementType, el: HTMLElement, payload?: any): void {
     const isVert = this.config?.vertical;
@@ -226,16 +250,20 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
       case "@carousel":
         // Siram kelas nama animasi dinamis bawaan config spreadsheet Sheets Anda
         el.className = `carousel anim-${this.config.animation} ${el.className || ""}`.trim();
+        el.setAttribute("role", "region");
+        el.setAttribute("aria-roledescription", "carousel");
         if (this.config.showControl === 'auto' || this.config.showNavigation === 'auto') {
           el.classList.add('auto-controls');
         }
 
         // 🧱 BANGUN KERANGKA UTAMA: Kunci config runtime lalu rakit balok track + slides.
         // Dilewati pasif pada jalur bootstrapper manual (run) — slides/track sudah hidup di DOM.
-        if (this.slides.length === 0 && payload?.content) {
-          this.rConfig = this.resolveRuntimeConfig(el, payload);
+        // `content` may arrive wrapped (`{ content: [...] }`) or bare (`[...]`); both work.
+        const slideData = Array.isArray(payload) ? payload : payload?.content;
+        if (this.slides.length === 0 && Array.isArray(slideData)) {
+          this.rConfig = this.resolveRuntimeConfig(el, payload, slideData.length);
 
-          const track = this.render("@carousel>track", payload.content) as HTMLElement;
+          const track = this.render("@carousel>track", slideData) as HTMLElement;
           this.track = track;
           if (track) el.appendChild(track);
         }
@@ -244,14 +272,20 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
       case "@carousel>track":
         // Rakit seluruh gerbong slide secara rekursif, sejalan dengan pola Accordion.
         const items = Array.isArray(payload) ? payload : [];
-        this.slides = items.map((item) => {
-          const slide = this.render("@carousel>track>slide", item) as HTMLElement;
+        this.slides = items.map((item, index) => {
+          const slide = this.render("@carousel>track>slide", { ...item, index, total: items.length }) as HTMLElement;
           if (slide) el.appendChild(slide);
           return slide;
         });
         break;
 
       case "@carousel>track>slide": {
+        el.setAttribute("role", "group");
+        el.setAttribute("aria-roledescription", "slide");
+        if (typeof payload?.index === "number") {
+          const total = payload.total ?? this.slides.length ?? "?";
+          el.setAttribute("aria-label", `${payload.index + 1} / ${total}`);
+        }
         const inner = this.render("@carousel>track>slide>inner", payload) as HTMLElement;
         if (inner) el.appendChild(inner);
         break;
@@ -299,21 +333,28 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
 
       case "@carousel>control>prev":
         el.innerHTML = isVert ? "&#9650;" : "&#10094;"; // ▲ atau ❮ secara semantik
+        el.setAttribute("aria-label", "Previous slide");
+        el.setAttribute("type", "button");
         if (typeof payload?.onSelect === "function") el.onclick = payload.onSelect;
         break;
 
       case "@carousel>control>next":
         el.innerHTML = isVert ? "&#9660;" : "&#10095;"; // ▼ atau ❯ secara semantik
+        el.setAttribute("aria-label", "Next slide");
+        el.setAttribute("type", "button");
         if (typeof payload?.onSelect === "function") el.onclick = payload.onSelect;
         break;
 
       case "@carousel>navigations": {
         el.className = `navigations ${payload?.vertical ? "vertical-dots" : "horizontal-dots"}`;
+        el.setAttribute("role", "group");
+        el.setAttribute("aria-label", "Slide navigation");
         const count = payload?.count ?? 0;
         const onSelect = payload?.onSelect;
         for (let index = 0; index < count; index++) {
           const dot = this.render("@carousel>navigations>dot", {
             active: index === 0,
+            index,
             onSelect: typeof onSelect === "function" ? () => onSelect(index) : undefined
           }) as HTMLButtonElement;
           this.dots.push(dot);
@@ -324,7 +365,12 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
 
       case "@carousel>navigations>dot":
         el.className = "dot";
-        if (payload?.active) el.classList.add("active");
+        el.setAttribute("type", "button");
+        el.setAttribute("aria-label", `Go to slide ${(payload?.index ?? 0) + 1}`);
+        if (payload?.active) {
+          el.classList.add("active");
+          el.setAttribute("aria-current", "true");
+        }
         if (typeof payload?.onSelect === "function") el.onclick = payload.onSelect;
         break;
     }
@@ -529,34 +575,38 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
 
   public _navigateTo(index: number, immediate = false): void {
     const totalSlides = this.slides.length;
-    if (totalSlides === 0 || this.isTransitioning) return;
+    if (totalSlides === 0) return;
 
-    let targetIndex = index;
-    const loop = this.rConfig.loop && this.rConfig.isSliding;
+    const maxIndex = this.rConfig.maxIndex;
+    const loop = Boolean(this.rConfig.loop);
 
-    if (immediate) {
-      this.currentIndex = targetIndex;
-      this.animate(true);
-      return;
-    }
-
+    let targetIndex: number;
     if (loop) {
-      if (targetIndex > this.rConfig.maxIndex) targetIndex = 0;
-      if (targetIndex < 0) targetIndex = this.rConfig.maxIndex;
+      // Wrap around on both ends.
+      targetIndex = index > maxIndex ? 0 : index < 0 ? maxIndex : index;
     } else {
-      if (targetIndex < 0) targetIndex = this.rConfig.maxIndex;
-      if (targetIndex > this.rConfig.maxIndex) targetIndex = 0;
+      // Out of range means "the carousel has ended" — clamp, and stop autoplay so the
+      // timer does not keep firing on a dead edge.
+      targetIndex = Math.min(Math.max(index, 0), maxIndex);
+      if (index > maxIndex || index < 0) this.stopAutoPlay();
     }
 
     this.currentIndex = targetIndex;
-    this.animate(false);
-    this.renderDots(loop as boolean);
+    this.animate(immediate);
+    this.renderDots();
   }
 
   private startAutoPlay(): void {
     if (this.rConfig.autoPlay && this.slides.length > 1 && !this.autoPlayTimer) {
       const interval = typeof this.rConfig.autoPlay === 'number' ? this.rConfig.autoPlay : 3000;
       this.autoPlayTimer = window.setInterval(this.next, interval);
+    }
+  }
+
+  private stopAutoPlay(): void {
+    if (this.autoPlayTimer) {
+      window.clearInterval(this.autoPlayTimer);
+      this.autoPlayTimer = undefined;
     }
   }
 
@@ -567,19 +617,19 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
     }
   }
 
-  private renderDots(loop: boolean): void {
+  private renderDots(): void {
     if (!this.rConfig.showNavigation || this.dots.length === 0) return;
-    this.dots.forEach(d => d.classList.remove("active"));
-    let dotActiveIndex = this.currentIndex;
-    if (loop) {
-      if (this.currentIndex > this.rConfig.maxIndex) dotActiveIndex = 0;
-      if (this.currentIndex < 0) dotActiveIndex = this.rConfig.maxIndex;
-    }
-    if (this.dots[dotActiveIndex]) this.dots[dotActiveIndex].classList.add("active");
+    this.dots.forEach((dot, index) => {
+      const isActive = index === this.currentIndex;
+      dot.classList.toggle("active", isActive);
+      if (isActive) dot.setAttribute("aria-current", "true");
+      else dot.removeAttribute("aria-current");
+    });
   }
 
   private attachControls(carousel: HTMLElement): void {
     // Konstruksi tombol (innerHTML + onclick) dikerjakan oleh template() — di sini cuma wiring & penancapan.
+    const group = this.render("@carousel>control", {}) as HTMLElement;
     const prevBtn = this.render("@carousel>control>prev", {
       onSelect: () => { this.previous(); this.resetAutoPlay(); }
     }) as HTMLButtonElement;
@@ -588,7 +638,8 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
     }) as HTMLButtonElement;
 
     this.buttons.push(prevBtn, nextBtn);
-    carousel.append(prevBtn, nextBtn);
+    group.append(prevBtn, nextBtn);
+    carousel.appendChild(group);
   }
 
   private attachNavigation(carousel: HTMLElement, navigableSlides: HTMLElement[]): void {
@@ -605,10 +656,7 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
   }
 
   public unmount(): void {
-    if (this.autoPlayTimer) {
-      window.clearInterval(this.autoPlayTimer);
-      this.autoPlayTimer = undefined;
-    }
+    this.stopAutoPlay();
     this.buttons.forEach(b => b.onclick = null);
     this.dots.forEach(d => d.onclick = null);
     this.slides = [];
@@ -646,7 +694,7 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
       }
     }
 
-    totalSlides = totalSlides ? totalSlides : payload.content.length;
+    totalSlides = totalSlides ?? (Array.isArray(payload) ? payload.length : (payload?.content?.length ?? 0));
 
     mergeAttributes({ ...secureAttributes, ...dataAttrs });
 

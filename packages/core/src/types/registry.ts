@@ -60,6 +60,7 @@ export interface iBuilderRegistry {
   "color-theme": iBasicNode;
   "editor": iBasicNode;
   "form-editor": iBasicNode;
+  badge: any;
   // Untuk komponen baru nanti, cukup daftarkan jenis array atomnya di sini:
   // stats: iStatsProperty[];
 }
