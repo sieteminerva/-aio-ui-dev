@@ -540,6 +540,11 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       inputs: this.#inputs,
       phase,
       emit: typeof this.config.emit === "function" ? (this.config.emit as (event: string, payload: any) => void) : null,
+      builderConfig: {
+        themeId: this.config.themeId,
+        namespace: this.config.namespace,
+        emit: typeof this.config.emit === "function" ? this.config.emit : null,
+      },
       showMessage: (content) => this._notify(form, false, content),
       config: this.config,
       cascadeHost: () => this._buildCascadeHost(),
@@ -564,6 +569,11 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       autoDisableNextStep: this.config.autoDisableNextStep ?? (this.config.cascading === true && this.config.multistep === true),
       onCascade: typeof this.config.onCascade === "function" ? this.config.onCascade : null,
       emit: typeof this.config.emit === "function" ? this.config.emit : null,
+      fieldConfig: {
+        themeId: this.config.themeId ?? undefined,
+        namespace: this.config.namespace ?? undefined,
+        emit: typeof this.config.emit === "function" ? this.config.emit : null,
+      },
       renderGroup: (group, formId, path) => this.renderGroup(group, formId, path),
       renderRow: (row, formId, path) => this.renderRow(row, formId, path),
       refreshSteps: (form) => this.#multistep?.refresh(form),

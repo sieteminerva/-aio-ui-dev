@@ -17,6 +17,9 @@ class TableFormAdapter {
   /** Preview table built from the last selected CSV/JSON file. */
   #preview: TableBuilder | null = null;
 
+  /** Payload key the preview belongs to — the name of the field that produced it. */
+  #previewKey: string | null = null;
+
   /** Whether the form-level file delegation listener is already attached. */
   #fileBound = false;
 
@@ -70,9 +73,12 @@ class TableFormAdapter {
    *
    * @param payload - Mutable submit payload.
    * @returns Nothing.
+   *
+   * @summary The key is the field that carried the file (`name`, else `id`), not a fixed
+   * `product`: two CSV fields in one form must not overwrite each other.
    */
   public beforeSubmit(payload: Record<string, any>): void {
-    if (this.#preview) payload.product = this.#preview.toJson();
+    if (this.#preview && this.#previewKey) payload[this.#previewKey] = this.#preview.toJson();
   }
 
   /** Releases the preview table held by this collaborator. */
@@ -96,6 +102,7 @@ class TableFormAdapter {
     form.querySelector(".table-container")?.remove();
     this.#preview?.destroy?.();
     this.#preview = null;
+    this.#previewKey = null;
 
     // Step 2: Skip rebuilding when the user cleared the input.
     if (!fileInput.files || fileInput.files.length === 0) return;
@@ -108,6 +115,7 @@ class TableFormAdapter {
     const tableEl = table.create(tableData);
 
     this.#preview = table;
+    this.#previewKey = fileInput.name || fileInput.id || null;
     (fileInput.parentElement as HTMLElement)?.insertAdjacentElement("afterend", tableEl);
   }
 

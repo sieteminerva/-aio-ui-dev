@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { fileUploaderInputModule } from "../FileUploader/FileUploader.InputModule";
+import { inputFormAdapter } from "../Input.FormAdapter";
 import { LITE_INPUT_MODULES, mountInputModules } from "../InputRegistry";
 
 /**
@@ -77,5 +78,19 @@ describe("file input module", () => {
 
     expect(hasFileModule).toBe(false);
     expect(() => mountInputModules(document.createElement("form"), loader)).not.toThrow();
+  });
+
+  it("hands the host emitter to the field, so a selection reaches the app bus", () => {
+    // The field is its own builder: it used to be built with `{ formId }` only, so a
+    // form field could never publish while the form itself published fine.
+    const emit = vi.fn();
+    const adapter = inputFormAdapter.load({ builderConfig: { emit } } as any);
+    const field = adapter.renderField({ type: "file", id: "photo" }, "demo-form");
+    const input = field.querySelector("input[type='file']") as HTMLInputElement;
+
+    Object.defineProperty(input, "files", { value: [], configurable: true });
+    input.dispatchEvent(new Event("change"));
+
+    expect(emit).toHaveBeenCalledWith("elementChanged", expect.objectContaining({ type: "@field>file" }));
   });
 });

@@ -170,6 +170,15 @@ describe("InputBuilder attributes", () => {
     expect((control as HTMLInputElement).type).toBe("hidden");
     expect((control as HTMLInputElement).value).toBe("abc");
   });
+
+  it("marks a file field as tabular only when it asks for it", () => {
+    // `data-uploader-csv` is the declaration the table module listens for: the input
+    // layer flags it and still never parses anything. Without the flag (or with a plain
+    // `file` field) a CSV preview would be attached to a photo upload.
+    expect(build({ type: "file", id: "a" }).control.hasAttribute("data-uploader-csv")).toBe(false);
+    expect(build({ type: "file", id: "b", config: { csv: true } }).control.hasAttribute("data-uploader-csv")).toBe(true);
+    expect(build({ type: "file", id: "c", config: { csv: true } }).control.hasAttribute("data-uploader")).toBe(true);
+  });
 });
 
 describe("InputRegistry", () => {

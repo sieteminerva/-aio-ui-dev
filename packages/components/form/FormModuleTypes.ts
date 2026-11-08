@@ -1,3 +1,4 @@
+import type { iBuilderConfig } from "@aio-ui/core/interface";
 import type { iMessageContent } from "@aio-ui/message/Message";
 import type { iFormConfig } from "./Form";
 import type { FormCascadeHost } from "./Handlers/Cascade";
@@ -142,6 +143,16 @@ export interface iFormModuleContext {
 
   /** Global event emitter, when the host was configured with one. */
   emit: ((event: string, payload: any) => void) | null;
+
+  /**
+   * Builder-level config to hand to the nested builders this module creates.
+   *
+   * @summary A field is its own builder, so without this it starts with an empty
+   * config: no `themeId` for a themed collaborator, and no `emit` — which is why a
+   * field's `elementChanged` never reached the application bus while the form
+   * itself could publish fine.
+   */
+  builderConfig: Partial<iBuilderConfig<any>>;
 
   /** Message host callback, wired to `FormBuilder.createMessage`. */
   showMessage: (content: iMessageContent) => void;

@@ -288,6 +288,16 @@ const schema = [
   // (50 = half, "auto" = full row). A row is layout, not a fieldset — `group` above.
   AddressSet,
   {
+    id: "files",
+    title: "Berkas",
+    group: [
+      // `config.csv` is a declaration, not a parser: it marks the file as tabular so the
+      // table module previews it. The input layer still reports raw `File` objects.
+      { type: "file", id: "product-csv", title: "Impor produk (CSV)", config: { csv: true, accept: ".csv,text/csv" } },
+      { type: "file", id: "reference-photo", title: "Foto referensi", config: { view: "thumbnail" } },
+    ] as iBasicInputNode[],
+  },
+  {
     id: "identity",
     label: "Identitas pemesan",
     column: 2,

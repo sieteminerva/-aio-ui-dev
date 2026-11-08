@@ -22,6 +22,7 @@ export const componentAssets = {
     "@aio-ui/product/ProductGrid": () => import("@aio-ui/product/ProductGrid"),
     "@aio-ui/section/Section": () => import("@aio-ui/section/Section"),
     "@aio-ui/tab/Tab": () => import("@aio-ui/tab/Tab"),
+    "@aio-ui/table/Table": () => import("@aio-ui/table/Table"),
   } as Record<string, () => Promise<unknown>>,
   styles: {
     "@aio-ui/accordion/Accordion.css": () => import("@aio-ui/accordion/Accordion.css?inline"),
@@ -39,5 +40,6 @@ export const componentAssets = {
     "@aio-ui/product/ProductGrid.css": () => import("@aio-ui/product/ProductGrid.css?inline"),
     "@aio-ui/section/Section.css": () => import("@aio-ui/section/Section.css?inline"),
     "@aio-ui/tab/Tab.css": () => import("@aio-ui/tab/Tab.css?inline"),
+    "@aio-ui/table/Table.css": () => import("@aio-ui/table/Table.css?inline"),
   } as Record<string, () => Promise<unknown>>,
 };

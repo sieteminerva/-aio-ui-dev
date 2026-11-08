@@ -31,9 +31,12 @@ class InputFormAdapter {
    * @param input - Basic input node or raw descriptor.
    * @param formId - Id of the owning form, forwarded to the field markup.
    * @returns The rendered field element.
+   *
+   * @summary The host's builder config comes along, so the field inherits `themeId`,
+   * `namespace` and `emit` instead of starting blank.
    */
   public renderField(input: any, formId: string): HTMLElement {
-    return new InputBuilder({ formId } as any).create(input);
+    return new InputBuilder({ ...this.#context.builderConfig, formId } as any).create(input);
   }
 
   /**

@@ -461,6 +461,9 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
         el.setAttribute("data-uploader", "");
         el.setAttribute("data-view", `${cfg?.view || "list"}`);
         el.setAttribute("data-render-thumbnail", `${cfg?.thumbnail ?? "true"}`);
+        // Opt-in, and only declarative: this field's file is tabular, so whatever owns
+        // tables may preview it. The input layer still never parses anything itself.
+        if (cfg?.csv === true) el.setAttribute("data-uploader-csv", "");
         break;
 
       case "@field>select>option":

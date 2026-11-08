@@ -69,6 +69,14 @@ export interface FormCascadeHost {
   cascadeMode?: FormCascadeMode;
   onCascade?: null | ((detail: iCascadeEventDetail) => void);
   emit?: any;
+  /**
+   * Builder-level config for fields this engine builds while it holds them.
+   *
+   * @summary A conditional field is created here, not by the input module, so the
+   * cascade path needs the host's `themeId`/`namespace`/`emit` too — otherwise the
+   * field it births is deaf to the application bus while its siblings are not.
+   */
+  fieldConfig?: { themeId?: string; namespace?: string; emit?: any };
   /** Bangun <fieldset> dari deskriptor group (termasuk menahan anak ber-condition) */
   renderGroup(group: any, formId: string, path?: string): HTMLElement;
   /** Bangun row layout dari deskriptor row (termasuk menahan anak ber-condition) */
@@ -302,7 +310,7 @@ export class FormCascade {
     } else if (item && typeof item === "object" && "row" in item) {
       el = this.#buildRow(item, formId, path);
     } else {
-      el = new InputBuilder({ formId } as any).create(item) as HTMLElement;
+      el = new InputBuilder({ ...this.host.fieldConfig, formId } as any).create(item) as HTMLElement;
     }
 
     if (!el) {
