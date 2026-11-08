@@ -19,6 +19,11 @@ broken builder shows a red status line instead of blanking the page.
 
 Adding a component here is a row, not an edit in three files.
 
+**A component appears in exactly one place.** `product-card` and `product-grid` used to
+sit in this table as well; once `#product` showed them with real data, the table rows were
+removed — a catalogue entry that duplicates a route tests nothing new and drifts from the
+real payload. Coverage of a component is measured where it is actually used.
+
 ## Page components (`#product`, `#article`, `#form`)
 
 Big components own a route. They take data asynchronously, decide their own layout, and

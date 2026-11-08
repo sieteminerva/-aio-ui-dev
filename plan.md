@@ -35,26 +35,26 @@ Hard rules taken from `.guidance/` and from the design discussion:
 
 ## 3. Decisions already made
 
-| #   | Decision                                                                       | Rationale                                                                                                                            |
-| --- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| D1  | LITE (`gallery`) is the trunk; FULL is not a superset                          | FULL is the older generation: no registry kernel, inline validation/cascade/multistep, legacy `EventBus`/`TemplateRegistry` slotting |
-| D2  | Physical restructure happens before the rewrite                                | Rewriting first would move files twice and hide which failure belongs to which change                                                |
-| D3  | Package scope is `@aio-ui/*`                                                   | Middle ground between `@aio-ui/framework/core` and `@aio/core`                                                                       |
-| D4  | App shell lives in its own package, not `core`                                 | `LandingPage` level code touches registry, renderer, router and animation                                                            |
-| D5  | Component manifest keeps exactly one shape                                     | Only the Style 3 manifest stays; the direct-builder, loadable-builder and promise variants are dropped                               |
-| D6  | `ComponentRegistry` receives its `import.meta.glob` maps from the host         | A package cannot own an absolute Vite glob rooted at the host application                                                            |
-| D7  | A component declares its sub-components through `modules` in its manifest      | Required for `packages/components/*` to be self-contained                                                                            |
-| D8  | `Base` exposes a static port (`iComponentSource`) that the registry plugs into | `ComponentRegistry` already imports `Builder`; the inverse import would be a cycle                                                   |
-| D9  | `DOMTreeMemory` / `EventBus` metadata layer is deferred                        | It requires rewriting every component to emit intents instead of mutating the DOM                                                    |
-| D10 | `examples/gallery` is the live example application                             | Keeps one runnable end-to-end target at all times                                                                                    |
-| D11 | Modules are registered, never injected as a deps bag: `registerModule(Class, config)` | The class is the token (`static slot` + `constructor(config, context)`); config lives with the registration                        |
-| D12 | A route is content **or** a controller: `registerPage(route, Controller, config)` | One instance per render, so `onDestroy` really releases; page may come from either side, never from both                           |
-| D13 | Data is read only through `ctx.http`                                           | Mock JSON is fetched the same way the live backend will be; migration is a config change                                             |
-| D14 | The theme is a slot with three phases, not an event subscriber                  | Removes the "who applies the theme" guesswork; two apps on one page cannot fight over DOM state                                      |
-| D15 | No `globalThis` state — `core` owns the store and exports it                 | `BuilderPort` is the seam pattern where a cycle must be broken; `TemplateRegistry` needs no seam, so it simply lives in core                |
-| D16 | Registries are built per need on the shared kernel; no universal hub         | Each registry resolves differently; forcing one API produced adapters that existed only to satisfy the pattern                           |
-| D17 | `TemplateRegistry` lives in `core`, not in `theme`                           | Its only readers are `DOMRenderer` (core) and `Base` (depends on core); a package plus a port was more machinery than the class          |
-| D18 | Each theme becomes its own package (`@aio-ui/theme-<id>`) later               | Install on demand: a project that only wants the default theme should not ship the horizontal scroll engine                             |
+| #   | Decision                                                                              | Rationale                                                                                                                            |
+| --- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| D1  | LITE (`gallery`) is the trunk; FULL is not a superset                                 | FULL is the older generation: no registry kernel, inline validation/cascade/multistep, legacy `EventBus`/`TemplateRegistry` slotting |
+| D2  | Physical restructure happens before the rewrite                                       | Rewriting first would move files twice and hide which failure belongs to which change                                                |
+| D3  | Package scope is `@aio-ui/*`                                                          | Middle ground between `@aio-ui/framework/core` and `@aio/core`                                                                       |
+| D4  | App shell lives in its own package, not `core`                                        | `LandingPage` level code touches registry, renderer, router and animation                                                            |
+| D5  | Component manifest keeps exactly one shape                                            | Only the Style 3 manifest stays; the direct-builder, loadable-builder and promise variants are dropped                               |
+| D6  | `ComponentRegistry` receives its `import.meta.glob` maps from the host                | A package cannot own an absolute Vite glob rooted at the host application                                                            |
+| D7  | A component declares its sub-components through `modules` in its manifest             | Required for `packages/components/*` to be self-contained                                                                            |
+| D8  | `Base` exposes a static port (`iComponentSource`) that the registry plugs into        | `ComponentRegistry` already imports `Builder`; the inverse import would be a cycle                                                   |
+| D9  | `DOMTreeMemory` / `EventBus` metadata layer is deferred                               | It requires rewriting every component to emit intents instead of mutating the DOM                                                    |
+| D10 | `examples/gallery` is the live example application                                    | Keeps one runnable end-to-end target at all times                                                                                    |
+| D11 | Modules are registered, never injected as a deps bag: `registerModule(Class, config)` | The class is the token (`static slot` + `constructor(config, context)`); config lives with the registration                          |
+| D12 | A route is content **or** a controller: `registerPage(route, Controller, config)`     | One instance per render, so `onDestroy` really releases; page may come from either side, never from both                             |
+| D13 | Data is read only through `ctx.http`                                                  | Mock JSON is fetched the same way the live backend will be; migration is a config change                                             |
+| D14 | The theme is a slot with three phases, not an event subscriber                        | Removes the "who applies the theme" guesswork; two apps on one page cannot fight over DOM state                                      |
+| D15 | No `globalThis` state — `core` owns the store and exports it                          | `BuilderPort` is the seam pattern where a cycle must be broken; `TemplateRegistry` needs no seam, so it simply lives in core         |
+| D16 | Registries are built per need on the shared kernel; no universal hub                  | Each registry resolves differently; forcing one API produced adapters that existed only to satisfy the pattern                       |
+| D17 | `TemplateRegistry` lives in `core`, not in `theme`                                    | Its only readers are `DOMRenderer` (core) and `Base` (depends on core); a package plus a port was more machinery than the class      |
+| D18 | Each theme becomes its own package (`@aio-ui/theme-<id>`) later                       | Install on demand: a project that only wants the default theme should not ship the horizontal scroll engine                          |
 
 ## 4. Target structure
 
@@ -97,8 +97,8 @@ package has been extracted and verified.
 | 2     | `ComponentRegistry` rewrite to the agreed contract     | done              |
 | 3     | PageController contract + one reference implementation | done              |
 | 4     | Entry implementation, `main.ts` reduced                | done (merged → 1) |
-| 5     | Port remaining FULL components                         | not started       |
-| 6     | Themes, `ThemeRenderer`, generator pipeline            | not started       |
+| 5     | Port remaining FULL components                         | mostly done       |
+| 6     | Themes, `ThemeRenderer`, generator pipeline            | theme slot done   |
 | —     | `DOMTreeMemory` / `EventBus` metadata layer            | deferred          |
 
 ---
@@ -346,10 +346,18 @@ Ported into `src/lib/Components` already, pending review:
 | Section      | `Section.ts`                                           | **no CSS**             | verify whether it relies on global styles                                                      |
 | Tab          | `Tab.ts`                                               | yes                    |                                                                                                |
 
-- [ ] Resolve the missing CSS for `Footer` and `Section`
-- [ ] Confirm the `Product` split and its CSS coverage
-- [ ] Remap `Menu` slotting
-- [ ] Register each ported component in the example app and verify rendering
+- [x] Resolve the missing CSS for `Footer` and `Section` — both now ship their own
+      stylesheet (`Footer.css` two-row contract, `Section.css` 2–3 column grid); neither
+      depends on `@aio-ui/styles` any more
+- [x] Confirm the `Product` split and its CSS coverage — `ProductCard` (list unit),
+      `ProductGrid` (list module), `ProductDetail` (record view, previously an empty file).
+      `ProductGrid.css` `@import`s `ProductCard.css` because the grid nests cards directly
+- [ ] Remap `Menu` slotting (still uses the legacy `ElementCreatedEventBus`)
+- [x] Register each ported component in the example app and verify rendering — the demo
+      now has four routes: `#kitchen` (elements, 13/13 ok), `#product`, `#article`,
+      `#form` (page components). See `docs/DEMO.md`
+- [x] Scaffolding for new components: `templates/component/` + `scripts/new-component.mjs`
+      (`npm run new:component`), proven by generating `packages/components/badge`
 
 ## Phase 6 — Themes and generator
 
@@ -403,15 +411,15 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 
 ## 7. Open questions
 
-| #   | Question                                                                                                                                                                 | Affects   |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
-| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                                                                    | closed    |
-| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now.                                                   | closed    |
-| Q3  | Should `Menu` be remapped now or dropped? — resolved: the entry exists, so remap it to `config.slots` during Phase 5.                                                    | Phase 5   |
-| Q4  | `docs/` target folder — resolved: repository `docs/`, technical docs named per contract (`API.md`, `FIELD-TYPES.md`, `APP.md`, `BOUNDARIES.md`).                         | closed    |
-| Q5  | Component package naming — resolved: `@aio-ui/<name>`, so install name and import name are identical (`@aio-ui/form/Form`). The `@aio-ui/components/*` alias is retired. | closed    |
-| Q6  | What does `onReady(elements)` receive — resolved: `iPageReadyContext` with `shell`, `menu`, `footer`, `blocks` (every element carrying an `id`).                         | closed    |
-| Q7  | Who applies the theme to the DOM — resolved: a `theme` slot. `AioApp` calls `prepare` before render, `activate` after attach, `deactivate` before swap. No event guessing. | closed    |
+| #   | Question                                                                                                                                                                   | Affects |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| Q1  | `Footer` and `Section` ship without CSS — resolved: they relied on global styles. Ignored on purpose.                                                                      | closed  |
+| Q2  | `Product` split into three builders — resolved: leftover of an abandoned module/submodule experiment. Ignored for now.                                                     | closed  |
+| Q3  | Should `Menu` be remapped now or dropped? — resolved: the entry exists, so remap it to `config.slots` during Phase 5.                                                      | Phase 5 |
+| Q4  | `docs/` target folder — resolved: repository `docs/`, technical docs named per contract (`API.md`, `FIELD-TYPES.md`, `APP.md`, `BOUNDARIES.md`).                           | closed  |
+| Q5  | Component package naming — resolved: `@aio-ui/<name>`, so install name and import name are identical (`@aio-ui/form/Form`). The `@aio-ui/components/*` alias is retired.   | closed  |
+| Q6  | What does `onReady(elements)` receive — resolved: `iPageReadyContext` with `shell`, `menu`, `footer`, `blocks` (every element carrying an `id`).                           | closed  |
+| Q7  | Who applies the theme to the DOM — resolved: a `theme` slot. `AioApp` calls `prepare` before render, `activate` after attach, `deactivate` before swap. No event guessing. | closed  |
 
 ## 8. Change log
 
@@ -472,3 +480,5 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 | 2026-11-08 | Demo split into routes by component **kind**, which is the distinction the one-page demo was hiding: `#kitchen` keeps element components (one builder, one node, manifest-driven), while `#product`, `#article` and `#form` became their own routes as page components. `product` composes at page level (filter + `product-grid` + `product-detail`, page owns "card → detail → back"), `article` composes inside `ArticleBuilder`'s slots (`controls`/`list`/`aside`/`detail`), `form` owns a schema plus its submit cycle. Data goes through `HttpService` with a mock endpoint (`public/mock/products.json`, `articles.json`), controllers respect `ctx.signal`, and product/photo assets come from `public/apparel/`. New: `ProductDetail` builder (the file was empty) with colours, back and add-to-cart hooks, `ProductGrid` gained config (`card`, `onOpen`, `onCheckout`), a payload normaliser and the missing `variants[].imageUrl` (cards previously rendered the BASE_URL as an image), `ProductGrid.css`, `docs/DEMO.md`, 6 product tests, and the article detail cover falling back to `thumbnail` (it was always the error SVG). Verified: `#product` 6 cards with loaded apparel images, filter → 4 merch items, detail shows title/price/colours, colour switch, add-to-cart status, back restores the list; `#article` 4 cards + aside + slug hash + detail/back; `#form` 7 fields and `formSubmit` data; `#kitchen` still 13/13 ok. 106 tests. |
 
 | 2026-11-08 | Cleanup pass on the article/product path. `ArticleBuilder`: removed the payload `console.log`, replaced the hand-made `document.createElement("div")` grid with the already-declared `@article>list` key, dropped the `el._articlePayload` expandos in favour of `data-article-id` + a `Map` of records (one source, stamped in `template()` for list and aside items alike), moved click delegation out of `prepare()` into `initialize()` with a stable handler and remove-before-add, and removed both `insertAdjacentHTML` sites — meta is now built from nodes, and `detail>body` accepts a node or plain text and refuses to parse markup. Deleted the empty `ArticleController.ts` stub. `ProductCard`: dropped its own `import "./ProductCard.css"` (the registry injects it) after making `ProductGrid.css` `@import` the card sheet, since the grid instantiates cards directly and would otherwise lose the styles; deleted the dead `_navigate`/`select`/`_handleChange` trio, and `onSelected` — documented but never called — now fires from `navigate()`. `FabMenu` no longer logs on its idle timer, and `HttpService` request logging is behind a new `debug` flag (off by default). Convention recorded: never import a component's own CSS, except a parent that nests a builder directly, which `@import`s the child sheet. Verified: kitchen 13/13, product open/colour/back, article open/back — **zero console output of any level**. |
+
+| 2026-11-08 | Removed `product-card` and `product-grid` from the `#kitchen` element table. Since `#product` renders both with real data (and its own explicit registrations), the catalogue rows duplicated a route and had already drifted from the shipped payload (`artwork.src` was never read, so those cards had no image). Kitchen: 13 → 11 sections, all `ok`; `ProductCard`/`ProductCard.css` loader entries dropped from the demo asset map because the grid imports the card module and its CSS directly. Rule recorded in `docs/DEMO.md`: a component is demonstrated in exactly one place. |

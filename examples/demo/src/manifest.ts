@@ -222,44 +222,6 @@ export const DEMO: iDemoEntry[] = [
     ],
   },
   {
-    name: "product-card",
-    path: "@aio-ui/product/ProductCard",
-    stylesheet: "@aio-ui/product/ProductCard.css",
-    category: "content",
-    kind: "element",
-    // Shape from `content.ts:692` — a flat product row.
-    payload: {
-      uid: "dsr7524x",
-      name: "O-Neck Standard",
-      category: "T-Shirt",
-      title: "Standard O-neck",
-      description: "Kaos katun combed 30s.",
-      price: 85000,
-      colors: [
-        { name: "white", value: "#ffffff" },
-        { name: "black", value: "#212121" },
-        { name: "violet", value: "#9966cc" },
-      ],
-      artwork: { src: image("Product") },
-    },
-  },
-  {
-    name: "product-grid",
-    path: "@aio-ui/product/ProductGrid",
-    category: "content",
-    kind: "element",
-    // `ProductGrid.prepare` reads `data.content.data ?? data.content`.
-    payload: {
-      content: {
-        data: [
-          { uid: "p1", title: "Standard O-neck", price: 85000, colors: [{ name: "white", value: "#ffffff" }], artwork: { src: image("Grid 1") } },
-          { uid: "p2", title: "Premium Tee", price: 120000, colors: [{ name: "black", value: "#212121" }], artwork: { src: image("Grid 2") } },
-        ],
-      },
-    },
-    note: "no stylesheet",
-  },
-  {
     name: "modal",
     path: "@aio-ui/modal/Modal",
     stylesheet: "@aio-ui/modal/Modal.css",
