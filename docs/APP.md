@@ -145,6 +145,7 @@ page controller (optional) ─────────────────�
 8. Run `animation.init(root)` on the new root when an animation port is provided.
 9. Scroll to the URL fragment, then run `onReady` with the mounted elements.
 10. Run the outgoing controller's `onDestroy` before its DOM is replaced.
+
 ## Page controller
 
 A route may be described by **content** (`source.pages[route]`), by a **controller**, or
@@ -164,12 +165,12 @@ class BlogPage implements iPageController {
 app.registerPage("blog", BlogPage, { limit: 5 });
 ```
 
-| Hook | Receives | Purpose |
-| --- | --- | --- |
-| `onPrepare` | `iPageContext` | load data, return the page to render |
-| `onReady` | `iPageReadyContext` | attach listeners once the DOM exists |
-| `onDestroy` | — | release what the controller acquired |
-| `attachMenu` | `iBasicNode` | rewrite the menu node; **called by the app**, not by the controller |
+| Hook         | Receives            | Purpose                                                             |
+| ------------ | ------------------- | ------------------------------------------------------------------- |
+| `onPrepare`  | `iPageContext`      | load data, return the page to render                                |
+| `onReady`    | `iPageReadyContext` | attach listeners once the DOM exists                                |
+| `onDestroy`  | —                   | release what the controller acquired                                |
+| `attachMenu` | `iBasicNode`        | rewrite the menu node; **called by the app**, not by the controller |
 
 `iPageContext` = `{ route, page, fragment, theme, builders, http, signal }`.
 `iPageReadyContext` = `{ route, page, shell, menu, footer, blocks }`, where `blocks` maps
@@ -200,6 +201,7 @@ changes — that is the whole point of routing mock data through the same port.
 `get()` resolves with the **whole envelope** (`{ success, message, data, meta }`, see
 `docs/API.md`), because consumers need `meta` for pagination. A legacy
 `{ status: "success" }` payload is still accepted.
+
 ## The mount-point rule
 
 The container element is a **stable mount point**: `#app` survives a route change,

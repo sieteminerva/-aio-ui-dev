@@ -11,9 +11,9 @@ import './style.css';
 import { EventEmitter } from '@aio-ui/event-emitter';
 import { HttpService } from '@aio-ui/http-service';
 import { AboutContent } from './content/about';
-import { GalleryContent } from './content/gallery';
 import { BuildPageContent } from './content/wizard';
 import { BlogPage } from './pages/blog';
+import { GalleryPage } from './pages/gallery';
 import { componentAssets } from './registry.assets';
 
 // 🔐 Daftarkan Service Worker supaya id_token disimpan di variabel SW.
@@ -41,7 +41,6 @@ export function registerServiceWorker() {
 const pages = {
   home: HomepageContent,
   about: AboutContent,
-  gallery: GalleryContent,
   form: BuildPageContent,
 };
 
@@ -124,7 +123,8 @@ async function start(container: HTMLElement) {
     // instance yang sama dipakai manifest form di atas, jadi event-nya nyambung
     .registerModule(emitter)
     // perilaku per-route; kontennya datang dari controller
-    .registerPage('blog', BlogPage);
+    .registerPage('blog', BlogPage)
+    .registerPage('gallery', GalleryPage);
 
   await app.mount();
 

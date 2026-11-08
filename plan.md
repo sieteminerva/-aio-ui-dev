@@ -302,9 +302,13 @@ Delivered:
 - [x] Data through `ctx.http` only; `HttpService.endpoint(query)` serves mock JSON as a
       real request (`public/mock/*.json`), live backend is a config change
 - [x] Reference controller: `examples/gallery/src/pages/blog.ts`
-- [x] Verify the `form` and `blog` routes end to end
+- [x] Reference controller: `examples/gallery/src/pages/gallery.ts` — Masonry keeps its own
+      paging contract (`loadFn(page, category)`), the controller supplies it from `http`
+- [x] Verify the `form`, `blog` and `gallery` routes end to end
 - [ ] Reference controller for `form` (wizard) — deliberately deferred until the
       Form module owns its sub-modules
+- [ ] Known defect found while verifying: on `#gallery` the fixed nav overlaps the filter
+      row, so filter clicks are intercepted. Pre-existing layout issue, not a data issue
 
 ## Phase 4 — AioApp implementation → merged into Phase 1
 
@@ -377,7 +381,7 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 | Q3  | Should `Menu` be remapped now or dropped? — resolved: the entry exists, so remap it to `config.slots` during Phase 5.                                                    | Phase 5   |
 | Q4  | `docs/` target folder — resolved: repository `docs/`, technical docs named per contract (`API.md`, `FIELD-TYPES.md`, `APP.md`, `BOUNDARIES.md`).                         | closed    |
 | Q5  | Component package naming — resolved: `@aio-ui/<name>`, so install name and import name are identical (`@aio-ui/form/Form`). The `@aio-ui/components/*` alias is retired. | closed    |
-| Q6  | What does `onReady(elements)` receive — resolved: `iPageReadyContext` with `shell`, `menu`, `footer`, `blocks` (every element carrying an `id`).                                | closed    |
+| Q6  | What does `onReady(elements)` receive — resolved: `iPageReadyContext` with `shell`, `menu`, `footer`, `blocks` (every element carrying an `id`).                         | closed    |
 | Q7  | Who applies the theme to the DOM (`data-theme` on the root): `AioApp`, or a theme service that listens to `themeChanged`? The entry currently only emits.                | Phase 3/6 |
 
 ## 8. Change log
@@ -407,6 +411,8 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 | 2026-11-08 | Plan reconciled with the code, and the boundary gate landed: `scripts/bounds.mjs` + `npm run check:bounds` + `npm run verify` (typecheck → bounds → test → build). The gate checks the dependency matrix from `docs/BOUNDARIES.md`, type-only `app → core`, deep-import resolution against `exports` (file fallback for map-less component packages), `import.meta.glob` outside the host, and reintroduced `paths`/`alias`. Verified by a deliberate violation probe. Phase 4 merged into Phase 1; Q3/Q4 closed; Q6 (`onReady` element map) and Q7 (theme DOM application) opened for Phase 3. |
 
 | 2026-11-08 | Phase 3 done. `registerController` → `registerPage(route, Controller, config)`; one controller instance per render. `iPagePrepareContext` → `iPageContext` (`route`, `page`, `fragment`, `theme`, `builders`, `http`, `signal`); `onReady(Map, shell)` → `iPageReadyContext` (`shell`, `menu`, `footer`, `blocks`). A route's page may now come from `source.pages` **or** `onPrepare`. `attachMenu` is invoked by the app. Navigation aborts the in-flight pass via `AbortController`, and a superseded render is dropped instead of painting. New slot `http` (`HttpService`); `HttpService` gained `endpoint(query)` (mock JSON as a real request), returns the whole envelope (`docs/API.md`), accepts the legacy `status` envelope, and its config is fully optional. `blog` became the reference controller, reading `public/mock/blog.json`; `blog.json` no longer lives in `src/content`. 78 tests, routes unchanged (123/64/32/116/76). |
+
+| 2026-11-08 | `gallery` became the second reference controller. Masonry already exposed `loadFn(page, category) => items`, so the controller passes `http` straight into that hook instead of pre-fetching everything; page 1 is fetched in `onPrepare`, further pages resolve to `[]` against the single-page mock. `gallery.json` moved to `public/mock/` and its envelope matched `docs/API.md`. Two findings recorded: Masonry defaults `selectedCategory` to the first category (not "All"), and the fixed nav overlaps the filter row on `#gallery`, so filter clicks are intercepted — both pre-existing, neither caused by the data change. |
 
 
 | 2026-11-08 | Contracts written: `core/types/api.ts` (`iApiResponse`, `iFieldDescriptor`), app `iPageBlock`/`iPageDocument`, `docs/API.md` from a live response. |
