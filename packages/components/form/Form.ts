@@ -10,6 +10,7 @@ import { CORE_FORM_MODULES } from "./FormRegistry";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { applyRowColumns, applyRowSpan, childSpanOf, columnsOf } from "./FormLayout";
 import { collectFormValues } from "./FormValues";
+import type { HttpService } from "@aio-ui/http-service";
 // 🎨 Gaya baseline field milik form: adaptor input juga mengimpornya untuk
 // pemakaian mandiri, tetapi form tetap memuatnya agar tampilan tidak bergantung
 // pada modul input mana yang dipasang (mis. renderer kustom).
@@ -81,6 +82,28 @@ export interface iFormConfig extends iBuilderConfig<FormElementType> {
    * from "this column was not in the form". Turn it on for insert-style payloads.
    */
   excludeEmpty?: boolean;
+  /**
+   * Data source for `[data-level]` address fields.
+   *
+   * The picker used to ship a hardcoded endpoint, which made it unusable off that one
+   * deployment. Declare the source here instead:
+   *
+   * ```ts
+   * address: { loader: (query) => http.get({ sheet: "wilayah", ...query }) }
+   * ```
+   *
+   * `loader` wins; `url`/`service` fall back to the built-in HTTP path.
+   */
+  address?: {
+    /** Rows for one level, already in `{ <level>_id, <level>_name }` shape. */
+    loader?: ((query: Record<string, any>) => Promise<any>) | null;
+    /** Endpoint for the built-in path. */
+    url?: string | null;
+    /** Shared HTTP service; otherwise the picker builds its own from `url`. */
+    service?: HttpService | null;
+    /** Ask for coordinates as well. */
+    geocode?: boolean;
+  } | null;
   /**
    * Optional loader that supplies optional Form sub-modules.
    *
@@ -174,6 +197,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       onSubmit: (_data: any) => { },
       files: "ignore",
       excludeEmpty: false,
+      address: null,
       modules: null,
     };
     this.config = this.resolveConfig(defaultConfig, config);

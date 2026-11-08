@@ -3,10 +3,6 @@ import type { iFormModuleContext } from "../FormModuleTypes";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
 import { IdAddressBuilder } from "./id-address-builder";
 
-/** Endpoint used by the address cascade when a form declares `[data-level]` fields. */
-const DEPLOYMENT_ID = "AKfycbwjQ_iNQClJuyf5z1ZlJcJ-j6LEnINfvbBmjBFlE4T3X4dVAoxF_GzUCCv6TXZ_apfhpA";
-const API_URL = `https://script.google.com/macros/s/${DEPLOYMENT_ID}/exec`;
-
 /**
  * Address picker adapter.
  *
@@ -20,6 +16,9 @@ class IdAddressFormAdapter {
 
   /** Live picker, once the form is ready for it. */
   #picker: IdAddressBuilder | null = null;
+
+  /** Whether the missing-configuration warning was already printed. */
+  #warned = false;
 
   /**
    * @param context - Host context.
@@ -41,10 +40,29 @@ class IdAddressFormAdapter {
     if (this.#picker) return;
     if (this.#context.form.querySelectorAll("[data-level]").length <= 1) return;
 
+    // The endpoint is the application's decision, not the component's. `address.loader` is
+    // the preferred form (route it through the app's HTTP service or a mock); `url` (plus
+    // an optional `service`) keeps the built-in path available.
+    const address = this.#context.config.address;
+    const hasSource = Boolean(address?.loader || address?.url || address?.service);
+
+    if (!hasSource) {
+      if (!this.#warned) {
+        this.#warned = true;
+        console.warn(
+          "[FormBuilder] Address fields found, but no address source is configured. " +
+          "Set config.address.loader(query) (preferred) or config.address.url."
+        );
+      }
+      return;
+    }
+
     this.#picker = new IdAddressBuilder({
       container: this.#context.form,
-      url: API_URL,
-      geocode: false,
+      url: address?.url ?? null,
+      loader: address?.loader ?? null,
+      service: address?.service ?? null,
+      geocode: address?.geocode ?? false,
     });
     this.#picker.init();
   }

@@ -286,6 +286,7 @@ const schema = [
   },
   // Inline row: `column` is the column count, `config.wide` the share a field takes
   // (50 = half, "auto" = full row). A row is layout, not a fieldset — `group` above.
+  AddressSet,
   {
     id: "identity",
     label: "Identitas pemesan",
@@ -298,8 +299,49 @@ const schema = [
   },
 ];
 
+/** Mock region tree: level → parentId → rows in `{ <level>_id, <level>_name }` shape. */
+const ADDRESS_TREE: Record<string, Record<string, any[]>> = {
+  propinsi: {
+    root: [
+      { propinsi_id: "31", propinsi_name: "DKI Jakarta" },
+      { propinsi_id: "32", propinsi_name: "Jawa Barat" },
+    ],
+  },
+  kota: {
+    "31": [{ kota_id: "3171", kota_name: "Jakarta Selatan" }],
+    "32": [{ kota_id: "3273", kota_name: "Bandung" }],
+  },
+  kecamatan: {
+    "3171": [{ kecamatan_id: "317101", kecamatan_name: "Kebayoran Baru" }],
+    "3273": [{ kecamatan_id: "327301", kecamatan_name: "Sukajadi" }],
+  },
+  kelurahan: {
+    "317101": [{ kelurahan_id: "3171011", kelurahan_name: "Senayan" }],
+    "327301": [{ kelurahan_id: "3273011", kelurahan_name: "Sukawarna" }],
+  },
+  kodepos: {
+    "3171011": [{ kodepos_id: "12190", kodepos_name: "12190" }],
+    "3273011": [{ kodepos_id: "40161", kodepos_name: "40161" }],
+  },
+};
+
+/**
+ * Address source for the `[data-level]` fields.
+ *
+ * A `loader` is the whole contract now: the application decides where the rows come from
+ * (HTTP service, cache, mock), and the picker never owns a transport or an endpoint.
+ */
+const addressSource = {
+  loader: async (query: Record<string, any>) => {
+    const level = String(query.level ?? "");
+    const parent = String(query.parentId ?? "root");
+    return ADDRESS_TREE[level]?.[parent] ?? [];
+  },
+};
+
 const formConfig = {
   id: "demo-order-form",
+  address: addressSource,
   // Cascade needs the engine on; `hidden` keeps conditional fields alive so a chained
   // picker (address, dependent select) can inject into them before they are shown.
   cascading: true,

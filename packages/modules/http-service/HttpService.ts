@@ -1,4 +1,4 @@
-interface iHttpServiceConfig {
+export interface iHttpServiceConfig {
   url?: string;
   /**
    * Builds the request URL for a query.
@@ -57,6 +57,25 @@ export class HttpService {
     if (this.config.cacheEnabled) {
       this._validateCache()
     }
+  }
+
+  /**
+   * Releases in-flight requests and stops accepting new ones.
+   *
+   * The app contract calls `port.destroy?.()` on every module, and a consumer that built
+   * its own service (the address picker does) needs the same door to close it.
+   */
+  destroy(): void {
+    this._destroyed = true;
+
+    for (const controller of this._abortControllers) {
+      try {
+        controller.abort();
+      } catch {
+        // An already-aborted controller is not an error worth reporting.
+      }
+    }
+    this._abortControllers.clear();
   }
 
   /**

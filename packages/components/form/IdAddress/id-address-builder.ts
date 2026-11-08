@@ -1,4 +1,5 @@
 import type { IAddressAdapter } from "./id-address-adapter";
+import { HttpService, type iHttpServiceConfig } from "@aio-ui/http-service";
 import { IdAddressAdapterNative } from "./id-address-adapter.native";
 import { IdAddressAdapterBase } from "./id-address-adapter.base";
 
@@ -30,7 +31,26 @@ interface IdAddressQuery {
 }
 
 export interface IdAddressConfig {
+  /** Endpoint used by the built-in fetch path. Ignored when `loader` is set. */
   url: string | null;
+  /**
+   * Data source override — preferred over `url`.
+   *
+   * Receives exactly the query the endpoint would have received (`{ level, parentId }`,
+   * `{ level: "kodepos", parentId }`, …) and resolves to the rows of that level, in the
+   * `{ <level>_id, <level>_name }` shape. This is the seam that lets an application route
+   * the picker through its own HTTP service, a cache, or a mock — which is also why the
+   * builder no longer has to own a transport at all.
+   */
+  loader?: ((query: IdAddressQuery) => Promise<any>) | null;
+  /**
+   * HTTP service that owns transport, timeout and cache.
+   *
+   * When omitted, the builder builds one from `url` + `cache` (same package, same
+   * behaviour as every other data consumer in the framework). Inject it to share an
+   * app-wide service, point at a different host, or stub it in tests.
+   */
+  service?: HttpService | null;
   geocode?: boolean;
   cache?: IdAddressCacheConfig;
   container: HTMLElement | string | null;
@@ -232,11 +252,11 @@ export class IdAddressBuilder {
    */
   _initialized: boolean;
 
-  /**
-   * @property {Set<AbortController>} _abortControllers
-   * @description Active request controllers used to cancel pending API calls.
-   */
-  _abortControllers: Set<AbortController>;
+  /** HTTP service in use; built on first request when none was injected. */
+  #http: HttpService | null = null;
+
+  /** Whether this picker created the service (and may therefore destroy it). */
+  #ownsHttp = false;
 
   /**
    * @property {HTMLElement|null} containerEl
@@ -314,7 +334,6 @@ export class IdAddressBuilder {
     // Step 3: Initialize lifecycle and request management flags.
     this._destroyed = false;
     this._initialized = false;
-    this._abortControllers = new Set();
     this.containerEl = null;
 
     // Step 4: Initialize internal data structures for state and event handling.
@@ -328,9 +347,9 @@ export class IdAddressBuilder {
       throw new Error("[IdAddressBuilder] container is required");
     }
 
-    // Step 6: Set the administrative hierarchy order and validate the local cache.
+    // Step 6: Set the administrative hierarchy order. Cache lifetime belongs to the HTTP
+    // service now, which validates its own entries on construction.
     this._levelOrder = [...ADDRESS_LEVELS];
-    this._validateCache();
   }
 
   /**
@@ -448,8 +467,9 @@ export class IdAddressBuilder {
     // console.log("IdAddressBuilder initialized.");
     let containerEl = null;
 
-    if (!this.config.url) {
-      throw new Error("[IdAddressBuilder] url is required");
+    // A data source is required; a URL is only one of the three ways to provide one.
+    if (!this.config.url && !this.config.service && typeof this.config.loader !== "function") {
+      throw new Error("[IdAddressBuilder] a loader, service or url is required");
     }
 
     if (typeof this.config.container === "string") {
@@ -564,15 +584,10 @@ export class IdAddressBuilder {
     this._destroyed = true;
     this._initialized = false;
 
-    // Step 2: Abort all active network requests to prevent callbacks on a dead instance.
-    for (const controller of this._abortControllers) {
-      try {
-        controller.abort();
-      } catch (err) {
-        console.warn("Abort failed:", err);
-      }
-    }
-    this._abortControllers.clear();
+
+    // Only close what we opened: a shared service belongs to the application.
+    if (this.#ownsHttp) this.#http?.destroy();
+    this.#http = null;
 
     // Step 3: Iterate through schema levels to clean up DOM and adapters.
     for (const schema of this.schema) {
@@ -1033,57 +1048,12 @@ export class IdAddressBuilder {
    * when serving data from the cache.
    */
   async getRegionalData(query: IdAddressQuery): Promise<any> {
-    // Step 1: Extract query parameters and determine the base key for caching.
-    const { level, parentId } = query;
-    const parentLevel = this._getRelatedLevel(level as IdAddressLevel, false);
-    const key = level === "detail" ? "detail" : parentLevel ? parentLevel : level;
-
-    // Step 2: Generate a unique suffix based on parentId, kodepos, or root status.
-    let suffix = query.kodepos ? query.kodepos : parentId ? parentId : "root";
-    suffix = level === "detail" && query.location ? suffix + "-geo" : suffix;
-    const cacheKey = `${key}-${suffix}`;
-
-    let isLocal = false;
-    let data = null;
-
-    // Step 3: Attempt to load data from local storage if caching is enabled.
-    if (this.config.cache?.enabled) {
-      const cached = this._loadCache(cacheKey);
-      if (cached) {
-        isLocal = true;
-        data = cached;
-      }
+    // A caller-supplied loader is a dry data source: no transport, no cache, no URL.
+    if (typeof this.config.loader === "function") {
+      return this.config.loader(query);
     }
 
-    // Step 4: If no cached data is found, fetch from the API and update the cache.
-    if (!data) {
-      isLocal = false;
-      data = await this._fetchAPI(query);
-      if (this.config.cache?.enabled && level) {
-        this._writeCache(cacheKey, data);
-      }
-    }
-
-    // Step 5: Fresh API data resolves as soon as it arrives; cached data also
-    // resolves instantly by default (cache.delay = 0). The artificial
-    // "network feel" pause only applies when cache.delay is configured above 0.
-    return new Promise((resolve, reject) => {
-      try {
-        if (isLocal && (this.config.cache?.delay ?? 0) > 0) {
-          setTimeout(() => {
-            // When the timeout finishes, 'resolve' the promise with the data
-            resolve(data);
-          }, this.config.cache?.delay);
-        } else {
-          // Instant path: cached without artificial delay, or fresh from the API
-          resolve(data);
-        }
-        // console.log(`[${level}] Data loaded from ${isLocal ? "cache" : "API"}:`, data);
-      } catch (error) {
-        localStorage.removeItem(`${this.config.cache?.prefix}:${cacheKey}`);
-        reject(error);
-      }
-    });
+    return this._fetchAPI(query);
   }
 
   /**
@@ -1227,62 +1197,54 @@ export class IdAddressBuilder {
    * instance destruction, and sets a timer to trigger an abort if the server doesn't respond
    * within the specified window. It also normalizes the API response format.
    */
-  async _fetchAPI(query: IdAddressQuery, options: RequestInit = {}, timeout: number = 10000): Promise<any> {
-    // Step 1: Guard against execution if the builder instance has been destroyed.
+  /**
+   * Requests one level through the HTTP service.
+   *
+   * The builder used to own a transport (fetch + AbortController + timeout + its own
+   * localStorage cache), which meant a second, slightly different HTTP stack inside a
+   * form component. `HttpService` already does all of it, so this is a thin adapter: it
+   * forwards the query and unwraps the response envelope the registry returns
+   * (`{ success, data, meta }` → `data`).
+   *
+   * @param query - Level query (`{ level, parentId }`, `{ level: "kodepos" }`, …).
+   * @returns The rows of that level, or `undefined` when the instance is destroyed.
+   */
+  async _fetchAPI(query: IdAddressQuery): Promise<any> {
     if (this._destroyed) return;
 
-    // Step 2: Initialize AbortController and register it for global cleanup.
-    const controller = new AbortController();
-    this._abortControllers.add(controller);
-
-    // Step 3: Set up a timer to automatically abort the request on timeout.
-    const id = setTimeout(() => controller.abort(), this.config.cache?.timeout ?? timeout);
-
-    // Step 4: Construct the final URL by appending sanitized query parameters.
-    const baseUrl = this.config.url?.replace(/\/+$/, "");
-    const params = new URLSearchParams();
-
-    for (const [k, v] of Object.entries(query)) {
-      if (v !== undefined && v !== null) params.append(k, v as string);
+    // Fail loudly and locally: an empty `url` would otherwise send a request to "" and
+    // surface as a mysterious network error.
+    if (!this.config.service && !this.config.url) {
+      throw new Error(
+        "[IdAddress] No data source configured. Pass a `loader` (preferred), a `service`, " +
+        "or a `url` when constructing the picker."
+      );
     }
-    const url = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
-    // console.log(`[Query]:`, query);
-    // console.log(`[Endpoint]:`, url);
-    try {
-      // Step 5: Execute the network request with the abort signal attached.
-      const res = await fetch(url!, { ...options, signal: controller.signal });
 
-      // Step 6: Clear the timeout immediately upon receiving a response.
-      clearTimeout(id);
+    const envelope = await this.#httpService().get(query as Record<string, any>);
+    return envelope && typeof envelope === "object" && "data" in envelope ? envelope.data : envelope;
+  }
 
-      // Step 7: Validate HTTP status codes (4xx and 5xx are treated as errors).
-      if (res.status >= 400 && res.status < 600) {
-        this._abortControllers.delete(controller);
-        throw new Error(res.statusText);
-      }
-
-      // Step 8: Parse JSON and validate the application-level success flag.
-      const json = await res.json();
-      if (json && json.success) {
-        this._abortControllers.delete(controller);
-        return json.data;
-      }
-      throw new Error(json?.message || "Invalid response");
-    } catch (err) {
-      // Step 9: Handle errors, specifically distinguishing between manual aborts and timeouts.
-      console.error("❌ getRegionalData", err);
-      clearTimeout(id);
-
-      if (err instanceof Error && err.name === "AbortError") {
-        console.error("Fetch request timed out.");
-        this._abortControllers.delete(controller);
-        throw new Error("Request timed out");
-      }
-
-      // Step 10: Cleanup the controller reference and re-throw the error for the caller.
-      this._abortControllers.delete(controller);
-      throw err;
+  /**
+   * The HTTP service this picker talks through.
+   *
+   * Built once from `config.service`, or from `url` + `cache` when none was injected.
+   *
+   * @returns The service instance.
+   */
+  #httpService(): HttpService {
+    if (!this.#http) {
+      this.#ownsHttp = !this.config.service;
+      this.#http = this.config.service ?? new HttpService({
+        url: this.config.url ?? "",
+        cacheEnabled: this.config.cache?.enabled ?? true,
+        cacheTtlDays: this.config.cache?.ttlDays ?? 1,
+        cachePrefix: this.config.cache?.prefix ?? "IdAddressBuilder",
+        delay: this.config.cache?.delay ?? 0,
+        timeout: this.config.cache?.timeout ?? 10000,
+      } as iHttpServiceConfig);
     }
+    return this.#http;
   }
 
   /**
@@ -1533,144 +1495,6 @@ export class IdAddressBuilder {
     this.__on("onGeocodeLoaded", fn);
   }
 
-  // ============================
-  // 💾 CACHING HELPERS
-  // ============================
-
-  /**
-   * Checks whether the builder cache is still valid and clears expired entries when needed.
-   *
-   * @param {boolean} [clearNow=false] - Forces cache clearing even when the stored expiration is still valid.
-   * @returns {void} Does not return a value; it updates `localStorage` cache metadata as a side effect.
-   * @throws {void} Storage errors are caught and logged instead of being thrown.
-   *
-   * @example
-   * const builder = new IdAddressBuilder({ url: '/api/address', container: '#address-form' });
-   * builder._validateCache(true); // Force all IdAddressBuilder cache entries to be refreshed.
-   *
-   * @description
-   * How it works: the method reads the cache expiration marker, exits early when the marker
-   * is still in the future, otherwise removes every `localStorage` item using the configured
-   * cache prefix and writes a new expiration timestamp based on `cache.ttlDays`.
-   */
-  _validateCache(clearNow: boolean = false) {
-    if (!this.config.cache?.enabled) return;
-
-    try {
-      // Step 1: Build the metadata key used to track the global cache expiration time.
-      const expiredTimeKey = `${this.config.cache.prefix}:expired-time`;
-
-      // Step 2: Read the stored expiration timestamp and capture the current time.
-      const storedExpiredTime = localStorage.getItem(expiredTimeKey);
-      const now = Date.now();
-
-      // Step 3: Keep the cache when a valid future expiration exists and no forced clear was requested.
-      if (!clearNow && storedExpiredTime) {
-        const parsedExpiredTime = parseInt(storedExpiredTime, 10);
-        if (parsedExpiredTime > now) {
-          // console.info(`Cache still valid.`);
-          return;
-        }
-      }
-
-      // Step 4: Remove all cached items that belong to this builder prefix.
-      for (let i = localStorage.length - 1; i >= 0; i--) {
-        const key = localStorage.key(i);
-        if (key?.startsWith(this.config.cache.prefix + ":")) {
-          localStorage.removeItem(key);
-        }
-      }
-
-      // Step 5: Convert the configured TTL from days to milliseconds.
-      const ttl = (this.config.cache?.ttlDays!) * 24 * 3600 * 1000;
-
-      // Step 6: Store the next expiration timestamp for future cache validation checks.
-      localStorage.setItem(expiredTimeKey, (now + ttl).toString());
-
-      console.info(`Cache cleared and new expiration set.`);
-    } catch (error) {
-      console.warn("Cache clear failed", error);
-    }
-  }
-
-  /**
-   * Writes one API response payload into the configured `localStorage` cache namespace.
-   *
-   * @param {string} key - Cache key suffix, without the configured prefix.
-   * @param {IAddressDetail} data - Serializable data to store in the cache entry.
-   * @returns {void} Does not return a value; it persists the cache entry in `localStorage`.
-   * @throws {Error} Throws `Cache write failed` when serialization or storage fails.
-   *
-   * @example
-   * builder._writeCache('propinsi-root', [{ propinsi_id: 31, propinsi_name: 'DKI Jakarta' }]);
-   *
-   * @description
-   * How it works: the method computes an absolute expiration time from `cache.ttlDays`,
-   * wraps the payload and expiration in a cache entry object, serializes it to JSON,
-   * and stores it under `<prefix>:<key>`.
-   */
-  _writeCache(key: string, data: IdAddressDetail): void {
-    try {
-      // Step 1: Convert the configured cache lifetime from days to milliseconds.
-      const ttl = (this.config.cache?.ttlDays!) * 24 * 3600 * 1000;
-
-      // Step 2: Wrap the payload with its absolute expiration timestamp.
-      /** @type {IdAddressCacheEntry} */
-      const obj = { data, expire: Date.now() + ttl };
-
-      // Step 3: Serialize and persist the entry under the configured cache namespace.
-      localStorage.setItem(`${this.config.cache?.prefix}:${key}`, JSON.stringify(obj));
-    } catch (error) {
-      // Step 4: Promote storage failures to callers that depend on successful cache writes.
-      throw new Error("Cache write failed", { cause: error });
-    }
-  }
-
-  /**
-   * Reads one cached API response payload from the configured `localStorage` cache namespace.
-   *
-   * @param {string} key - Cache key suffix, without the configured prefix.
-   * @returns {*|null} Returns cached data when present, otherwise `null`.
-   * @throws {void} Read and parse errors are caught and logged instead of being thrown.
-   *
-   * @example
-   * const cachedCities = builder._loadCache('propinsi-31');
-   * if (cachedCities) {
-   *   console.log(cachedCities.length);
-   * }
-   *
-   * @description
-   * How it works: the method builds the namespaced cache key, reads the raw JSON string
-   * from `localStorage`, parses it into a cache entry, removes stale or invalid entries,
-   * and returns only the stored `data` payload.
-   */
-  _loadCache(key: string): any {
-    try {
-      // Step 1: Read the serialized cache entry from the configured namespace.
-      const raw = localStorage.getItem(`${this.config.cache?.prefix}:${key}`);
-
-      // Step 2: Return null when no cache entry exists for the requested key.
-      if (!raw) return null;
-
-      // Step 3: Parse the cache entry JSON into an object.
-      /** @type {IdAddressCacheEntry} */
-      const obj = JSON.parse(raw);
-
-      // Step 4: Remove stale cache entries and continue with a remote fetch.
-      if (!obj || typeof obj.expire !== "number" || obj.expire <= Date.now()) {
-        localStorage.removeItem(`${this.config.cache?.prefix}:${key}`);
-        return null;
-      }
-
-      // Step 5: Return the cached payload.
-      return obj.data;
-    } catch (error) {
-      // Step 6: Log cache read failures without breaking the main API fetch flow.
-      console.warn("Cache load failed", error);
-      localStorage.removeItem(`${this.config.cache?.prefix}:${key}`);
-      return null;
-    }
-  }
 }
 
 /**
