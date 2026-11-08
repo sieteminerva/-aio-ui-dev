@@ -63,7 +63,7 @@ export interface iComponentManifest {
   modules?: iComponentModuleRef[];
 }
 
-/** A sub-module a component declares (engine, collaborator, adapter). */
+/** A sub-module a component declares (engine, adapter, adapter). */
 export interface iComponentModuleRef {
   /** Stable id inside the owning component, e.g. `validation`. */
   id: string;

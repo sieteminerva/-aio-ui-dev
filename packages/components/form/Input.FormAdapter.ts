@@ -2,7 +2,7 @@ import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import type { iFormModuleContext } from "./FormModuleTypes";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
 import { InputBuilder } from "./Input";
-import { inputFilesOf, mountInputModules } from "./InputRegistry";
+import { inputFilesOf, mountControls, mountInputModules } from "./InputRegistry";
 
 /**
  * Field rendering adapter.
@@ -47,6 +47,22 @@ class InputFormAdapter {
    */
   public mount(root: HTMLElement): void {
     mountInputModules(root);
+  }
+
+  /**
+   * Gives a group the same control set a field can have.
+   *
+   * @param fieldset - Group the set acts on.
+   * @param spec - `{ actions, position? }` declared by the group schema.
+   * @returns The controls node, or `null` when the input preset has no controls module.
+   *
+   * @summary Delegated to the input module registry, so this adapter does not know how a
+   * button works — and a host that drops the `controls` module gets no buttons instead of
+   * a broken fieldset.
+   */
+  public renderActions(fieldset: HTMLElement, spec: { actions: any; position?: "left" | "right" }): HTMLElement[] | null {
+    const controls = mountControls(fieldset, spec.actions, spec.position ?? "right");
+    return controls ? [controls] : null;
   }
 
   /**

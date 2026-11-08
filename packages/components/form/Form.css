@@ -653,7 +653,7 @@ select:focus-visible {
     bottom: var(--input-min-height);
     justify-self: right;
     text-align: right;
-    z-index: 99;
+    z-index: 7;
   }
 
   &.loading > select::picker-icon,
@@ -680,7 +680,7 @@ select:focus-visible {
     display: block;
     position: absolute;
     right: 21px;
-    z-index: 99;
+    z-index: 7;
   }
 
   & > .dropdown[data-style].loading::after {

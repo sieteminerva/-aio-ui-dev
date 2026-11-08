@@ -33,7 +33,7 @@ export type FormModuleId = (typeof FORM_MODULE_IDS)[keyof typeof FORM_MODULE_IDS
  */
 export type FormModulePhase = "prepare" | "initialize";
 
-/** Target handed to {@link iFormCollaborator.renderTable}. */
+/** Target handed to {@link iFormAdapter.renderTable}. */
 export interface iFormTableTarget {
   /** Fieldset that will receive the table. */
   fieldset: HTMLElement;
@@ -45,7 +45,7 @@ export interface iFormTableTarget {
   groupId?: string;
 }
 
-/** Target handed to {@link iFormCollaborator.notify}. */
+/** Target handed to {@link iFormAdapter.notify}. */
 export interface iFormMessageTarget {
   /** Form the message belongs to. */
   form: HTMLFormElement;
@@ -58,13 +58,13 @@ export interface iFormMessageTarget {
  * Optional hooks a loaded Form module result may implement.
  *
  * @summary `FormBuilder` iterates its loaded modules and calls these hooks when
- * present. That is how collaborators such as the uploader, the address picker,
+ * present. That is how adapters such as the uploader, the address picker,
  * and schema tables take part in rendering and submission without the builder
  * importing them.
  *
  * Every hook is optional; a module that only exposes an API ignores them.
  */
-export interface iFormCollaborator {
+export interface iFormAdapter {
   /**
    * Builds one field from the input schema.
    *
@@ -99,6 +99,20 @@ export interface iFormCollaborator {
    *   does not handle table specs. The first module returning nodes wins.
    */
   renderTable?: (spec: any, target: iFormTableTarget) => HTMLElement[] | null;
+
+  /**
+   * Builds a control set (add/edit/save/search/…) for a group that declares `actions`.
+   *
+   * @param fieldset - Group the set acts on.
+   * @param spec - `{ actions, position? }` from the group schema.
+   * @returns Nodes to append to the fieldset, or `null` when this module does not
+   *   handle action sets. The first module returning nodes wins.
+   *
+   * @summary A group is a scope, exactly like a field: the buttons and their behaviour
+   * belong to the controls module, so `FormBuilder` only hands the fieldset over and the
+   * engine never learns that a button exists.
+   */
+  renderActions?: (fieldset: HTMLElement, spec: { actions: any; position?: "left" | "right" }) => HTMLElement[] | null;
 
   /**
    * Presents a status message to the user.
@@ -148,7 +162,7 @@ export interface iFormModuleContext {
    * Builder-level config to hand to the nested builders this module creates.
    *
    * @summary A field is its own builder, so without this it starts with an empty
-   * config: no `themeId` for a themed collaborator, and no `emit` — which is why a
+   * config: no `themeId` for a themed adapter, and no `emit` — which is why a
    * field's `elementChanged` never reached the application bus while the form
    * itself could publish fine.
    */

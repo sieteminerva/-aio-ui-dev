@@ -17,6 +17,7 @@ const selectors = { "@field>label": { tagName: "label", /* attrs: { "animation":
 // ID ADDRESS input sets
 export const AddressSet = {
   id: "address-set",
+  legend: "Id Address Set",
   // condition: { field: "contact-company", filled: true },
   group: [
     {
@@ -124,12 +125,14 @@ export const AddressSet = {
 // INPUT CONTROL Sets
 export const InputControlSet = {
   id: "test-set",
+  legend: "Input Controls",
   group: [
     {
       type: "text",
       id: "test-1",
       title: "Test Text",
       placeholder: "Isi apa aja",
+      editable: true,
       config: {
         actions: [
           {
@@ -169,6 +172,7 @@ export const InputControlSet = {
       id: "test-2",
       title: "Test Text",
       placeholder: "Pilih mana saja",
+      editable: true,
       config: {
         options: [
           "A", "B", "C", "D"
@@ -206,66 +210,105 @@ export const InputControlSet = {
         ]
       }
     },
+    // A group is a scope for the control set: `search` reads the whole fieldset with the
+    // same vocabulary a submit uses, and reports it through `context.result` + a `search`
+    // event on the fieldset.
+    {
+      id: "lookup",
+      title: "Cari pesanan lama",
+      actions: [
+        {
+          type: "search",
+          label: "Cari",
+          onClick: (_scope: HTMLElement, context: any) => {
+            console.log("[lookup] search", context.result);
+          },
+        },
+        { type: "copy", label: "Copy", onClick: () => { } },
+      ],
+      group: [
+        { type: "text", id: "lookup-invoice", title: "No. invoice", placeholder: "INV-…" },
+        { type: "select", id: "lookup-status", title: "Status", options: ["Baru", "Diproses", "Selesai"] },
+      ] as iBasicInputNode[],
+    },
+    // `edit` + `save` turn the group into a record viewer: locked until Edit is pressed.
+    {
+      id: "customer",
+      title: "Data pelanggan",
+      actions: [
+        { type: "edit", label: "Edit", onClick: () => { } },
+        { type: "save", label: "Simpan", onClick: () => { } },
+      ],
+      group: [
+        { type: "text", id: "customer-name", title: "Nama pelanggan", placeholder: "Belum diisi" },
+        { type: "select", id: "customer-tier", title: "Tier", options: ["Bronze", "Silver", "Gold"] },
+      ] as iBasicInputNode[],
+    },
 
+  ]
 
+}
+
+export const DropdownSet = {
+  legend: "dropdown",
+  group: [
+    // ══ Test bed: Dropdown mode select (Semantic-UI style) ──────────────
+    {
+      type: "dropdown",
+      id: "test-dropdown-single",
+      title: "Satu pilihan (style=select)",
+      placeholder: "Ketik atau pilih satu...",
+      config: {
+        style: "select",
+        min: 1,
+        max: 6,
+        options: [
+          { value: "jakarta", label: "Jakarta" },
+          { value: "bandung", label: "Bandung" },
+          { value: "surabaya", label: "Surabaya" },
+          { value: "yogyakarta", label: "Yogyakarta" },
+          { value: "bali", label: "Bali" },
+          { value: "makassar", label: "Makassar" }
+        ],
+        onSelect: (value: string, id: string | null) => {
+          console.log("[Dropdown single] onSelect", { value, id });
+        }
+      }
+    },
+    {
+      type: "dropdown",
+      id: "test-dropdown-multi",
+      title: "Banyak pilihan (style=select + isMultiple)",
+      placeholder: "Ketik lalu pilih banyak...",
+      config: {
+        style: "select",
+        isMultiple: true,
+        min: 1,
+        max: 15,
+        options: [
+          "Kopi",
+          "Teh",
+          "Jus Alpukat",
+          "Kue Lapis",
+          "Klepon",
+          "Wajik",
+          "Sekoteng",
+          "Semar Mendem",
+          "Jenang",
+          "Nasi Liwet",
+          "Tengkleng"
+        ],
+        onMultiChange: (items: any[]) => {
+          console.log("[Dropdown multi] onMultiChange", items);
+        }
+      }
+    },
   ]
 }
 
-export const DropdownSet = [
-  // ══ Test bed: Dropdown mode select (Semantic-UI style) ──────────────
-  {
-    type: "dropdown",
-    id: "test-dropdown-single",
-    title: "Satu pilihan (style=select)",
-    placeholder: "Ketik atau pilih satu...",
-    config: {
-      style: "select",
-      min: 1,
-      max: 6,
-      options: [
-        { value: "jakarta", label: "Jakarta" },
-        { value: "bandung", label: "Bandung" },
-        { value: "surabaya", label: "Surabaya" },
-        { value: "yogyakarta", label: "Yogyakarta" },
-        { value: "bali", label: "Bali" },
-        { value: "makassar", label: "Makassar" }
-      ],
-      onSelect: (value: string, id: string | null) => {
-        console.log("[Dropdown single] onSelect", { value, id });
-      }
-    }
-  },
-  {
-    type: "dropdown",
-    id: "test-dropdown-multi",
-    title: "Banyak pilihan (style=select + isMultiple)",
-    placeholder: "Ketik lalu pilih banyak...",
-    config: {
-      style: "select",
-      isMultiple: true,
-      min: 1,
-      max: 15,
-      options: [
-        "Kopi",
-        "Teh",
-        "Jus Alpukat",
-        "Kue Lapis",
-        "Klepon",
-        "Wajik",
-        "Sekoteng",
-        "Semar Mendem",
-        "Jenang",
-        "Nasi Liwet",
-        "Tengkleng"
-      ],
-      onMultiChange: (items: any[]) => {
-        console.log("[Dropdown multi] onMultiChange", items);
-      }
-    }
-  },
-]
-
 const schema = [
+
+  InputControlSet,
   {
     id: "order",
     title: "Detail pesanan",
@@ -318,6 +361,7 @@ const schema = [
       { type: "textarea", id: "street", title: "Alamat lengkap", config: { wide: "auto" } },
     ] as iBasicInputNode[],
   },
+  DropdownSet,
 ];
 
 /**
@@ -373,6 +417,12 @@ export function formContent(): iPageContent {
                 form.addEventListener("formValidation", (event: any) => {
                   const { reason, message } = event.detail ?? {};
                   if (reason !== "valid") log.textContent = `formValidation (${reason}) → ${message ?? ""}`;
+                });
+
+                // A group's `search` action is a read, not a submit: it bubbles up from
+                // the fieldset so the page can answer without knowing the controls layer.
+                form.addEventListener("search", (event: any) => {
+                  log.textContent = `search → ${JSON.stringify(event.detail?.query ?? {}, null, 2)}`;
                 });
 
                 el.appendChild(log);

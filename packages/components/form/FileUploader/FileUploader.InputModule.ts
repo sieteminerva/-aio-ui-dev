@@ -1,6 +1,6 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import { FileUploader } from "./FileUploader";
-import { INPUT_MODULE_IDS, type iInputCollaborator, type iInputModuleContext } from "../InputModuleTypes";
+import { INPUT_MODULE_IDS, type iInputAdapter, type iInputModuleContext } from "../InputModuleTypes";
 
 /**
  * File input module.
@@ -14,7 +14,7 @@ import { INPUT_MODULE_IDS, type iInputCollaborator, type iInputModuleContext } f
  * current selection. Parsing a CSV into a table, serializing to a Drive payload, showing
  * a preview: all of that belongs to whoever owns the file, not to the input layer.
  */
-class FileUploaderInputModule implements iInputCollaborator {
+class FileUploaderInputModule implements iInputAdapter {
   /**
    * Attaches the uploader to a file field and wires the selection callback.
    *
@@ -91,7 +91,7 @@ class FileUploaderInputModule implements iInputCollaborator {
  * @example
  * // registered by CORE_INPUT_MODULES; a form that never uploads can drop it
  */
-export const fileUploaderInputModule: iModuleDefinition<iInputModuleContext, iInputCollaborator> = {
+export const fileUploaderInputModule: iModuleDefinition<iInputModuleContext, iInputAdapter> = {
   id: INPUT_MODULE_IDS.file,
   load: () => new FileUploaderInputModule(),
 };

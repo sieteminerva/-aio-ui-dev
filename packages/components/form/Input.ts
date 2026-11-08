@@ -4,7 +4,7 @@ import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { inputTypeOf } from "./FieldTypes";
 import {
   CORE_INPUT_MODULES,
-  type iInputCollaborator,
+  type iInputAdapter,
   type iInputModuleContext,
 } from "./InputRegistry";
 import type { iCalculationFormula } from "./Handlers/Calculation";
@@ -92,16 +92,21 @@ export interface iInputActionDefinition {
 
 export interface iInputActionContext {
   parentElement: HTMLElement;
-  input: iBasicInputNode;
+  /** Field the set belongs to; `null` when the scope is a group. */
+  input: iBasicInputNode | null;
   action: iActionType;
   button: HTMLButtonElement;
+  /** First control of the scope, kept for single-field sets. */
   element: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
+  /** One control's value, or a serialized summary for a group. */
   value: string;
+  /** Every value of the scope, in submit vocabulary (that is what `search` reports). */
+  values?: Record<string, any>;
   event: MouseEvent;
   result?: unknown;
 }
 
-export type iInputActionHandler = (parentElement: HTMLElement, context: iInputActionContext) => void;
+export type iInputActionHandler = (parentElement: HTMLElement, context: iInputActionContext) => void | Promise<void>;
 
 export interface iBasicInputConfig {
   attributes?: Array<{ name: string; value: string }>;
@@ -181,10 +186,10 @@ export interface iInputConfig extends iBuilderConfig<InputElementType> {
   /**
    * Optional loader that supplies the input sub-modules (dropdown, file, controls, popover).
    *
-   * Leave it `null` and the core preset keeps every collaborator available. Inject one to
+   * Leave it `null` and the core preset keeps every adapter available. Inject one to
    * trim the layer down (for example `LITE_INPUT_MODULES`), or to add a project module.
    */
-  modules?: ModuleLoader<iInputModuleContext, iInputCollaborator> | null;
+  modules?: ModuleLoader<iInputModuleContext, iInputAdapter> | null;
 }
 
 export class InputBuilder extends Builder<InputElementType, iInputConfig> {
@@ -195,10 +200,10 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
   #input: iBasicInputNode = {};
 
   /** Owns the lifecycle of the input sub-modules: one resolve per prepare. */
-  readonly #loader: ModuleLoader<iInputModuleContext, iInputCollaborator>;
+  readonly #loader: ModuleLoader<iInputModuleContext, iInputAdapter>;
 
   /** Modules resolved for the field being built. */
-  #modules: iInputCollaborator[] = [];
+  #modules: iInputAdapter[] = [];
 
   /** Host data a module may read: the builder's own configuration. */
   get #moduleContext(): iInputModuleContext {
@@ -233,8 +238,8 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
 
     this.config = this.resolveConfig(defaultConfig, config);
 
-    // The loader is the only thing that knows the collaborator set; `prepare()` resolves it.
-    this.#loader = this.config.modules ?? new ModuleLoader<iInputModuleContext, iInputCollaborator>("input", CORE_INPUT_MODULES);
+    // The loader is the only thing that knows the adapter set; `prepare()` resolves it.
+    this.#loader = this.config.modules ?? new ModuleLoader<iInputModuleContext, iInputAdapter>("input", CORE_INPUT_MODULES);
 
   }
 
@@ -322,7 +327,7 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
 
     // 🧩 Precedence: a registered module may own any type (that is how a project swaps in
     // its own picker), then the field-type matrix picks the selector, then the plain
-    // `<input>` fallback. `InputBuilder` never names a collaborator.
+    // `<input>` fallback. `InputBuilder` never names a adapter.
     let inputEl: (HTMLInputElement | HTMLSelectElement | HTMLElement | null) = null;
 
     for (const module of this.#modules) {

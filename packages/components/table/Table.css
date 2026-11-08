@@ -442,7 +442,7 @@ table.table,
 /* ==========================================================================
    5. Responsive: Stacked layout (card mode)
    ========================================================================== */
-@container tableParent (max-width: 700px) {
+@container tableParent (max-width: 480px) {
   table.table,
   .table {
     border: none;

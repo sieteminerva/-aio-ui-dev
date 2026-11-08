@@ -103,6 +103,54 @@
       &:active {
         transform: scale(98.5%);
       }
+
+      /* The unavailable half of an edit/save pair. */
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
     }
+  }
+
+  /* 5. A group (fieldset) owns a set too: the buttons sit in the header corner so the
+        fields keep their full width. Their colours are restated because a group-level
+        button is not glued to an input — it needs a solid surface to stay legible on the
+        card rather than inheriting the translucent input fill. */
+  & fieldset.form-group {
+    position: relative;
+
+    & > .controls {
+      position: absolute;
+      top: 0.6em;
+      right: 0.6em;
+      z-index: 1;
+      display: inline-flex;
+
+      & button {
+        color: #fff;
+        background-color: var(--input-primary-color);
+        border-color: var(--input-primary-color);
+
+        &:hover {
+          color: #fff;
+          background-color: color-mix(in srgb, var(--input-primary-color) 80%, black 20%);
+        }
+      }
+    }
+  }
+
+  /* 6. States a control set owns. `locked` is the resting state of a record viewer
+        (`data-locked`), `searching` is an in-flight search. */
+  & [data-locked="true"] {
+    & input,
+    & select,
+    & textarea {
+      cursor: default;
+    }
+  }
+
+  & .searching .controls button.search {
+    cursor: progress;
+    opacity: 0.65;
   }
 }

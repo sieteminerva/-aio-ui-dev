@@ -1,5 +1,5 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
-import { INPUT_MODULE_IDS, type iInputCollaborator, type iInputModuleContext } from "./InputModuleTypes";
+import { INPUT_MODULE_IDS, type iInputAdapter, type iInputModuleContext } from "./InputModuleTypes";
 
 /**
  * Popover module.
@@ -8,7 +8,7 @@ import { INPUT_MODULE_IDS, type iInputCollaborator, type iInputModuleContext } f
  * panel). The focus/blur plumbing and the value sync-back live here, not in
  * `InputBuilder`, so the field renderer never learns about popovers.
  */
-class PopoverInputModule implements iInputCollaborator {
+class PopoverInputModule implements iInputAdapter {
   /**
    * Attaches the configured popover to the control.
    *
@@ -79,7 +79,7 @@ class PopoverInputModule implements iInputCollaborator {
  * @example
  * // registered by CORE_INPUT_MODULES; drop it and `config.popover` is ignored
  */
-export const popoverInputModule: iModuleDefinition<iInputModuleContext, iInputCollaborator> = {
+export const popoverInputModule: iModuleDefinition<iInputModuleContext, iInputAdapter> = {
   id: INPUT_MODULE_IDS.popover,
   load: () => new PopoverInputModule(),
 };

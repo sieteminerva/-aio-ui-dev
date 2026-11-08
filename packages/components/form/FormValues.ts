@@ -50,15 +50,25 @@ interface iEntry {
 }
 
 /**
- * Reads every successful control of a form.
+ * Reads every successful control of a form — or of any container holding controls.
  *
- * @param form - Live form element.
+ * @param form - Live form element, a `<fieldset>` group, or any wrapper (a `.field`).
  * @param options - Collection options; see {@link iCollectValuesOptions}.
  * @returns Payload keyed by control name.
+ *
+ * @summary A `<fieldset>` and a `.field` wrapper are scopes a control set can own, and
+ * `search` has to read them with the same vocabulary a submit uses — one definition of
+ * "what this form holds", not two that drift apart. `elements` is used when the root has
+ * it (it skips nothing and keeps document order); a plain wrapper falls back to a query.
  */
-export function collectFormValues(form: HTMLFormElement, options: iCollectValuesOptions = {}): Record<string, any> {
+export function collectFormValues(
+  form: HTMLFormElement | HTMLFieldSetElement | HTMLElement,
+  options: iCollectValuesOptions = {}
+): Record<string, any> {
   const controls = Array.from(
-    form.elements as unknown as ArrayLike<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    (typeof HTMLFieldSetElement !== "undefined" && form instanceof HTMLFieldSetElement) || form instanceof HTMLFormElement
+      ? (form as HTMLFormElement).elements as unknown as ArrayLike<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+      : form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input, select, textarea")
   );
 
   const entries: iEntry[] = [];

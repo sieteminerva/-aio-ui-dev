@@ -81,7 +81,7 @@ class TableFormAdapter {
     if (this.#preview && this.#previewKey) payload[this.#previewKey] = this.#preview.toJson();
   }
 
-  /** Releases the preview table held by this collaborator. */
+  /** Releases the preview table held by this adapter. */
   public destroy(): void {
     this.#preview?.destroy?.();
     this.#preview = null;
@@ -167,8 +167,8 @@ export const tableFormAdapter: iModuleDefinition<iFormModuleContext, TableFormAd
   /**
    * Releases the preview table.
    *
-   * @param collaborator - The collaborator returned by `load()`.
+   * @param adapter - The adapter returned by `load()`.
    * @returns Nothing.
    */
-  destroy: (collaborator) => collaborator.destroy(),
+  destroy: (adapter) => adapter.destroy(),
 };

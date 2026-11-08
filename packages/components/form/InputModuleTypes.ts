@@ -29,12 +29,25 @@ export interface iInputModuleContext {
 }
 
 /**
+ * Description of an action set to build.
+ *
+ * Actions may be declared as an array or as `{ [type]: definition }`; whoever resolves
+ * them normalises the shape, so a module only ever sees the array.
+ */
+export interface iInputActionsSpec {
+  actions: Array<Record<string, any> & { type: string }>;
+  position?: "left" | "right";
+  /** Field the set belongs to; absent when the scope is a group. */
+  input?: iBasicInputNode | null;
+}
+
+/**
  * Optional hooks an input sub-module may implement.
  *
  * Every hook is optional and every hook is a no-op when the module is not registered, so
  * removing a module from the preset degrades the field instead of breaking it.
  */
-export interface iInputCollaborator {
+export interface iInputAdapter {
   /**
    * Renders the control for a field type this module owns.
    *
@@ -63,6 +76,15 @@ export interface iInputCollaborator {
   mount?: (root: Document | HTMLElement) => void;
 
   /**
+   * Builds a button set for a scope — a field wrapper or a whole `<fieldset>` group.
+   *
+   * @param scope - Element the set acts on.
+   * @param spec - `{ actions, position?, input? }`, with actions already normalised.
+   * @returns The controls node, or `null` when the module declines.
+   */
+  renderActions?: (scope: HTMLElement, spec: iInputActionsSpec) => HTMLElement | null;
+
+  /**
    * The files currently selected inside a form, keyed by input name.
    *
    * Raw `File` objects only: what to do with them (parse, upload, preview) belongs to the
@@ -74,4 +96,4 @@ export interface iInputCollaborator {
 }
 
 /** Erased definition type for the preset arrays, where module results differ per id. */
-export type InputModuleDefinition = iModuleDefinition<iInputModuleContext, iInputCollaborator>;
+export type InputModuleDefinition = iModuleDefinition<iInputModuleContext, iInputAdapter>;

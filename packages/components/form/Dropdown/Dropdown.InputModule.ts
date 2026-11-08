@@ -1,6 +1,6 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import { DropdownBuilder, type iDropdownContent } from "./Dropdown";
-import { INPUT_MODULE_IDS, type iInputCollaborator, type iInputModuleContext } from "../InputModuleTypes";
+import { INPUT_MODULE_IDS, type iInputAdapter, type iInputModuleContext } from "../InputModuleTypes";
 
 /**
  * Dropdown input module.
@@ -10,7 +10,7 @@ import { INPUT_MODULE_IDS, type iInputCollaborator, type iInputModuleContext } f
  * keeps `InputBuilder` free of a direct import, so a project that never uses a dropdown
  * never pays for it.
  */
-class DropdownInputModule implements iInputCollaborator {
+class DropdownInputModule implements iInputAdapter {
   readonly #context: iInputModuleContext;
 
   constructor(context: iInputModuleContext) {
@@ -73,7 +73,7 @@ class DropdownInputModule implements iInputCollaborator {
  * @example
  * // registered by CORE_INPUT_MODULES; omit it from a custom preset to drop the builder
  */
-export const dropdownInputModule: iModuleDefinition<iInputModuleContext, iInputCollaborator> = {
+export const dropdownInputModule: iModuleDefinition<iInputModuleContext, iInputAdapter> = {
   id: INPUT_MODULE_IDS.dropdown,
   load: (context) => new DropdownInputModule(context),
 };

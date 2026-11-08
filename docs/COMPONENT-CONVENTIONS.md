@@ -321,7 +321,7 @@ Anything that needs a real DOM belongs in the demo page, not the suite.
   host's `styles` asset map (exact path, then normalized, then by file name — the sheet
   sits next to the component under a name no sibling reuses), injects one
   `<style id="rajutan-lazy-css__…">`, and is idempotent with the registry's own
-  injection. A collaborator that is not a `Builder` (say `FileUploader`) asks for its
+  injection. A adapter that is not a `Builder` (say `FileUploader`) asks for its
   sheet in its constructor; `ProductGrid.css` may still `@import "./ProductCard.css";`
   when the child is created directly.
 - Respect `prefers-reduced-motion` for any transition.

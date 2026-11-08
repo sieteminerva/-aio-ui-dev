@@ -116,8 +116,8 @@ export const idAddressFormAdapter: iModuleDefinition<iFormModuleContext, IdAddre
   /**
    * Destroys the address picker.
    *
-   * @param collaborator - The collaborator returned by `load()`.
+   * @param adapter - The adapter returned by `load()`.
    * @returns Nothing.
    */
-  destroy: (collaborator) => collaborator.destroy(),
+  destroy: (adapter) => adapter.destroy(),
 };

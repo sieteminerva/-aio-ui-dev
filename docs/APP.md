@@ -1,7 +1,7 @@
 # AioApp — Framework Entry
 
 `AioApp` (`packages/app/src/AioApp.ts`) is the framework entry point. It is the only
-class an application has to instantiate, and every collaborator it consumes is a
+class an application has to instantiate, and every adapter it consumes is a
 **registered module** — nothing is instantiated outside and handed in silently:
 
 ```ts
@@ -21,7 +21,7 @@ await app.render();
 
 The contract lives beside it: `iApp` (public surface), `iAppConfig`, `iAppSource`,
 `iAppOptions`, `iAppSlots`, `iAppModuleClass`, `iAppModuleContext` (`types.ts`) and one
-port per collaborator (`ports.ts`).
+port per adapter (`ports.ts`).
 
 ## Why the entry exists
 
@@ -46,7 +46,7 @@ and the component names are derived from the tree.
 
 ## Modules — register first, use second
 
-The app declares **slots**, not collaborators. `iAppSlots` is the complete list:
+The app declares **slots**, not adapters. `iAppSlots` is the complete list:
 `registry`, `router`, `renderer`, `animation`, `events`, `storage`.
 
 **The real class is the token.** No wrapper class, no `defineModule()` alias, no

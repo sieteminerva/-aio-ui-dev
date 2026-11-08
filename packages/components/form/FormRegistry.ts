@@ -15,16 +15,16 @@ export type FormModuleDefinition = iModuleDefinition<iFormModuleContext, any>;
 /**
  * Lite preset: field rendering only.
  *
- * @summary No engines and no optional collaborators. The input module is still
+ * @summary No engines and no optional adapters. The input module is still
  * required, because a form with no field renderer cannot produce anything.
  */
 export const LITE_FORM_MODULES: FormModuleDefinition[] = [inputFormAdapter];
 
 /**
- * Core preset: every engine and collaborator the form has always provided.
+ * Core preset: every engine and adapter the form has always provided.
  *
  * @summary This is the default set used when no loader is injected. Registration
- * order is also mount order for collaborators, so `input` runs before `idAddress`,
+ * order is also mount order for adapters, so `input` runs before `idAddress`,
  * matching the previous hardcoded sequence. `requires` drives dependency order.
  */
 export const CORE_FORM_MODULES: FormModuleDefinition[] = [

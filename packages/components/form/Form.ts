@@ -5,7 +5,7 @@ import type { FormCascade, FormCascadeHost, iCascadeEventDetail } from "./Handle
 import type { FormMultistepHandler, FormMultistepHost } from "./Handlers/Multistep";
 import type { FormValidationHandler } from "./Handlers/Validation";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
-import type { FormModulePhase, iFormCollaborator, iFormModuleContext } from "./FormModuleTypes";
+import type { FormModulePhase, iFormAdapter, iFormModuleContext } from "./FormModuleTypes";
 import { CORE_FORM_MODULES } from "./FormRegistry";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { applyRowColumns, applyRowSpan, childSpanOf, columnsOf } from "./FormLayout";
@@ -144,7 +144,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
   // 🧩 Modul yang sudah dimuat pada siklus render berjalan. Form hanya memanggil
   // hook opsionalnya (mount/beforeSubmit/renderTable), tanpa tahu isinya.
-  #features: iFormCollaborator[] = [];
+  #features: iFormAdapter[] = [];
 
   constructor(config: Partial<iFormConfig> = {}) {
     super();
@@ -435,6 +435,22 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       const submitBtn = this.render("@form>actions>submit", { isGroupBtn: true, formId }) as HTMLButtonElement;
       this.submitButtonId = submitBtn.id;
       fieldset.appendChild(submitBtn);
+    }
+
+    // 🧩 A group can carry its own control set (add/edit/save/search). The form only
+    // offers the fieldset; the controls module owns the buttons and what they do.
+    const groupActions = groupInput.actions ?? groupInput.config?.actions;
+    if (groupActions) {
+      for (const feature of this.#features) {
+        const nodes = feature.renderActions?.(fieldset, {
+          actions: groupActions,
+          position: groupInput.actionsPosition ?? groupInput.config?.position,
+        });
+        if (nodes && nodes.length) {
+          fieldset.append(...nodes);
+          break;
+        }
+      }
     }
 
     return fieldset;
@@ -923,7 +939,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
   }
 
   /**
-   * Resets the form and tells every collaborator to drop its own state.
+   * Resets the form and tells every adapter to drop its own state.
    *
    * @summary `form.reset()` restores controls the browser knows about; a preview table, an
    * uploader's file list or an address picker keep showing the old values unless their
