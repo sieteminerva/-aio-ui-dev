@@ -236,11 +236,19 @@ export const InputControlSet = {
       id: "customer",
       title: "Data pelanggan",
       actions: [
+        {
+          type: "add",
+          label: "new",
+          onClick: (_e: Event, payload: any) => {
+            console.log("action!! ADD", payload)
+          }
+        },
         { type: "edit", label: "Edit", onClick: () => { } },
         { type: "save", label: "Simpan", onClick: () => { } },
       ],
       group: [
-        { type: "text", id: "customer-name", title: "Nama pelanggan", placeholder: "Belum diisi" },
+        // `editable: true` keeps this one field writable while Edit/Save lock the group.
+        { type: "text", id: "customer-name", title: "Nama pelanggan", placeholder: "Belum diisi", editable: true },
         { type: "select", id: "customer-tier", title: "Tier", options: ["Bronze", "Silver", "Gold"] },
       ] as iBasicInputNode[],
     },

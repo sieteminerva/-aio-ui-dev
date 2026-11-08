@@ -107,6 +107,31 @@ describe("controls on a group", () => {
     expect(locked.readOnly).toBe(true);
     expect((fieldset.querySelector("#plain") as HTMLInputElement).readOnly).toBe(false);
   });
+
+  it("keeps a field declared editable unlocked, even with an edit action", () => {
+    // `editable: true` becomes `data-editable` on the field wrapper (see InputBuilder).
+    const { fieldset } = group(`<fieldset class="form-group" id="rec-3">
+      <div class="field" data-editable="true"><input id="note" name="note" type="text" /></div>
+      <div class="field"><input id="total" name="total" type="text" /></div>
+      <div class="field"><select id="tier" name="tier"><option value="a">A</option></select></div>
+    </fieldset>`);
+    const note = fieldset.querySelector("#note") as HTMLInputElement;
+    const total = fieldset.querySelector("#total") as HTMLInputElement;
+    const tier = fieldset.querySelector("#tier") as HTMLSelectElement;
+
+    controls(fieldset, editSave());
+
+    expect(note.readOnly).toBe(false);
+    expect(total.readOnly).toBe(true);
+    expect(tier.disabled).toBe(true);
+
+    // Saving locks the set again but still leaves the editable field alone.
+    (fieldset.querySelector("button.edit") as HTMLButtonElement).click();
+    (fieldset.querySelector("button.save") as HTMLButtonElement).click();
+
+    expect(note.readOnly).toBe(false);
+    expect(total.readOnly).toBe(true);
+  });
 });
 
 describe("controls search", () => {

@@ -422,6 +422,9 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
   /** Locks every control in the scope, remembering what it looked like. */
   private _lock(scope: HTMLElement): void {
     for (const control of this.#controls(scope)) {
+      // A field the schema marked editable is not the set's to lock.
+      if (this.#isEditable(control)) continue;
+
       if (!this.#editableState.has(control)) {
         this.#editableState.set(control, {
           readonly: this.#supportsReadOnly(control) ? (control as HTMLInputElement).readOnly : false,
@@ -437,6 +440,21 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
 
     scope.setAttribute("data-locked", "true");
     scope.classList.add("locked");
+  }
+
+  /**
+   * Whether the schema gave this control to the visitor permanently.
+   *
+   * @param control - Control being considered for a lock.
+   * @returns `true` when the field (or an ancestor scope) declares `editable`.
+   *
+   * @summary `editable: true` outranks the edit policy: a record viewer with an `edit`
+   * action may still expose one field that is always live (a comment box, a quantity).
+   * `InputBuilder` writes the marker on the field wrapper, so an ancestor lookup covers a
+   * group whose fields each decide for themselves.
+   */
+  #isEditable(control: HTMLElement): boolean {
+    return Boolean(control.closest("[data-editable='true']"));
   }
 
   /**

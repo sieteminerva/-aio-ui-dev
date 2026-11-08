@@ -120,6 +120,13 @@ export interface iBasicInputConfig {
   actions?: iInputActionDefinition[] | Partial<Record<iActionType, Omit<iInputActionDefinition, "type">>> | null;
   actionMode?: string;
   /**
+   * Keep this field writable even when a control set locks its scope.
+   *
+   * Same meaning as the node-level `editable`; accepted here too so a schema can group it
+   * with the rest of the field's behaviour.
+   */
+  editable?: boolean;
+  /**
    * Width hint when the field sits inside a row.
    *
    * `50` → half the row, `0.5` → the same thing as a fraction, `"auto"` → the whole row.
@@ -359,6 +366,14 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
 
     if (inputEl) {
       this.applyAttributes(inputEl, this.#input);
+    }
+
+    // `editable: true` is a promise to the visitor: this field stays writable even when the
+    // control set locks everything else (its buttons are `edit`/`save`). The marker goes on
+    // the wrapper because that is the scope a set reads, and it is one attribute instead of
+    // every control kind having to know about the lock.
+    if (this.#input.editable === true || cfg?.editable === true) {
+      wrapper.setAttribute("data-editable", "true");
     }
 
     // C. Render Info Tambahan di bagian bawah jika ada

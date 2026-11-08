@@ -2,10 +2,10 @@
 
 A **control set** is a row of buttons attached to a **scope**. Two scopes exist:
 
-| Scope | Declared as | Owned by |
-| ----- | ----------- | -------- |
-| One field | `{ type, id, config: { actions: [...] } }` | `InputBuilder` (module `controls`) |
-| A group | `{ id, title, actions: [...], group: [...] }` | `FormBuilder` → `Fieldset` → same module |
+| Scope     | Declared as                                   | Owned by                                 |
+| --------- | --------------------------------------------- | ---------------------------------------- |
+| One field | `{ type, id, config: { actions: [...] } }`    | `InputBuilder` (module `controls`)       |
+| A group   | `{ id, title, actions: [...], group: [...] }` | `FormBuilder` → `Fieldset` → same module |
 
 `<form>` is deliberately **not** a scope: a set that can clone or delete its host is a
 footgun.
@@ -24,15 +24,15 @@ fields keep their full width.
 Actions may be an array, or `{ [type]: definition }`. Each definition is
 `{ type, label?, icon?, onClick(scope, context) }`; `onClick` may be async.
 
-| Action | What it does on a scope |
-| ------ | ----------------------- |
-| `edit` | Unlocks every control in the scope and enables `save`. |
-| `save` | Locks the scope again, then dispatches `change` on each control so engines re-evaluate. |
-| `copy` | Writes the scope's values to the clipboard: the value of a one-control scope, otherwise the collected payload as JSON. |
-| `add` | Clones the whole scope with fresh ids/names (`rec-1` → `rec-1-1`), empty values, and its own working buttons. |
-| `delete` / `remove` | Removes the scope. Never the form. |
-| `search` | Reads the scope (see below). |
-| `custom` | Nothing but `onClick`. |
+| Action              | What it does on a scope                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `edit`              | Unlocks every control in the scope and enables `save`.                                                                 |
+| `save`              | Locks the scope again, then dispatches `change` on each control so engines re-evaluate.                                |
+| `copy`              | Writes the scope's values to the clipboard: the value of a one-control scope, otherwise the collected payload as JSON. |
+| `add`               | Clones the whole scope with fresh ids/names (`rec-1` → `rec-1-1`), empty values, and its own working buttons.          |
+| `delete` / `remove` | Removes the scope. Never the form.                                                                                     |
+| `search`            | Reads the scope (see below).                                                                                           |
+| `custom`            | Nothing but `onClick`.                                                                                                 |
 
 Buttons are rendered with `type="button"`, so a set inside a form can never submit it.
 
@@ -52,10 +52,10 @@ Buttons are rendered with `type="button"`, so a set inside a form can never subm
 
 ## The edit policy
 
-| Declared actions | State of the scope |
-| ---------------- | ------------------ |
-| contains `edit` | starts **locked**: `<select>` and non-text inputs are `disabled`, text-like inputs are `readOnly`, scope gets `data-locked="true"` + `.locked` |
-| no `edit` | stays **open**; a scope this set locked earlier is restored, because nothing could unlock it |
+| Declared actions | State of the scope                                                                                                                             |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| contains `edit`  | starts **locked**: `<select>` and non-text inputs are `disabled`, text-like inputs are `readOnly`, scope gets `data-locked="true"` + `.locked` |
+| no `edit`        | stays **open**; a scope this set locked earlier is restored, because nothing could unlock it                                                   |
 
 "Locked by the set" is answered by the set's own bookkeeping (`data-locked` plus a
 per-control snapshot), never by inspecting `readOnly`/`disabled`: those properties reflect
@@ -63,6 +63,18 @@ to attributes, so an author's intent and an earlier lock look identical in the D
 
 When both `edit` and `save` are declared they behave as a pair — exactly one of them is
 enabled at a time instead of a second button being appended.
+
+### `editable: true` outranks the lock
+
+```ts
+{ type: "text", id: "customer-name", title: "Nama pelanggan", editable: true }
+```
+
+A field marked `editable` stays writable even when the scope is locked — a record viewer
+with `edit`/`save` can still expose one field that is always live (a comment box, a
+quantity). `InputBuilder` writes the marker as `data-editable="true"` on the field wrapper,
+and the set skips any control whose ancestor carries it, so it also works per field inside
+a locked group. `config.editable` is accepted as well as the node-level key.
 
 ## `search`
 

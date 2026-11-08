@@ -72,6 +72,9 @@ export const INPUT_STRUCTURAL_KEYS: readonly string[] = [
   "position",
   "useLabel",
   "display",
+  // A field that stays writable while a control set locks its scope; becomes
+  // `data-editable` on the wrapper, never an attribute of the control.
+  "editable",
   "actions",
   "popover",
   "options",
