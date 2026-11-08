@@ -1,10 +1,13 @@
 import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
-import { DropdownBuilder, type iDropdownConfig, type iDropdownContent } from "./Dropdown/Dropdown";
-import { InputControlsBuilder, type InputControlsElementType } from "./InputControls/InputControls";
-import { FileUploader } from "./FileUploader/FileUploader";
+import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
+import { inputTypeOf } from "./FieldTypes";
+import {
+  CORE_INPUT_MODULES,
+  type iInputCollaborator,
+  type iInputModuleContext,
+} from "./InputRegistry";
 import type { iCalculationFormula } from "./Handlers/Calculation";
-import { inputTypeOf } from "./InputRegistry";
 
 /**
  * Attributes `applyAttributes` knows how to map, in application order.
@@ -80,7 +83,7 @@ export type iActionType = "add" | "remove" | "delete" | "save" | "edit" | "copy"
 
 export interface iInputActionDefinition {
   type: iActionType;
-  selector?: Record<InputControlsElementType, iActionProperty>;
+  selector?: Record<string, iActionProperty>;
   label?: string;
   icon?: string;
   onClick: iInputActionHandler;
@@ -120,7 +123,8 @@ export interface iBasicInputConfig {
   createEventListener?: boolean;
   popover?: string | HTMLElement | undefined;
   display?: "block" | "inline";
-  dropdown?: Partial<iDropdownConfig>;
+  /** Options forwarded to the dropdown module when `type` is `"dropdown"`. */
+  dropdown?: Record<string, any>;
   /** Calculation strategy attached to this input (usually a readonly total field). */
   calculator?: iCalculationFormula<any>;
 }
@@ -153,14 +157,48 @@ export interface iBasicInputNode extends iBuilderConfig<InputElementType> {
   onValueChange?: (form: any, e: Event) => {}
 }
 
-export class InputBuilder extends Builder<InputElementType> {
+/** Builder-level configuration for the input layer. */
+export interface iInputConfig extends iBuilderConfig<InputElementType> {
+  /**
+   * Optional loader that supplies the input sub-modules (dropdown, file, controls, popover).
+   *
+   * Leave it `null` and the core preset keeps every collaborator available. Inject one to
+   * trim the layer down (for example `LITE_INPUT_MODULES`), or to add a project module.
+   */
+  modules?: ModuleLoader<iInputModuleContext, iInputCollaborator> | null;
+}
+
+/**
+ * Loader used by the static helpers (`collectFiles`, `parseCsvTable`, `initFileAdapters`).
+ *
+ * Statics have no instance to read a config from, so they resolve through the default
+ * preset — the same set `new InputBuilder()` uses when nothing is injected.
+ */
+const DEFAULT_INPUT_LOADER = new ModuleLoader<iInputModuleContext, iInputCollaborator>("input", CORE_INPUT_MODULES);
+
+function defaultInputModules(): iInputCollaborator[] {
+  return DEFAULT_INPUT_LOADER.resolveAll({ builderConfig: { themeId: "default" } });
+}
+
+export class InputBuilder extends Builder<InputElementType, iInputConfig> {
   readonly builderId: keyof iBuilderRegistry = "input";
   readonly name: keyof iBuilderRegistry = "input";
   readonly stylesheet: string = "";
 
   #input: iBasicInputNode = {};
 
-  constructor(config: Partial<iBuilderConfig<InputElementType>> = {}) {
+  /** Owns the lifecycle of the input sub-modules: one resolve per prepare. */
+  readonly #loader: ModuleLoader<iInputModuleContext, iInputCollaborator>;
+
+  /** Modules resolved for the field being built. */
+  #modules: iInputCollaborator[] = [];
+
+  /** Host data a module may read: the builder's own configuration. */
+  get #moduleContext(): iInputModuleContext {
+    return { builderConfig: this.config };
+  }
+
+  constructor(config: Partial<iInputConfig> = {}) {
     super();
 
     const defaultSelectors = {
@@ -176,14 +214,18 @@ export class InputBuilder extends Builder<InputElementType> {
       "@field>info": { tagName: "small", className: "info" }
     };
 
-    const defaultConfig: Required<iBuilderConfig<InputElementType>> = {
+    const defaultConfig: Required<iInputConfig> = {
       themeId: "default",
       selectors: defaultSelectors as any,
       namespace: null,
       emit: () => { },
+      modules: null,
     };
 
     this.config = this.resolveConfig(defaultConfig, config);
+
+    // The loader is the only thing that knows the collaborator set; `prepare()` resolves it.
+    this.#loader = this.config.modules ?? DEFAULT_INPUT_LOADER;
 
   }
 
@@ -236,36 +278,16 @@ export class InputBuilder extends Builder<InputElementType> {
 
 
   /**
-   * Attaches the file uploader adapter to a file input this builder produced.
-   *
-   * @summary `FileUploader` is an input-level adapter, not a Form concern.
-   * Its constructor is idempotent per element, so repeated builds are safe.
-   * @param input - File input element created by this builder.
-   * @returns Nothing.
-   */
-  private _mountFileAdapter(input: HTMLInputElement): void {
-    try {
-      new FileUploader(input);
-    } catch (error) {
-      console.warn("[InputBuilder] file adapter init failed:", error);
-    }
-  }
-
-  /**
    * Initializes file adapters inside an arbitrary DOM subtree.
    *
    * @summary Raw HTML fields bypass `prepare()`, so the Form layer needs a way to
-   * cover them without importing `FileUploader` itself. That is the purpose of
-   * this boundary.
+   * cover them without importing `FileUploader` itself. That is what the module
+   * boundary is for.
    * @param root - Form element or freshly mounted fieldset.
    * @returns Nothing.
    */
   public static initFileAdapters(root: Document | HTMLFormElement | HTMLElement): void {
-    try {
-      FileUploader.initAll(root);
-    } catch (error) {
-      console.warn("[InputBuilder] file adapter init failed:", error);
-    }
+    for (const module of defaultInputModules()) module.mount?.(root);
   }
 
   /**
@@ -277,8 +299,8 @@ export class InputBuilder extends Builder<InputElementType> {
    * @returns Payload keyed by input name; empty when nothing was selected.
    */
   public static async collectFiles(formId: string): Promise<Record<string, any>> {
-    if (typeof FileUploader.getFilesForGoogleDrive !== "function") return {};
-    return FileUploader.getFilesForGoogleDrive(formId);
+    const module = defaultInputModules().find((m) => typeof m.collectFiles === "function");
+    return module?.collectFiles ? module.collectFiles(formId) : {};
   }
 
   /**
@@ -290,15 +312,21 @@ export class InputBuilder extends Builder<InputElementType> {
    * @returns Normalized `{ header, body, footer }` table data.
    */
   public static async parseCsvTable(formId: string): Promise<{ header: any[]; body: any[]; footer: any }> {
-    return FileUploader.parseCSVToTable(formId);
+    const module = defaultInputModules().find((m) => typeof m.parseCsv === "function");
+    if (!module?.parseCsv) throw new Error("[InputBuilder] No input module can parse table files; register the file module.");
+    return module.parseCsv(formId);
   }
 
-  public prepare(inputObj: Partial<iBasicInputNode>, _config?: Required<iBuilderConfig<InputElementType>> | undefined): HTMLElement | Record<string, any | HTMLElement> {
+  public prepare(inputObj: Partial<iBasicInputNode>, _config?: Required<iInputConfig> | undefined): HTMLElement | Record<string, any | HTMLElement> {
 
     this.#input = this.resolvePayload(inputObj);
 
     const cfg = this.#input.config;
     const definition = inputTypeOf(this.#input.type);
+
+    // 🧩 Modules are resolved once per prepare, after the payload exists: a module decides
+    // from the field what it wants to do, and `InputBuilder` never learns their names.
+    this.#modules = this.#loader.resolveAll(this.#moduleContext);
 
     const wrapper = this.render("@field", this.#input)!;
 
@@ -317,14 +345,21 @@ export class InputBuilder extends Builder<InputElementType> {
 
     if (label) wrapper.appendChild(label);
 
-    // 🧩 The control is chosen by the type registry, so a new field type is one row there
-    // instead of another `case` here. `dropdown` is the one type a sibling builder owns.
-    let inputEl = (definition.control
-      ? this.render(definition.control, this.#input)
-      : null) as (HTMLInputElement | HTMLSelectElement | HTMLElement | null);
+    // 🧩 Precedence: a registered module may own any type (that is how a project swaps in
+    // its own picker), then the field-type matrix picks the selector, then the plain
+    // `<input>` fallback. `InputBuilder` never names a collaborator.
+    let inputEl: (HTMLInputElement | HTMLSelectElement | HTMLElement | null) = null;
 
-    if (!inputEl && this.#input.type === "dropdown") {
-      inputEl = this._renderDropdown(this.#input);
+    for (const module of this.#modules) {
+      const rendered = module.renderControl?.(this.#input, this.#moduleContext);
+      if (rendered) {
+        inputEl = rendered;
+        break;
+      }
+    }
+
+    if (!inputEl && definition.control) {
+      inputEl = this.render(definition.control, this.#input) as HTMLElement;
     }
 
     if (!inputEl) {
@@ -349,23 +384,10 @@ export class InputBuilder extends Builder<InputElementType> {
     // Dropdown mencetak root `.dropdown` sendiri, jadi root itu yang ditempel apa adanya.
     if (inputEl) inputEl.__outer ? wrapper.appendChild(inputEl.__outer) : wrapper.appendChild(inputEl);
 
-    if (cfg?.actions && inputEl) {
-      const actions = this._renderActions(wrapper, this.#input);
-      wrapper.classList.add("actions");
-      wrapper.appendChild(actions)
-    }
-
-    // D. OTOMATIS PASANG POPOVER GENERIK JIKA TERSEDIA DI CONFIG
-    if (cfg?.popover && inputEl) {
-      this._attachGenericPopover(inputEl, cfg.popover);
-    }
-
-    // 🧩 Adapter input: uploader dipasang SETELAH elemen menempel ke `.field`.
-    // FileUploader mencari parent `.field` saat konstruksi untuk menaruh daftar
-    // berkas + view container; dipasang lebih awal, container-nya null dan
-    // fungsinya diam-diam mati (hanya elemen yang terlihat).
-    if (this.#input.type === "file" && inputEl instanceof HTMLInputElement) {
-      this._mountFileAdapter(inputEl);
+    // 🧩 Decoration runs after the control is in the wrapper: the uploader, the action set
+    // and the popover all need a mounted control (and, for the uploader, its `.field`).
+    if (inputEl) {
+      for (const module of this.#modules) module.decorate?.(wrapper, inputEl, this.#input, this.#moduleContext);
     }
 
     return wrapper!;
@@ -540,148 +562,6 @@ export class InputBuilder extends Builder<InputElementType> {
 
   }
 
-
-  private _renderDropdown(payload: any): HTMLElement {
-    const cfg = payload.config;
-
-    const options = (cfg?.options || []).map((option: any) => {
-      if (typeof option === "string") {
-        return { id: option, label: option };
-      }
-      return { id: option.value, label: option.label };
-    });
-
-    const dropdownPayload: iDropdownContent = {
-      id: payload.id,
-      title: payload.title,
-      placeholder: payload.placeholder,
-      value: payload.value,
-      options,
-      name: payload.name || payload.id,
-      attributes: cfg?.attributes || [],
-    };
-
-    const dropdownBuilder = new DropdownBuilder({
-      ...cfg?.dropdown,
-      themeId: this.config.themeId || "default",
-      namespace: this.config.namespace,
-      emit: this.config.emit,
-    });
-
-    const dropdownElement = dropdownBuilder.create(dropdownPayload, {
-      apiUrl: cfg?.apiUrl || null,
-      debounceDelay: cfg?.debounceDelay,
-      style: cfg?.style || "select",
-      min: cfg?.min,
-      max: cfg?.max,
-      isMultiple: cfg?.isMultiple,
-      onSelect: cfg?.onSelect,
-      onMultiChange: cfg?.onMultiChange,
-    });
-
-    // Fix the wrapper class to avoid nested .field inside InputBuilder's .field
-    // Set the name on hidden input for form submission
-    const hidden = dropdownElement.querySelector("input[type='hidden']") as HTMLInputElement;
-    if (hidden) {
-      if (payload.id) {
-        hidden.setAttribute("name", payload.name || payload.id);
-      }
-    }
-
-    return dropdownElement;
-  }
-
-  private _renderActions(parentElement: HTMLElement, payload: any): HTMLElement {
-    const cfg = payload.config;
-    const configuredActions = cfg.actions || [];
-    const actions = Array.isArray(configuredActions)
-      ? configuredActions
-      : Object.entries(configuredActions).map(([type, action]) => ({
-        ...(action as object),
-        type,
-      }));
-
-    const controlsBuilder = new InputControlsBuilder(this.config as any).create({
-      content: {
-        parentElement,
-        position: cfg.position || "right",
-        actions,
-        input: payload,
-      }
-    });
-
-    return controlsBuilder;
-  }
-
-  private _attachGenericPopover(inputEl: HTMLElement, popoverTarget: string | HTMLElement): void {
-    let popoverEl: HTMLElement;
-
-    if (typeof popoverTarget === "string") {
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = popoverTarget.trim();
-      popoverEl = tempDiv.firstElementChild as HTMLElement;
-    } else {
-      popoverEl = popoverTarget;
-    }
-
-    if (!popoverEl) return;
-
-    if (!popoverEl.hasAttribute("popover")) {
-      popoverEl.setAttribute("popover", "manual");
-    }
-
-    const inputId = inputEl.id;
-    if (inputId) {
-      // Pasang atribut anchor="ID_INPUT" secara langsung pada popover
-      const uniqueAnchorName = `--anchor-${inputId}`;
-      inputEl.style.setProperty("anchor-name", uniqueAnchorName);
-      popoverEl.style.setProperty("position-anchor", uniqueAnchorName);
-      // popoverEl.setAttribute("anchor", inputId);
-    }
-
-    // Selipkan popover tepat setelah input utama di dalam struktur DOM wrapper
-    inputEl.insertAdjacentElement("afterend", popoverEl);
-
-    // Event buka saat fokus masuk ke input utama
-    inputEl.addEventListener("focus", () => {
-      if (typeof HTMLElement.prototype.showPopover === "function") {
-        popoverEl.showPopover();
-      }
-    });
-
-    // Event tutup pintar saat keluar fokus
-    inputEl.addEventListener("blur", (e: FocusEvent) => {
-      const relatedTarget = e.relatedTarget as HTMLElement;
-
-      if (popoverEl.contains(relatedTarget)) {
-        const handleInnerBlur = (innerEvent: FocusEvent) => {
-          const nextFocus = innerEvent.relatedTarget as HTMLElement;
-
-          if (!popoverEl.contains(nextFocus) && nextFocus !== inputEl) {
-            // Auto sinkronisasi nilai komponen dalam popover ke input utama
-            const innerField = popoverEl.querySelector("textarea, input, select") as HTMLInputElement | HTMLTextAreaElement;
-            if (innerField && "value" in inputEl) {
-              (inputEl as any).value = innerField.value;
-              inputEl.dispatchEvent(new Event("input", { bubbles: true }));
-              inputEl.dispatchEvent(new Event("change", { bubbles: true }));
-            }
-
-            if (typeof HTMLElement.prototype.hidePopover === "function") {
-              popoverEl.hidePopover();
-            }
-            popoverEl.removeEventListener("blur", handleInnerBlur, true);
-          }
-        };
-
-        popoverEl.addEventListener("blur", handleInnerBlur, true);
-        return;
-      }
-
-      if (typeof HTMLElement.prototype.hidePopover === "function") {
-        popoverEl.hidePopover();
-      }
-    });
-  }
 
   private _sanitizeId(value: string): string {
     return value

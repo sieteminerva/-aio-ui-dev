@@ -1,5 +1,5 @@
 import { InputBuilder, type InputType, type iBasicInputNode } from "./Input";
-import { scanInputAttributes } from "./InputRegistry";
+import { scanInputAttributes } from "./FieldTypes";
 
 export interface iAttributeProperty {
   name: string;

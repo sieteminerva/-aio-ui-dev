@@ -1,17 +1,19 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { InputBuilder } from "../Input";
 import { InputAttributeBuilder } from "../Attribute";
-import { INPUT_TYPE_REGISTRY, inputTypeOf, scanInputAttributes } from "../InputRegistry";
+import { INPUT_TYPE_REGISTRY, inputTypeOf, scanInputAttributes } from "../FieldTypes";
+import { CORE_INPUT_MODULES, LITE_INPUT_MODULES } from "../InputRegistry";
+import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 
 /**
  * First DOM-aware tests in the repo: a field is markup, so the contract can only be
- * pinned down by rendering it. Everything else here is the type matrix.
+ * pinned down by rendering it. Everything else here is the type matrix and the module set.
  */
 
-function build(schema: Record<string, any>): { container: HTMLElement; control: HTMLElement } {
-  const container = new InputBuilder().create(schema as any) as HTMLElement;
+function build(schema: Record<string, any>, config: Record<string, any> = {}): { container: HTMLElement; control: HTMLElement } {
+  const container = new InputBuilder(config as any).create(schema as any) as HTMLElement;
   const control = container.querySelector("input, textarea, select") as HTMLElement;
   return { container, control };
 }
@@ -205,5 +207,57 @@ describe("InputAttributeBuilder.scan", () => {
     expect(report.ok).toBe(true);
     expect(report.structural).toEqual(["type", "id"]);
     expect(report.accepted).toEqual(["min"]);
+  });
+});
+
+describe("input module registry", () => {
+  const withActions = {
+    type: "text",
+    id: "sku",
+    title: "SKU",
+    config: { actions: [{ type: "add", label: "Add", onClick: () => undefined }] },
+  };
+
+  it("decorates a field with the action set when the controls module is registered", () => {
+    const { container } = build(withActions, { modules: new ModuleLoader("input", CORE_INPUT_MODULES) });
+
+    expect(container.classList.contains("actions")).toBe(true);
+    expect(container.querySelector("button")).not.toBeNull();
+  });
+
+  it("renders the bare field when the controls module is not registered", () => {
+    const { container } = build(withActions, { modules: new ModuleLoader("input", LITE_INPUT_MODULES) });
+
+    expect(container.classList.contains("actions")).toBe(false);
+    expect(container.querySelector("button")).toBeNull();
+    expect(container.querySelector("input")).not.toBeNull();
+  });
+
+  it("lets a project module own a field type the registry has never heard of", () => {
+    const renderControl = vi.fn((field: any) => {
+      if (field.type !== "rating") return null;
+      const el = document.createElement("div");
+      el.className = "rating-stars";
+      return el;
+    });
+
+    const loader = new ModuleLoader("input", [
+      ...CORE_INPUT_MODULES,
+      { id: "rating", load: () => ({ renderControl }) },
+    ]);
+    const { container } = build({ type: "rating", id: "score", title: "Score" }, { modules: loader });
+
+    expect(renderControl).toHaveBeenCalled();
+    expect(container.querySelector(".rating-stars")).not.toBeNull();
+  });
+
+  it("keeps a plain field free of modules entirely", () => {
+    const { container, control } = build(
+      { type: "text", id: "name", title: "Nama" },
+      { modules: new ModuleLoader("input", LITE_INPUT_MODULES) }
+    );
+
+    expect(control.tagName).toBe("INPUT");
+    expect(container.querySelectorAll("label")).toHaveLength(1);
   });
 });
