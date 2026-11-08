@@ -1,0 +1,147 @@
+/* ==========================================================================
+   SECTION — one row, 2–3 content columns
+   Each column stacks: image → eyebrow → title → description → actions.
+   The grid decides the column count, so the same payload reads well at any width.
+   ========================================================================== */
+
+.section {
+  display: grid;
+  /* `auto-fit` + a 18rem floor: 3 columns on a wide page, 2 in the middle,
+     1 under ~40rem without any breakpoint-specific rules. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  align-items: center;
+  gap: var(--app-gap);
+  width: 100%;
+}
+
+.section-column {
+  display: grid;
+  align-content: center;
+  gap: 0.75rem;
+  min-width: 0;
+  /* Old payloads carry flex utilities in `className` (`column`, `half`, `full`) from the
+     previous layout system. The grid owns sizing here, so those are neutralised: without
+     this, `half` halves the cell to a 50% max-width and the media never fills its column. */
+  flex: none;
+  max-width: none;
+}
+
+/* ── Media ─────────────────────────────────────────────────────────────── */
+.section-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: var(--app-image-border-radius);
+  box-shadow: var(--app-shadow-soft);
+}
+
+/* ── Text ──────────────────────────────────────────────────────────────── */
+.section-eyebrow {
+  font-size: var(--app-font-size-xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--app-primary-color);
+}
+
+.section-title {
+  margin: 0;
+  font-size: var(--app-font-size-2xl);
+  line-height: 1.2;
+  color: var(--app-text-heading-color);
+  text-wrap: balance;
+}
+
+.section-desc {
+  margin: 0;
+  max-width: 60ch;
+  font-size: var(--app-font-size-base);
+  line-height: 1.7;
+  color: var(--app-text-accent-color);
+}
+
+/* ── Actions ───────────────────────────────────────────────────────────── */
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* The CTA is an `<a>`; without `href` it carries role="button" instead. Both are
+   styled identically so the tag stays a semantic decision, not a visual one. */
+.section-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  font-size: var(--app-font-size-sm);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--app-surface-strong);
+  background: var(--app-primary-color);
+  border: 1px solid var(--app-primary-color);
+  border-radius: 9999px;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.section-cta:hover,
+.section-cta:focus-visible {
+  background: var(--app-primary-hover);
+  border-color: var(--app-primary-hover);
+  transform: translateY(-1px);
+}
+
+.section-cta:focus-visible {
+  outline: 2px solid var(--app-border-focus);
+  outline-offset: 2px;
+}
+
+/* A second CTA reads as secondary: outline until hover, then it fills in. */
+.section-cta + .section-cta {
+  color: var(--app-primary-color);
+  background: transparent;
+  border-color: var(--app-primary-color);
+}
+
+.section-cta + .section-cta:hover,
+.section-cta + .section-cta:focus-visible {
+  color: var(--app-surface-strong);
+  background: var(--app-primary-color);
+  border-color: var(--app-primary-color);
+}
+
+/* ── Small viewport: one column, image full row ────────────────────────── */
+@media (max-width: 768px) {
+  .section {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .section-image {
+    grid-column: 1 / -1;
+    aspect-ratio: 16 / 9;
+  }
+
+  .section-title {
+    font-size: var(--app-font-size-xl);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-cta {
+    transition: none;
+  }
+
+  .section-cta:hover {
+    transform: none;
+  }
+}

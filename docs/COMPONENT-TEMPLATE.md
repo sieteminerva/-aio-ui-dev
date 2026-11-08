@@ -20,12 +20,12 @@ included by Vitest (`packages/**/*.test.ts`). Nothing in `templates/` can break 
 
 ## Placeholders
 
-| Token        | `my-widget` becomes | Used for                                          |
-| ------------ | ------------------- | ------------------------------------------------- |
-| `__PASCAL__` | `MyWidget`          | file name, class name, `iMyWidgetConfig`          |
-| `__CAMEL__`  | `myWidget`          | selector-token prefix (`@myWidget>item`)          |
-| `__KEBAB__`  | `my-widget`         | package name, registry key, CSS classes           |
-| `__TITLE__`  | `My Widget`         | comment headers and the README title              |
+| Token        | `my-widget` becomes | Used for                                 |
+| ------------ | ------------------- | ---------------------------------------- |
+| `__PASCAL__` | `MyWidget`          | file name, class name, `iMyWidgetConfig` |
+| `__CAMEL__`  | `myWidget`          | selector-token prefix (`@myWidget>item`) |
+| `__KEBAB__`  | `my-widget`         | package name, registry key, CSS classes  |
+| `__TITLE__`  | `My Widget`         | comment headers and the README title     |
 
 Substitution is a plain `split/join` over the four tokens — no templating engine, so the
 files stay readable in the editor.
@@ -62,11 +62,11 @@ Next steps — three places must know the component by name: …
 It creates files; it does not edit yours. Three registrations stay manual on purpose —
 each one is a decision, not a copy-paste:
 
-| Where                                            | What to add                                                       |
-| ------------------------------------------------ | ----------------------------------------------------------------- |
-| `packages/core/src/types/registry.ts`             | `badge: any;` in `iBuilderRegistry` (the `builderId` must typecheck) |
-| Host asset map, e.g. `examples/demo/src/registry.assets.ts` | `modules` + `styles` entries with **static** specifiers |
-| Content or demo table                            | `builder: ["badge"]`, or a row in the demo manifest               |
+| Where                                                       | What to add                                                          |
+| ----------------------------------------------------------- | -------------------------------------------------------------------- |
+| `packages/core/src/types/registry.ts`                       | `badge: any;` in `iBuilderRegistry` (the `builderId` must typecheck) |
+| Host asset map, e.g. `examples/demo/src/registry.assets.ts` | `modules` + `styles` entries with **static** specifiers              |
+| Content or demo table                                       | `builder: ["badge"]`, or a row in the demo manifest                  |
 
 Then `npm install` once so the workspace link for `@aio-ui/<kebab>` exists (new package
 folders are picked up by the `packages/components/*` workspace glob).
@@ -74,7 +74,7 @@ folders are picked up by the `packages/components/*` workspace glob).
 ## Lifting this into `aio-kit`
 
 The generator is deliberately self-contained: argv parsing + token substitution + `fs`
-calls. A CLI wrapper only has to decide *where* the templates live and *where* the output
+calls. A CLI wrapper only has to decide _where_ the templates live and _where_ the output
 goes.
 
 ```js
@@ -83,12 +83,21 @@ import { cpSync, readFileSync, writeFileSync, mkdirSync, existsSync } from "node
 import { join } from "node:path";
 
 const TOKENS = (kebab, pascal, camel, title) => ({
-  __PASCAL__: pascal, __CAMEL__: camel, __KEBAB__: kebab, __TITLE__: title,
+  __PASCAL__: pascal,
+  __CAMEL__: camel,
+  __KEBAB__: kebab,
+  __TITLE__: title,
 });
 
 export function newComponent({ name, cwd, templatesDir, targetDir }) {
-  const kebab = name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").replace(/[\s_]+/g, "-").toLowerCase();
-  const pascal = kebab.split("-").map((p) => p[0].toUpperCase() + p.slice(1)).join("");
+  const kebab = name
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .replace(/[\s_]+/g, "-")
+    .toLowerCase();
+  const pascal = kebab
+    .split("-")
+    .map((p) => p[0].toUpperCase() + p.slice(1))
+    .join("");
   const camel = kebab.replace(/-([a-z0-9])/g, (_, c) => c.toUpperCase());
   const out = join(cwd, targetDir ?? "packages/components", kebab);
 
@@ -102,8 +111,10 @@ export function newComponent({ name, cwd, templatesDir, targetDir }) {
     ["README.md.tpl", "README.md"],
   ]) {
     const text = readFileSync(join(templatesDir, from), "utf8");
-    const filled = Object.entries(TOKENS(kebab, pascal, camel, name))
-      .reduce((acc, [token, value]) => acc.split(token).join(value), text);
+    const filled = Object.entries(TOKENS(kebab, pascal, camel, name)).reduce(
+      (acc, [token, value]) => acc.split(token).join(value),
+      text,
+    );
 
     const target = join(out, to);
     mkdirSync(dirname(target), { recursive: true });

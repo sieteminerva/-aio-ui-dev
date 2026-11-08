@@ -1,168 +1,241 @@
-import type { iActionProperty, iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
+import type { iBuilderConfig, iBuilderSelectorsConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 
-export type SectionElementType =
-  | "@section"
-  | "@section>content"
-  | "@section>content>image"
-  | "@section>content>eyebrow"
-  | "@section>content>header"
-  | "@section>content>desc"
-  | "@section>content>actions"
-  | "@section>content>actions>item";
+/**
+ * Section — one row of 2–3 content columns.
+ *
+ * ```ts
+ * { content: [ { className?, content: [ { eyebrow, title, description, imageUrl, actions } ] }, … ] }
+ * ```
+ *
+ * A column is either a wrapper of blocks (`content: [...]`) or a block itself, so both the
+ * nested shape above and a flat `content: [{ title, imageUrl }]` render. Each block
+ * contributes, in this order: image → eyebrow → header → description → actions.
+ */
+
+export const ELEMENT_KEYS = [
+  "@section",
+  "@section>content",
+  "@section>content>image",
+  "@section>content>eyebrow",
+  "@section>content>header",
+  "@section>content>desc",
+  "@section>content>actions",
+  "@section>content>actions>item",
+] as const;
+
+export type SectionElementType = (typeof ELEMENT_KEYS)[number];
+
+export const DEFAULT_SELECTORS: iBuilderSelectorsConfig<SectionElementType> = {
+  "@section": { tagName: "section", className: "section" },
+  "@section>content": { tagName: "div", className: "section-column" },
+  "@section>content>image": { tagName: "img", className: "section-image" },
+  "@section>content>eyebrow": { tagName: "div", className: "section-eyebrow" },
+  "@section>content>header": { tagName: "h2", className: "section-title" },
+  "@section>content>desc": { tagName: "p", className: "section-desc" },
+  "@section>content>actions": { tagName: "div", className: "section-actions" },
+  // An anchor: a CTA is usually a link. Without `href` it becomes a real button via
+  // role="button" + tabindex, so both cases stay keyboard reachable.
+  "@section>content>actions>item": { tagName: "a", className: "section-cta" },
+};
+
+export interface iSectionAction {
+  label?: string;
+  href?: string;
+  type?: "button" | "submit" | "reset";
+  onClick?: (event: MouseEvent) => void;
+}
+
+export interface iSectionBlock {
+  image?: string;
+  imageUrl?: string;
+  /** Accessible description for the image; falls back to `title`. */
+  alt?: string;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  actions?: iSectionAction[];
+}
+
+export interface iSectionColumn extends iSectionBlock {
+  className?: string;
+  content?: iSectionBlock[] | HTMLElement;
+}
 
 export interface iSectionConfig extends iBuilderConfig<SectionElementType> {
+  /** Wrapper class appended to the root, e.g. `"container"`. */
+  className?: string;
+}
 
+export interface iNormalizedColumn {
+  className?: string;
+  blocks: iSectionBlock[];
+  /** A pre-built node passed as `column.content`. */
+  element?: HTMLElement;
+}
+
+/**
+ * Normalize the payload into columns of blocks.
+ *
+ * Accepts `{ content: [...] }`, a bare array, or a single column object. A column whose
+ * own fields look like a block is treated as one block, which is what makes the flat
+ * shape work without a nested array of one.
+ */
+export function normalizeColumns(data: any): iNormalizedColumn[] {
+  const content = data?.content ?? data;
+  if (!content) return [];
+
+  // `{}` is "nothing", not "one empty column".
+  if (!Array.isArray(content) && typeof content === "object" && Object.keys(content).length === 0) return [];
+
+  const raw = Array.isArray(content) ? content : [content];
+
+  return raw.filter(Boolean).map((column: iSectionColumn) => {
+    const className = typeof column.className === "string" ? column.className : undefined;
+    const inner = column.content;
+
+    if (Array.isArray(inner)) {
+      return { className, blocks: inner.filter(Boolean) as iSectionBlock[] };
+    }
+
+    if (typeof HTMLElement !== "undefined" && inner instanceof HTMLElement) {
+      return { className, blocks: [], element: inner };
+    }
+
+    if (column.eyebrow || column.title || column.description || column.image || column.imageUrl || column.actions) {
+      return { className, blocks: [column] };
+    }
+
+    return { className, blocks: [] };
+  });
+}
+
+/** Add a space-separated class list without wiping the selector's own classes. */
+function addClasses(el: HTMLElement, value: unknown): void {
+  if (typeof value !== "string") return;
+  for (const token of value.split(/\s+/).filter(Boolean)) el.classList.add(token);
 }
 
 export class SectionBuilder extends Builder<SectionElementType, iSectionConfig> {
   readonly builderId = "section";
   readonly name = "section";
-  readonly stylesheet: string = "";
-  public config: any;
+  readonly stylesheet: string = "./Section.css";
+  public config: Required<iSectionConfig>;
 
   constructor(config: Partial<iSectionConfig> = {}) {
     super();
-    // 💡 KEMBALI SUCI: Kamus selektor kaku Anda terbebas murni dari properti isArray kuno!
-    const defaultSelectors: Record<SectionElementType, iActionProperty> = {
-      "@section": { tagName: "section", className: "row" },
-      "@section>content": { tagName: "div", className: "column" },
-      "@section>content>image": { tagName: "img", className: "img-fluid" },
-      "@section>content>eyebrow": { tagName: "div", className: "eyebrow" },
-      "@section>content>header": { tagName: "h2", className: "title" },
-      "@section>content>desc": { tagName: "p", className: "desc" },
-      "@section>content>actions": { tagName: "div", className: "actions" },
-      "@section>content>actions>item": { tagName: "button", className: "button" }
-    };
 
     const defaultConfig: Required<iSectionConfig> = {
       themeId: "default",
-      selectors: defaultSelectors,
+      selectors: DEFAULT_SELECTORS,
       namespace: null,
-      emit: () => { }
-    }
+      emit: () => { },
+      className: "",
+    };
 
     this.config = this.resolveConfig(defaultConfig, config);
   }
 
-  /**
-   * 👑 THE REFINED COMPILER GATEWAY
-   * Ultra-Slim, 100% Linear, dan terintegrasi penuh dengan saku memori JIT Map!
-   */
-  public prepare(data: iBasicNode, _config: Partial<iSectionConfig> = {}): HTMLElement {
-
-    // console.log({ data })
-    // 1. Lahirkan Cangkang Makro Terluar Seksi (@section)
+  public prepare(data: any): HTMLElement {
     const section = this.render("@section", data);
-    // Amankan dan kembalikan elemen kontainer makro terluarnya secara standard via Map get!
-    return section as HTMLElement;
-  }
 
-  /**
-   * 👑 THE SEPARATED HYDRATION VALVE (POS PENYIRAMAN RAHIM DATA)
-   * Kebal XSS murni vanilla, terisolasi penuh, 0% campur tangan birokrasi engine pusat!
-   */
-  protected template(typeKey: SectionElementType, el: HTMLElement, payload?: any): void {
-    if (!payload) return;
+    for (const column of normalizeColumns(data)) {
+      const box = this.render("@section>content", column);
+      if (!box) continue;
 
-    switch (typeKey) {
-      case "@section":
-        el.id = payload.id || "";
-        // Jika pembungkus luar memiliki set custom class dari Sheets, siram!
-        if (payload.className) el.className = `section ${payload.className}`.trim();
-        // Normalisasi data array kolom konten dari Sheets (Mendukung Multi-Instance Kolom)
-        const rows = Array.isArray(payload.content) ? payload.content : [payload.content];
-        // 2. Loop Linear Tingkat Kolon Isi Konten (N-Columns)
-        for (const column of rows) {
-          // console.log({ column })
-          // Lahirkan boks pembungkus kolom konten
-          const contentBox = this.render("@section>content", column);
-          el?.appendChild(contentBox!);
+      if (column.element) box.appendChild(column.element);
 
+      for (const block of column.blocks) {
+        const imageUrl = block.imageUrl ?? block.image;
+        if (imageUrl) {
+          const image = this.render("@section>content>image", block);
+          if (image) box.appendChild(image);
         }
 
+        if (block.eyebrow) {
+          const eyebrow = this.render("@section>content>eyebrow", block);
+          if (eyebrow) box.appendChild(eyebrow);
+        }
+
+        if (block.title) {
+          const header = this.render("@section>content>header", block);
+          if (header) box.appendChild(header);
+        }
+
+        if (block.description) {
+          const desc = this.render("@section>content>desc", block);
+          if (desc) box.appendChild(desc);
+        }
+
+        const actions = Array.isArray(block.actions) ? block.actions : [];
+        if (actions.length) {
+          const group = this.render("@section>content>actions", block);
+          if (group) {
+            for (const action of actions) {
+              const item = this.render("@section>content>actions>item", action);
+              if (item) group.appendChild(item);
+            }
+            box.appendChild(group);
+          }
+        }
+      }
+
+      section?.appendChild(box);
+    }
+
+    return this.load("@section") as HTMLElement;
+  }
+
+  protected template(typeKey: SectionElementType, el: HTMLElement, payload?: any): void {
+    switch (typeKey) {
+      case "@section":
+        if (payload?.id) el.id = payload.id;
+        if (payload?.className) addClasses(el, payload.className);
+        if (this.config.className) addClasses(el, this.config.className);
         break;
 
       case "@section>content":
-
-        el.className = payload.className || "column"
-
-        if (payload.content && Array.isArray(payload.content)) {
-
-          for (const col of payload.content) {
-            if (col.image || col.imageUrl) {
-              const image = this.render("@section>content>image", { image: col.imageUrl, title: col.title })!;
-              el?.appendChild(image)
-            };
-            if (col.eyebrow) {
-              const eyebrow = this.render("@section>content>eyebrow", col)!;
-              el?.appendChild(eyebrow)
-            };
-            if (col.title) {
-              const header = this.render("@section>content>header", col)!;
-              el?.appendChild(header)
-            };
-            if (col.description) {
-              const desc = this.render("@section>content>desc", col)!;
-              el?.appendChild(desc)
-            };
-            if (col.actions?.length > 0) {
-              const actions = this.render("@section>content>actions", col)!;
-              el?.appendChild(actions)
-            };
-
-          }
-        } else if (payload?.content instanceof HTMLElement) {
-          el?.appendChild(payload.content)
-        }
+        if (payload?.className) addClasses(el, payload.className);
         break;
 
-      case "@section>content>image":
-        el.setAttribute("src", encodeURI(payload.image || ""));
-        el.setAttribute("alt", payload.title || "section-graphic");
+      case "@section>content>image": {
+        const img = el as HTMLImageElement;
+        img.src = encodeURI(payload?.imageUrl ?? payload?.image ?? "");
+        img.alt = payload?.alt || payload?.title || "";
+        img.loading = "lazy";
+        img.decoding = "async";
         break;
+      }
 
       case "@section>content>eyebrow":
-        // console.log({ payload })
-        el.textContent = payload.eyebrow || "";
+        el.textContent = payload?.eyebrow ?? "";
         break;
 
       case "@section>content>header":
-        el.textContent = payload.title || "";
+        el.textContent = payload?.title ?? "";
         break;
 
       case "@section>content>desc":
-        el.textContent = payload.description || "";
-        break;
-
-      case "@section>content>actions":
-        const actionItems = Array.isArray(payload) ? payload : [];
-        actionItems.forEach((actionData: any) => {
-          const btnItem = this.render("@section>content>actions>item", actionData);
-          if (btnItem && el) el.appendChild(btnItem);
-        });
+        el.textContent = payload?.description ?? "";
         break;
 
       case "@section>content>actions>item":
-        el.textContent = payload.label || "";
+        el.textContent = payload?.label ?? "";
 
-        // Fleksibilitas perubahan tag otomatis (Anchor vs Button) mengikuti isi data href
-        if (payload.href) {
-          const anchor = el as HTMLAnchorElement;
-          anchor.href = payload.href;
-          // Pancing penguncian perosotan scroll passthrough satu pintu jika dibutuhkan:
-          // (this as any).bindNavigation?.(anchor, payload.href);
+        if (payload?.href) {
+          el.setAttribute("href", payload.href);
         } else {
-          const btn = el as HTMLButtonElement;
-          btn.type = payload.type || "button";
-          if (payload.onClick) btn.addEventListener("click", payload.onClick);
+          // No destination: behave like the button it visually is.
+          el.setAttribute("role", "button");
+          el.tabIndex = 0;
+          if (typeof payload?.onClick === "function") el.addEventListener("click", payload.onClick);
         }
+        break;
+
+      default:
         break;
     }
   }
 
-  public initialize(): void {
-    // Ambil akses langsung elemen dari saku Map jika butuh mengikat event eksternal
-    // console.log(`[Section Connected] Blueprint for component "${this.name}" successfully deployed.`);
-  }
+  public initialize(): void { }
 }

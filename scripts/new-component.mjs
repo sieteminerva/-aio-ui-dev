@@ -62,7 +62,7 @@ const flag = (name) => flags.get(name);
 const rawName = positional[0];
 
 if (!rawName) {
-  console.error("Usage: node scripts/new-component.mjs <name> [--title \"…\"] [--dir path] [--no-test] [--force] [--dry]");
+  console.error('Usage: node scripts/new-component.mjs <name> [--title "…"] [--dir path] [--no-test] [--force] [--dry]');
   process.exit(1);
 }
 
@@ -78,7 +78,11 @@ function toKebab(input) {
 }
 
 function toPascal(kebab) {
-  return kebab.split("-").filter(Boolean).map((part) => part[0].toUpperCase() + part.slice(1)).join("");
+  return kebab
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join("");
 }
 
 const kebab = toKebab(String(rawName));

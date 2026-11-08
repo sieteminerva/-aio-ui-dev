@@ -97,23 +97,34 @@ export const DEMO: iDemoEntry[] = [
   {
     name: "section",
     path: "@aio-ui/section/Section",
+    stylesheet: "@aio-ui/section/Section.css",
     category: "layout",
     kind: "element",
-    // Shape from `.archives/travel-trip/content.ts:296` — one section, content is an
-    // array of columns, and each column has its own `content` array.
+    // Shape from `.archives/travel-trip/content.ts:296` — one row, content is an array of
+    // columns, and each column has its own `content` array of blocks.
     payload: {
       id: "demo-section",
       className: "demo",
       content: [
         {
-          className: "column full",
+          className: "column half",
           content: [
-            { eyebrow: "Eyebrow", title: "Judul section", description: "Deskripsi section.", imageUrl: image("Section") },
+            {
+              eyebrow: "Private trip",
+              title: "Dua kolom, satu baris.",
+              description:
+                "Kolom teks di kiri, media di kanan. Di bawah 768px grid runtuh jadi satu kolom dan gambar mengambil lebar penuh.",
+              actions: [{ label: "Lihat galeri", href: "#gallery" }, { label: "Tanya dulu" }],
+            },
           ],
+        },
+        {
+          className: "column half",
+          content: [{ imageUrl: image("Section media"), alt: "Ilustrasi kolom media" }],
         },
       ],
     },
-    note: "no stylesheet; needs global styles",
+    note: "2 columns; image spans the full row under 768px",
   },
   {
     name: "footer",

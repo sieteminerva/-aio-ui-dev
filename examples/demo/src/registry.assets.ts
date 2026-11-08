@@ -33,6 +33,7 @@ export const componentAssets = {
     "@aio-ui/modeswitcher/ModeSwitcher.css": () => import("@aio-ui/modeswitcher/ModeSwitcher.css?inline"),
     "@aio-ui/pricingcard/PricingCard.css": () => import("@aio-ui/pricingcard/PricingCard.css?inline"),
     "@aio-ui/product/ProductCard.css": () => import("@aio-ui/product/ProductCard.css?inline"),
+    "@aio-ui/section/Section.css": () => import("@aio-ui/section/Section.css?inline"),
     "@aio-ui/tab/Tab.css": () => import("@aio-ui/tab/Tab.css?inline"),
   } as Record<string, () => Promise<unknown>>,
 };

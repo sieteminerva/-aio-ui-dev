@@ -9,20 +9,20 @@ Status is what the demo reports, not what the docs wish.
 
 ## Verified
 
-| Component       | Input shape (what `build(name, payload)` receives)                                                                | Evidence                                        |
-| --------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `accordion`     | `{ content: [{ title, description }] }`                                                                           | `content.ts:308`                                |
-| `carousel`      | `{ content: [{ title, description, image }] }`                                                                    | `content.ts:37`                                 |
-| `tab`           | `{ content: { menu: string[], body: any[] } }`                                                                    | gallery `content/blog` usage                    |
-| `section`       | `{ id, className, content: [ { className, content: [ { imageUrl, eyebrow, title, description, actions? } ] } ] }` | `content.ts:296`                                |
-| `footer`        | `{ content: { id?, company, copyright?, columns: [{ title?, description?, actions?: [{ label, href\|value }] }] } }` | `.archives/travel-trip/main.ts:61`           |
-| `menu`          | `{ content: { navigations: [{ href, label, title }], actions: [] } }`                                             | rendered nav                                    |
-| `fab-menu`      | `{ title, actions: [{ label }] }` — **no** `content` wrapper                                                      | `prepare()` reads `content.actions`             |
-| `mode-switcher` | `{}`                                                                                                              | self-contained                                  |
-| `pricing-card`  | **array** of `{ header, body: [{ title, className? }], price, action: { label } }`                                | `content.ts:531`                                |
-| `product-card`  | `{ uid, name, category, title, description, price, colors: [{ name, value }], artwork: { src } }`                 | `content.ts:692`                                |
-| `product-grid`  | `{ content: { data: [<product-card payload>] } }`                                                                 | `ProductGrid.prepare` reads `data.content.data` |
-| `modal`         | `{ content }` (string or nodes) + `config: { id, title, destroyOnClose?, onReady? }`                                | `Modal.ts` — `prepare()` returns the element |
+| Component       | Input shape (what `build(name, payload)` receives)                                                                   | Evidence                                        |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `accordion`     | `{ content: [{ title, description }] }`                                                                              | `content.ts:308`                                |
+| `carousel`      | `{ content: [{ title, description, image }] }`                                                                       | `content.ts:37`                                 |
+| `tab`           | `{ content: { menu: string[], body: any[] } }`                                                                       | gallery `content/blog` usage                    |
+| `section`       | `{ id, className, content: [ { className, content: [ { imageUrl, eyebrow, title, description, actions? } ] } ] }`    | `content.ts:296`                                |
+| `footer`        | `{ content: { id?, company, copyright?, columns: [{ title?, description?, actions?: [{ label, href\|value }] }] } }` | `.archives/travel-trip/main.ts:61`              |
+| `menu`          | `{ content: { navigations: [{ href, label, title }], actions: [] } }`                                                | rendered nav                                    |
+| `fab-menu`      | `{ title, actions: [{ label }] }` — **no** `content` wrapper                                                         | `prepare()` reads `content.actions`             |
+| `mode-switcher` | `{}`                                                                                                                 | self-contained                                  |
+| `pricing-card`  | **array** of `{ header, body: [{ title, className? }], price, action: { label } }`                                   | `content.ts:531`                                |
+| `product-card`  | `{ uid, name, category, title, description, price, colors: [{ name, value }], artwork: { src } }`                    | `content.ts:692`                                |
+| `product-grid`  | `{ content: { data: [<product-card payload>] } }`                                                                    | `ProductGrid.prepare` reads `data.content.data` |
+| `modal`         | `{ content }` (string or nodes) + `config: { id, title, destroyOnClose?, onReady? }`                                 | `Modal.ts` — `prepare()` returns the element    |
 
 ## Rules that came out of measuring
 
@@ -56,6 +56,14 @@ Status is what the demo reports, not what the docs wish.
    `slide-up` when `vertical`. `loop: false` clamps at the ends instead of wrapping.
    `showControl`/`showNavigation` accept `"auto"`, which adds `.auto-controls` (hover to
    reveal); `true` keeps them visible.
+8. **`section` is one row of 2–3 columns, and the grid decides the count.** Each column is
+   a block (or a list of blocks) rendered in the order image → eyebrow → title →
+   description → actions. The column count is pure CSS (`auto-fit` + an 18rem floor): 3
+   tracks on a page-width container, 2 in the middle, 1 below `768px`, where the image also
+   takes the full row. Old payloads carry flex utilities in `column.className`
+   (`column half`, `column full`) — the component neutralises `flex`/`max-width` on the
+   column so those cannot halve a grid cell. `imageUrl` and `image` are both accepted, and
+   `alt` is separate from `title` so an image block needs no heading.
 
 New components start from the scaffold, not from an existing file:
 `node scripts/new-component.mjs <name>` → [`COMPONENT-TEMPLATE.md`](./COMPONENT-TEMPLATE.md),
@@ -63,10 +71,9 @@ conventions in [`COMPONENT-CONVENTIONS.md`](./COMPONENT-CONVENTIONS.md).
 
 ## Known gaps
 
-| Gap              | Detail                                                                                                                                                                                                                                               |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `section`        | No stylesheet of its own; relies on `@aio-ui/styles`. Payload is a _column of columns_, which is more nesting than the visual result suggests.                                                                                                       |
-| `product-detail` | `packages/components/product/ProductDetail.ts` exports no Builder class — it cannot be registered until it is rewritten.                                                                                                                             |
+| Gap              | Detail                                                                                                                                         |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `product-detail` | `packages/components/product/ProductDetail.ts` exports no Builder class — it cannot be registered until it is rewritten.                       |
 
 ## Analysis — can this be universal?
 

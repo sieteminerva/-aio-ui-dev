@@ -25,27 +25,27 @@ packages/components/my-widget/
    └─ MyWidget.test.ts  DOM-free tests (payload contract + selector coverage)
 ```
 
-| Rule                       | Reason                                                                 |
-| -------------------------- | ---------------------------------------------------------------------- |
-| Folder name is `kebab-case`| It is the package name suffix and the registry key.                    |
-| File name is `PascalCase`  | It is the class name; the registry derives the CSS path from it.       |
-| One component per folder   | Multi-component folders break stylesheet derivation and chunk naming.  |
-| `package.json` is private  | Nothing is published; workspaces link them locally.                    |
+| Rule                        | Reason                                                                |
+| --------------------------- | --------------------------------------------------------------------- |
+| Folder name is `kebab-case` | It is the package name suffix and the registry key.                   |
+| File name is `PascalCase`   | It is the class name; the registry derives the CSS path from it.      |
+| One component per folder    | Multi-component folders break stylesheet derivation and chunk naming. |
+| `package.json` is private   | Nothing is published; workspaces link them locally.                   |
 
 ---
 
 ## 2. Naming
 
-| Thing                     | Convention                     | Example (`my-widget`)             |
-| ------------------------- | ------------------------------ | --------------------------------- |
-| Registry key / `builderId`| The folder's kebab name        | `"my-widget"`                     |
-| Class                     | `<Pascal>Builder`              | `MyWidgetBuilder`                 |
-| Element-type union        | `<Pascal>ElementType`          | `MyWidgetElementType`             |
-| Config interface          | `i<Pascal>Config`              | `iMyWidgetConfig`                 |
-| Item/record interface     | `i<Pascal>Item`                | `iMyWidgetItem`                   |
-| Key list                  | `ELEMENT_KEYS`                 | —                                 |
-| Selector map              | `DEFAULT_SELECTORS`            | —                                 |
-| Payload normalizer        | `normalizePayload`             | —                                 |
+| Thing                      | Convention              | Example (`my-widget`) |
+| -------------------------- | ----------------------- | --------------------- |
+| Registry key / `builderId` | The folder's kebab name | `"my-widget"`         |
+| Class                      | `<Pascal>Builder`       | `MyWidgetBuilder`     |
+| Element-type union         | `<Pascal>ElementType`   | `MyWidgetElementType` |
+| Config interface           | `i<Pascal>Config`       | `iMyWidgetConfig`     |
+| Item/record interface      | `i<Pascal>Item`         | `iMyWidgetItem`       |
+| Key list                   | `ELEMENT_KEYS`          | —                     |
+| Selector map               | `DEFAULT_SELECTORS`     | —                     |
+| Payload normalizer         | `normalizePayload`      | —                     |
 
 `builderId` and `name` are both the registry key and nothing else. Older components
 (`product-card`, `fab-menu`) predate this rule; do not copy their aliasing.
@@ -156,14 +156,14 @@ public prepare(data: any): HTMLElement {
 }
 ```
 
-| Rule                                                        | Reason                                                                 |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Build with `render()`, never `document.createElement()`      | `render()` registers the node, runs `template()`, applies the theme handler and emits `elementAdded`. A hand-made element is invisible to all of that. |
-| Never use `innerHTML` for content                            | Payload is untrusted; `textContent` is the only safe sink.             |
-| Do not append anything to `document.body`                    | The caller decides where the root goes. A builder that body-appends escapes teardown. |
-| Skip absent parts instead of appending empty nodes            | Empty `<p>`/`<ul>` keep layout gaps open and showed up in the footer as a real defect. |
-| Return `this.load("@container")`, not a local variable       | The element in the node store is the canonical one (wrappers and hydration markers live there). |
-| `prepare()` must be pure with respect to the DOM outside it  | It runs before `initialize()`, on every render.                        |
+| Rule                                                        | Reason                                                                                                                                                 |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Build with `render()`, never `document.createElement()`     | `render()` registers the node, runs `template()`, applies the theme handler and emits `elementAdded`. A hand-made element is invisible to all of that. |
+| Never use `innerHTML` for content                           | Payload is untrusted; `textContent` is the only safe sink.                                                                                             |
+| Do not append anything to `document.body`                   | The caller decides where the root goes. A builder that body-appends escapes teardown.                                                                  |
+| Skip absent parts instead of appending empty nodes          | Empty `<p>`/`<ul>` keep layout gaps open and showed up in the footer as a real defect.                                                                 |
+| Return `this.load("@container")`, not a local variable      | The element in the node store is the canonical one (wrappers and hydration markers live there).                                                        |
+| `prepare()` must be pure with respect to the DOM outside it | It runs before `initialize()`, on every render.                                                                                                        |
 
 Multi-mode components (e.g. `Rating`'s four visual types, `Footer`'s two rows) branch on
 `this.config` inside `prepare()` and render only the keys that mode needs.
@@ -217,12 +217,12 @@ public initialize(root: HTMLElement): void {
 private handleClick = (event: Event): void => { /* … */ };
 ```
 
-| Rule                                              | Reason                                                                 |
-| ------------------------------------------------- | ---------------------------------------------------------------------- |
-| Keep listener refs as stable class fields         | An inline arrow cannot be removed, so re-initialising stacks handlers. |
-| Remove before add                                  | `run()`-style bootstrapping and re-mounts call `initialize()` again.  |
-| Own your timers, observers and `AbortController`s  | Clear them in `destroy()`; a running interval keeps the instance (and its nodes) alive. |
-| Do not read state the constructor could have set   | Config is already resolved; payload is the argument.                   |
+| Rule                                              | Reason                                                                                  |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Keep listener refs as stable class fields         | An inline arrow cannot be removed, so re-initialising stacks handlers.                  |
+| Remove before add                                 | `run()`-style bootstrapping and re-mounts call `initialize()` again.                    |
+| Own your timers, observers and `AbortController`s | Clear them in `destroy()`; a running interval keeps the instance (and its nodes) alive. |
+| Do not read state the constructor could have set  | Config is already resolved; payload is the argument.                                    |
 
 Special case — **`prepare()` may return something other than the root element** when a
 component has no DOM identity of its own (e.g. `Modal` returns controls through
@@ -269,11 +269,11 @@ export interface iMyWidgetConfig extends iBuilderConfig<MyWidgetElementType> {
 
 A component is not usable until three places know its name:
 
-| Place                                         | Entry                                                            |
-| --------------------------------------------- | ---------------------------------------------------------------- |
-| `packages/core/src/types/registry.ts`          | `my-widget: any;` inside `iBuilderRegistry`                       |
-| Host asset map (e.g. `examples/demo/src/registry.assets.ts`) | `modules` + `styles` lazy loaders                |
-| Content                                                       | `builder: ["my-widget"]` on a node, or a host table row          |
+| Place                                                        | Entry                                                   |
+| ------------------------------------------------------------ | ------------------------------------------------------- |
+| `packages/core/src/types/registry.ts`                        | `my-widget: any;` inside `iBuilderRegistry`             |
+| Host asset map (e.g. `examples/demo/src/registry.assets.ts`) | `modules` + `styles` lazy loaders                       |
+| Content                                                      | `builder: ["my-widget"]` on a node, or a host table row |
 
 The asset map is written with **static specifiers** on purpose: Vite needs literal
 `import()` strings to create chunks, so a computed `import(entry.path)` produces nothing.
@@ -319,14 +319,14 @@ Anything that needs a real DOM belongs in the demo page, not the suite.
 
 ## 13. Anti-patterns
 
-| Don't                                                     | Do instead                                                       |
-| --------------------------------------------------------- | ---------------------------------------------------------------- |
-| `document.createElement` inside `prepare()`               | `this.render(key, payload)`                                      |
-| `el.innerHTML = "<b>" + value + "</b>"`                   | `el.textContent = value` (and a key for the wrapper)             |
-| Caching DOM in module-level variables                     | Keep it on the instance; the instance dies with the tree         |
-| Two components sharing one key name                       | Each builder owns its keys; namespace handles collisions         |
-| Registering a wrapper object around the builder class      | Register the class; the registry constructs it                   |
-| Joining `label` and `value` with `" "` without checking    | Decide the display rule in `template()` and document it          |
+| Don't                                                   | Do instead                                               |
+| ------------------------------------------------------- | -------------------------------------------------------- |
+| `document.createElement` inside `prepare()`             | `this.render(key, payload)`                              |
+| `el.innerHTML = "<b>" + value + "</b>"`                 | `el.textContent = value` (and a key for the wrapper)     |
+| Caching DOM in module-level variables                   | Keep it on the instance; the instance dies with the tree |
+| Two components sharing one key name                     | Each builder owns its keys; namespace handles collisions |
+| Registering a wrapper object around the builder class   | Register the class; the registry constructs it           |
+| Joining `label` and `value` with `" "` without checking | Decide the display rule in `template()` and document it  |
 
 ---
 
