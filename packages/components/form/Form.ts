@@ -9,6 +9,7 @@ import type { FormModulePhase, iFormCollaborator, iFormModuleContext } from "./F
 import { CORE_FORM_MODULES } from "./FormRegistry";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { applyRowColumns, applyRowSpan, childSpanOf, columnsOf } from "./FormLayout";
+import { collectFormValues } from "./FormValues";
 // 🎨 Gaya baseline field milik form: adaptor input juga mengimpornya untuk
 // pemakaian mandiri, tetapi form tetap memuatnya agar tampilan tidak bergantung
 // pada modul input mana yang dipasang (mis. renderer kustom).
@@ -761,8 +762,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       }
 
       form.classList.add("loading");
-      const formData = new FormData(form);
-      const data = Object.fromEntries(formData as any);
+      const data = collectFormValues(form);
 
       // 🧩 Kolaborator menyumbang datanya (file, alamat, tabel) sebelum event rilis.
       for (const feature of this.#features) await feature.beforeSubmit?.(data);
@@ -774,12 +774,11 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
             formId: form.id,
             data,
             complete: (success: boolean, messageConfig: any, resetForm: boolean) => {
-              // TODO: beri tahu modul kolaborator saat form di-reset agar state-nya ikut bersih
               toggleLoadingState(success);
               this._notify(form, success, messageConfig);
-              if (resetForm || this.config.resetOnComplete) form.reset();
+              if (resetForm || this.config.resetOnComplete) this.#resetForm(form);
             },
-            reset: () => form.reset()
+            reset: () => this.#resetForm(form)
           }
         }));
     });
@@ -828,6 +827,26 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     console.warn("[FormBuilder] No module handles messages. Register the message module in the loader preset.");
   }
 
+  /**
+   * Resets the form and tells every collaborator to drop its own state.
+   *
+   * @summary `form.reset()` restores controls the browser knows about; a preview table, an
+   * uploader's file list or an address picker keep showing the old values unless their
+   * module is told. The shell owns the controls, the modules own the rest.
+   * @param form - Form to reset.
+   */
+  #resetForm(form: HTMLFormElement): void {
+    form.reset();
+
+    for (const feature of this.#features) {
+      try {
+        feature.reset?.(form);
+      } catch (error) {
+        console.warn("[FormBuilder] module reset failed:", error);
+      }
+    }
+  }
+
 
   /**
    * Helper internal untuk memindai string HTML mentah atau element hidup 
@@ -840,7 +859,6 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     if (input instanceof HTMLButtonElement) {
       btn = input.type === "submit" ? input : input.querySelector("button[type=submit], input[type=submit]");
     } else if (typeof input === "string") {
-      console.log("found string submit button")
       const wrapper = document.createElement("div");
       wrapper.insertAdjacentHTML("beforeend", input.trim());
       btn = wrapper.querySelector("button[type=submit], input[type=submit]");

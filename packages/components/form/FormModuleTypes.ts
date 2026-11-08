@@ -107,6 +107,16 @@ export interface iFormCollaborator {
    *   The first loaded module implementing this hook handles the message.
    */
   notify?: (content: iMessageContent, target: iFormMessageTarget) => void;
+
+  /**
+   * Called after the form was reset, so a module can clear the state it owns.
+   *
+   * @summary `form.reset()` only resets controls the browser knows about — a preview
+   * table, an uploader's file list or an address picker keep showing the old values
+   * unless they are told.
+   * @param form - The form that was just reset.
+   */
+  reset?: (form: HTMLFormElement) => void;
 }
 
 /**
