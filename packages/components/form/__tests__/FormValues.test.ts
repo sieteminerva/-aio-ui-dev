@@ -103,3 +103,31 @@ describe("collectFormValues", () => {
     expect(collectFormValues(form)).toEqual({ dup: "typed" });
   });
 });
+
+describe("collectFormValues excludeEmpty", () => {
+  const markup = `
+    <input name="name" value="">
+    <input name="qty" value="2">
+    <input name="agree" type="checkbox">
+    <input name="topping" type="checkbox" value="cheese">
+  `;
+
+  it("keeps empty and false values by default", () => {
+    expect(collectFormValues(formWith(markup))).toEqual({
+      name: "",
+      qty: "2",
+      agree: false,
+      topping: false,
+    });
+  });
+
+  it("drops them when asked", () => {
+    expect(collectFormValues(formWith(markup), { excludeEmpty: true })).toEqual({ qty: "2" });
+  });
+
+  it("keeps a ticked checkbox that happens to hold a value", () => {
+    const form = formWith(`<input name="topping" type="checkbox" value="cheese" checked>`);
+
+    expect(collectFormValues(form, { excludeEmpty: true })).toEqual({ topping: "cheese" });
+  });
+});

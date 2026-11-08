@@ -13,7 +13,7 @@ export type PricingCardElementType =
   | "@card>actions"
 
 interface iPricingCardConfig extends iBuilderConfig<PricingCardElementType> {
-  // selectors: Record<PricingCardElementType, iActionProperty>;
+  // selectors: Record<PricingCardElementType, iElementProperty>;
 }
 
 export class PricingCardBuilder extends Builder<PricingCardElementType, iPricingCardConfig> {

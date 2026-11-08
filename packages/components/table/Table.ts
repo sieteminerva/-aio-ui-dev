@@ -1,4 +1,4 @@
-import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 import {
   __applyTableClasses,
@@ -104,7 +104,7 @@ export class TableBuilder extends Builder<TableElementType, iTableConfig> {
   constructor(config: Partial<iTableConfig> = {}) {
     super();
 
-    const defaultSelectors: Record<TableElementType, iActionProperty> = {
+    const defaultSelectors: Record<TableElementType, iElementProperty> = {
       "@container": { tagName: "div", className: "table-container" },
       "@table": { tagName: "table", className: "table" },
       "@table>thead": { tagName: "thead" },
@@ -532,7 +532,7 @@ export class TableBuilder extends Builder<TableElementType, iTableConfig> {
    * Template hook for atomic data injection into specific element types.
    * This is called by the base render() method for each element created.
    */
-  protected template(typeKey: TableElementType, el: HTMLElement, payload: any, selector: iActionProperty): void {
+  protected template(typeKey: TableElementType, el: HTMLElement, payload: any, selector: iElementProperty): void {
 
     switch (typeKey) {
 

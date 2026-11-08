@@ -1,4 +1,4 @@
-import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { createImageError } from "@aio-ui/utilities/DomUtils";
 
 import { Builder } from "@aio-ui/base/Base";
@@ -76,7 +76,7 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
 
   constructor(config: Partial<iArticleConfig> = {}) {
     super();
-    const defaultSelectors: Record<ArticleElementType, iActionProperty> = {
+    const defaultSelectors: Record<ArticleElementType, iElementProperty> = {
       "@container": { tagName: "section", className: "article" },
       "@article>list": { tagName: "div", className: "row" },
       "@article>pagination": { tagName: "div", className: "pagination" },
@@ -292,7 +292,7 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
     this.listElement = null;
   }
 
-  protected template(typeKey: ArticleElementType, el: HTMLElement, payload?: any, _props?: iActionProperty): void {
+  protected template(typeKey: ArticleElementType, el: HTMLElement, payload?: any, _props?: iElementProperty): void {
     switch (typeKey) {
       case "@container":
 

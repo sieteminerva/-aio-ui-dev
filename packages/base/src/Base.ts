@@ -1,4 +1,4 @@
-import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iActionProperty, iNodeRecordItem, iNodeRecordRelations } from "@aio-ui/core/interface";
+import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iNodeRecordItem, iNodeRecordRelations } from "@aio-ui/core/interface";
 // import { TemplateRegistry } from "@aio-ui/template-registry";
 // import { ElementCreatedEventBus } from "../Services/EventBus";
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
@@ -319,7 +319,7 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
  * Murni hanya mengurusi penyemprotan teks data spesifik atomik,
  * terisolasi penuh, rapi, dan kebal dari bug hantu selamanya!
  */
-  protected abstract template(typeKey: TType, el: HTMLElement, payload?: any, props?: iActionProperty): void;
+  protected abstract template(typeKey: TType, el: HTMLElement, payload?: any, props?: iElementProperty): void;
 
   /**
    * @description
@@ -368,23 +368,24 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     defaultOptions: Required<C> | any,
     userConfig: Partial<C> = {}): Required<C> {
     // Step 1: Initialize the local layout registry by cloning the component's default structural selector nodes.
-    const mergedSelectors = { ...(defaultOptions.selectors || {}) } as Record<TType, any>;
+    const mergedSelectors = { ...(defaultOptions.selectors || {}) } as Record<TType, iElementProperty>;
 
     // Step 2: Validate the existence of third-party selectors overrides hantaran userConfig layers.
     if (userConfig.selectors) {
       // Step 3: Traverse the override dictionary entries linearly to assimilate the specialized structural tokens.
       Object.entries(userConfig.selectors).forEach(([key, selectorValue]) => {
-        if (selectorValue && typeof selectorValue === "object") {
-          mergedSelectors[key as TType] = {
-            ...(mergedSelectors[key as TType] || {}),
-            ...selectorValue,
-            // Step 5: Secure the critical HTML custom attributes dictionary block to guarantee zero property evaporation.
-            attrs: {
-              ...((mergedSelectors[key as TType] || {}).attrs || {}),
-              ...((selectorValue as iElementProperty | iActionProperty).attrs || {})
-            }
-          };
-        }
+        if (!selectorValue || typeof selectorValue !== "object") return;
+
+        const override = selectorValue as iElementProperty;
+        mergedSelectors[key as TType] = {
+          ...(mergedSelectors[key as TType] || {}),
+          ...override,
+          // Step 5: Secure the critical HTML custom attributes dictionary block to guarantee zero property evaporation.
+          attrs: {
+            ...((mergedSelectors[key as TType] || {}).attrs || {}),
+            ...(override.attrs || {})
+          }
+        };
       });
     }
     // Step 6: Package the consolidated state metadata container, ensuring selectors are strictly typed and sealed.
@@ -949,7 +950,7 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
    * Melumat tuntas ID, ClassName, kustom attrs, hingga data- attributes bawaan database Sheets.
    * Pair-stamping delegated to Utility/AttributeUtils.
    */
-  private _applyNodeAttributes(el: HTMLElement, selector: any): void {
+  private _applyNodeAttributes(el: HTMLElement, selector: iElementProperty): void {
     if (!selector) return;
 
     // 1. Suntikkan Identitas ID jika didefinisikan kaku di dalam selektor preset

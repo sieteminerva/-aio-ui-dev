@@ -1,4 +1,4 @@
-import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { inputTypeOf } from "./FieldTypes";
@@ -84,7 +84,7 @@ export type iActionType = "add" | "remove" | "delete" | "save" | "edit" | "copy"
 
 export interface iInputActionDefinition {
   type: iActionType;
-  selector?: Record<string, iActionProperty>;
+  selector?: Record<string, iElementProperty>;
   label?: string;
   icon?: string;
   onClick: iInputActionHandler;

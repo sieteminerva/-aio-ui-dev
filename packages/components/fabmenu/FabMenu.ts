@@ -1,4 +1,4 @@
-import type { iActionProperty, iBasicNode, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import type { iElementProperty, iBasicNode, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 // import "./FabMenu.css";
 
@@ -83,7 +83,7 @@ export class FabMenuBuilder extends Builder<FabMenuElementType, iFabMenuConfig> 
   /**
    * 👑 THE SEPARATED HYDRATION VALVE
    */
-  protected template(typeKey: FabMenuElementType, el: HTMLElement, payload: any, props: iActionProperty): void {
+  protected template(typeKey: FabMenuElementType, el: HTMLElement, payload: any, props: iElementProperty): void {
 
     switch (typeKey) {
       case "@fab":

@@ -5,7 +5,7 @@
  * - `style: "select"` (default) renders a popover menu (`.menu[popover]`) anchored to the control.
  * - `style: "datalist"` renders a native `<datalist>`.
  */
-import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 import "./Dropdown.css";
 
@@ -78,7 +78,7 @@ export class DropdownBuilder extends Builder<DropdownElementType, iDropdownConfi
     // Membuat ID unik agar input dan datalist saling terhubung dengan aman
     this.listId = `dl-${Math.random().toString(36).substr(2, 9)}`;
 
-    const defaultSelector: Record<DropdownElementType, iActionProperty> = {
+    const defaultSelector: Record<DropdownElementType, iElementProperty> = {
       "@dropdown": { tagName: "div", className: "dropdown" },
       "@dropdown>label": { tagName: "label", className: "label" },
       "@dropdown>input": {

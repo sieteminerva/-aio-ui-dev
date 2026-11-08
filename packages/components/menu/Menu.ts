@@ -1,5 +1,5 @@
 
-import type { iActionProperty, iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
+import type { iElementProperty, iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 // import "./Menu.css";
 
@@ -18,7 +18,7 @@ export const ELEMENT_KEYS = [
 
 export type MenuElementType = (typeof ELEMENT_KEYS)[number];
 
-export const DEFAULT_MENU_SELECTORS: Record<MenuElementType, iActionProperty> = {
+export const DEFAULT_MENU_SELECTORS: Record<MenuElementType, iElementProperty> = {
   "@container": { tagName: "aside", className: "sidebar" },
   "@menu": { tagName: "nav", className: "nav" },
   "@menu>brand": { tagName: "div", className: "brand", attrs: { src: "" } },
@@ -35,7 +35,7 @@ export interface iMenuConfig extends iBuilderConfig<MenuElementType> {
    * TOTAL EXTRACTED SELECTORS (Semua elemen diekstrak utuh ke sini!)
    */
   type: "top" | "sidebar"
-  selectors: Record<MenuElementType, iActionProperty>;
+  selectors: Record<MenuElementType, iElementProperty>;
 
   /** Default route */
   defaultRoute?: string;
@@ -49,9 +49,9 @@ export interface iMenuConfig extends iBuilderConfig<MenuElementType> {
 }
 
 export interface iMenuSplit {
-  brand: iActionProperty;
-  navigations: iActionProperty[];
-  actions: iActionProperty[];
+  brand: iElementProperty;
+  navigations: iElementProperty[];
+  actions: iElementProperty[];
 }
 
 /**
@@ -67,7 +67,7 @@ export interface iMenuSplit {
  * Exported and pure so the rule is testable without a DOM.
  */
 export function splitMenuContent(content: any): iMenuSplit {
-  const navigations: iActionProperty[] = Array.isArray(content?.navigations)
+  const navigations: iElementProperty[] = Array.isArray(content?.navigations)
     ? content.navigations
     : content?.navigations
       ? [content.navigations]
@@ -76,7 +76,7 @@ export function splitMenuContent(content: any): iMenuSplit {
   const brand = navigations[0] ?? { label: "Brand", href: "#home" };
   const rest = navigations.slice(1);
 
-  const isAction = (link: iActionProperty): boolean =>
+  const isAction = (link: iElementProperty): boolean =>
     link?.className === "button" || Boolean(link?.href?.includes("tel:"));
 
   const actions = Array.isArray(content?.actions)
@@ -232,7 +232,7 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
   // ====================================================
   // 🧙‍♂️ OVERRIDE 2: PERAKIT STRUKTUR CONTENT DEFAULT FALLBACK KOMPONEN MENU
   // ====================================================
-  protected template(typeKey: MenuElementType, el: HTMLElement, payload: any, props: iActionProperty): void {
+  protected template(typeKey: MenuElementType, el: HTMLElement, payload: any, props: iElementProperty): void {
     // if (!payload) return;
 
     switch (typeKey) {
@@ -309,7 +309,7 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
       case "@menu>actions": {
         // One link per action, flat: `div.actions` is not a list, so nesting `li` in it
         // (the previous behaviour) produced invalid markup and duplicated the CTA.
-        const actions: iActionProperty[] = Array.isArray(payload) ? payload : [];
+        const actions: iElementProperty[] = Array.isArray(payload) ? payload : [];
         for (const action of actions) {
           const link = this.render("@menu>item>link", action);
           if (link) {

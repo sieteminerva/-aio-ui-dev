@@ -2,10 +2,10 @@
  * Builder configuration contracts.
  */
 
-import type { iActionProperty } from "./content";
+import type { iElementProperty } from "./content";
 import type { iEventEmit } from "./events";
 
-export type iBuilderSelectorsConfig<TType extends string = string> = Record<TType, iActionProperty>;
+export type iBuilderSelectorsConfig<TType extends string = string> = Record<TType, iElementProperty>;
 
 export interface iBuilderConfig<TType extends string = string> {
   themeId?: string;

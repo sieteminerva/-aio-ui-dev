@@ -1,5 +1,5 @@
 // Components/ProductCardBuilder.ts (The Purely Integrated Polymorphic Product Card Specification)
-import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 
 // No stylesheet import here on purpose: the registry loads `ProductCard.css` from the
@@ -47,7 +47,7 @@ export class ProductCardBuilder extends Builder<ProductCardElementType, iProduct
     super();
 
     // 💡 SINKRONISASI ATOMIK PREFIX: Tambahkan sub-token image dan checkout ksatria
-    const defaultSelectors: Record<ProductCardElementType, iActionProperty> = {
+    const defaultSelectors: Record<ProductCardElementType, iElementProperty> = {
       "@product": { tagName: "div", className: "product" },
       "@product>display": { tagName: "div", className: "display" },
       "@product>display>image": { tagName: "img", className: "img-fluid product-shadow-blend" },

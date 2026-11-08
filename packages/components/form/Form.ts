@@ -65,6 +65,13 @@ export interface iFormConfig extends iBuilderConfig<FormElementType> {
    */
   files?: "ignore" | ((files: Record<string, File[]>, form: HTMLFormElement) => Record<string, any> | Promise<Record<string, any>>);
   /**
+   * Drop `""`, `false` and empty arrays from the submit payload.
+   *
+   * Default `false`: an update wants every key, so the backend can tell "clear this cell"
+   * from "this column was not in the form". Turn it on for insert-style payloads.
+   */
+  excludeEmpty?: boolean;
+  /**
    * Optional loader that supplies optional Form sub-modules.
    *
    * Leave it `null` (default) and every feature keeps its built-in handler, so
@@ -152,6 +159,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       emit: null,
       onSubmit: (_data: any) => { },
       files: "ignore",
+      excludeEmpty: false,
       modules: null,
     };
     this.config = this.resolveConfig(defaultConfig, config);
@@ -762,7 +770,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       }
 
       form.classList.add("loading");
-      const data = collectFormValues(form);
+      const data = collectFormValues(form, { excludeEmpty: this.config.excludeEmpty });
 
       // 🧩 Kolaborator menyumbang datanya (file, alamat, tabel) sebelum event rilis.
       for (const feature of this.#features) await feature.beforeSubmit?.(data);

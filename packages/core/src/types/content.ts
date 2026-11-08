@@ -6,15 +6,36 @@
  * their owning component package once the registry becomes augmentable.
  */
 
+/**
+ * One entry of a selector map, and the single vocabulary for "properties of an element".
+ *
+ * This used to be two types — `iElementProperty` (structure) and `iActionProperty`
+ * (structure + label/href/onClick) — that were the same shape in practice, so every
+ * consumer wrote a union or `any` and the checker learned nothing. One type, superset of
+ * both, is what the renderer actually accepts.
+ */
 export interface iElementProperty {
+  /** Element identity. */
   id?: string;
   className?: string;
   tagName?: string;
+  /** Raw HTML attributes. */
   attrs?: Record<string, string>;
+  /** Same attributes in list form, for callers that build them dynamically. */
+  attributes?: Array<{ name: string; value: string }>;
   isArray?: boolean;
+  /** Wrapper chain, e.g. `.switch.control` or `div.col>span`. */
   wrapper?: string;
   icon?: string;
   textContent?: string;
+  /** Content commonly carried by an action/CTA node. */
+  label?: string;
+  href?: string;
+  src?: string;
+  isActive?: boolean;
+  isRoot?: boolean;
+  type?: "button" | "submit" | "reset" | InputType | InputControlsType;
+  onClick?: (event: MouseEvent) => void;
 }
 // ==========================================
 // 1. INDIVIDUAL ATOM PROPERTIES & DESIGN TOKENS
@@ -25,23 +46,13 @@ export interface iHeaderProperty extends iElementProperty {
   description?: string;
 }
 
-export interface iActionProperty extends iElementProperty {
-  label?: string;
-  href?: string;
-  src?: string;
-  isActive?: boolean;
-  isRoot?: boolean;
-  icon?: string;
-  type?: 'button' | 'submit' | 'reset' | InputType | InputControlsType;
-  onClick?: (event: MouseEvent) => void;
-}
 
 // Data Item khusus untuk builder bertipe 'section', 'carousel', 'masonry'
 export interface iBuilderContent extends iElementProperty {
   title?: string;
   description?: string;
   image?: string;
-  actions?: iActionProperty[];
+  actions?: iElementProperty[];
   category?: string;
 }
 
@@ -49,7 +60,7 @@ export interface iBuilderContent extends iElementProperty {
 export interface iCardProperty extends iElementProperty {
   header: string;
   body: { name: string; className: string }[];
-  action?: iActionProperty;
+  action?: iElementProperty;
 }
 
 // Skema untuk Form Builder

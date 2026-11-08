@@ -24,6 +24,18 @@
 /** Controls that never contribute a value to the payload. */
 const SKIPPED_TYPES = new Set(["file", "submit", "button", "reset", "image"]);
 
+/** Collection options. */
+export interface iCollectValuesOptions {
+  /**
+   * Drop `""`, `false` and empty arrays from the payload.
+   *
+   * Default `false` on purpose: an update payload usually needs **every** key present so
+   * the backend can tell "clear this cell" from "this column was not part of the form".
+   * Turn it on for insert-style payloads, where an absent key is the same as an empty one.
+   */
+  excludeEmpty?: boolean;
+}
+
 /** One control's contribution, before names are grouped. */
 interface iEntry {
   name: string;
@@ -41,9 +53,10 @@ interface iEntry {
  * Reads every successful control of a form.
  *
  * @param form - Live form element.
+ * @param options - Collection options; see {@link iCollectValuesOptions}.
  * @returns Payload keyed by control name.
  */
-export function collectFormValues(form: HTMLFormElement): Record<string, any> {
+export function collectFormValues(form: HTMLFormElement, options: iCollectValuesOptions = {}): Record<string, any> {
   const controls = Array.from(
     form.elements as unknown as ArrayLike<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   );
@@ -80,7 +93,25 @@ export function collectFormValues(form: HTMLFormElement): Record<string, any> {
     });
   }
 
-  return assemble(entries);
+  return options.excludeEmpty ? stripEmpty(assemble(entries)) : assemble(entries);
+}
+
+/**
+ * Removes values a consumer would treat as "nothing".
+ *
+ * @param data - Assembled payload.
+ * @returns Payload without `""`, `false` and empty arrays.
+ */
+function stripEmpty(data: Record<string, any>): Record<string, any> {
+  const kept: Record<string, any> = {};
+
+  for (const [name, value] of Object.entries(data)) {
+    if (value === "" || value === false) continue;
+    if (Array.isArray(value) && value.length === 0) continue;
+    kept[name] = value;
+  }
+
+  return kept;
 }
 
 /** A toggle's contribution: `true` when it was left at the browser's default value. */

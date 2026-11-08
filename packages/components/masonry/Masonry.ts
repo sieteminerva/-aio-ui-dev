@@ -1,4 +1,4 @@
-import type { iActionProperty, iBasicNode, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import type { iElementProperty, iBasicNode, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 // import "./Masonry.css";
 
@@ -323,7 +323,7 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
         break;
 
       case "@masonry>item>actions": {
-        const actions: iActionProperty[] = Array.isArray(payload) ? payload : [];
+        const actions: iElementProperty[] = Array.isArray(payload) ? payload : [];
         for (const action of actions) {
           const btn = action.href ? document.createElement("a") : document.createElement("button");
           if (action.id) btn.id = action.id;

@@ -2,7 +2,7 @@
  * DOM and node contracts: what a page tree looks like and how nodes are recorded.
  */
 
-import type { iActionProperty } from "./content";
+import type { iElementProperty } from "./content";
 import type { iBuilderRegistry } from "./registry";
 
 export interface iMetadataContext {
@@ -104,7 +104,7 @@ export interface iBasicStandardNode extends iNodeLifecycleHooks {
   className?: string;
   builder?: never;
   isRoot?: boolean;
-  content?: string | HTMLElement | iBasicNode | iBasicNode[] | iActionProperty;
+  content?: string | HTMLElement | iBasicNode | iBasicNode[] | iElementProperty;
   // 💡 INTERNAL SYSTEM TRACKING: Metadata penanda form admin dashboard Anda
   _field?: string;
 
