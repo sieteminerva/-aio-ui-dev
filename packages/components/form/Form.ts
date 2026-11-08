@@ -48,6 +48,15 @@ export interface iFormConfig extends iBuilderConfig<FormElementType> {
   minHeight?: string;
   multistep?: boolean;
   cascading?: boolean; // show or build input or group based on condition from input value before. it will looking "condition" property 
+  /**
+   * How conditional items are kept until their condition passes.
+   *
+   * `template` (default) plants a `<template>` and builds the element only when the
+   * condition holds. `hidden` builds it immediately and toggles the `hidden` attribute —
+   * required by chained inputs (an address picker injecting options into the next select)
+   * because a template gives them nothing to inject into.
+   */
+  cascadeMode?: "template" | "hidden";
   onCascade?: null | ((detail: iCascadeEventDetail) => void); // listener kustom setiap kaskade mount/unmount/gate
   calculation?: boolean;
   footer?: HTMLElement | string | null;
@@ -156,6 +165,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       selectors: defaultSelectors,
       multistep: false,
       cascading: false,
+      cascadeMode: "template",
       autoDisableNextStep: false, // null = ikuti cascading && multistep
       onCascade: null,
       calculation: false,
@@ -249,7 +259,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
         // 🌊 CASCADE: group pembawa .condition ditahan — placeholder <template>
         // ditanam di posisinya, dibangun sungguhan saat kondisinya terpenuhi
         if (isCascading && this.#cascade?.isCascadeItem(input)) {
-          this.#cascade?.hold(form, String(index));
+          this.#cascade?.hold(form, String(index), input);
           continue;
         }
 
@@ -278,7 +288,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       else if (input && typeof input === "object" && "row" in input) {
         // A row carries no field data, but its children may still be conditional.
         if (isCascading && this.#cascade?.isCascadeItem(input)) {
-          this.#cascade?.hold(form, String(index));
+          this.#cascade?.hold(form, String(index), input);
           continue;
         }
 
@@ -291,7 +301,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       else {
         // 🌊 CASCADE: input tunggal pembawa .condition juga ditahan seperti group
         if (isCascading && this.#cascade?.isCascadeItem(input)) {
-          this.#cascade?.hold(form, String(index));
+          this.#cascade?.hold(form, String(index), input);
           continue;
         }
 
@@ -345,7 +355,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
         // 🌊 CASCADE: item anak pembawa .condition ditahan — placeholder <template>
         // ditanam di posisinya (terdaftar otomatis di #nodes) lalu rendering dilewati
         if (cascadeActive && this.#cascade?.isCascadeItem(innerInput)) {
-          this.#cascade?.hold(fieldset, `${cascadePath}.group.${_index}`);
+          this.#cascade?.hold(fieldset, `${cascadePath}.group.${_index}`, innerInput);
           return;
         }
 
@@ -443,7 +453,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
       // Cascade: a conditional child is held in place and mounted when its rule passes.
       if (cascadeActive && this.#cascade?.isCascadeItem(child)) {
-        this.#cascade?.hold(container, childPath);
+        this.#cascade?.hold(container, childPath, child);
         return;
       }
 
@@ -524,12 +534,14 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       builder: this.builderId,
       inputs: this.#inputs,
       multistep: this.config.multistep === true,
+      cascadeMode: this.config.cascadeMode ?? "template",
       // Gerbang next: null/undefined = ikuti cascading; true = paksa kunci;
       // false = nonaktif. (Lihat iFormConfig.autoDisableNextStep)
       autoDisableNextStep: this.config.autoDisableNextStep ?? (this.config.cascading === true && this.config.multistep === true),
       onCascade: typeof this.config.onCascade === "function" ? this.config.onCascade : null,
       emit: typeof this.config.emit === "function" ? this.config.emit : null,
       renderGroup: (group, formId, path) => this.renderGroup(group, formId, path),
+      renderRow: (row, formId, path) => this.renderRow(row, formId, path),
       refreshSteps: (form) => this.#multistep?.refresh(form),
       // 🧾 Tombol next terkunci kondisi kaskade → jalur terpusat.
       reportCascadeBlocked: (info) => this.#validation?.reportCascadeBlocked(info),

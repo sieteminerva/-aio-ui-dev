@@ -811,6 +811,12 @@ select:focus-visible {
   }
 }
 
+/* Cascade in `hidden` mode: the element exists (so a chained picker can inject into it)
+   but must not take space. `[hidden]` alone only sets visibility in this stylesheet. */
+[data-cascade-hidden] {
+  display: none !important;
+}
+
 /* ==========================================================================
    8. Toggle Switch Components
    ========================================================================== */

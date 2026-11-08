@@ -280,6 +280,8 @@ const schema = [
       // Radios sharing a name form one group; `style: "toggle"` asks for the switch shell.
       { type: "radio", id: "pickup", name: "delivery", value: "pickup", title: "Ambil sendiri", config: { style: "toggle" } },
       { type: "radio", id: "courier", name: "delivery", value: "courier", title: "Kirim kurir", checked: true, config: { style: "toggle" } },
+      // Cascade: this field only exists while the delivery radio says "courier".
+      { type: "text", id: "courierNote", title: "Catatan untuk kurir", condition: { field: "delivery", equals: "courier" } },
     ] as iBasicInputNode[],
   },
   // Inline row: `column` is the column count, `config.wide` the share a field takes
@@ -298,7 +300,18 @@ const schema = [
 
 const formConfig = {
   id: "demo-order-form",
+  // Cascade needs the engine on; `hidden` keeps conditional fields alive so a chained
+  // picker (address, dependent select) can inject into them before they are shown.
+  cascading: true,
+  cascadeMode: "hidden" as const,
 };
+
+/** Three steps, one per group — the engine owns the next/back set. */
+const multiStepSchema = [
+  { id: "ms-contact", title: "Langkah 1 · Kontak", group: [{ type: "email", id: "ms-email", title: "Email", required: true }] },
+  { id: "ms-address", title: "Langkah 2 · Alamat", group: [{ type: "text", id: "ms-city", title: "Kota", required: true }] },
+  { id: "ms-confirm", title: "Langkah 3 · Konfirmasi", group: [{ type: "checkbox", id: "ms-agree", title: "Saya setuju" }] },
+] as any[];
 
 export function formContent(): iPageContent {
   return {
@@ -326,6 +339,24 @@ export function formContent(): iPageContent {
                 form.addEventListener("formValidation", (event: any) => {
                   const { reason, message } = event.detail ?? {};
                   if (reason !== "valid") log.textContent = `formValidation (${reason}) → ${message ?? ""}`;
+                });
+
+                el.appendChild(log);
+              },
+            },
+            // Multistep form: three groups become three steps.
+            ".form-host.multistep": {
+              builder: ["form"],
+              onCreated: (el: HTMLElement, _render: any, build: any) => {
+                const form = build("form", { schema: multiStepSchema, config: { id: "demo-multistep", multistep: true } });
+                el.mount(form);
+
+                const log = document.createElement("pre");
+                log.className = "form-log";
+                log.textContent = "Multistep siap…";
+
+                form.addEventListener("formSubmit", (event: any) => {
+                  log.textContent = `formSubmit → ${JSON.stringify(event.detail?.data ?? {}, null, 2)}`;
                 });
 
                 el.appendChild(log);

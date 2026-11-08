@@ -47,6 +47,9 @@ export type iCascadeState = {
 };
 
 /** Kontrak minimal yang wajib dipenuhi host (FormBuilder) agar engine bekerja */
+/** How conditional items are held until their condition passes. */
+export type FormCascadeMode = "template" | "hidden";
+
 export interface FormCascadeHost {
   builder: string;
   inputs: any[];
@@ -54,10 +57,22 @@ export interface FormCascadeHost {
   /** Gerbang tombol next: null/undefined = ikuti cascading && multistep;
    * true = kunci selama ada kondisi belum terpenuhi; false = nonaktif. */
   autoDisableNextStep?: boolean;
+  /**
+   * How a not-yet-met conditional item is kept.
+   *
+   * - `template` (default): a `<template>` placeholder, the real element is built only
+   *   when the condition passes. Cheapest, and the item cannot be touched while hidden.
+   * - `hidden`: the item is built immediately and toggled with the `hidden` attribute.
+   *   Needed by chained inputs (an address picker injecting options into the *next*
+   *   select) because a `<template>` gives them nothing to inject into.
+   */
+  cascadeMode?: FormCascadeMode;
   onCascade?: null | ((detail: iCascadeEventDetail) => void);
   emit?: any;
   /** Bangun <fieldset> dari deskriptor group (termasuk menahan anak ber-condition) */
   renderGroup(group: any, formId: string, path?: string): HTMLElement;
+  /** Bangun row layout dari deskriptor row (termasuk menahan anak ber-condition) */
+  renderRow(row: any, formId: string, path?: string): HTMLElement;
   /** Perbaiki langkah aktif bila sebuah step di-unmount oleh kaskade */
   refreshSteps?(form: HTMLFormElement): void;
   /** Laporkan tombol "next" terkunci karena sebuah condition belum terpenuhi */
@@ -207,8 +222,12 @@ export class FormCascade {
   // tiap kali masuk langkah terkunci / status berubah.
   private lastBlockedInfo: CascadeBlockedInfo | null = null;
 
+  /** How conditional items are held; see {@link FormCascadeMode}. */
+  readonly #mode: FormCascadeMode;
+
   constructor(host: FormCascadeHost) {
     this.host = host;
+    this.#mode = host.cascadeMode === "hidden" ? "hidden" : "template";
   }
 
   /**
@@ -223,12 +242,92 @@ export class FormCascade {
     return FormCascadeHandler.isCascadeItem(item);
   }
 
-  /** Tanam placeholder <template> di posisi skema (dipanggil prepare/renderGroup) */
-  hold(parent: HTMLElement, path: string): void {
+  /**
+   * Keeps a not-yet-met conditional item in place (called by prepare/renderGroup).
+   *
+   * In `template` mode this plants a `<template>` placeholder and the real element is
+   * built when the condition passes. In `hidden` mode the element is built **now** and
+   * toggled with the `hidden` attribute, so a module that needs to inject data into it
+   * (an address picker filling the next select) has a live element to work with.
+   *
+   * @param parent - Container the item belongs to.
+   * @param path - Cascade path key for this item.
+   * @param item - Schema item; required by `hidden` mode to build it immediately.
+   */
+  hold(parent: HTMLElement, path: string, item?: any): void {
+    if (this.#mode === "hidden" && item) {
+      const formId = parent.closest("form")?.id ?? "";
+      const element = this.#build(item, formId, path);
+      element.dataset.cascade = path;
+      // `hidden` is the semantic flag; `data-cascade-hidden` is the layout switch, because
+      // Form.css keeps `[hidden]` fields in the flow (visibility) to avoid jumping.
+      element.hidden = true;
+      element.setAttribute("data-cascade-hidden", "");
+      parent.appendChild(element);
+      this.hiddenItems.set(path, element);
+      return;
+    }
+
     const placeholder = document.createElement("template");
     placeholder.dataset.cascade = path;
     this.placeholders.set(path, placeholder);
     parent.appendChild(placeholder);
+  }
+
+  /** Elements held by the `hidden` mode: path → live element. */
+  private hiddenItems = new Map<string, HTMLElement>();
+
+  /**
+   * Builds the real element for a conditional item.
+   *
+   * @param item - Schema item (group or field).
+   * @param formId - Owning form id.
+   * @param path - Cascade path key.
+   * @returns The built element, already stamped with `data-cascade`.
+   */
+  #build(item: any, formId: string, path: string): HTMLElement {
+    let el: HTMLElement | null = null;
+
+    if (item && typeof item === "object" && "group" in item) {
+      el = this.host.renderGroup(item, formId, path);
+      if (el) {
+        if (item.id) el.id = item.id;
+        if (item.className) el.classList.add(...String(item.className).split(/\s+/).filter(Boolean));
+        // A freshly born multistep step only carries its step number — the navigation
+        // buttons live at form level as one shared set.
+        if (this.host.multistep && !path.includes(".")) el.dataset.index = path;
+        // Wake the input adapters in the new area, including raw HTML fields.
+        mountInputModules(el);
+      }
+    } else if (item && typeof item === "object" && "row" in item) {
+      el = this.#buildRow(item, formId, path);
+    } else {
+      el = new InputBuilder({ formId } as any).create(item) as HTMLElement;
+    }
+
+    if (!el) {
+      const label = item && (item.id || item.name || item.type);
+      throw new Error(
+        `[Form Cascade] Gagal membangun elemen kaskade pada path "${path}"` +
+        (label ? ` untuk "${label}"` : "") +
+        ". Pastikan selektor '@form>group' terkonfigurasi & InputBuilder mengembalikan elemen yang valid (render() mengembalikan undefined bila selektor tidak dikenal)."
+      );
+    }
+
+    el.dataset.cascade = path;
+    return el;
+  }
+
+  /**
+   * Builds a layout row through the host, so a conditional row keeps its grid.
+   *
+   * @param item - Row node.
+   * @param formId - Owning form id.
+   * @param path - Cascade path key.
+   * @returns The row container.
+   */
+  #buildRow(item: any, formId: string, path: string): HTMLElement {
+    return this.host.renderRow(item, formId, path);
   }
 
   /** Aktifkan engine: delegasi input/change + sync + gate awal */
@@ -277,48 +376,58 @@ export class FormCascade {
     control.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  /** Evaluasi kondisi → transisi placeholder <-> elemen asli, lalu perbarui gerbang */
+  /**
+   * Evaluates every condition, transitions the items it owns, then refreshes the gate.
+   *
+   * Two modes, one rule: `hidden` toggles visibility of elements that already exist,
+   * `template` swaps a placeholder for a freshly built element (and back).
+   */
   sync(): void {
     const form = this.form;
     if (!form) return;
     const values = FormCascadeHandler.collectValues(form);
     const resolve = (field: string) => FormCascadeHandler.resolveFieldValue({ form, inputs: this.host.inputs }, field);
 
-    // Bangun elemen nyata dari deskriptor lalu tukar dengan placeholder-nya
-    const mount = (item: any, path: string, placeholder: HTMLElement): HTMLElement => {
-      let el: HTMLElement | null = null;
-      if (item && typeof item === "object" && "group" in item) {
-        el = this.host.renderGroup(item, form.id, path);
-        if (el) {
-          if (item.id) el.id = item.id;
-          if (item.className) el.className = `${el.className} ${item.className}`.trim();
-          // Step multistep yang baru lahir cukup membawa nomor langkah —
-          // tombol navigasi HIDUP DI LEVEL FORM sebagai satu set bersama
-          // yang ditukar engine multistep pada setiap perpindahan langkah.
-          if (this.host.multistep && !path.includes(".")) {
-            el.dataset.index = path;
-          }
-          // Hidupkan adapter input (uploader CSV dsb.) di area yang baru lahir —
-          // termasuk field HTML mentah yang tak melewati InputBuilder.
-          mountInputModules(el);
-        }
-      } else {
-        // InputBuilder memasang adapter-nya sendiri saat membangun field.
-        el = new InputBuilder({ formId: form.id } as any).create(item) as HTMLElement;
-      }
-      if (!el) {
-        const label = item && (item.id || item.name || item.type);
-        throw new Error(
-          `[Form Cascade] Gagal membangun elemen kaskade pada path "${path}"` +
-          (label ? ` untuk "${label}"` : "") +
-          ". Pastikan selektor '@form>group' terkonfigurasi & InputBuilder mengembalikan elemen yang valid (render() mengembalikan undefined bila selektor tidak dikenal)."
-        );
-      }
-      el.dataset.cascade = path;
-      placeholder.replaceWith(el);
-      return el;
-    };
+    // Hidden mode: elements are live from the start, so this only flips `hidden`. Nothing
+    // is rebuilt — which is what lets an address picker keep the options it injected into
+    // the next select while that select is still out of view.
+    if (this.#mode === "hidden") {
+      let pass = 0;
+      let toggled = 0;
 
+      do {
+        toggled = 0;
+        FormCascadeHandler.walkInputs(this.host.inputs, "", (item, path) => {
+          if (!FormCascadeHandler.isCascadeItem(item)) return;
+
+          const element = this.hiddenItems.get(path);
+          if (!element) return false;
+
+          const met = FormCascadeHandler.conditionMet(
+            FormCascadeHandler.normalizeCondition(item.condition),
+            resolve,
+            values
+          );
+
+          if (met === element.hidden) {
+            element.hidden = !met;
+            element.toggleAttribute("data-cascade-hidden", !met);
+            toggled++;
+            this.emit(form, met ? "mount" : "unmount", element, item, path);
+          }
+
+          return true;
+        });
+        pass++;
+      } while (toggled && pass < 10);
+
+      if (this.host.multistep) this.host.refreshSteps?.(form);
+      this.gate(form);
+      return;
+    }
+
+    // Template mode: a placeholder is planted where the element would be; the real element
+    // is built only while the condition holds.
     let changed = false;
     let pass = 0;
     do {
@@ -331,8 +440,9 @@ export class FormCascade {
         const met = FormCascadeHandler.conditionMet(FormCascadeHandler.normalizeCondition(item.condition), resolve, values);
         if (met) {
           if (!mounted) {
-            // mount() melempar Error bila pembangunan elemen gagal — tidak lagi ditelan.
-            const el = mount(item, path, placeholder);
+            // A build failure throws — it is not swallowed.
+            const el = this.#build(item, form.id, path);
+            placeholder.replaceWith(el);
             changed = true;
             this.emit(form, "mount", el, item, path);
           }
@@ -352,6 +462,7 @@ export class FormCascade {
     // Gerbang next: tombol disabled bila langkah berikutnya masih terkunci kondisi
     this.gate(form);
   }
+
 
   /**
    * Gerbang kaskade (multistep) — dikendalikan `autoDisableNextStep`:

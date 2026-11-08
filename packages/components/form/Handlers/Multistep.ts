@@ -68,6 +68,31 @@ export class FormMultistepHandler {
     this.goTo(0);
   }
 
+  /**
+   * Validates one step.
+   *
+   * `fieldset.checkValidity()` is **not** enough: a fieldset does not validate its
+   * descendants (a synthetic fieldset holding a required, empty input still reports
+   * `true`), so the Next gate silently let every step through. Each mounted control is
+   * checked instead, and the first invalid one is reported to the visitor.
+   *
+   * @param fieldset - The mounted step.
+   * @returns `true` when every control in the step is valid.
+   */
+  #stepIsValid(fieldset: HTMLElement): boolean {
+    const controls = Array.from(
+      fieldset.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+        "input, select, textarea"
+      )
+    ).filter((control) => !control.disabled && control.willValidate);
+
+    const invalid = controls.filter((control) => !control.checkValidity());
+    if (invalid.length === 0) return true;
+
+    invalid[0].reportValidity();
+    return false;
+  }
+
   private _handleClick(event: MouseEvent): void {
     const target = event.target as HTMLElement | null;
     const button = target?.closest?.("button") as HTMLButtonElement | null;
@@ -83,8 +108,7 @@ export class FormMultistepHandler {
     if (isNext) {
       // Gerbang validasi: langkah aktif harus sah sebelum boleh maju
       const currentFieldset = this._mountedFieldset(form, this.currentStep);
-      if (currentFieldset && !currentFieldset.checkValidity()) {
-        currentFieldset.reportValidity();
+      if (currentFieldset && !this.#stepIsValid(currentFieldset)) {
         // 🧾 Laporkan validasi native langkah gagal ke jalur terpusat (emit + toast).
         try {
           this.host.reportNativeInvalid?.(form, this.currentStep);
