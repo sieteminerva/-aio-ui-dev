@@ -73,7 +73,9 @@ async function start(container: HTMLElement) {
     .register('product-grid' as any, pageComponent('@aio-ui/product/ProductGrid', '@aio-ui/product/ProductGrid.css'))
     .register('product-detail' as any, pageComponent('@aio-ui/product/ProductDetail', '@aio-ui/product/ProductDetail.css'))
     .register('article' as any, pageComponent('@aio-ui/article/Article', '@aio-ui/article/Article.css'))
-    .register('form' as any, pageComponent('@aio-ui/form/Form', '@aio-ui/form/Form.css'));
+    .register('form' as any, pageComponent('@aio-ui/form/Form', '@aio-ui/form/Form.css'))
+    // The theme switcher is a fab menu with per-item handlers, so it needs config too.
+    .register('fab-menu' as any, pageComponent('@aio-ui/fabmenu/FabMenu', '@aio-ui/fabmenu/FabMenu.css'));
 
   const app = new AioApp({
     container,

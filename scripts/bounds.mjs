@@ -89,9 +89,9 @@ function subpathResolves(name, sub) {
   const mounted = join(ROOT, "node_modules", "@aio-ui", name);
   const dir = existsSync(mounted)
     ? mounted
-    : ["components", "modules", "themes"]
-      .map((group) => join(ROOT, "packages", group, name))
-      .find((candidate) => existsSync(candidate)) ?? join(ROOT, "packages", "components", name);
+    : (["components", "modules", "themes"]
+        .map((group) => join(ROOT, "packages", group, name))
+        .find((candidate) => existsSync(candidate)) ?? join(ROOT, "packages", "components", name));
 
   const manifestPath = join(dir, "package.json");
   if (existsSync(manifestPath)) {

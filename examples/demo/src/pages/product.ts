@@ -1,6 +1,7 @@
 import type { iPageContent, iPageController, iPageContext } from "@aio-ui/app";
 
 import { demoNav, pageIntro } from "../nav";
+import { themeSwitcher } from "../theme-switcher";
 
 /**
  * Product page — a page component made of three modules.
@@ -130,6 +131,7 @@ export class ProductPage implements iPageController {
         content: {
           ...demoNav,
           ...pageIntro("Product", `${products.length} item · list + filter + detail, komposisi di level halaman`),
+          ...themeSwitcher,
           "main.product-page": {
             content: {
               ".catalog": {

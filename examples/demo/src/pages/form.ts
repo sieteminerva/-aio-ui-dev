@@ -1,6 +1,7 @@
 import type { iPageContent } from "@aio-ui/app";
 
 import { demoNav, pageIntro } from "../nav";
+import { themeSwitcher } from "../theme-switcher";
 
 /**
  * Form page — a form schema, not a component catalogue entry.
@@ -36,6 +37,7 @@ export function formContent(): iPageContent {
       content: {
         ...demoNav,
         ...pageIntro("Form", "schema-driven · validation, handlers, dan submit dimiliki form itu sendiri"),
+        ...themeSwitcher,
         "main.form-page": {
           content: {
             ".form-host": {

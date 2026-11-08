@@ -3,6 +3,7 @@ import type { iNodeContent } from "@aio-ui/core/interface";
 import { DEMO } from "../manifest";
 import type { iDemoEntry } from "../manifest";
 import { demoNav, pageIntro } from "../nav";
+import { themeSwitcher } from "../theme-switcher";
 
 /**
  * Kitchen-sink page, generated from the demo table.
@@ -53,12 +54,12 @@ export function kitchenContent(): iNodeContent {
         },
         ...(entry.kind === "modal"
           ? {
-              "button.open": {
-                content: "open modal",
-                onCreated: (element: HTMLElement) =>
-                  element.addEventListener("click", () => (globalThis as any).__demoModal?.open?.()),
-              },
-            }
+            "button.open": {
+              content: "open modal",
+              onCreated: (element: HTMLElement) =>
+                element.addEventListener("click", () => (globalThis as any).__demoModal?.open?.()),
+            },
+          }
           : {}),
       },
     },
@@ -69,6 +70,7 @@ export function kitchenContent(): iNodeContent {
       content: {
         ...demoNav,
         ...pageIntro("Elements", `${DEMO.length} komponen elemen · satu builder, satu node`),
+        ...themeSwitcher,
         "main.kitchen": { content: sections },
       },
     },

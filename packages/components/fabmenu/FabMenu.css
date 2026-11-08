@@ -26,13 +26,13 @@
 }
 .fab.bottom-right {
   bottom: 20px;
-  left: 20px;
-  align-items: flex-start;
+  right: 20px;
+  align-items: flex-end;
 }
 .fab.bottom-left {
   bottom: 20px;
-  right: 20px;
-  align-items: flex-end;
+  left: 20px;
+  align-items: flex-start;
 }
 
 /* (FAB Rounded Button) */
@@ -78,6 +78,18 @@
   display: flex;
 }
 
+/* The entry animation must not own visibility: when frames are frozen (background tab,
+   some reduced-motion setups) an `opacity` keyframe leaves the open panel invisible.
+   Transform-only keeps the panel rendered and still gives it a small entrance. */
+@keyframes themeWidgetFadeInSlide {
+  from {
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
 .fab .panel .title {
   font-size: 10px;
   font-weight: bold;
@@ -111,13 +123,8 @@
 }
 
 /* Animation */
-@keyframes themeWidgetFadeInSlide {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@media (prefers-reduced-motion: reduce) {
+  .fab .panel {
+    animation: none;
   }
 }

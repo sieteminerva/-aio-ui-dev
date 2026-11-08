@@ -1,6 +1,7 @@
 import type { iPageContent, iPageController, iPageContext } from "@aio-ui/app";
 
 import { demoNav, pageIntro } from "../nav";
+import { themeSwitcher } from "../theme-switcher";
 
 /**
  * Article page — the slot composition lives inside `ArticleBuilder`
@@ -21,6 +22,7 @@ export class ArticlePage implements iPageController {
         content: {
           ...demoNav,
           ...pageIntro("Article", `${count} artikel · slot controls + list + aside + detail di dalam builder`),
+          ...themeSwitcher,
           "main.article-page": {
             content: {
               ".article-host": {

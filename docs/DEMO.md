@@ -101,3 +101,27 @@ route, pass `debug: true` next to `endpoint`:
 ```ts
 .registerModule(HttpService, { ...mockApi, debug: true })
 ```
+
+## Theme switcher
+
+The switcher is host chrome, wired into a **fab menu** (`src/theme-switcher.ts`), and it is
+included on every route:
+
+```
+fab item click → location.hash = "#<route>?theme=<id>"
+              → HashRouter parses ?theme →
+              → AioApp sees a different theme → ThemeRenderer.use() → re-render
+```
+
+That is the whole contract — no framework API was invented for switching. Notes:
+
+- the menu marks the active theme with `isActive`, read from the current URL;
+- `closeOnSelected: false` keeps the panel open while comparing themes, and the idle timer
+  still closes it;
+- `fab-menu` is registered explicitly in `main.ts` (`pageComponent(...)`) so it can receive
+  `config` (`position`, `displayIcon`, …) next to its payload;
+- the demo's own chrome (body/nav/sections) reads `--app-*` tokens, so a theme switch is
+  visible end-to-end instead of only inside components.
+
+Available ids: `default`, `cyberpunk` — add one by importing its package in `main.ts` and
+appending it to `THEMES`.

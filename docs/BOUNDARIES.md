@@ -51,9 +51,9 @@ keeps the graph a tree and lets anyone publish `@aio-ui/theme-<their-own>`.
    `@aio-ui/animations`, `@aio-ui/module-loader`, `@aio-ui/theme`.
 
 5b. Theme packages are add-ons under `packages/themes/<id>/` with the package name
-    `@aio-ui/theme-<id>`. They depend on `core` types only (`iThemeModule`). A theme that
-    needs a stylesheet ships it in its own package (`CyberpunkTheme.css`) and the host
-    imports it once.
+`@aio-ui/theme-<id>`. They depend on `core` types only (`iThemeModule`). A theme that
+needs a stylesheet ships it in its own package (`CyberpunkTheme.css`) and the host
+imports it once.
 
 6. Component packages are flat (`packages/components/<name>/<File>.ts`), so an
    application imports `@aio-ui/form/Form`. Install name and import name are identical.
