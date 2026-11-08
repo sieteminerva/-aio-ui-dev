@@ -25,6 +25,7 @@ export const componentAssets = {
     "@aio-ui/accordion/Accordion.css": () => import("@aio-ui/accordion/Accordion.css?inline"),
     "@aio-ui/carousel/Carousel.css": () => import("@aio-ui/carousel/Carousel.css?inline"),
     "@aio-ui/fabmenu/FabMenu.css": () => import("@aio-ui/fabmenu/FabMenu.css?inline"),
+    "@aio-ui/footer/Footer.css": () => import("@aio-ui/footer/Footer.css?inline"),
     "@aio-ui/menu/Menu.css": () => import("@aio-ui/menu/Menu.css?inline"),
     "@aio-ui/modal/Modal.css": () => import("@aio-ui/modal/Modal.css?inline"),
     "@aio-ui/modeswitcher/ModeSwitcher.css": () => import("@aio-ui/modeswitcher/ModeSwitcher.css?inline"),

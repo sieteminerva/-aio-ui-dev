@@ -96,10 +96,32 @@ export const DEMO: iDemoEntry[] = [
   {
     name: "footer",
     path: "@aio-ui/footer/Footer",
+    stylesheet: "@aio-ui/footer/Footer.css",
     category: "layout",
     kind: "element",
-    payload: { content: { columns: [] } },
-    note: "no stylesheet; payload shape unverified",
+    // Row 1 = `content.columns` (any count), row 2 = copyright. Columns are free-form:
+    // the first carries title + description, the second only actions.
+    payload: {
+      content: {
+        id: "contact-section",
+        company: "Agen Wisata SeribuTrip",
+        columns: [
+          {
+            title: "Agen Wisata SeribuTrip",
+            description: "Operator lokal resmi yang mengedepankan kenyamanan dan ketepatan.",
+          },
+          {
+            title: "Kontak & Informasi",
+            actions: [
+              { label: "email", href: "halo@seributrip.id" },
+              { label: "phone", href: "+628123456789" },
+              { label: "address", href: "Dermaga 16 Marina Ancol, Jakarta" },
+            ],
+          },
+        ],
+      },
+    },
+    note: "row 1 = content.columns[] (dynamic), row 2 = copyright",
   },
   {
     name: "menu",

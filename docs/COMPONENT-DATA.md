@@ -15,7 +15,7 @@ Status is what the demo reports, not what the docs wish.
 | `carousel`      | `{ content: [{ title, description, image }] }`                                                                    | `content.ts:37`                                 |
 | `tab`           | `{ content: { menu: string[], body: any[] } }`                                                                    | gallery `content/blog` usage                    |
 | `section`       | `{ id, className, content: [ { className, content: [ { imageUrl, eyebrow, title, description, actions? } ] } ] }` | `content.ts:296`                                |
-| `footer`        | `{ content: { columns: [] } }` (columns optional in practice)                                                     | rendered empty skeleton                         |
+| `footer`        | `{ content: { id?, company, copyright?, columns: [{ title?, description?, actions?: [{ label, href\|value }] }] } }` | `.archives/travel-trip/main.ts:61`           |
 | `menu`          | `{ content: { navigations: [{ href, label, title }], actions: [] } }`                                             | rendered nav                                    |
 | `fab-menu`      | `{ title, actions: [{ label }] }` — **no** `content` wrapper                                                      | `prepare()` reads `content.actions`             |
 | `mode-switcher` | `{}`                                                                                                              | self-contained                                  |
@@ -42,13 +42,19 @@ Status is what the demo reports, not what the docs wish.
    registry can mount it. `destroyOnClose: true` makes the instance **single-use** — closing
    destroys it, and calling `open()` afterwards only warns. To keep a modal reusable across
    renders, use `destroyOnClose: false` and grab the handle from `config.onReady(controls)`.
+6. **`footer` is two rows, not a list of records.** Row 1 is `content.columns[]` (any count,
+   auto-fitted by CSS); row 2 is the copyright line generated from `company` plus the live
+   year, overridable with `copyright: "… {year} … {company} …"`. Each column is free-form —
+   title only, actions only, or both — and absent parts are not rendered at all. A payload
+   without `columns` is read as a single column (`title`/`description`/`actions` flat).
+   Action `href` values are scheme-inferred: an email becomes `mailto:`, a phone `tel:`,
+   and a non-addressable value (a street address) stays visible text with an inert `#`.
 
 ## Known gaps
 
 | Gap              | Detail                                                                                                                                                                                                                                               |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `section`        | No stylesheet of its own; relies on `@aio-ui/styles`. Payload is a _column of columns_, which is more nesting than the visual result suggests.                                                                                                       |
-| `footer`         | No stylesheet; `columns` shape still unverified (renders an empty footer).                                                                                                                                                                           |
 | `carousel`       | Three slides mount, but slide count/`auto-controls` behaviour depends on `config.showControl`/`showNavigation` which the demo does not set.                                                                                                          |
 | `product-detail` | `packages/components/product/ProductDetail.ts` exports no Builder class — it cannot be registered until it is rewritten.                                                                                                                             |
 
