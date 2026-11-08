@@ -16,6 +16,21 @@ export interface iModalConfig extends iBuilderConfig<ModalElementType> {
   modalClass?: string;         // Kelas kustom tambahan untuk kotak modal dalam
   onOpen?: (el: HTMLElement) => void;  // Callback siklus hidup saat modal meletup terbuka
   onClose?: (el: HTMLElement) => void; // Callback siklus hidup saat modal padam ditutup
+  /**
+   * Receives the control handles once the overlay exists.
+   *
+   * This is how a caller opens a modal: `build()` now returns the element, so the
+   * handles have to arrive some other way than the return value.
+   */
+  onReady?: (controls: iModalControls) => void;
+}
+
+/** What a caller gets to drive an open modal. */
+export interface iModalControls {
+  element: HTMLElement;
+  open: () => void;
+  close: () => void;
+  unmount: () => void;
 }
 
 export class ModalBuilder extends Builder<ModalElementType, iModalConfig> {
@@ -24,6 +39,16 @@ export class ModalBuilder extends Builder<ModalElementType, iModalConfig> {
   readonly stylesheet: string = "./Modal.css";
 
   currentModal: HTMLElement | null = null;
+
+  /** True after `destroy()`; `open()`/`close()` refuse to pretend it still works. */
+  #destroyed = false;
+
+  /** Kept so teardown removes exactly the listener that was added. */
+  private closeBtn: HTMLElement | null = null;
+  private readonly handleCloseClick = () => this.close();
+  private readonly handleBackdropClick = (event: Event) => {
+    if (event.target === this.currentModal) this.close();
+  };
 
   constructor(config: Partial<iModalConfig> = {}) {
     super();
@@ -44,58 +69,61 @@ export class ModalBuilder extends Builder<ModalElementType, iModalConfig> {
       namespace: null,
       emit: () => { },
       onClose: () => { },
-      onOpen: () => { }
+      onOpen: () => { },
+      onReady: () => { }
     };
     // const randomSuffix = Math.random().toString(36).substring(7);
     this.config = this.resolveConfig(defaultConfig, config);
   }
 
   /**
-   * 🏛️ SYSTEM PRESET PAGE DEFAULT BUILDER
-   * Mengatur daur hidup pembuatan elemen dan menahan duplikasi fisik di DOM browser
+   * Builds the overlay and returns it.
+   *
+   * Three things changed from the version that misbehaved:
+   *
+   * 1. it **returns the element** instead of control handles, so the registry can mount
+   *    it (`build()` requires an element); the handles now arrive through `onReady`;
+   * 2. it no longer appends itself to `document.body` — whoever renders it decides
+   *    where it lives, which is what made overlays stack up before;
+   * 3. a leftover node with the same id is **removed first**, so the id always has
+   *    exactly one owner instead of silently reusing a stale element.
    */
-  public prepare(contentPayload: any): { open: () => void; close: () => void; unmount: () => void; element: HTMLElement } {
-    // 💡 POTENSI ANTI-KEMBUNG: Ambil dari live DOM jika mode reuse aktif
-    // console.log(contentPayload)
-    const existingDOMElement = document.getElementById(this.config.id);
-    if (existingDOMElement && !this.config.destroyOnClose) {
-      console.log(`[Universal Modal] Re-using active memory pointer for #${this.config.id}`);
+  public prepare(contentPayload: any): HTMLElement {
+    document.getElementById(this.config.id)?.remove();
+    this.#destroyed = false;
 
-      // Sinkronisasikan saku internal Map agar tetap konsisten memegang elemen aktif
-      // this.nodes().set("@container", existingDOMElement, contentPayload, false); //<= akan fix the issue
-      // this.load("@container", contentPayload) as HTMLElement; // <= tidak, sementara yang dilakukan sama
-      this.currentModal = existingDOMElement;
-      return this._getControlInterfaces();
-    }
-
-    // 1. Lahirkan Cangkang Makro Terluar (Outer Overlay Backdrop)
     const overlay = this.render("@container", contentPayload) as HTMLElement;
-
-    this.currentModal = overlay;
-
-    // 2. Lahirkan Kotak Dialog Modal Dalam (Inner Box)
     const modalBox = this.render("@modal", contentPayload);
-
-    // 3. Lahirkan Header & Tombol Silang JIT
     const header = this.render("@modal>header", contentPayload);
     const closeBtn = this.render("@modal>closeBtn", contentPayload);
 
-    // 4. Proses kompilasi konten polimorfik murni vanilla pilihan cerdas Anda
     const bodyContent = this._compileContent(contentPayload);
     bodyContent.classList.add("body");
 
-    // ====================================================
-    // 🧙‍♂️ THE PERFECT VANILLA WEAVING (JAHIT STRUKTUR DOM)
-    // ====================================================
     if (header && closeBtn) header.appendChild(closeBtn);
     if (modalBox && header) modalBox.appendChild(header);
     if (modalBox && bodyContent) modalBox.appendChild(bodyContent);
     if (overlay && modalBox) overlay.appendChild(modalBox);
 
-    // Injeksi fisik modal langsung di bawah bodi kulit terluar dokumen HTML
-    if (overlay) document.body.appendChild(overlay);
+    this.currentModal = overlay;
+    this.closeBtn = (closeBtn as HTMLElement) ?? null;
+    this.bind();
 
-    return this._getControlInterfaces();
+    this.config.onReady?.(this._getControlInterfaces());
+
+    return overlay;
+  }
+
+  /** Attaches the two ways out, using references that teardown can remove. */
+  private bind(): void {
+    this.closeBtn?.addEventListener("click", this.handleCloseClick);
+    this.currentModal?.addEventListener("click", this.handleBackdropClick);
+  }
+
+  /** Removes exactly the listeners `bind()` added. */
+  private unbind(): void {
+    this.closeBtn?.removeEventListener("click", this.handleCloseClick);
+    this.currentModal?.removeEventListener("click", this.handleBackdropClick);
   }
 
   protected template(typeKey: ModalElementType, el: HTMLElement, _payload?: any): void {
@@ -126,56 +154,52 @@ export class ModalBuilder extends Builder<ModalElementType, iModalConfig> {
     }
   }
 
-  public initialize(_el?: HTMLElement, payload?: any, _context?: any): void {
-    // console.log("initialize", _el)
-    const overlay = (this.load("@container") || this.render("@container", payload)) as HTMLElement || this.currentModal;
-    // console.log("initialize overlay", overlay)
-    const closeBtn = this.load("@modal>closeBtn") as HTMLElement;
+  /**
+   * Kept for compatibility: listeners are bound in `prepare()`, so nothing happens here.
+   * Binding lazily is what made a reused element arrive without working listeners.
+   */
+  public initialize(_el?: HTMLElement, _payload?: any, _context?: any): void {
+    return;
+  }
 
-    if (closeBtn && overlay) {
-      // Klik tombol silang memicu penutupan modal
-      closeBtn.addEventListener("click", () => this.close());
+  /** Id kept outside `config`, which is cleared by `Base.destroy()`. */
+  #label(): string {
+    return `#${(this.config as Partial<iModalConfig> | null)?.id ?? "modal"}`;
+  }
 
-      // Tutup safely jika area kosong backdrop luar hitam diketuk oleh user
-      overlay.addEventListener("click", (event) => {
-        if (event.target === overlay) {
-          this.close();
-        }
-      });
-
-      // console.log(`[Modal Lifecycle] Event interaksi untuk #${this.config.id} sukses terikat.`);
-    }
+  /** Whether this instance has been torn down. A destroyed modal cannot be reopened. */
+  public get isDestroyed(): boolean {
+    return this.#destroyed;
   }
 
   public open(): void {
-    const overlay = this.currentModal || this.load("@container") as HTMLElement;
-    console.log("open", overlay) //<= overlay element ada
-    if (!overlay) return;
+    const overlay = this.currentModal;
+    if (this.#destroyed || !overlay) {
+      // `destroyOnClose: true` makes the modal single-use. Say it out loud instead of
+      // leaving a caller with a handle that silently does nothing.
+      // `this.config` is gone after destroy(), hence the optional access.
+      console.warn(
+        `[Modal] open() ignored: ${this.#label()} was destroyed. Rebuild it, or use destroyOnClose: false.`
+      );
+      return;
+    }
 
     overlay.classList.remove("hidden");
     document.body.style.overflow = "hidden"; // Cegah double scrolling halaman belakang
 
-    if (typeof this.config.onOpen === "function") {
-      this.config.onOpen(overlay);
-    }
+    this.config.onOpen?.(overlay);
   }
 
   public close(): void {
-    const overlay = this.currentModal || this.load("@container") as HTMLElement;
-
-    console.log("close", overlay) //<= overlay element ada
-    if (!overlay) return;
+    const overlay = this.currentModal;
+    if (this.#destroyed || !overlay) return;
 
     overlay.classList.add("hidden");
     document.body.style.overflow = ""; // Pulihkan scroll normal halaman belakang
 
-    if (typeof this.config.onClose === "function") {
-      this.config.onClose(overlay);
-    }
+    this.config.onClose?.(overlay);
 
-    if (this.config.destroyOnClose) {
-      this.unmount();
-    }
+    if (this.config.destroyOnClose) this.destroy();
   }
 
   private _compileContent(content: any): HTMLElement {
@@ -197,26 +221,34 @@ export class ModalBuilder extends Builder<ModalElementType, iModalConfig> {
     return fallbackDiv;
   }
 
-  private _getControlInterfaces(_currentModal?: HTMLElement) {
-    // console.log("same element:", currentModal?.isEqualNode(this.currentModal)) // ❌ hasilnya false padahal sama 
-    const overlay = this.currentModal;
+  private _getControlInterfaces(): iModalControls {
     return {
-      element: overlay as HTMLElement,
+      element: this.currentModal as HTMLElement,
       open: () => this.open(),
       close: () => this.close(),
-      unmount: () => this.unmount()
+      unmount: () => this.destroy()
     };
   }
 
-  public unmount() {
-    const overlay = this.load("@container") as HTMLElement
-    const closeBtn = this.load("@modal>closeBtn") as HTMLElement;
-    if (overlay && closeBtn) {
-      closeBtn.removeEventListener("click", this.close);
-      overlay.removeEventListener("click", this.close);
-      const modal = document.getElementById(this.config.id)
-      modal?.remove()
-      this.destroy();
-    }
+  /**
+   * Releases everything this builder owns. Idempotent on purpose: it is called by
+   * `close()` (when `destroyOnClose`), by a controller, and by route teardown.
+   */
+  public destroy(): void {
+    this.unbind();
+
+    document.body.style.overflow = "";
+    this.currentModal?.remove();
+
+    this.currentModal = null;
+    this.closeBtn = null;
+    this.#destroyed = true;
+
+    super.destroy();
+  }
+
+  /** Alias kept so existing callers keep working. */
+  public unmount(): void {
+    this.destroy();
   }
 }

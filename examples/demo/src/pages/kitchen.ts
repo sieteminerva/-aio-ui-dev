@@ -15,12 +15,7 @@ function mount(host: HTMLElement, entry: iDemoEntry, build: any): void {
   try {
     const out = build(entry.name, entry.payload);
 
-    if (entry.kind === "modal") {
-      if (!out?.element) throw new Error("modal returned no element handle");
-      // The global handle exists so the section's button can open it.
-      (globalThis as any).__demoModal = out;
-      host.mount(out.element);
-    } else if (out instanceof HTMLElement) {
+    if (out instanceof HTMLElement) {
       host.mount(out);
     } else if (out?.element instanceof HTMLElement) {
       host.mount(out.element);

@@ -21,6 +21,8 @@ export interface iDemoEntry {
   kind: "element" | "modal";
   /** Payload handed to `build(name, payload)`. */
   payload: any;
+  /** Config merged into the builder (selectors, callbacks, per-build options). */
+  config?: Record<string, any>;
   /** Set when the payload shape is a best guess rather than a verified contract. */
   note?: string;
 }
@@ -208,8 +210,17 @@ export const DEMO: iDemoEntry[] = [
     stylesheet: "@aio-ui/modal/Modal.css",
     category: "chrome",
     kind: "modal",
-    payload: { title: "Modal demo", content: "Isi modal dari payload demo." },
-    note: "CONTRACT MISMATCH: prepare() returns controls, not an element, so build() cannot mount it",
+    // `destroyOnClose: true` makes a modal single-use; a mounted demo wants reuse.
+    payload: "Isi modal dari payload demo.",
+    config: {
+      id: "demo-modal",
+      title: "Modal demo",
+      destroyOnClose: false,
+      onReady: (controls: any) => {
+        (globalThis as any).__demoModal = controls;
+      },
+    },
+    note: "config: { id, title, destroyOnClose: false = reuse, onReady(controls) }",
   },
 ];
 
@@ -225,6 +236,7 @@ export function manifestFor(entry: iDemoEntry) {
   return (data: unknown): iComponentManifest => ({
     path: entry.path,
     stylesheet: entry.stylesheet,
+    config: entry.config,
     schema: data,
   });
 }
