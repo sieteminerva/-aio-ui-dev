@@ -76,3 +76,57 @@ describe("formSubmit payload", () => {
     expect(data.delivery).toBe("pickup");
   });
 });
+
+describe("submit hooks", () => {
+  it("calls config.onSubmit with the completed payload", async () => {
+    const seen: any[] = [];
+    const form = new FormBuilder().create(schema as any, { onSubmit: (data: any) => seen.push(data) } as any) as HTMLFormElement;
+    document.body.appendChild(form);
+
+    (form.querySelector("#name") as HTMLInputElement).value = "Budi";
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(seen).toHaveLength(1);
+    expect(seen[0].name).toBe("Budi");
+    expect(seen[0].delivery).toBe("courier");
+    form.remove();
+  });
+
+  it("keeps dispatching formSubmit when onSubmit throws", async () => {
+    const form = new FormBuilder().create(schema as any, {
+      onSubmit: () => { throw new Error("boom"); },
+    } as any) as HTMLFormElement;
+    document.body.appendChild(form);
+
+    let received = false;
+    form.addEventListener("formSubmit", () => { received = true; });
+
+    const consoleError = console.error;
+    console.error = () => undefined;
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    console.error = consoleError;
+
+    expect(received).toBe(true);
+    form.remove();
+  });
+
+  it("clears the controls before answering when resetOnSubmit is on", async () => {
+    const form = new FormBuilder().create(schema as any, { resetOnSubmit: true } as any) as HTMLFormElement;
+    document.body.appendChild(form);
+
+    let nameAtDispatch: string | null = null;
+    form.addEventListener("formSubmit", (event: any) => {
+      nameAtDispatch = event.detail.data.name;
+    });
+
+    (form.querySelector("#name") as HTMLInputElement).value = "Budi";
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(nameAtDispatch).toBe("Budi");                                    // payload captured
+    expect((form.querySelector("#name") as HTMLInputElement).value).toBe(""); // controls cleared
+    form.remove();
+  });
+});

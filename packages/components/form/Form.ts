@@ -21,6 +21,8 @@ export type FormElementType =
   | "@form>group"
   | "@form>group>legend"
   | "@form>group>desc"
+  | "@form>title"
+  | "@form>desc"
   | "@form>row"
   | "@form>row>title"
   | "@form>actions"
@@ -42,8 +44,7 @@ export interface iFormConfig extends iBuilderConfig<FormElementType> {
   buttonClass?: string;
   resetOnSubmit?: boolean;
   resetOnComplete?: boolean;
-  createEventListener?: boolean;
-  autoDisableNextStep?: boolean
+  createEventListener?: boolean; autoDisableNextStep?: boolean
   minHeight?: string;
   multistep?: boolean;
   cascading?: boolean; // show or build input or group based on condition from input value before. it will looking "condition" property 
@@ -122,6 +123,9 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       "@form>group": { tagName: "fieldset", className: "form-group" },
       "@form>group>legend": { tagName: "legend", className: "title" },
       "@form>group>desc": { tagName: "p", className: "desc" },
+      // The form's own heading, above the first group.
+      "@form>title": { tagName: "h2", className: "title" },
+      "@form>desc": { tagName: "p", className: "desc" },
       // A row is layout, not a fieldset: fields + nested rows in a CSS grid.
       "@form>row": { tagName: "div", className: "field group" },
       "@form>row>title": { tagName: "p", className: "title" },
@@ -193,6 +197,11 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     const form = this.render("@form", inputs) as HTMLFormElement;
     const formId = form.id;
     const isCascading = this.config.cascading === true;
+
+    // 📄 The form's own heading: `title`/`description` are part of `iFormConfig`, so they
+    // render instead of being silently ignored. They sit above the first group.
+    if (this.config.title) form.appendChild(this.render("@form>title", this.config.title)!);
+    if (this.config.description) form.appendChild(this.render("@form>desc", this.config.description)!);
     // 🌊 Engine kaskade dibangun bila cascading aktif — ATAU bila gerbang
     // next diminta eksplisit (autoDisableNextStep:true, mis. untuk kondisi眼
     // manual pada group schema tanpa cascading), agar gate() tetap berjalan.
@@ -247,14 +256,18 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
         // 🪜 MULTISTEP: group pembawa langkah DITAHAN — placeholder <template>
         // ditanam di posisinya; fieldset sungguhan baru dibangun saat tombol
         // Next/Back menekannya (lihat FormMultistepHandler._mount).
-        if (_config.multistep) {
+        //
+        // One source of truth: `this.config.multistep` (resolved in the constructor), not
+        // the `_config` argument `create()` happens to pass — the same file already read
+        // `this.config.multistep` everywhere else.
+        if (this.config.multistep) {
           this.#multistep?.hold(form, Number(index), input);
           continue;
         }
 
         const fieldset = this.renderGroup(input, formId, isCascading ? String(index) : undefined);
         if (input.id) fieldset.id = input.id;
-        if (input.className) fieldset.className = fieldset.className + " " + input.className;
+        if (input.className) fieldset.classList.add(...String(input.className).split(/\s+/).filter(Boolean));
         // console.log("group", fieldset, this.#inputs.length)
         form.appendChild(fieldset);
       }
@@ -574,13 +587,22 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
         break;
 
       case "@form": {
-        // console.log(this.config)
         const form = el as HTMLFormElement;
         const randomSuffix = Math.random().toString(36).substring(7);
+
         form.id = this.config.id ? `form-${this.config.id}`.replace(/\s+/g, "-") : `form-${randomSuffix}`;
-        form.className = `${this.config.className} ${this.config.multistep ? "multistep" : ""} ${form.className || ""}`.trim();
+
+        // Class tokens are added one by one, never concatenated: string building appends a
+        // second copy on every re-render and leaves double spaces behind.
+        if (this.config.className) {
+          form.classList.add(...String(this.config.className).split(/\s+/).filter(Boolean));
+        }
+        if (this.config.multistep) form.classList.add("multistep");
+
         form.method = this.config.method;
         if (this.config.action) form.action = this.config.action;
+        // The form's own name, used by submit handlers and by `document.forms`.
+        if (this.config.name) form.name = String(this.config.name);
         break;
       }
 
@@ -620,6 +642,11 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
       case "@form>row>title":
         el.textContent = typeof payload === "string" ? payload : String(payload?.label ?? "");
+        break;
+
+      case "@form>title":
+      case "@form>desc":
+        el.textContent = typeof payload === "string" ? payload : String(payload?.label ?? payload?.description ?? "");
         break;
 
       case "@form>group>desc":
@@ -774,6 +801,20 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
       // 🧩 Kolaborator menyumbang datanya (file, alamat, tabel) sebelum event rilis.
       for (const feature of this.#features) await feature.beforeSubmit?.(data);
+
+      // `resetOnSubmit` clears the controls before the consumer answers — the payload is
+      // already captured, so the visitor can start a second entry while the first uploads.
+      if (this.config.resetOnSubmit) this.#resetForm(form);
+
+      // `onSubmit` is the direct callback; `formSubmit` is the event. Both see the same
+      // completed payload, and a throwing callback must not stop the event.
+      if (typeof this.config.onSubmit === "function") {
+        try {
+          this.config.onSubmit(data);
+        } catch (error) {
+          console.error("[FormBuilder] onSubmit failed:", error);
+        }
+      }
 
       form.dispatchEvent(
         new CustomEvent("formSubmit", {
