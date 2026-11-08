@@ -4,6 +4,38 @@ import { DropdownBuilder, type iDropdownConfig, type iDropdownContent } from "./
 import { InputControlsBuilder, type InputControlsElementType } from "./InputControls/InputControls";
 import { FileUploader } from "./FileUploader/FileUploader";
 import type { iCalculationFormula } from "./Handlers/Calculation";
+import { inputTypeOf } from "./InputRegistry";
+
+/**
+ * Attributes `applyAttributes` knows how to map, in application order.
+ *
+ * A key not listed here is not applied by the builder (it can still be passed through
+ * `config.attributes`), and a key listed here is still dropped for a type whose registry
+ * row does not accept it.
+ */
+const ATTRIBUTE_ORDER = [
+  "value",
+  "checked",
+  "placeholder",
+  "required",
+  "disabled",
+  "readonly",
+  "multiple",
+  "accept",
+  "min",
+  "max",
+  "minlength",
+  "maxlength",
+  "step",
+  "pattern",
+  "rows",
+  "cols",
+  "autocomplete",
+  "inputmode",
+] as const;
+
+/** Attributes whose presence is the value: `required`, `disabled`, `multiple`, … */
+const BOOLEAN_ATTRIBUTES = new Set(["required", "disabled", "readonly", "multiple"]);
 
 export type InputType =
   | "text"
@@ -188,9 +220,16 @@ export class InputBuilder extends Builder<InputElementType> {
     if (!inputPayload.placeholder && inputPayload.title) {
       inputPayload.placeholder = (inputPayload.type === "select" || inputPayload.type === "textarea") ? `Pilih ${inputPayload.title}` : `Isi ${inputPayload.title}`;
     }
-    if (Array.isArray(inputObj.config?.options)) {
-      inputPayload.config.options = inputObj.config.options.map((option) => typeof option === "string" ? { value: option, label: option } : option);
+
+    // 🧩 `options` is accepted at the top level (`{ type: "select", options: [...] }`) as
+    // well as under `config`, because a schema read from a sheet writes it flat. Both
+    // shapes normalise into `config.options`, which is where the select and dropdown
+    // templates read from.
+    const rawOptions = inputObj.config?.options ?? (inputObj as any).options;
+    if (Array.isArray(rawOptions)) {
+      inputPayload.config.options = rawOptions.map((option: any) => typeof option === "string" ? { value: option, label: option } : option);
     }
+
     return inputPayload;
   }
 
@@ -259,59 +298,41 @@ export class InputBuilder extends Builder<InputElementType> {
     this.#input = this.resolvePayload(inputObj);
 
     const cfg = this.#input.config;
+    const definition = inputTypeOf(this.#input.type);
 
     const wrapper = this.render("@field", this.#input)!;
-    const ltext = this.#input.label ?? this.#input.title;
 
-    if (ltext && this.#input.config?.useLabel && this.#input.type !== "dropdown") {
-      const label = this.render("@field>label", { text: ltext, position: this.#input.position, id: this.#input.id })!
-      wrapper?.appendChild(label);
+    // 🏷️ One label, one place. `useLabel` is an on/off switch (default on, set in
+    // `resolvePayload`); `position` is a CSS hint (`data-position`), never an order change.
+    //
+    // Read from `config` only: a top-level `position` on the schema resolves through the
+    // reactive payload proxy to an inherited value (the demo checkbox came back `"right"`
+    // without asking for it), and `config.position` is the typed home anyway.
+    const labelText = this.#input.label ?? this.#input.title;
+    const labelPosition = this.#input.config?.position;
+
+    const label = labelText && this.#input.config?.useLabel !== false
+      ? this.render("@field>label", { text: labelText, position: labelPosition, id: this.#input.id }) as HTMLElement
+      : null;
+
+    if (label) wrapper.appendChild(label);
+
+    // 🧩 The control is chosen by the type registry, so a new field type is one row there
+    // instead of another `case` here. `dropdown` is the one type a sibling builder owns.
+    let inputEl = (definition.control
+      ? this.render(definition.control, this.#input)
+      : null) as (HTMLInputElement | HTMLSelectElement | HTMLElement | null);
+
+    if (!inputEl && this.#input.type === "dropdown") {
+      inputEl = this._renderDropdown(this.#input);
     }
 
-    let inputEl: HTMLInputElement | HTMLSelectElement | HTMLElement;
-
-    switch (this.#input.type) {
-      case "textarea":
-        inputEl = this.render("@field>textarea", this.#input)!;
-        break;
-
-      case "select":
-        inputEl = this.render("@field>select", this.#input)!;
-        break;
-
-      case "dropdown":
-        inputEl = this._renderDropdown(this.#input);
-        break;
-
-      case "checkbox":
-        inputEl = this.render("@field>checkbox", this.#input)!;
-        break;
-
-      case "radio":
-        inputEl = this.render("@field>radio", this.#input)!;
-        break;
-
-      case "file":
-        inputEl = this.render("@field>file", this.#input)!;
-        break;
-
-      default:
-        // Default untuk jenis text, number, email, password, dll.
-        inputEl = this.render("@field>input", this.#input)!;
-        if ((this.#input.type === "text" || this.#input.type === "number") && (this.#input.config?.className === "loading")) {
-          inputEl.classList.add("loading");
-        }
-        break;
-    }
-
-    // Dropdown & checkbox mencetak label kedua sendiri (posisi diambil dari config).
-    if (ltext && this.#input.config?.useLabel && (this.#input.type === "dropdown" || this.#input.type === "checkbox")) {
-      const label = this.render("@field>label", {
-        text: ltext,
-        position: this.#input.config.position,
-        id: this.#input.id,
-      })!;
-      wrapper.append(label);
+    if (!inputEl) {
+      // Default untuk jenis text, number, email, password, dll.
+      inputEl = this.render("@field>input", this.#input)!;
+      if ((this.#input.type === "text" || this.#input.type === "number") && (cfg?.className === "loading")) {
+        inputEl.classList.add("loading");
+      }
     }
 
     if (inputEl) {
@@ -326,7 +347,7 @@ export class InputBuilder extends Builder<InputElementType> {
 
 
     // Dropdown mencetak root `.dropdown` sendiri, jadi root itu yang ditempel apa adanya.
-    inputEl.__outer ? wrapper.appendChild(inputEl.__outer) : wrapper.appendChild(inputEl);
+    if (inputEl) inputEl.__outer ? wrapper.appendChild(inputEl.__outer) : wrapper.appendChild(inputEl);
 
     if (cfg?.actions && inputEl) {
       const actions = this._renderActions(wrapper, this.#input);
@@ -413,7 +434,9 @@ export class InputBuilder extends Builder<InputElementType> {
 
       case "@field>radio":
         (el as HTMLInputElement).type = payload.type;
-        (el as HTMLInputElement).checked = true;
+        // Only a field that asks for it starts checked; a radio group is several fields,
+        // so defaulting to true put every option in the group in the checked state.
+        (el as HTMLInputElement).checked = payload.checked === true;
         break;
 
       case "@field>file":
@@ -449,27 +472,59 @@ export class InputBuilder extends Builder<InputElementType> {
     }
   }
 
+  /**
+   * Applies a schema to a live control.
+   *
+   * The registry decides what a type may carry: an attribute that means nothing for the
+   * type is dropped instead of landing in the markup (`maxlength` on a `checkbox`, a
+   * `min` on a `file`). `id` and `name` are structural and always set; `config.attributes`
+   * is applied last, so an escape hatch still wins.
+   */
   private applyAttributes(el: HTMLInputElement | HTMLSelectElement | HTMLElement, payload: any) {
-    const cfg = payload.config;
+    const cfg = payload.config ?? {};
+    const allowed = inputTypeOf(payload.type).attributes;
 
     el.id = payload.id;
     (el as HTMLInputElement).name = payload.name ? String(payload.name) : payload.id;
 
-    // Set the live control value after options are rendered. Cascade-created
-    // inputs pass through this method when a condition becomes true.
-    if (payload.value !== undefined && payload.value !== null && "value" in el) {
-      (el as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value = String(payload.value);
-    }
-    if (el instanceof HTMLInputElement) {
-      if (payload.checked !== undefined) el.checked = Boolean(payload.checked);
-      if (el.type === "number") el.step = String(payload.step ?? "any");
+    const read = (key: string) => payload[key] !== undefined ? payload[key] : cfg[key];
+
+    for (const key of ATTRIBUTE_ORDER) {
+      if (!allowed.includes(key)) continue;
+
+      const value = read(key);
+
+      if (key === "value") {
+        // The live property after options exist — cascade re-renders rely on this.
+        if (value !== undefined && value !== null && "value" in el) {
+          (el as HTMLInputElement | HTMLSelectElement).value = String(value);
+        }
+        continue;
+      }
+
+      if (key === "checked") {
+        if (el instanceof HTMLInputElement) el.checked = Boolean(value);
+        continue;
+      }
+
+      if (BOOLEAN_ATTRIBUTES.has(key)) {
+        // Presence is the value: `false` must leave the attribute absent, never render
+        // an empty or `"false"` one — an attribute that exists is still an enabled toggle.
+        if (!value) continue;
+        el.setAttribute(key, "");
+        if (key in el) (el as any)[key] = true;
+        continue;
+      }
+
+      if (value === undefined || value === null || value === "") continue;
+      el.setAttribute(key, String(value));
     }
 
-    // Injeksi spesifikasi atribut HTML standar
-    if (payload.placeholder) el.setAttribute("placeholder", String(payload.placeholder));
-    if (payload.disabled) el.setAttribute("disabled", "");
-    if (payload.readonly) el.setAttribute("readonly", "readonly");
-    if (payload.required) el.setAttribute("required", "");
+    // A number input without a step snaps to integers; the browser default is 1.
+    if (el instanceof HTMLInputElement && el.type === "number" && !el.getAttribute("step")) {
+      el.step = "any";
+    }
+
     // Tancapkan custom inline attributes bawaan array schema Anda (jika ada)
     if (cfg?.attributes && Array.isArray(cfg.attributes)) {
       cfg.attributes.forEach((attr: any) => {

@@ -24,6 +24,7 @@
     "test:watch": "vitest"
   },
   "devDependencies": {
+    "happy-dom": "^21.0.4",
     "typescript": "~6.0.2",
     "vitest": "^4.1.12"
   }
