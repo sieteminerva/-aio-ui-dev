@@ -146,6 +146,39 @@ page controller (optional) ─────────────────�
 9. Scroll to the URL fragment, then run `onReady` with the mounted elements.
 10. Run the outgoing controller's `onDestroy` before its DOM is replaced.
 
+## Themes — a namespace, not another `register*`
+
+`registerModule` answers *which object fills which slot*; `registerPage` answers *who
+renders which route*. Both are structural, one-per-key. Adding a theme is neither: it
+appends to a collection that already has an owner, so it gets a collection-shaped door
+rather than a third `register*` method (which would make the app a growing list of verbs).
+
+```ts
+const app = new AioApp({ … })
+  .registerModule(components)
+  .registerModule(HashRouter)
+  .registerModule(ThemeRenderer, { themes: [new DefaultTheme()] }); // the port + its initial set
+
+app.theme.register(new CyberpunkTheme());   // add one — before or after mount()
+app.theme.ids;                              // ["default", "cyberpunk"]  (empty if the port can't list)
+app.theme.current;                          // "default"
+
+await app.mount();
+
+app.theme.use("cyberpunk");                 // switch + re-render the current route
+```
+
+Why `use()` goes through the router: a theme is part of the URL (`#route?theme=id`). Routing
+the switch through `router.navigate(route, themeId, fragment)` keeps three things truthful
+at once — the address bar, the persisted `active_theme`, and the render — and reuses the
+path a visitor takes when they open a shared link. `use()` without a router (nothing
+mounted yet) just records the id.
+
+`register()` before `mount()` is queued and flushed while modules are created, because the
+theme port does not exist yet. It throws a clear error if the registered port cannot accept
+themes (a custom port without `register`); pass the initial set to
+`registerModule(ThemeRenderer, { themes })` in that case.
+
 ## Page controller
 
 A route may be described by **content** (`source.pages[route]`), by a **controller**, or

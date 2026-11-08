@@ -58,6 +58,23 @@ export class ThemeRenderer {
     return this.#id;
   }
 
+  /**
+   * Adds a theme after construction.
+   *
+   * Registration is not tied to the constructor: a theme is just an id plus hooks, and
+   * its templates are per-instance, so adding one later is safe. If no theme was active
+   * yet (unknown id), the new one becomes the active theme.
+   */
+  public register(theme: iThemeModule): void {
+    this.#themes.register(theme);
+    this.#registerTemplates(theme);
+
+    if (!this.#active) {
+      this.#active = theme;
+      this.#id = theme.themeId;
+    }
+  }
+
   /** Switches the active theme. Unknown ids are reported and ignored. */
   public use(themeId: string): void {
     const next = this.#themes.resolve(themeId);

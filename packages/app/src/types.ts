@@ -10,6 +10,7 @@
  */
 
 import type { iBasicNode, iNodeContent } from "@aio-ui/core/node";
+import type { iThemeModule } from "@aio-ui/core/page";
 import type {
   iAnimationPort,
   iAppRouteState,
@@ -262,6 +263,37 @@ export interface iThemePort {
   deactivate?(shell: HTMLElement): void;
   /** Applies a theme id selected after mount (the router reported a new theme). */
   use?(themeId: string): void;
+  /** Adds a theme after the port exists. Optional: a host port may be read-only. */
+  register?(theme: iThemeModule): void;
+  /** Registered theme ids, when the port can enumerate them. */
+  readonly ids?: string[];
+  /** Currently applied theme id, when the port tracks it. */
+  readonly current?: string;
+}
+
+/**
+ * Theme controls on the app: `app.theme.register(...)`, `app.theme.use(...)`.
+ *
+ * Namespaced on purpose. `registerModule` answers "which object fills which slot" and
+ * `registerPage` answers "who renders which route"; both are structural. Adding a theme is
+ * neither — it adds an item to a collection that already has an owner — so it gets a
+ * collection-shaped door instead of a third `register*` method on the app.
+ */
+export interface iAppThemeFacade {
+  /**
+   * Adds a theme. Safe before or after `mount()`; a pre-mount call is queued and applied
+   * once the theme port exists.
+   */
+  register(theme: iThemeModule): iApp;
+  /**
+   * Switches the active theme and re-renders the current route. Routed through the router
+   * when there is one, so the address bar and the persisted choice stay truthful.
+   */
+  use(themeId: string): void;
+  /** Ids the port knows about (empty when the port cannot enumerate). */
+  readonly ids: string[];
+  /** Active theme id. */
+  readonly current: string;
 }
 /** Public surface of a mounted app. */
 export interface iApp {
@@ -269,6 +301,9 @@ export interface iApp {
   readonly currentRoute: string;
   /** Root element of the mounted page, `null` before `mount()`. */
   readonly shell: HTMLElement | null;
+
+  /** Theme controls — `register(theme)` / `use(id)`. See `iAppThemeFacade`. */
+  readonly theme: iAppThemeFacade;
 
   /**
    * Registers the module that fills a slot. Must be called before `mount()`.

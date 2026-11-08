@@ -125,3 +125,14 @@ That is the whole contract — no framework API was invented for switching. Note
 
 Available ids: `default`, `cyberpunk` — add one by importing its package in `main.ts` and
 appending it to `THEMES`.
+
+The switcher prefers the app's own door when a handle exists:
+
+```ts
+const app = (globalThis as any).__app;   // the demo keeps its handle for debugging
+if (app?.theme?.use) app.theme.use(id);   // router-driven: URL + storage + re-render
+else location.hash = hashWithTheme(id);   // fallback: the hash alone is enough
+```
+
+See [`APP.md`](./APP.md#themes--a-namespace-not-another-register) for why themes are
+registered through `app.theme.register()` instead of a third `register*` method.

@@ -26,6 +26,7 @@
 
 import type { iBasicNode, iNodeContent } from "@aio-ui/core/node";
 import type { iBuilderRegistry } from "@aio-ui/core/registry";
+import type { iThemeModule } from "@aio-ui/core/page";
 
 import type {
   iAnimationPort,
@@ -43,6 +44,7 @@ import type {
   iAppModuleContext,
   iAppSlots,
   iAppSlot,
+  iAppThemeFacade,
   iPageBlock,
   iPageContent,
   iPageContext,
@@ -187,6 +189,9 @@ export class AioApp implements iApp {
   #sequence = 0;
   #mounted = false;
 
+  /** Themes registered through `app.theme.register()` before the port existed. */
+  #pendingThemes: iThemeModule[] = [];
+
   constructor(config: iAppConfig) {
     this.#source = config.source ?? { pages: {} };
     this.#containerTarget = config.container;
@@ -198,6 +203,67 @@ export class AioApp implements iApp {
     for (const [route, page] of Object.entries(this.#source.pages ?? {})) {
       this.#pages.set(normalizeRoute(route), page);
     }
+  }
+
+  /**
+   * Theme controls: `app.theme.register(theme)` and `app.theme.use(id)`.
+   *
+   * A namespace rather than another `register*` method, because adding a theme does not
+   * fill a slot or own a route — it appends to a collection that already has an owner.
+   * `register()` works before or after `mount()`; `use()` re-renders the current route
+   * through the router so the URL and the stored choice stay truthful.
+   */
+  public get theme(): iAppThemeFacade {
+    const app = this;
+
+    return {
+      register(theme: iThemeModule): iApp {
+        app.#registerTheme(theme);
+        return app;
+      },
+      use(themeId: string): void {
+        app.#useTheme(themeId);
+      },
+      get ids(): string[] {
+        return app.#themes?.ids ?? [];
+      },
+      get current(): string {
+        return app.#theme;
+      },
+    };
+  }
+
+  #registerTheme(theme: iThemeModule): void {
+    if (!this.#themes) {
+      // No theme port yet: queue it, and mount() flushes the queue once the port exists.
+      this.#pendingThemes.push(theme);
+      return;
+    }
+
+    if (typeof this.#themes.register !== "function") {
+      throw new Error(
+        `[AioApp] The registered theme module cannot accept "${theme?.themeId ?? "?"}" after mount: ` +
+        "its port has no register(). Pass the themes in registerModule(ThemeRenderer, { themes })."
+      );
+    }
+
+    this.#themes.register(theme);
+    this.#log("theme:registered", { themeId: theme.themeId });
+  }
+
+  #useTheme(themeId: string): void {
+    if (themeId === this.#theme) return;
+
+    // The router owns the address bar and re-emits the route change, so switching a theme
+    // follows exactly the same path as a visitor who arrived with `?theme=`. Anything else
+    // (setting #theme here and re-rendering) would leave the URL lying.
+    if (this.#router) {
+      this.#router.navigate(this.#route || this.#defaultRoute, themeId, this.#fragment);
+      return;
+    }
+
+    this.#theme = themeId;
+    this.#log("theme:changed", { themeId, via: "direct" });
   }
 
   /** Route currently rendered. Empty until `mount()` finishes. */
@@ -376,6 +442,11 @@ export class AioApp implements iApp {
       this.#releasePorts(created.reverse());
       throw error;
     }
+
+    // Whatever `app.theme.register()` collected before mount is applied here, where the
+    // port finally exists — same door, same behaviour, either timing.
+    for (const theme of this.#pendingThemes) this.#registerTheme(theme);
+    this.#pendingThemes = [];
 
     this.#log("modules:created", { slots: created });
   }

@@ -80,7 +80,7 @@ export class HashRouter {
     // Evaluasi string input sejak gerbang navigasi terdepan!
     let targetRoute = this._normalizeRoute(routeId);
     let targetFragment = fragmentId?.trim().replace(/^#/, "") || "";
-    console.log(this.validRoutes)
+
     // Jika yang mau dituju ternyata bukan rute halaman resmi, melainkan nama seksi polos (#faq-section)
     if (!this.validRoutes.includes(targetRoute.toLowerCase()) && !_isValidRoute) {
       console.warn(`[Router] Redirecting dynamic section anchor click to default page path.`);
@@ -185,7 +185,6 @@ export class HashRouter {
   }
 
   public updateValidRoute(route: string): void {
-    console.log(this.validRoutes)
     this.validRoutes.push(route);
   }
 

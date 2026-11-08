@@ -54,13 +54,24 @@ export const themeSwitcher = {
             isActive: id === active,
             onClick: () => {
               if (currentTheme() === id) return;
-              // A hash change is the whole contract: the router and the app take it from here.
+
+              // Preferred door: `app.theme.use()`. The app forwards it to the router, so the
+              // URL, storage and re-render all follow the normal path. The demo keeps its app
+              // handle on `globalThis` (see main.ts), which is exactly what a host has.
+              const app = (globalThis as any).__app;
+              if (typeof app?.theme?.use === "function") {
+                app.theme.use(id);
+                return;
+              }
+
+              // Fallback for a page without an app handle: a hash change is enough, the
+              // router parses `?theme=` and the app takes it from there.
               location.hash = hashWithTheme(id);
             },
           })),
         },
         config: {
-          position: "top-right",
+          position: "bottom-right",
           displayIcon: "🎨",
           // The menu is a control, not a menu of destinations: keep it open while the
           // visitor compares themes, then let the idle timer close it.
