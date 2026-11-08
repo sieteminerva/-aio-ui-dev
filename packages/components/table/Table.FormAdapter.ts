@@ -1,7 +1,7 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import type { iFormModuleContext, iFormTableTarget } from "@aio-ui/form/FormModuleTypes";
 import { FORM_MODULE_IDS } from "@aio-ui/form/FormModuleTypes";
-import { InputBuilder } from "@aio-ui/form/Input";
+import { parseTableFile } from "@aio-ui/utilities/parseTableFile";
 import { TableBuilder } from "./Table";
 
 /**
@@ -100,8 +100,10 @@ class TableFormAdapter {
     // Step 2: Skip rebuilding when the user cleared the input.
     if (!fileInput.files || fileInput.files.length === 0) return;
 
-    // Step 3: Parse through the input layer, then mount the preview table.
-    const tableData = await InputBuilder.parseCsvTable(form.id);
+    // Step 3: Parse the file this input actually holds, then mount the preview table.
+    // The table layer owns CSV→rows; asking the input layer for a *form id* (as this used
+    // to) meant the table depended on the uploader and could only ever read one file.
+    const tableData = await parseTableFile(fileInput.files[0]);
     const table = new TableBuilder({ renderAsCard: false, autoFreezeAt: 0 });
     const tableEl = table.create(tableData);
 

@@ -2,13 +2,17 @@ import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import type { iFormModuleContext } from "./FormModuleTypes";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
 import { InputBuilder } from "./Input";
+import { inputFilesOf, mountInputModules } from "./InputRegistry";
 
 /**
  * Field rendering adapter.
  *
- * @summary Owns `InputBuilder`: it creates every field the form renders and
- * collects the files its file adapter produced. `FileUploader` stays inside the
- * input layer; this adapter only talks to `InputBuilder`.
+ * @summary Owns `InputBuilder`: it creates every field the form renders, offers subtrees
+ * to the input modules (the file adapter for raw HTML fields), and — only when the form
+ * asks for it — contributes the selected files to the submit payload.
+ *
+ * Nothing here parses or serializes a file: the form config decides, because that is a
+ * policy, not a mechanism.
  */
 class InputFormAdapter {
   /** Host context captured at load time. */
@@ -39,17 +43,23 @@ class InputFormAdapter {
    * @returns Nothing.
    */
   public mount(root: HTMLElement): void {
-    InputBuilder.initFileAdapters(root);
+    mountInputModules(root);
   }
 
   /**
-   * Contributes serialized uploads to the submit payload.
+   * Contributes the selected files when — and only when — the form asks for them.
    *
+   * @summary `config.files` is `"ignore"` by default: a form submit carries form data,
+   * not an implied file payload. A callback receives the raw `File` map and decides what
+   * to add (a Drive serialization, a signed URL, nothing at all).
    * @param payload - Mutable submit payload.
-   * @returns A promise resolved once files are serialized.
    */
   public async beforeSubmit(payload: Record<string, any>): Promise<void> {
-    Object.assign(payload, await InputBuilder.collectFiles(this.#context.form.id));
+    const policy = this.#context.config.files;
+    if (typeof policy !== "function") return;
+
+    const files = inputFilesOf(this.#context.form.id);
+    Object.assign(payload, await policy(files, this.#context.form));
   }
 }
 

@@ -62,11 +62,15 @@ export interface iInputCollaborator {
    */
   mount?: (root: Document | HTMLElement) => void;
 
-  /** Serializes the files selected inside a form (file module only). */
-  collectFiles?: (formId: string) => Promise<Record<string, any>>;
-
-  /** Parses the CSV/JSON file selected inside a form into table data (file module only). */
-  parseCsv?: (formId: string) => Promise<{ header: any[]; body: any[]; footer: any }>;
+  /**
+   * The files currently selected inside a form, keyed by input name.
+   *
+   * Raw `File` objects only: what to do with them (parse, upload, preview) belongs to the
+   * caller. A capability that only exists when this module is registered.
+   *
+   * @param formId - Id of the form that owns the file inputs.
+   */
+  getFiles?: (formId: string) => Record<string, File[]>;
 }
 
 /** Erased definition type for the preset arrays, where module results differ per id. */

@@ -48,6 +48,19 @@ export interface iFormConfig extends iBuilderConfig<FormElementType> {
   footer?: HTMLElement | string | null;
   onSubmit?: null | Function;
   /**
+   * What a submit does with the files selected in the form.
+   *
+   * `"ignore"` (default) keeps them out of the payload: a submit carries form data, and
+   * turning a `File` into a Drive payload (or a URL, or a preview) is a decision the
+   * application makes. Pass a function to opt in — it receives the raw `File` map keyed by
+   * input name and returns whatever should be merged into the payload.
+   *
+   * ```ts
+   * files: async (files) => ({ uploads: await serialize(files) })
+   * ```
+   */
+  files?: "ignore" | ((files: Record<string, File[]>, form: HTMLFormElement) => Record<string, any> | Promise<Record<string, any>>);
+  /**
    * Optional loader that supplies optional Form sub-modules.
    *
    * Leave it `null` (default) and every feature keeps its built-in handler, so
@@ -131,6 +144,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       namespace: null,
       emit: null,
       onSubmit: (_data: any) => { },
+      files: "ignore",
       modules: null,
     };
     this.config = this.resolveConfig(defaultConfig, config);

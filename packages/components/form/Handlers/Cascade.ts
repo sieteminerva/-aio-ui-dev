@@ -6,6 +6,7 @@
 // ======================================================================
 
 import { InputBuilder } from "../Input";
+import { mountInputModules } from "../InputRegistry";
 import type { CascadeBlockedInfo } from "./Validation";
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
@@ -294,7 +295,7 @@ export class FormCascade {
           }
           // Hidupkan adapter input (uploader CSV dsb.) di area yang baru lahir —
           // termasuk field HTML mentah yang tak melewati InputBuilder.
-          InputBuilder.initFileAdapters(el);
+          mountInputModules(el);
         }
       } else {
         // InputBuilder memasang adapter-nya sendiri saat membangun field.

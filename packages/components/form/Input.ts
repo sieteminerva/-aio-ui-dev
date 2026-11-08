@@ -125,6 +125,17 @@ export interface iBasicInputConfig {
   display?: "block" | "inline";
   /** Options forwarded to the dropdown module when `type` is `"dropdown"`. */
   dropdown?: Record<string, any>;
+  /**
+   * Called with the raw files the user picked, when the file module is registered.
+   *
+   * The input layer deliberately stops here: parsing a CSV into a table, serializing a
+   * Drive payload or rendering a preview are decisions for whoever owns the file. Without
+   * the `file` module in the preset this callback never fires.
+   *
+   * @param files - Selected files, in the order the browser reported them.
+   * @param field - The resolved field payload, for id/name context.
+   */
+  onFileSelected?: (files: File[], field: any) => void | Promise<void>;
   /** Calculation strategy attached to this input (usually a readonly total field). */
   calculator?: iCalculationFormula<any>;
 }
@@ -166,18 +177,6 @@ export interface iInputConfig extends iBuilderConfig<InputElementType> {
    * trim the layer down (for example `LITE_INPUT_MODULES`), or to add a project module.
    */
   modules?: ModuleLoader<iInputModuleContext, iInputCollaborator> | null;
-}
-
-/**
- * Loader used by the static helpers (`collectFiles`, `parseCsvTable`, `initFileAdapters`).
- *
- * Statics have no instance to read a config from, so they resolve through the default
- * preset — the same set `new InputBuilder()` uses when nothing is injected.
- */
-const DEFAULT_INPUT_LOADER = new ModuleLoader<iInputModuleContext, iInputCollaborator>("input", CORE_INPUT_MODULES);
-
-function defaultInputModules(): iInputCollaborator[] {
-  return DEFAULT_INPUT_LOADER.resolveAll({ builderConfig: { themeId: "default" } });
 }
 
 export class InputBuilder extends Builder<InputElementType, iInputConfig> {
@@ -225,7 +224,7 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
     this.config = this.resolveConfig(defaultConfig, config);
 
     // The loader is the only thing that knows the collaborator set; `prepare()` resolves it.
-    this.#loader = this.config.modules ?? DEFAULT_INPUT_LOADER;
+    this.#loader = this.config.modules ?? new ModuleLoader<iInputModuleContext, iInputCollaborator>("input", CORE_INPUT_MODULES);
 
   }
 
@@ -276,46 +275,6 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
   }
 
 
-
-  /**
-   * Initializes file adapters inside an arbitrary DOM subtree.
-   *
-   * @summary Raw HTML fields bypass `prepare()`, so the Form layer needs a way to
-   * cover them without importing `FileUploader` itself. That is what the module
-   * boundary is for.
-   * @param root - Form element or freshly mounted fieldset.
-   * @returns Nothing.
-   */
-  public static initFileAdapters(root: Document | HTMLFormElement | HTMLElement): void {
-    for (const module of defaultInputModules()) module.mount?.(root);
-  }
-
-  /**
-   * Serializes the files currently selected in a form.
-   *
-   * @summary Keeps `FileUploader` internal to the input layer while letting the
-   * submission path collect uploads.
-   * @param formId - Id of the form that owns the file inputs.
-   * @returns Payload keyed by input name; empty when nothing was selected.
-   */
-  public static async collectFiles(formId: string): Promise<Record<string, any>> {
-    const module = defaultInputModules().find((m) => typeof m.collectFiles === "function");
-    return module?.collectFiles ? module.collectFiles(formId) : {};
-  }
-
-  /**
-   * Parses the CSV or JSON file selected inside a form into table data.
-   *
-   * @summary Same boundary as {@link collectFiles}: table consumers get parsed
-   * data without depending on the uploader implementation.
-   * @param formId - Id of the form that owns the file inputs.
-   * @returns Normalized `{ header, body, footer }` table data.
-   */
-  public static async parseCsvTable(formId: string): Promise<{ header: any[]; body: any[]; footer: any }> {
-    const module = defaultInputModules().find((m) => typeof m.parseCsv === "function");
-    if (!module?.parseCsv) throw new Error("[InputBuilder] No input module can parse table files; register the file module.");
-    return module.parseCsv(formId);
-  }
 
   public prepare(inputObj: Partial<iBasicInputNode>, _config?: Required<iInputConfig> | undefined): HTMLElement | Record<string, any | HTMLElement> {
 

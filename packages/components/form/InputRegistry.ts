@@ -19,7 +19,8 @@ import { dropdownInputModule } from "./Dropdown/Dropdown.InputModule";
 import { fileUploaderInputModule } from "./FileUploader/FileUploader.InputModule";
 import { inputControlsInputModule } from "./InputControls/InputControls.InputModule";
 import { popoverInputModule } from "./Popover.InputModule";
-import type { InputModuleDefinition } from "./InputModuleTypes";
+import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
+import type { InputModuleDefinition, iInputCollaborator, iInputModuleContext } from "./InputModuleTypes";
 
 export { INPUT_MODULE_IDS } from "./InputModuleTypes";
 export type { InputModuleId, iInputCollaborator, iInputModuleContext, InputModuleDefinition } from "./InputModuleTypes";
@@ -44,3 +45,35 @@ export const CORE_INPUT_MODULES: InputModuleDefinition[] = [
   inputControlsInputModule,
   popoverInputModule,
 ];
+
+/**
+ * Offers a subtree to every module in the preset.
+ *
+ * This is the only entry point a host needs for "fields that were not built by
+ * `InputBuilder`" (raw HTML in a form, a multistep step that was just mounted): the
+ * registry walks its own set, so the caller never names `FileUploader` — or any other
+ * collaborator — and a preset without the `file` module simply has nothing to mount.
+ *
+ * @param root - Subtree to scan.
+ * @param preset - Definitions to resolve. Defaults to the core set.
+ */
+export function mountInputModules(root: Document | HTMLElement, preset: InputModuleDefinition[] = CORE_INPUT_MODULES): void {
+  const loader = new ModuleLoader<iInputModuleContext, iInputCollaborator>("input", preset);
+  for (const module of loader.resolveAll({ builderConfig: { themeId: "default" } })) module.mount?.(root);
+  loader.unloadAll();
+}
+
+/**
+ * The files currently selected inside a form, keyed by input name.
+ *
+ * @param formId - Id of the form that owns the file inputs.
+ * @param preset - Definitions to resolve. Defaults to the core set.
+ * @returns Raw files; empty when the preset has no module that can read them.
+ */
+export function inputFilesOf(formId: string, preset: InputModuleDefinition[] = CORE_INPUT_MODULES): Record<string, File[]> {
+  const loader = new ModuleLoader<iInputModuleContext, iInputCollaborator>("input", preset);
+  const module = loader.resolveAll({ builderConfig: { themeId: "default" } }).find((m) => typeof m.getFiles === "function");
+  const files = module?.getFiles ? module.getFiles(formId) : {};
+  loader.unloadAll();
+  return files;
+}

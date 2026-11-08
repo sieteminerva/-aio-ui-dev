@@ -9,6 +9,7 @@
     "./AttributeUtils": "./src/AttributeUtils.ts",
     "./DomUtils": "./src/DomUtils.ts",
     "./color.utils": "./src/color.utils.ts",
-    "./helper": "./src/helper.ts"
+    "./helper": "./src/helper.ts",
+    "./parseTableFile": "./src/parseTableFile.ts"
   }
 }
