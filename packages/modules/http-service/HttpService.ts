@@ -177,8 +177,17 @@ export class HttpService {
    * @returns Cache Key for `localStorage`
    */
   private _constructCacheKey(query: any, suffix: string): string {
-    const key = Object.keys(query).join("-");
-    return `${key}-${suffix}`;
+    // Values, not just key names: `{ level: "kota", parentId: 12 }` and
+    // `{ level: "kecamatan", parentId: 3273 }` used to collapse onto the same key, so the
+    // first level's rows were served for every later one. A cached answer must identify
+    // the question, not its shape.
+    const parts = Object.entries(query ?? {})
+      .filter(([, value]) => value !== undefined && value !== null)
+      // Sorted, so `{ a, b }` and `{ b, a }` are the same question.
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, value]) => `${key}-${String(value)}`);
+
+    return `${parts.join("|") || "root"}-${suffix}`;
   }
 
   /**
