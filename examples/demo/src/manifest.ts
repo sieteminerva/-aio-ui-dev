@@ -1,0 +1,190 @@
+import type { iComponentManifest } from "@aio-ui/core/ComponentRegistry";
+
+/**
+ * The demo table.
+ *
+ * One entry per component: where it loads from, what it needs, and how it is mounted.
+ * Everything else in this example is derived from here — the registry, the loader map,
+ * and the page itself. Adding a component means adding a row, not editing three files.
+ *
+ * `kind` exists because not every builder returns an element: `modal` returns control
+ * handles (`open`/`close`/`element`) instead, which is a real API difference, not a bug.
+ */
+export interface iDemoEntry {
+  /** Registry name, also the section id on the page. */
+  name: string;
+  /** Module specifier, resolved by the host loader map. */
+  path: string;
+  /** Stylesheet specifier; omitted when the component ships no CSS. */
+  stylesheet?: string;
+  category: "layout" | "navigation" | "content" | "chrome";
+  kind: "element" | "modal";
+  /** Payload handed to `build(name, payload)`. */
+  payload: any;
+  /** Set when the payload shape is a best guess rather than a verified contract. */
+  note?: string;
+}
+
+const image = (label: string) => `https://placehold.co/600x400/222/fff?text=${encodeURIComponent(label)}`;
+
+export const DEMO: iDemoEntry[] = [
+  {
+    name: "accordion",
+    path: "@aio-ui/accordion/Accordion",
+    stylesheet: "@aio-ui/accordion/Accordion.css",
+    category: "content",
+    kind: "element",
+    payload: {
+      content: [
+        { title: "Pertama", content: "Isi panel pertama." },
+        { title: "Kedua", content: "Isi panel kedua." },
+      ],
+    },
+  },
+  {
+    name: "carousel",
+    path: "@aio-ui/carousel/Carousel",
+    stylesheet: "@aio-ui/carousel/Carousel.css",
+    category: "content",
+    kind: "element",
+    payload: {
+      content: [
+        { image: image("Slide 1"), title: "Slide 1" },
+        { image: image("Slide 2"), title: "Slide 2" },
+        { image: image("Slide 3"), title: "Slide 3" },
+      ],
+    },
+    note: "renders the first slide; multi-slide needs a verified payload",
+  },
+  {
+    name: "tab",
+    path: "@aio-ui/tab/Tab",
+    stylesheet: "@aio-ui/tab/Tab.css",
+    category: "layout",
+    kind: "element",
+    payload: {
+      content: {
+        menu: ["Panel A", "Panel B"],
+        body: [{ content: "Isi panel A" }, { content: "Isi panel B" }],
+      },
+    },
+  },
+  {
+    name: "section",
+    path: "@aio-ui/section/Section",
+    category: "layout",
+    kind: "element",
+    payload: {
+      id: "demo-section",
+      content: {
+        eyebrow: "Eyebrow",
+        header: "Judul section",
+        description: "Deskripsi section dari payload demo.",
+        image: image("Section"),
+      },
+    },
+    note: "builds, but renders empty with this payload",
+  },
+  {
+    name: "footer",
+    path: "@aio-ui/footer/Footer",
+    category: "layout",
+    kind: "element",
+    payload: { content: { columns: [] } },
+    note: "no stylesheet; payload shape unverified",
+  },
+  {
+    name: "menu",
+    path: "@aio-ui/menu/Menu",
+    stylesheet: "@aio-ui/menu/Menu.css",
+    category: "navigation",
+    kind: "element",
+    payload: {
+      content: {
+        navigations: [{ href: "#kitchen", label: "Kitchen", title: "Kitchen" }],
+        actions: [],
+      },
+    },
+  },
+  {
+    name: "fab-menu",
+    path: "@aio-ui/fabmenu/FabMenu",
+    stylesheet: "@aio-ui/fabmenu/FabMenu.css",
+    category: "navigation",
+    kind: "element",
+    payload: {
+      content: {
+        title: "Actions",
+        actions: [{ label: "Satu" }, { label: "Dua" }, { label: "Tiga" }],
+      },
+    },
+    note: "FAILS: 'payload is not iterable' on this actions shape",
+  },
+  {
+    name: "mode-switcher",
+    path: "@aio-ui/modeswitcher/ModeSwitcher",
+    stylesheet: "@aio-ui/modeswitcher/ModeSwitcher.css",
+    category: "chrome",
+    kind: "element",
+    payload: {},
+  },
+  {
+    name: "pricing-card",
+    path: "@aio-ui/pricingcard/PricingCard",
+    stylesheet: "@aio-ui/pricingcard/PricingCard.css",
+    category: "content",
+    kind: "element",
+    payload: {
+      title: "Paket Dasar",
+      price: "Rp 100.000",
+      features: ["Fitur satu", "Fitur dua"],
+    },
+    note: "payload shape unverified",
+  },
+  {
+    name: "product-card",
+    path: "@aio-ui/product/ProductCard",
+    stylesheet: "@aio-ui/product/ProductCard.css",
+    category: "content",
+    kind: "element",
+    payload: {
+      title: "Produk contoh",
+      price: "Rp 50.000",
+      image: image("Product"),
+    },
+    note: "payload shape unverified",
+  },
+  {
+    name: "product-grid",
+    path: "@aio-ui/product/ProductGrid",
+    category: "content",
+    kind: "element",
+    payload: { data: [], content: [] },
+    note: "builds empty; list payload needs a verified shape",
+  },
+  {
+    name: "modal",
+    path: "@aio-ui/modal/Modal",
+    stylesheet: "@aio-ui/modal/Modal.css",
+    category: "chrome",
+    kind: "modal",
+    payload: { title: "Modal demo", content: "Isi modal dari payload demo." },
+    note: "CONTRACT MISMATCH: prepare() returns controls, not an element, so build() cannot mount it",
+  },
+];
+
+/**
+ * Every entry shares one manifest shape.
+ *
+ * The payload is handed over as `schema` on purpose: the demo table already describes
+ * what the builder takes, so no `data.content` unwrapping happens in between. That is
+ * the difference between this app and the gallery, where content trees are authored as
+ * nodes and the registry picks `content`.
+ */
+export function manifestFor(entry: iDemoEntry) {
+  return (data: unknown): iComponentManifest => ({
+    path: entry.path,
+    stylesheet: entry.stylesheet,
+    schema: data,
+  });
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@aio-ui/example-demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@aio-ui/accordion": "*",
+    "@aio-ui/animations": "*",
+    "@aio-ui/app": "*",
+    "@aio-ui/carousel": "*",
+    "@aio-ui/core": "*",
+    "@aio-ui/event-emitter": "*",
+    "@aio-ui/fabmenu": "*",
+    "@aio-ui/footer": "*",
+    "@aio-ui/http-service": "*",
+    "@aio-ui/menu": "*",
+    "@aio-ui/modal": "*",
+    "@aio-ui/modeswitcher": "*",
+    "@aio-ui/pricingcard": "*",
+    "@aio-ui/product": "*",
+    "@aio-ui/router": "*",
+    "@aio-ui/section": "*",
+    "@aio-ui/styles": "*",
+    "@aio-ui/tab": "*",
+    "@aio-ui/theme": "*",
+    "@aio-ui/utilities": "*"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  }
+}

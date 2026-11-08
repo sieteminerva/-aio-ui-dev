@@ -11,7 +11,9 @@
   ],
   "scripts": {
     "dev": "npm --workspace @aio-ui/example-gallery run dev",
+    "dev:demo": "npm --workspace @aio-ui/example-demo run dev",
     "build": "npm --workspace @aio-ui/example-gallery run build",
+    "build:demo": "npm --workspace @aio-ui/example-demo run build",
     "preview": "npm --workspace @aio-ui/example-gallery run preview",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "check:bounds": "node scripts/bounds.mjs",

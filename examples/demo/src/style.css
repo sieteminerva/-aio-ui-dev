@@ -1,0 +1,69 @@
+/*
+ * Demo styling deliberately minimal: this page measures whether components build and
+ * whether their stylesheets load, not how they look. Nothing here overrides a component.
+ */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f7f7f8;
+  color: #111;
+}
+
+.page {
+  padding: 2rem;
+  display: grid;
+  gap: 2rem;
+}
+
+header.intro h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+
+header.intro p,
+p.meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+main.kitchen {
+  display: grid;
+  gap: 1.5rem;
+}
+
+section {
+  background: #fff;
+  border: 1px solid #e2e2e6;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+section h2 {
+  margin: 0 0 0.25rem;
+  font-family: ui-monospace, monospace;
+  font-size: 1rem;
+}
+
+.mount {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+button.open {
+  margin-top: 0.5rem;
+}
+
+/* A failed component must be loud: this page exists to surface exactly that. */
+.mount[data-status="error"] {
+  border-left: 3px solid #d33;
+  padding-left: 0.75rem;
+}
+
+.mount .error {
+  margin: 0;
+  color: #d33;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+}

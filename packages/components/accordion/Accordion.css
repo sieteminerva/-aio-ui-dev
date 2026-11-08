@@ -1,33 +1,70 @@
-/* Accordion Component */
-.accordion details {
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
-  padding: 0.85rem 1rem;
-  background: var(--surface-strong);
-  margin-bottom: 0.75rem;
+/* ==============================================================
+  Accordion — default look
+  Same vocabulary as the global `details` styling in @aio-ui/styles,
+  scoped to `.accordion` so it never restyles unrelated disclosures.
+============================================================== */
+
+.accordion {
+  & details {
+    background: var(--app-surface-background-color);
+    border: 1px solid var(--app-border-color);
+    border-radius: var(--app-component-border-radius);
+    box-shadow: var(--app-shadow-soft);
+    overflow: hidden;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+    margin-bottom: 1em;
+
+    &:hover {
+      border-color: var(--app-primary-color);
+    }
+
+    &[open] {
+      border-color: var(--app-border-focus);
+      box-shadow: var(--app-shadow-elevated);
+
+      & summary::after {
+        content: "−";
+      }
+    }
+  }
+
+  & summary {
+    padding: 1.15rem 1.4rem;
+    font-weight: 600;
+    font-size: var(--app-font-size-base);
+    color: var(--app-text-heading-color);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    list-style: none;
+    transition: color 0.2s ease;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::after {
+      content: "+";
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--app-primary-color);
+      transition: transform 0.25s ease;
+      line-height: 1;
+    }
+  }
+
+  /* The builder renders a `div.content`; prose may also arrive as `p`. */
+  & .content,
+  & p {
+    padding: 0 1.4rem 1.25rem 1.4rem;
+    margin: 0;
+    color: var(--app-text-accent-color);
+    font-size: var(--app-font-size-base);
+    line-height: 1.65;
+  }
 }
-.accordion summary {
-  cursor: pointer;
-  font-weight: 700;
-  color: var(--text-heading);
-  list-style: none;
-  display: flex;
-  justify-content: space-between;
-}
-.accordion summary::-webkit-details-marker {
-  display: none;
-}
-.accordion summary::after {
-  content: var(--dropdown-arrow-content);
-  transition: transform 180ms ease;
-  display: inline-block;
-  width: 24px;
-  height: 24px;
-}
-.accordion details[open] summary::after {
-  transform: rotate(180deg);
-}
-.accordion .content {
-  padding-top: 0.55rem;
-  color: var(--text-muted);
-}
+
