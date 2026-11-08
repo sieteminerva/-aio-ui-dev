@@ -32,6 +32,13 @@ export interface iMasonryConfig extends iBuilderConfig<MasonryElementType> {
   maxDisplayed: number; // if content > maxDisplayed will create `more / next` button, and the loadMore will check the remaining content and load at maxDisplayed limit, and so on
   useLoadButton?: boolean;
   category: string | null;
+  /**
+   * Category highlighted on first render.
+   *
+   * `null` (default) shows everything — the "All" button is active. A name that is not
+   * present in the current data falls back to `null` instead of rendering an empty grid.
+   */
+  defaultCategory?: string | null;
 
   loadFn?: null | ((page: number, category: string | null) => Promise<any[]>); // Default untuk load data baru dari GAS Server
   onScrollEnd?: null | (() => void);      // Meletup saat user menyentuh lantai terbawah dokumen bodi HTML
@@ -88,6 +95,7 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
       maxDisplayed: 5,
       useLoadButton: true,
       category: null,
+      defaultCategory: null,
       selectors: defaultSelectors,
       loadFn: null, // Default untuk load data baru dari GAS Server
       onScrollEnd: null,    // Meletup saat user menyentuh lantai terbawah dokumen bodi HTML
@@ -167,7 +175,11 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
     });
     const categories = Array.from(categoriesSet);
 
-    this.selectedCategory = categories.length > 0 ? categories[0] : null;
+    // Start on the configured category, or on "All" (null) when none is configured.
+    // A name that does not exist in the current data also means "All": an empty grid on
+    // first paint is worse than showing everything.
+    const preferred = this.config.defaultCategory;
+    this.selectedCategory = preferred && categories.includes(preferred) ? preferred : null;
 
     if (categories.length > 0) {
       const filterMenuElement = this._renderFilterMenu(categories, this.selectedCategory as string);

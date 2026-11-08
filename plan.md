@@ -354,6 +354,16 @@ Ported into `src/lib/Components` already, pending review:
 
 - [ ] `DOMTreeMemory` + `EventBus` metadata layer — only after the shell is stable and a
       concrete diff/regeneration requirement exists
+- [ ] **IdAddress must stop carrying its own HTTP client.** `id-address-builder.ts`
+      (`_fetchAPI`, ~line 1213) is where `HttpService` originally came from; IdAddress is a
+      standalone library of the author's, ported into Form as plug-and-play. When the Form
+      module work starts, remove that embedded fetch and depend on
+      `@aio-ui/http-service` instead, so the code is smaller and every component shares one
+      client. Keep the response contract aligned: `{ success, message, data, meta }`, whole
+      envelope returned (`docs/API.md`)
+- [ ] Styling pass — the fixed nav overlaps the filter row on `#gallery` (filter clicks are
+      intercepted) and the overall visual layer is still rough. Deliberately deferred until
+      every route runs on logic alone
 
 ---
 
@@ -370,7 +380,7 @@ npm run build           # production build, lightningcss must not fail
 
 Plus a manual check of the dev server (port is whatever Vite picks, typically 5176)
 for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
-**123 / 64 / 32 / 116 / 76** inside `#app`, no console error or warning.
+**123 / 64 / 41 / 116 / 76** inside `#app`, no console error or warning.
 
 ## 7. Open questions
 
@@ -413,6 +423,9 @@ for `#home`, `#about`, `#gallery`, `#blog`, `#form`: expected node counts
 | 2026-11-08 | Phase 3 done. `registerController` → `registerPage(route, Controller, config)`; one controller instance per render. `iPagePrepareContext` → `iPageContext` (`route`, `page`, `fragment`, `theme`, `builders`, `http`, `signal`); `onReady(Map, shell)` → `iPageReadyContext` (`shell`, `menu`, `footer`, `blocks`). A route's page may now come from `source.pages` **or** `onPrepare`. `attachMenu` is invoked by the app. Navigation aborts the in-flight pass via `AbortController`, and a superseded render is dropped instead of painting. New slot `http` (`HttpService`); `HttpService` gained `endpoint(query)` (mock JSON as a real request), returns the whole envelope (`docs/API.md`), accepts the legacy `status` envelope, and its config is fully optional. `blog` became the reference controller, reading `public/mock/blog.json`; `blog.json` no longer lives in `src/content`. 78 tests, routes unchanged (123/64/32/116/76). |
 
 | 2026-11-08 | `gallery` became the second reference controller. Masonry already exposed `loadFn(page, category) => items`, so the controller passes `http` straight into that hook instead of pre-fetching everything; page 1 is fetched in `onPrepare`, further pages resolve to `[]` against the single-page mock. `gallery.json` moved to `public/mock/` and its envelope matched `docs/API.md`. Two findings recorded: Masonry defaults `selectedCategory` to the first category (not "All"), and the fixed nav overlaps the filter row on `#gallery`, so filter clicks are intercepted — both pre-existing, neither caused by the data change. |
+
+| 2026-11-08 | Masonry: the initially active category became configurable (`defaultCategory`), defaulting to `null` = "All", so a visitor sees every item on first paint. A configured name that is absent from the data also resolves to `null` rather than an empty grid. Gallery now opens with 5 items and `All` active (route count 32 → 41). Deferred items recorded: IdAddress should depend on `@aio-ui/http-service` instead of its own `_fetchAPI` (to be done with the Form module), and the styling pass stays queued. |
+
 
 
 | 2026-11-08 | Contracts written: `core/types/api.ts` (`iApiResponse`, `iFieldDescriptor`), app `iPageBlock`/`iPageDocument`, `docs/API.md` from a live response. |
