@@ -4,6 +4,12 @@
    behaviour when the package is used on its own.
    ========================================================================== */
 
+/* The grid instantiates its cards directly (not through the registry), so the card's
+   stylesheet would never be injected on this path. Importing it here keeps
+   `ProductCard.ts` free of CSS imports while still shipping the card's styles with the
+   only component that nests it. */
+@import "./ProductCard.css";
+
 .grid .row.full-width {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));

@@ -10,7 +10,7 @@ Status is what the demo reports, not what the docs wish.
 ## Verified
 
 | Component       | Input shape (what `build(name, payload)` receives)                                                                   | Evidence                                        |
-| --------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | --- | ---------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | --- | ------- | ------------------------------------------------------------------------------------ | -------------------------------------------- |
 | `accordion`     | `{ content: [{ title, description }] }`                                                                              | `content.ts:308`                                |
 | `carousel`      | `{ content: [{ title, description, image }] }`                                                                       | `content.ts:37`                                 |
 | `tab`           | `{ content: { menu: string[], body: any[] } }`                                                                       | gallery `content/blog` usage                    |
@@ -21,7 +21,7 @@ Status is what the demo reports, not what the docs wish.
 | `mode-switcher` | `{}`                                                                                                                 | self-contained                                  |
 | `pricing-card`  | **array** of `{ header, body: [{ title, className? }], price, action: { label } }`                                   | `content.ts:531`                                |
 | `product-card`  | `{ uid, name, category, title, description, price, colors: [{ name, value }], artwork: { src } }`                    | `content.ts:692`                                |
-| `product-grid`  | `{ content: { data: [<product-card payload>] } }`                                                                    | `ProductGrid.prepare` reads `data.content.data` || `product-detail`| `{ uid, category, title, description, price, currency, colors: [{ name, value }], artwork: { src } }`               | `pages/product.ts` — one record, `onBack`/`onAddToCart` || `modal`         | `{ content }` (string or nodes) + `config: { id, title, destroyOnClose?, onReady? }`                                 | `Modal.ts` — `prepare()` returns the element    |
+| `product-grid`  | `{ content: { data: [<product-card payload>] } }`                                                                    | `ProductGrid.prepare` reads `data.content.data` |     | `product-detail` | `{ uid, category, title, description, price, currency, colors: [{ name, value }], artwork: { src } }` | `pages/product.ts` — one record, `onBack`/`onAddToCart` |     | `modal` | `{ content }` (string or nodes) + `config: { id, title, destroyOnClose?, onReady? }` | `Modal.ts` — `prepare()` returns the element |
 
 ## Rules that came out of measuring
 
@@ -71,9 +71,9 @@ split (element vs page components) is described in [`DEMO.md`](./DEMO.md).
 
 ## Known gaps
 
-| Gap              | Detail                                                                                                                   |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `product-card`   | `ProductCard` reads `variants[].imageUrl` on first paint and `variants[].src` when switching colours, so a caller must supply both — `ProductGrid` now does, a hand-built payload must too. |
+| Gap            | Detail                                                                                                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `product-card` | `ProductCard` reads `variants[].imageUrl` on first paint and `variants[].src` when switching colours, so a caller must supply both — `ProductGrid` now does, a hand-built payload must too. |
 
 ## Analysis — can this be universal?
 

@@ -17,8 +17,7 @@
   position: relative;
   overflow: hidden;
   border-radius: var(--app-image-border-radius);
-  background:
-    radial-gradient(circle at 50% 30%, var(--app-surface-strong) 0%, var(--app-surface-muted) 70%);
+  background: radial-gradient(circle at 50% 30%, var(--app-surface-strong) 0%, var(--app-surface-muted) 70%);
   border: 1px solid var(--app-border-color);
 }
 

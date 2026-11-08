@@ -197,10 +197,9 @@ export class FabMenuBuilder extends Builder<FabMenuElementType, iFabMenuConfig> 
     if (!this.config.duration || this.config.duration <= 0) return;
 
     this.idleTimer = window.setTimeout(() => {
-      if (this.isMenuOpen) {
-        console.log(`[FAB Engine] ${(this.config?.duration as number || 1000) / 1000}s Idle reached. Auto-closing...`);
-        this.close();
-      }
+      // Auto-close is a behaviour, not an event worth logging: a component that prints
+      // on a timer fills the host's console on its own.
+      if (this.isMenuOpen) this.close();
     }, this.config.duration);
   }
 

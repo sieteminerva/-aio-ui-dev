@@ -313,6 +313,11 @@ Anything that needs a real DOM belongs in the demo page, not the suite.
 - Declare `readonly stylesheet = "./MyWidget.css"` **and** pass
   `stylesheet: "@aio-ui/my-widget/MyWidget.css"` in the host manifest. The registry
   derives it from the script path when the manifest omits it.
+- **Never `import "./MyWidget.css"` inside the builder.** The registry already injects the
+  sheet from the manifest; a second import is an untracked duplicate.
+  The exception is a builder that instantiates a child builder **directly** (not through
+  the registry): that child's sheet would never be injected, so the parent's CSS
+  `@import`s it — see `ProductGrid.css` → `@import "./ProductCard.css";`.
 - Respect `prefers-reduced-motion` for any transition.
 
 ---

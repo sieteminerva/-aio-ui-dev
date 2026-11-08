@@ -13,6 +13,8 @@ interface iHttpServiceConfig {
   cacheEnabled?: boolean;
   cachePrefix?: string;
   cacheTtlDays?: number;
+  /** Print request/response diagnostics. Off by default: a data module should not own the console. */
+  debug?: boolean;
 }
 
 type iCacheEntry = Record<"data" | "expire", any | number>;
@@ -105,7 +107,9 @@ export class HttpService {
       if (isLocal && this.config.delay > 0) {
         await new Promise((resolve) => setTimeout(resolve, this.config.delay));
       }
-      console.log(`[${query}] Data loaded from ${isLocal ? "cache" : "API"}:`, data);
+      if (this.config.debug) {
+        console.log(`[HttpService] ${isLocal ? "cache" : "api"}`, query, data);
+      }
       return data;
     } catch (error) {
       localStorage.removeItem(`${this.config.cachePrefix}:${cacheKey}`);
@@ -140,7 +144,9 @@ export class HttpService {
       this._writeCache(cacheKey, data);
     }
 
-    console.log(`[POST][${query}] Data successfully processed via API:`, data);
+    if (this.config.debug) {
+      console.log(`[HttpService] POST`, query, data);
+    }
     return data;
   }
 
@@ -216,8 +222,9 @@ export class HttpService {
     // Step 4: Construct the final URL. A host-supplied `endpoint` wins, so a mock
     // transport can point at static files while controllers stay unchanged.
     const url = this.config.endpoint?.(query) ?? this._buildUrl(query);
-    console.log(`[Query]:`, query);
-    console.log(`[Endpoint]:`, url);
+    if (this.config.debug) {
+      console.log(`[HttpService] GET ${url}`, query);
+    }
     try {
       // Step 5: Execute the network request with the abort signal attached.
       const res = await fetch(url, options);

@@ -1,7 +1,10 @@
 // Components/ProductCardBuilder.ts (The Purely Integrated Polymorphic Product Card Specification)
 import type { iActionProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
-import "./ProductCard.css";
+
+// No stylesheet import here on purpose: the registry loads `ProductCard.css` from the
+// manifest (or derives it from the script path) and injects it as a real <style> node.
+// Importing it again would be a second, untracked copy of the same sheet.
 
 export type ProductCardElementType =
   | "@product"
@@ -260,18 +263,6 @@ export class ProductCardBuilder extends Builder<ProductCardElementType, iProduct
   // 🎢 HIGH-UTILITY INTERACTION METHODS (MUTATOR CAROUSEL + TAB HYBRID ANDA)
   // ====================================================
 
-  public _navigate(index: number, el: any) {
-    const buttons = el.querySelectorAll("buttons") as HTMLButtonElement[];
-    if (!buttons || !buttons.length) return;
-
-    // Kunci nomor indeks agar berputar melingkar (infinite loop array)
-    const targetIndex = (index + buttons.length) % buttons.length;
-    this.currentDisplayIndex = targetIndex;
-
-    this._handleChange(buttons);
-    this.select();
-  }
-
   public navigate(index: number, productRoot: HTMLElement) {
     const variants = this.#item.variants || [];
     if (!variants.length) return;
@@ -303,52 +294,10 @@ export class ProductCardBuilder extends Builder<ProductCardElementType, iProduct
         displayImg.style.opacity = "1";
       }, 80);
     }
-  }
 
-  private select() {
-    const variants = this.#item.variants || [];
-    const activeVariant = variants[this.currentDisplayIndex];
-    if (!activeVariant) return;
-
-    // Picu callback eksternal bawaan config spreadsheet Anda
-    if (typeof this.config.onSelected === "function") {
-      this.config.onSelected(activeVariant);
-
-    }
-  }
-
-  private _handleChange(buttons: HTMLButtonElement[]) {
-    // const cardIndex = (this as any).instanceSiblingIndex !== undefined ? (this as any).instanceSiblingIndex : 0;
-    const displayBox = this.load("@product>display") as HTMLElement;
-    const displayImg = this.load("@product>display>image") as HTMLImageElement;
-    const variants = this.#item.variants || [];
-    const activeVariant = variants[this.currentDisplayIndex];
-    if (!activeVariant) return;
-    // A. MUTASI STATUS TOMBOL MENU OPTION (ALUR TABS STYLE)
-    buttons.forEach((btn: HTMLButtonElement, idx: number) => {
-      if (idx === this.currentDisplayIndex) {
-        btn.classList.add("active");
-        btn.setAttribute("aria-checked", "true");
-        btn.setAttribute("tabindex", "0");
-      } else {
-        btn.classList.remove("active");
-        btn.setAttribute("aria-checked", "false");
-        btn.setAttribute("tabindex", "-1");
-      }
-    });
-    // B. MUTASI VISUAL DISPLAY ATAS (ALUR CAROUSEL SHADOW-BLEND STYLE!)
-    if (displayBox && displayImg) {
-      // Nyalakan efek transisi animasi fade out sesaat
-      displayImg.style.opacity = "0.3";
-      // Berikan durasi jeda mikro piksel agar peramban browser tidak memotong rendering
-      setTimeout(() => {
-        // 🔮 EKSEKUSI TRIK UTAMAA ANDA: Ubah warna latar bapaknya, dan ganti gambar shadow di depannya!
-        if (activeVariant.color) displayBox.style.backgroundColor = activeVariant.color;
-        if (activeVariant.src) displayImg.src = encodeURI(activeVariant.src);
-        // Kembalikan ke derajat kegelapan penuh
-        displayImg.style.opacity = "1";
-      }, 80);
-    }
+    // C. Kabari pemanggil varian mana yang aktif. `onSelected` was documented but never
+    // called, so a card could not report its colour to the grid or the page.
+    if (typeof this.config.onSelected === "function") this.config.onSelected(activeVariant);
   }
 
   private _handleKeyDown(e: KeyboardEvent, el: HTMLElement): void {

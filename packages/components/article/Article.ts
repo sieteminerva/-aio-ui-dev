@@ -51,6 +51,16 @@ export interface iArticleConfig extends iBuilderConfig<ArticleElementType> {
   items?: number;
 }
 
+/**
+ * The DOM only carries the record's key; the component keeps the record itself.
+ * Attaching objects to elements (`el._payload`) works until the node is cloned or
+ * replaced, and then the data is silently gone.
+ */
+function stampArticleId(el: HTMLElement, payload: any): void {
+  const id = payload?.slug ?? payload?.uid;
+  if (id !== undefined && id !== null) el.dataset.articleId = String(id);
+}
+
 export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> {
   readonly builderId: keyof iBuilderRegistry = "article";
   readonly name: keyof iBuilderRegistry = "article";
@@ -61,6 +71,8 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
   private slotSpecs: iArticleSlotSpec[] = [];
   /** Simpan list view saat detail aktif, agar bisa dikembalikan via tombol back. */
   private listElement: HTMLElement | null = null;
+  /** Records by id (`slug`/`uid`), so cards only carry a key. */
+  private records = new Map<string, any>();
 
   constructor(config: Partial<iArticleConfig> = {}) {
     super();
@@ -122,9 +134,19 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
    */
   public prepare(content: any, _config?: Required<iArticleConfig>): HTMLElement {
     this.currentRawServerResponse = content?.content || content || {};
-    console.log("article content:", this.currentRawServerResponse)
+
+    // Fresh render pass: forget the previous list and record index.
+    this.listElement = null;
+    this.records.clear();
 
     const container = this.render("@container", this.currentRawServerResponse) as HTMLElement;
+    const records: any[] = Array.isArray(this.currentRawServerResponse?.data) ? this.currentRawServerResponse.data : [];
+
+    // Cards carry an id, not a payload: the component keeps the data, the DOM keeps a key.
+    records.forEach((article, index) => {
+      const id = String(article?.slug ?? article?.uid ?? index);
+      this.records.set(id, article);
+    });
 
     const slotFor = (role: string): boolean => this.slotSpecs.length === 0 || this.slotSpecs.some((s) => s.slot === role);
 
@@ -149,24 +171,19 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
 
     // ── 2. LIST — grid kartu artikel dari data[] ──────────────────────────
     if (slotFor("list")) {
-      const grid = document.createElement("div");
-      grid.className = "row";
-      grid.dataset.slot = "list";
-      grid.dataset.display = this.config.view || "card";
+      const grid = this.render("@article>list", this.currentRawServerResponse) as HTMLElement | undefined;
+      if (grid) {
+        grid.dataset.slot = "list";
+        grid.dataset.display = this.config.view || "card";
 
-      const articles = Array.isArray(this.currentRawServerResponse?.data)
-        ? this.currentRawServerResponse.data
-        : [];
-      articles.forEach((article: any) => {
-        const item = this.render("@article>item", article) as HTMLElement | undefined;
-        if (item) {
-          (item as any)._articlePayload = article;
-          (item as any)._articleSlugToken = article.slug;
+        records.forEach((article: any) => {
+          const item = this.render("@article>item", article) as HTMLElement | undefined;
+          if (!item) return;
           grid.appendChild(item);
-        }
-      });
-      grid.dataset.listHost = "true";
-      container.appendChild(grid);
+        });
+
+        container.appendChild(grid);
+      }
     }
 
     // ── 3. ASIDE — rekomendasi dari data[] ────────────────────────────────
@@ -178,48 +195,46 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
       }
     }
 
-    // ── 4. Pasang interaksi terpusat (klik kartu → detail, back → list) ───
-    this.bindInteractions(container);
-
     return container;
   }
 
   // =====================================================================
-  // 🎮 INTERAKSI TERPUSAT — controller memegang seluruh event delegation.
+  // 🎮 INTERAKSI TERPUSAT — satu delegation di container modul.
+  // Dipasang dari initialize(): create() memanggilnya setelah prepare()
+  // selesai dan tree terpasang, jadi listener bisa dilepas kembali.
   // =====================================================================
 
-  /** Pasang click delegation pada container modul. */
-  private bindInteractions(container: HTMLElement): void {
-    container.addEventListener("click", (e: Event) => {
-      const target = e.target as HTMLElement;
+  private handleClick = (event: Event): void => {
+    const container = event.currentTarget as HTMLElement;
+    const target = event.target as HTMLElement;
 
-      // A. Klik kartu artikel (list) atau item rekomendasi (aside) → detail
-      const card = target.closest('[data-slot="list"] .item, article.item, aside.aside .item') as HTMLElement | null;
-      const article = card ? (card as any)._articlePayload : null;
-      if (card && article) {
-        this.showDetail(container, article);
+    // A. Klik kartu artikel (list) atau item rekomendasi (aside) → detail
+    const card = target.closest("[data-article-id]") as HTMLElement | null;
+    if (card) {
+      const record = this.records.get(String(card.dataset.articleId));
+      if (record) {
+        this.showDetail(container, record);
         return;
       }
+    }
 
-      // B. Klik tombol kembali → tampilkan kembali list view
-      const backBtn = target.closest('[data-slot="back-navigation"], button.back') as HTMLElement | null;
-      if (backBtn) {
-        this.showList(container);
-        return;
-      }
+    // B. Klik tombol kembali → tampilkan kembali list view
+    if (target.closest('[data-slot="back-navigation"], button.back')) {
+      this.showList(container);
+      return;
+    }
 
-      // C. Klik tombol pagination HATEOAS → emit elementChanged
-      const pageBtn = target.closest(".pagination .item") as HTMLElement | null;
-      if (pageBtn && pageBtn.dataset.url) {
-        this.config.emit?.("elementChanged", {
-          builder: this.builderId,
-          type: "@article>pagination",
-          element: pageBtn,
-          data: { endpoint: pageBtn.dataset.url, module: this },
-        } as any);
-      }
-    });
-  }
+    // C. Klik tombol pagination HATEOAS → emit elementChanged
+    const pageBtn = target.closest(".pagination .item") as HTMLElement | null;
+    if (pageBtn && pageBtn.dataset.url) {
+      this.config.emit?.("elementChanged", {
+        builder: this.builderId,
+        type: "@article>pagination",
+        element: pageBtn,
+        data: { endpoint: pageBtn.dataset.url, module: this },
+      } as any);
+    }
+  };
 
   /** Tampilkan view detail untuk satu artikel (menggantikan list atau detail aktif). */
   private showDetail(container: HTMLElement, article: any = null): void {
@@ -305,19 +320,33 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
         el.textContent = payload || "Untitled Article";
         break;
 
-      case "@article>header>meta":
-        if (payload.author) {
-          el.insertAdjacentHTML("afterbegin", `
-                  <span class="author">Oleh: <strong>${payload.author || "Admin"}</strong></span>
-                  <span class="divider">•</span>
-                  <span class="date">${payload.date || "Baru saja"}</span>
-                `.trim());
-        } else {
-          el.insertAdjacentHTML("afterbegin", `
-                  <span class="date">${payload.date || "Baru saja"}</span>
-                `.trim());
+      case "@article>header>meta": {
+        // Built as nodes, not as a markup string: author/date are data, and data must
+        // never be able to introduce elements.
+        const author = payload.author;
+        const date = payload.date || "Baru saja";
+
+        if (author) {
+          const authorEl = document.createElement("span");
+          authorEl.className = "author";
+          authorEl.append("Oleh: ");
+          const strong = document.createElement("strong");
+          strong.textContent = String(author);
+          authorEl.appendChild(strong);
+          el.appendChild(authorEl);
+
+          const divider = document.createElement("span");
+          divider.className = "divider";
+          divider.textContent = "•";
+          el.appendChild(divider);
         }
+
+        const dateEl = document.createElement("span");
+        dateEl.className = "date";
+        dateEl.textContent = String(date);
+        el.appendChild(dateEl);
         break;
+      }
 
       case "@article>controls": {
 
@@ -371,7 +400,8 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
         el.textContent = payload?.filter || "";
         break;
 
-      case "@article>item":
+      case "@article>item": {
+        stampArticleId(el, payload);
         if (payload.thumbnail) {
           const thumb = this.render("@article>figure", payload.thumbnail);
           thumb!.className = "thumbnail"
@@ -384,6 +414,7 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
         const caption = this.render("@article>item>caption", payload.summary);
         if (caption) el.appendChild(caption);
         break;
+      }
 
       case "@article>item>caption":
         el.textContent = payload || "";
@@ -415,8 +446,7 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
 
 
       case "@article>aside>item":
-        // Suntikkan payload agar controller bisa membukanya di detail view.
-        (el as any)._articlePayload = payload;
+        stampArticleId(el, payload);
         const thumbnail = this.render("@article>figure", payload.thumbnail)!;
         const h = this.render("@article>header", { title: payload.title, date: payload.date })!
         el.append(thumbnail, h)
@@ -439,12 +469,20 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
         break;
 
       case "@article>detail>body":
-        el.insertAdjacentHTML("afterbegin", payload)
+        // A body may be a node (already safe) or plain text. A markup string is not
+        // parsed: an article body is data, and data does not choose the DOM shape.
+        if (payload instanceof HTMLElement) el.appendChild(payload);
+        else if (typeof payload === "string") el.textContent = payload;
         break;
     }
   }
 
-  public initialize(_el?: HTMLElement, _payload?: any, _context?: any): void {
-    // Interaksi sudah terpasang otomatis di prepare() lewat bindInteractions().
+  public initialize(root?: HTMLElement, _payload?: any, _context?: any): void {
+    const container = root ?? (this.load("@container") as HTMLElement);
+    if (!container) return;
+
+    // Idempotent: stable ref plus remove-before-add, so re-initialising cannot stack.
+    container.removeEventListener("click", this.handleClick);
+    container.addEventListener("click", this.handleClick);
   }
 }

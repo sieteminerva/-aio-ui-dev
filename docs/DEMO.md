@@ -3,12 +3,12 @@
 The demo exists to measure components, so it is split by the two kinds of thing the
 framework actually has. They behave differently, and jamming them into one page hid that.
 
-| Route       | Kind       | What it proves                                                       |
-| ----------- | ---------- | -------------------------------------------------------------------- |
-| `#kitchen`  | element    | every component that is "one builder, one node", driven by a table    |
-| `#product`  | page       | list + filter + detail, composed **at page level**                    |
-| `#article`  | page       | the same shape, but composed **inside the builder** (its slots)       |
-| `#form`     | page       | a schema with validation, handlers and its own submit cycle           |
+| Route      | Kind    | What it proves                                                     |
+| ---------- | ------- | ------------------------------------------------------------------ |
+| `#kitchen` | element | every component that is "one builder, one node", driven by a table |
+| `#product` | page    | list + filter + detail, composed **at page level**                 |
+| `#article` | page    | the same shape, but composed **inside the builder** (its slots)    |
+| `#form`    | page    | a schema with validation, handlers and its own submit cycle        |
 
 ## Element components (`#kitchen`)
 
@@ -53,10 +53,10 @@ const mockApi = {
 };
 ```
 
-| Sheet       | File                            | Used by      |
-| ----------- | ------------------------------- | ------------ |
-| `products`  | `public/mock/products.json`     | `#product`   |
-| `articles`  | `public/mock/articles.json`     | `#article`   |
+| Sheet      | File                        | Used by    |
+| ---------- | --------------------------- | ---------- |
+| `products` | `public/mock/products.json` | `#product` |
+| `articles` | `public/mock/articles.json` | `#article` |
 
 Moving to a real backend means deleting `endpoint` and setting `url` — no page changes.
 Controllers respect `ctx.signal`: a navigation that supersedes a fetch drops the result
@@ -88,4 +88,11 @@ components
 ```
 
 Element rows from `manifest.ts` keep the simpler registration (`schema: data`). Both are
-valid; the difference is whether a component needs a config *and* a payload at once.
+valid; the difference is whether a component needs a config _and_ a payload at once.
+
+`HttpService` logs nothing by default. If you need request diagnostics while wiring a
+route, pass `debug: true` next to `endpoint`:
+
+```ts
+.registerModule(HttpService, { ...mockApi, debug: true })
+```
