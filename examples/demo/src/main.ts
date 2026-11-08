@@ -98,7 +98,9 @@ async function start(container: HTMLElement) {
     .registerPage('article', ArticlePage);
 
   await app.render();
+  // Debug handles: the app, and the bus it publishes through (component + page events).
   (globalThis as any).__app = app;
+  (globalThis as any).__emitter = emitter;
 }
 
 const app = document.querySelector<HTMLDivElement>('#app');

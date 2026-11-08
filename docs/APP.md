@@ -90,7 +90,7 @@ explicitly: `registerModule(fakeRouter, "router")`.
 | the class decides the slot                                                     | registering a storage class for the router slot is rejected by the type system, not discovered at runtime             |
 | config is `ConstructorParameters<M>[0]`, so it is typed by the class itself    | no duplicated config interface; `AppStorage` infers `iStorageConfig`                                                  |
 | config lives at the registration, never in `iAppConfig`                        | `iAppConfig` stays general (`container`, `source`, `defaultRoute`, `theme`, `debug`) no matter how many modules exist |
-| modules are constructed in `render()`, not at registration                     | a router needs the route list, the restored theme and the change callback, which only exist when the entry runs      |
+| modules are constructed in `render()`, not at registration                     | a router needs the route list, the restored theme and the change callback, which only exist when the entry runs       |
 | required slots are checked **before** anything is created                      | a missing slot is a configuration mistake, not a half-working app                                                     |
 | a module that throws mid-creation releases the ones already created            | no port is left running unattended                                                                                    |
 | registering after `render()` throws                                            | "register first, use second" is enforced, not documented                                                              |
@@ -291,21 +291,59 @@ skipped, not thrown. This keeps the LITE promise — a missing component is a no
 
 ## Events
 
-Emitted through the injected `iEventPort` (a project may ignore the port entirely):
+One channel carries two layers, both typed by `iPageEvents` in `@aio-ui/core/events`
+(`iPageEvents` extends `iComponentEvents`, so an emitter registered for pages accepts
+component events without a cast). A project may ignore the port entirely.
 
-| Event          | Payload                          | When                                      |
-| -------------- | -------------------------------- | ----------------------------------------- |
-| `pageChanged`  | `{ route }`                      | a render pass starts                      |
-| `beforeRender` | `{ route, components, missing }` | names derived, before preload             |
-| `ready`        | `{ route, shell }`               | page attached, animation run              |
-| `themeChanged` | `{ theme, shell }`               | the router reported a new theme           |
-| `error`        | `{ message, route, error }`      | a step failed; previous DOM stays mounted |
+Emitted by the shell through the injected `iEventPort`:
+
+| Event          | Payload                                    | When                                                    |
+| -------------- | ------------------------------------------ | ------------------------------------------------------- |
+| `pageChanged`  | `{ route, previous }`                      | a render pass starts; `previous` is `null` on the first |
+| `beforeRender` | `{ route, components, missing, sequence }` | names derived, before preload                           |
+| `ready`        | `{ route, shell, elements, sequence }`     | page attached, theme activated, `onReady` done          |
+| `superseded`   | `{ route, sequence, by }`                  | a newer navigation won; this pass will not paint        |
+| `themeChanged` | `{ theme, previous, shell }`               | the router reported a different theme id                |
+| `error`        | `{ message, route, phase, error }`         | a step failed; previous DOM stays mounted               |
+| `destroyed`    | `{ route }`                                | `destroy()` released the modules and removed the shell  |
+
+`phase` is `"prepare" | "preload" | "render" | "ready"`, so a listener can tell which
+step failed without pattern-matching the message. Every event names its route: a
+listener attached once for the whole session never has to guess which page it is about.
+`ready.elements` is the same `id → element` map the controller receives as `blocks`.
+
+### Component events
+
+A component reports what it does to its own nodes — `elementAdded`, `elementChanged`,
+`elementRemoved` — through `config.emit`. The registry owns the wiring: the shell calls
+`registry.useEmitter(...)` once, at module creation, and every later `registry.build()`
+injects that publisher into the component config.
+
+```ts
+// in the shell (AioApp does this for you)
+registry.useEmitter((event, data) => events?.emit(event, data));
+```
+
+The consequences that matter:
+
+| Rule                                       | Why                                                                                   |
+| ------------------------------------------ | ------------------------------------------------------------------------------------- |
+| no emitter registered → no `emit` key      | a LITE project without an event bus keeps working; `config.emit?.(...)` is a no-op    |
+| manual config still wins                   | a component is framework-agnostic; `config.emit` is its only channel, so it overrides |
+| `emit: null` silences one instance         | the merge order is `theme < emitter < manifest < node`                                |
+| unknown event names are allowed            | a component may name its own: `formValidation`, `tabs:content-loaded`, `modeChanged`  |
+| a throwing listener does not stop the rest | the bus reports, it is not control flow                                               |
+
+ModeSwitcher used to publish `themeChanged`, which belongs to the shell ("the router
+reported a different theme id"); it now publishes `modeChanged`, so one key never carries
+two unrelated payloads.
 
 ## Debug channel
 
-`debug: true` writes one prefixed line per phase (`mount`, `render:start`, `preload`,
-`miss`, `render:superseded`, `render:done`, `destroy`). It is the place to see the
-decision the entry made without adding console noise to a production build.
+`debug: true` writes one prefixed line per phase (`render:init`, `modules:created`,
+`render:start`, `preload`, `miss`, `render:superseded`, `render:done`, `destroy`). It is
+the place to see the decision the entry made without adding console noise to a
+production build.
 
 ## Requirements this places on the registry
 

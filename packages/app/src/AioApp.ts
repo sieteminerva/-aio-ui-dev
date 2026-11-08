@@ -26,6 +26,7 @@
 
 import type { iBasicNode, iNodeContent } from "@aio-ui/core/node";
 import type { iBuilderRegistry } from "@aio-ui/core/registry";
+import type { iPagePhase } from "@aio-ui/core/events";
 import type { iThemeModule } from "@aio-ui/core/page";
 
 import type {
@@ -509,6 +510,12 @@ export class AioApp implements iApp {
     for (const theme of this.#pendingThemes) this.#registerTheme(theme);
     this.#pendingThemes = [];
 
+    // Component events. The registry takes one publisher and injects it into every
+    // builder config, so a component reports `elementAdded`/`elementChanged`/… without
+    // knowing whether the application registered an emitter. The lookup is lazy, so the
+    // events port may be created before or after the registry.
+    this.#registry?.useEmitter?.((event, data) => this.#events?.emit(event, data));
+
     this.#log("modules:created", { slots: created });
   }
 
@@ -516,6 +523,10 @@ export class AioApp implements iApp {
   public destroy(): void {
     this.#abort?.abort();
     this.#release();
+
+    // Announce while the modules are still alive: a listener that wants to release its
+    // own subscription does so on this event, so it must arrive before the ports go.
+    this.#events?.emit("destroyed", { route: this.#route });
 
     // Reverse creation order: a module created last is released first.
     this.#releasePorts([...this.#ports.keys()].reverse());
@@ -556,6 +567,7 @@ export class AioApp implements iApp {
 
   #onRouteChanged(state: { route: string; theme: string | null; fragment: string }): Promise<void> {
     if (state.theme && state.theme !== this.#theme) {
+      const previous = this.#theme;
       this.#theme = state.theme;
       this.#storage?.set(THEME_STORAGE_KEY, state.theme);
       try {
@@ -565,6 +577,7 @@ export class AioApp implements iApp {
       }
       this.#events?.emit("themeChanged", {
         theme: state.theme,
+        previous,
         shell: this.#root,
       });
       this.#log("themeChanged", { theme: state.theme });
@@ -583,7 +596,7 @@ export class AioApp implements iApp {
     const sequence = ++this.#sequence;
     const target = this.#resolveRoute(route);
 
-    this.#events?.emit("pageChanged", { route: target });
+    this.#events?.emit("pageChanged", { route: target, previous: this.#route || null });
     this.#log("render:start", { route: target, sequence });
 
     this.#abort?.abort();
@@ -600,11 +613,11 @@ export class AioApp implements iApp {
         try {
           prepared = await controller.onPrepare(context);
         } catch (error) {
-          if (!context.signal.aborted) this.#fail(target, "onPrepare failed", error);
+          if (!context.signal.aborted) this.#fail(target, "prepare", "onPrepare failed", error);
         }
       }
 
-      if (sequence !== this.#sequence) return this.#log("render:superseded", { route: target, sequence });
+      if (sequence !== this.#sequence) return this.#supersede(target, sequence);
 
       const page = prepared ?? context.page;
       if (!page) {
@@ -624,13 +637,12 @@ export class AioApp implements iApp {
       const missing = names.filter((name) => !this.#registry!.has(name));
 
       this.#log("preload", { route: target, components: names, missing, sequence });
-      this.#events?.emit("beforeRender", { route: target, components: names, missing });
+      this.#events?.emit("beforeRender", { route: target, components: names, missing, sequence });
       if (known.length) await this.#registry!.load(known, nodes);
-      if (sequence !== this.#sequence) return this.#log("render:superseded", { route: target, sequence });
+      if (sequence !== this.#sequence) return this.#supersede(target, sequence);
 
       const pageEl = this.#renderNode(pageNode);
       if (!pageEl) throw new Error(`[AioApp] Renderer returned no element for route "${target}"`);
-
       const menuEl = menuNode ? this.#renderNode(menuNode) : null;
       const footerEl = footerNode ? this.#renderNode(footerNode) : null;
       const tree = assembleShell(menuEl, pageEl, footerEl);
@@ -639,17 +651,19 @@ export class AioApp implements iApp {
       this.#route = target;
       this.#fragment = fragment || "";
       this.#paint(tree, themed);
-      if (sequence !== this.#sequence) return;
+      if (sequence !== this.#sequence) return this.#supersede(target, sequence);
 
-      this.#events?.emit("ready", { route: target, shell: tree });
-      this.#ready(target, themed, tree, controller, menuEl, footerEl);
+      // `ready` carries the element map, so it is emitted after `#ready()` has built it
+      // and activated the theme — "attached" means the page is usable, not merely painted.
+      const blocks = this.#ready(target, themed, tree, controller, menuEl, footerEl);
+      this.#events?.emit("ready", { route: target, shell: tree, elements: blocks, sequence });
       this.#log("render:done", { route: target, sequence });
     } catch (error) {
-      if (abort.signal.aborted) return this.#log("render:aborted", { route: target, sequence });
+      if (abort.signal.aborted) return this.#supersede(target, sequence);
 
       // The previous DOM stays mounted on purpose: a broken route must not blank
       // the application.
-      this.#fail(target, "Render failed", error);
+      this.#fail(target, "render", "Render failed", error);
     }
   }
 
@@ -691,7 +705,12 @@ export class AioApp implements iApp {
     }
   }
 
-  /** Reports the mounted page to its controller and to the theme. */
+  /**
+   * Reports the mounted page to its controller and to the theme.
+   *
+   * @returns The `id → element` map of the painted shell — the same map the caller
+   *   publishes with `ready`, so a listener sees what the controller saw.
+   */
   #ready(
     route: string,
     page: iPageContent,
@@ -699,7 +718,7 @@ export class AioApp implements iApp {
     controller: iPageController | null,
     menu: HTMLElement | null,
     footer: HTMLElement | null
-  ): void {
+  ): Map<string, HTMLElement> {
     const blocks = new Map<string, HTMLElement>();
     for (const element of shell.querySelectorAll<HTMLElement>("[id]")) blocks.set(element.id, element);
 
@@ -709,7 +728,7 @@ export class AioApp implements iApp {
       console.error(`[AioApp] theme activate failed for route "${route}":`, error);
     }
 
-    if (!controller?.onReady) return;
+    if (!controller?.onReady) return blocks;
 
     const context: iPageReadyContext = { route, page, shell, menu, footer, blocks };
 
@@ -717,8 +736,10 @@ export class AioApp implements iApp {
       controller.onReady(context);
     } catch (error) {
       console.error(`[AioApp] onReady failed for route "${route}":`, error);
-      this.#events?.emit("error", { message: "onReady failed", route, error });
+      this.#fail(route, "ready", "onReady failed", error);
     }
+
+    return blocks;
   }
 
   /** Releases the controller of the route being left. */
@@ -791,9 +812,15 @@ export class AioApp implements iApp {
   }
 
   /** Reports a failed pass. The previous DOM stays mounted on purpose. */
-  #fail(route: string, message: string, error: unknown): void {
+  #fail(route: string, phase: iPagePhase, message: string, error: unknown): void {
     console.error(`[AioApp] ${message} for route "${route}":`, error);
-    this.#events?.emit("error", { message, route, error });
+    this.#events?.emit("error", { message, route, phase, error });
+  }
+
+  /** Reports a pass a newer navigation replaced. Nothing is painted from it. */
+  #supersede(route: string, sequence: number): void {
+    this.#log("render:superseded", { route, sequence });
+    this.#events?.emit("superseded", { route, sequence, by: this.#sequence });
   }
 
   /** Falls back to the default route, then to the first known route, for an unknown hash. */

@@ -106,9 +106,12 @@ export class ModeSwitcherBuilder extends Builder<ModeSwitcherElementType, iModeS
         toggleBtn?.classList.toggle('is-dark', this.mode === "dark");
         label.textContent = this.mode === 'dark' ? 'Light' : 'Dark';
 
-        this.config.emit?.("themeChanged", {
-          themeId: this.activeLiveThemeId,
-          shell: toggleBtn
+        // Light/dark is this component's own concern; the shell's `themeChanged` means
+        // "the router reported a different theme id" (default, cyberpunk, …), so it must
+        // not be reused here — a listener would see two unrelated payloads on one key.
+        this.config.emit?.("modeChanged", {
+          mode: this.mode,
+          element: toggleBtn
         });
       });
 

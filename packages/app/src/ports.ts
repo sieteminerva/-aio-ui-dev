@@ -11,6 +11,7 @@
  */
 
 import type { iBuilderRegistry } from "@aio-ui/core/registry";
+import type { iEventCallback, iEventEmit } from "@aio-ui/core/events";
 import type { iNodeContent } from "@aio-ui/core/node";
 
 /** Minimal route state the shell consumes. Mirrors `iRouteState` in `@aio-ui/router`. */
@@ -46,6 +47,17 @@ export interface iComponentRegistryPort {
 
   /** Builds one component element synchronously from already-preloaded assets. */
   build(name: keyof iBuilderRegistry, data: any): HTMLElement;
+
+  /**
+   * Hands the registry the publisher every builder config will carry.
+   *
+   * Optional: a custom registry may not support component events at all, and the shell
+   * must keep working with it. When implemented, the shell calls it once, right after
+   * the modules are created — from then on every `registry.build()` injects `emit` into
+   * the component config, so a component reports its own events without knowing whether
+   * an event bus exists.
+   */
+  useEmitter?(emit: iEventEmit): void;
 }
 
 /** What the shell needs from the declarative renderer. */
@@ -87,14 +99,17 @@ export interface iAnimationPort {
 /**
  * What the app needs from an event emitter.
  *
- * Deliberately loose (`any` payloads, method syntax): the emitter package types its
- * keys against `iPageEvents`, and a shell that demanded those exact keys would force
- * every project to depend on that type. A method declared with wider parameters is
- * assignable both ways, so a real `EventEmitter` can be registered as-is.
+ * Typed against `iPageEvents`, which already extends the component map — so the same port
+ * carries `elementAdded`/`elementChanged`/`elementRemoved` forwarded from the registry.
+ * A real `EventEmitter` satisfies this as-is; the payload of an unknown key is untyped,
+ * which is what lets a component name its own events.
  */
 export interface iEventPort {
-  emit(event: any, data?: any): void;
-  on(event: any, callback: (...args: any[]) => void): void;
+  /** Publishes an event. Known keys carry their payload type, custom ones are untyped. */
+  emit: iEventEmit;
+
+  /** Subscribes to an event. */
+  on<K extends string>(event: K, callback: iEventCallback<K>): void;
 }
 
 /**

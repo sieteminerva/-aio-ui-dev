@@ -9,6 +9,7 @@
     "./node": "./src/types/node.ts",
     "./builder": "./src/types/builder.ts",
     "./registry": "./src/types/registry.ts",
+    "./events": "./src/types/events.ts",
     "./content": "./src/types/content.ts",
     "./page": "./src/types/page.ts",
     "./renderer": "./src/types/renderer.ts",

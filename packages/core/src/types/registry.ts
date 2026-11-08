@@ -11,6 +11,14 @@ import type {
   iHeaderProperty,
 } from "./content";
 
+/**
+ * Events a builder reports while it assembles or mutates its own nodes.
+ *
+ * Only builder-level events live here. The shell-level ones (`ready`, `themeChanged`,
+ * `error`) used to sit in this map too, left over from the old monolithic page builder —
+ * they are declared once, with their real payloads, in `events.ts`. Keeping one copy is
+ * what makes `iPageEvents extends iComponentEvents` legal instead of a collision.
+ */
 export interface iComponentEvents<T extends string = string> {
   elementChanged: {
     builder?: keyof iBuilderRegistry;
@@ -30,9 +38,6 @@ export interface iComponentEvents<T extends string = string> {
     builder?: keyof iBuilderRegistry;
     data?: any
   };
-  themeChanged: { themeId: string; shell: HTMLElement };
-  ready: { shell: HTMLElement; elements: Map<string, HTMLElement>, context?: any };
-  error: { message: string; error: Error; context?: string };
 }
 
 export interface iBuilderRegistry {

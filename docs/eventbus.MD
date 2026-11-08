@@ -1,5 +1,12 @@
 # LandingPageBuilder EventBus
 
+> **Catatan (kontrak aktif).** Dokumen ini mendokumentasikan eksperimen lama
+> `LandingPageBuilder`. Nama event ber-namespace (`page:beforeRender`, `page:ready`) di
+> bawah sudah **tidak berlaku**: kontrak yang dipakai sekarang adalah `iPageEvents` di
+> `@aio-ui/core/events`, tanpa namespace, dengan payload yang membawa `route`.
+> Yang masih relevan dari dokumen ini adalah alur relay `resolve-or-reuse` dan peran
+> `DOMTreeMemory` — bukan nama event-nya. Lihat `docs/APP.md` § Events untuk daftar terbaru.
+
 Dokumentasi ini menjelaskan eksperimen relay, attach/detach, dan swap route yang sekarang dipusatkan lewat `EventBus`.
 
 ```text
@@ -62,7 +69,8 @@ Secara garis besar alurnya sekarang:
 5. `Builder` menyimpan metadata node dan mem-broadcast `builder:created`.
 6. `DOMTreeMemory` menerima record, menyimpan proxy/raw, lalu menjahit relasi parent-child.
 7. Shell baru di-attach lagi ke container aplikasi.
-8. Event `page:beforeRender` dan `page:ready` dibroadcast untuk integrasi eksternal.
+8. Event `beforeRender` dan `ready` dibroadcast untuk integrasi eksternal (dulu ditulis
+   `page:beforeRender` / `page:ready`; lihat catatan di atas).
 
 Prinsipnya:
 

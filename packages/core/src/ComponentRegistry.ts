@@ -1,6 +1,47 @@
 import type { iBasicNode, iBuilderRegistry } from "./interface";
+import type { iEventEmit } from "./types/events";
 import { Registry } from "./Registry";
 import { getBuilderAdapter } from "./BuilderPort";
+
+/**
+ * Layered config for one build: `theme < emitter < manifest < node`.
+ *
+ * The emitter sits above the theme so every builder gets a publisher even when a theme
+ * configured it, and below the manifest/node so a component can still set its own — or
+ * silence it with `emit: null`. Selectors are merged across the three layers so a node
+ * that overrides one key keeps the rest.
+ *
+ * Pure and exported: the merge is the one part of `build()` that can be pinned down
+ * without a DOM.
+ */
+export function mergeBuildConfig(
+  theme: Record<string, any> | undefined,
+  emitter: iEventEmit | null,
+  manifest: Record<string, any> | undefined,
+  node: Record<string, any> | undefined
+): Record<string, any> {
+  const merged: Record<string, any> = { ...theme };
+  if (emitter) merged.emit = emitter;
+  if (manifest) Object.assign(merged, manifest);
+
+  const user = node ?? {};
+  Object.assign(merged, user);
+
+  // Selectors merge *per key and per property*: a node that overrides `{ "@menu": { id } }`
+  // keeps the theme's other `@menu` properties instead of dropping the whole object.
+  const selectors: Record<string, any> = {};
+  for (const source of [theme, manifest, user]) {
+    if (!source?.selectors || typeof source.selectors !== "object") continue;
+    for (const [key, value] of Object.entries(source.selectors)) {
+      const previous = selectors[key];
+      selectors[key] = isPlainRecord(previous) && isPlainRecord(value) ? { ...previous, ...value } : value;
+    }
+  }
+  if (Object.keys(selectors).length) merged.selectors = selectors;
+  else delete merged.selectors;
+
+  return merged;
+}
 
 /**
  * Component manifest — the single registration shape.
@@ -180,11 +221,34 @@ export class ComponentRegistry {
   #assets: iComponentAssetMaps;
 
   /**
+   * Publisher handed to every builder config.
+   *
+   * Set once by the host (`useEmitter`) instead of being threaded through every node, so
+   * a component is never asked whether the application has an event bus — it just calls
+   * `config.emit?.(...)`, which stays `undefined` when the host registered no emitter.
+   */
+  #emitter: iEventEmit | null = null;
+
+  /**
    * @summary Stores the host asset maps used for every lazy component load.
    * @param assets - Vite glob maps declared by the host application.
    */
   constructor(assets: iComponentAssetMaps) {
     this.#assets = assets;
+  }
+
+  /**
+   * Attaches the publisher every subsequent build receives.
+   *
+   * Optional by design: a host without an event bus never calls it, and the configs it
+   * builds simply have no `emit`. Passing `null` detaches.
+   *
+   * @param emit - Publisher, or `null` to stop forwarding component events.
+   * @returns The current registry instance.
+   */
+  public useEmitter(emit: iEventEmit | null): this {
+    this.#emitter = emit;
+    return this;
   }
 
   private registeredSheets = new Set<CSSStyleSheet>();
@@ -519,28 +583,12 @@ export class ComponentRegistry {
       ? manifest.schema
       : (nodeRecord && nodeRecord.content !== undefined ? nodeRecord.content : data);
 
-    // 4. Merge config — PRIORITAS = tema < manifest (default registrasi) < userConfig (instance/node).
+    // 4. Merge config — PRIORITAS = tema < emitter < manifest (default registrasi) < userConfig (instance/node).
     //    Instance (node.config) menang atas default registrasi; tema jadi lapisan terbawah.
-    //    `selectors` digabung secara DEEP sehingga override parsial (mis. sidebar hanya mengirim
+    //    `selectors` digabung sehingga override parsial (mis. sidebar hanya mengirim
     //    `{ "@menu": { id } }`) tidak menimpa seluruh selectors default milik builder.
     const userConfig = nodeRecord ? (nodeRecord.config || {}) : {};
-
-    // Lapisan dasar: tema + manifest default
-    let baseConfig: any = { ...activeThemeConfig };
-    if (manifestConfig) baseConfig = { ...baseConfig, ...manifestConfig };
-
-    // Lapisan final: baseConfig ditimpa userConfig (instance menang)
-    let finalMergedConfig: any = { ...baseConfig, ...userConfig };
-
-    // Gabung selectors secara deep dari tema, manifest, dan user (user mendapat prioritas tertinggi)
-    const mergedSelectors: Record<string, any> = {};
-    for (const src of [activeThemeConfig, manifestConfig, userConfig]) {
-      if (src?.selectors && typeof src.selectors === "object") {
-        Object.assign(mergedSelectors, src.selectors);
-      }
-    }
-    if (Object.keys(mergedSelectors).length) finalMergedConfig.selectors = mergedSelectors;
-    else delete finalMergedConfig.selectors;
+    const finalMergedConfig = mergeBuildConfig(activeThemeConfig, this.#emitter, manifestConfig, userConfig);
 
     if (nodeRecord && nodeRecord.config) {
       nodeRecord.config = finalMergedConfig;
