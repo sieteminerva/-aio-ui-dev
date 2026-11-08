@@ -80,7 +80,12 @@ export type InputElementType =
   | "@field>file"
   | "@field>info";
 
-export type iActionType = "add" | "remove" | "delete" | "save" | "edit" | "copy" | "search" | "custom";
+export type iActionType =
+  | "add" | "remove" | "delete" | "save" | "edit" | "copy" | "search" | "custom"
+  // Composite presets: "editor" is edit+save, "repeater" is add+delete. They exist so a
+  // schema can ask for the pair with one word (`actions: ["editor"]`); normalisation
+  // expands them into the two buttons and the pair toggle, so nothing downstream sees them.
+  | "editor" | "repeater";
 
 export interface iInputActionDefinition {
   type: iActionType;
@@ -117,8 +122,15 @@ export interface iBasicInputConfig {
   position?: "left" | "right";
   icon?: string;
   content?: string | Record<string, unknown>;
-  actions?: iInputActionDefinition[] | Partial<Record<iActionType, Omit<iInputActionDefinition, "type">>> | null;
-  actionMode?: string;
+  /**
+   * Buttons for this set.
+   *
+   * Entries may be mixed: a bare name is a preset (`"editor"` → edit+save, `"repeater"` →
+   * add+delete, `"search"` → search) with the built-in behaviour and no callback, while an
+   * object is taken literally — it exists so a project can name the button and do its own
+   * work. `["editor", { type: "copy", onClick }]` is therefore valid.
+   */
+  actions?: Array<iActionType | iInputActionDefinition> | Partial<Record<iActionType, Omit<iInputActionDefinition, "type">>> | null;
   /**
    * Keep this field writable even when a control set locks its scope.
    *

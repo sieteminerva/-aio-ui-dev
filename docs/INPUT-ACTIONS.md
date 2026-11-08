@@ -6,6 +6,7 @@ A **control set** is a row of buttons attached to a **scope**. Two scopes exist:
 | --------- | --------------------------------------------- | ---------------------------------------- |
 | One field | `{ type, id, config: { actions: [...] } }`    | `InputBuilder` (module `controls`)       |
 | A group   | `{ id, title, actions: [...], group: [...] }` | `FormBuilder` → `Fieldset` → same module |
+| A row     | `{ id, title, actions: [...], row: [...] }`   | `FormBuilder` → row `<div>` → same module |
 
 `<form>` is deliberately **not** a scope: a set that can clone or delete its host is a
 footgun.
@@ -21,8 +22,18 @@ fields keep their full width.
 
 ## Actions
 
-Actions may be an array, or `{ [type]: definition }`. Each definition is
-`{ type, label?, icon?, onClick(scope, context) }`; `onClick` may be async.
+Actions may be an array (names and objects mixed) or `{ [type]: definition }`. A bare name
+is a **preset**: built-in behaviour, label from the type, no callback needed. An object is
+taken literally and exists for a project that wants its own label or work.
+
+```ts
+config: { actions: ["editor", "repeater", { type: "copy", label: "Copy", onClick }] }
+```
+
+| Preset     | Expands to  |
+| ---------- | ----------- |
+| `editor`   | edit + save |
+| `repeater` | add + delete |
 
 | Action              | What it does on a scope                                                                                                |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -35,6 +46,11 @@ Actions may be an array, or `{ [type]: definition }`. Each definition is
 | `custom`            | Nothing but `onClick`.                                                                                                 |
 
 Buttons are rendered with `type="button"`, so a set inside a form can never submit it.
+
+A custom dropdown is locked as a **unit**: the visible box, the hidden input that submits,
+and `data-locked` on the `div.dropdown` (a readOnly box would still open its popover).
+Duplicating a locked scope resets the clone to the pre-lock baseline, so Edit works on the
+copy; `editable: true` fields stay writable in the clone as well.
 
 ### `context`
 

@@ -118,7 +118,6 @@ export interface InputBuilderConfigOptions {
   icon?: string;
   content?: string | Record<string, unknown>;
   action?: { mode?: string } | null;
-  actionMode?: string;
   wide?: number | null;
   useLabel?: boolean;
   view?: string;

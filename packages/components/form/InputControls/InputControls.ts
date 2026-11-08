@@ -59,7 +59,7 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
   readonly stylesheet: string = "./inputControls.css";
 
   /** Lock state per control as it was before the set locked it, restored on save. */
-  #editableState = new WeakMap<HTMLElement, { readonly: boolean; disabled: boolean }>();
+  #editableState = new WeakMap<HTMLElement, { readonly: boolean; disabled: boolean; valueDisabled?: boolean }>();
   /** Scopes already listening for Enter-to-search. */
   #searchBound = new WeakSet<HTMLElement>();
 
@@ -332,6 +332,29 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
     });
     scope.after(clone);
 
+    // The clone carries the *locked* DOM, not the state the source started in. Left alone,
+    // its snapshot would record "readonly/disabled" as the baseline and Edit could never
+    // open it — which is exactly what a repeated group showed. The source keeps the
+    // pre-lock state, so the clone is reset from it (by position) before initialising.
+    const sourceControls = this.#controls(scope);
+    this.#controls(clone).forEach((control, index) => {
+      const state = this.#editableState.get(sourceControls[index]);
+      const valueInput = this.#dropdownValue(control);
+
+      if (state) {
+        control.disabled = state.disabled;
+        if (this.#supportsReadOnly(control)) (control as HTMLInputElement).readOnly = state.readonly;
+        if (valueInput) valueInput.disabled = state.valueDisabled ?? false;
+      } else if (!this.#isEditable(control)) {
+        control.disabled = false;
+        if (this.#supportsReadOnly(control)) (control as HTMLInputElement).readOnly = false;
+        if (valueInput) valueInput.disabled = false;
+      }
+    });
+    clone.removeAttribute("data-locked");
+    clone.classList.remove("locked");
+    clone.querySelectorAll("[data-locked]").forEach((element) => element.removeAttribute("data-locked"));
+
     const clonedControls = clone.querySelector<HTMLElement>(".controls");
     const sourceButtons = scope.querySelectorAll<HTMLButtonElement>(".controls button");
     clonedControls?.querySelectorAll<HTMLButtonElement>("button").forEach((button, index) => {
@@ -425,21 +448,56 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
       // A field the schema marked editable is not the set's to lock.
       if (this.#isEditable(control)) continue;
 
+      const dropdown = this.#dropdownRoot(control);
+      const valueInput = dropdown ? this.#dropdownValue(control) : null;
+
       if (!this.#editableState.has(control)) {
         this.#editableState.set(control, {
           readonly: this.#supportsReadOnly(control) ? (control as HTMLInputElement).readOnly : false,
           disabled: control.disabled,
+          valueDisabled: valueInput?.disabled,
         });
       }
 
-      // A select has no readOnly: disabled is the only lock the platform offers.
-      if (control instanceof HTMLSelectElement) control.disabled = true;
-      else if (this.#supportsReadOnly(control)) (control as HTMLInputElement).readOnly = true;
-      else control.disabled = true;
+      if (dropdown) {
+        // A dropdown is two inputs and a menu: locking the visible box alone leaves the
+        // popover open and the submitted value live. Disabled is the only state that
+        // actually stops the interaction, and it also stops the menu from opening.
+        control.disabled = true;
+        if (valueInput) valueInput.disabled = true;
+        dropdown.setAttribute("data-locked", "true");
+      } else if (control instanceof HTMLSelectElement) {
+        // A select has no readOnly: disabled is the only lock the platform offers.
+        control.disabled = true;
+      } else if (this.#supportsReadOnly(control)) {
+        (control as HTMLInputElement).readOnly = true;
+      } else {
+        control.disabled = true;
+      }
     }
 
     scope.setAttribute("data-locked", "true");
     scope.classList.add("locked");
+  }
+
+  /**
+   * The `div.dropdown` a control belongs to, when it is a custom dropdown.
+   *
+   * @param control - Control being locked or unlocked.
+   * @returns The dropdown container, or `null` for a plain control.
+   *
+   * @summary `closest()` matches the element itself and the visible box is itself
+   * `input.dropdown`, so the walk starts at the parent — otherwise the "container" would
+   * be the box and the hidden value would never be found.
+   */
+  #dropdownRoot(control: HTMLElement): HTMLElement | null {
+    const root = control.parentElement?.closest<HTMLElement>(".dropdown") ?? null;
+    return root && root !== control ? root : null;
+  }
+
+  /** The hidden input of a dropdown: the value that actually submits. */
+  #dropdownValue(control: HTMLElement): HTMLInputElement | null {
+    return this.#dropdownRoot(control)?.querySelector<HTMLInputElement>("input[type='hidden']") ?? null;
   }
 
   /**
@@ -468,14 +526,21 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
   private _unlock(scope: HTMLElement, force = false): void {
     for (const control of this.#controls(scope)) {
       const state = this.#editableState.get(control);
+      const dropdown = this.#dropdownRoot(control);
+      const valueInput = dropdown ? this.#dropdownValue(control) : null;
+
       if (state) {
         control.disabled = state.disabled;
         if (this.#supportsReadOnly(control)) (control as HTMLInputElement).readOnly = state.readonly;
+        if (valueInput) valueInput.disabled = state.valueDisabled ?? false;
         this.#editableState.delete(control);
       } else if (force) {
         control.disabled = false;
         if (this.#supportsReadOnly(control)) (control as HTMLInputElement).readOnly = false;
+        if (valueInput) valueInput.disabled = false;
       }
+
+      dropdown?.removeAttribute("data-locked");
     }
 
     scope.removeAttribute("data-locked");

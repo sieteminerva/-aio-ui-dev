@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { InputControlsBuilder } from "../InputControls/InputControls";
+import { normaliseActions } from "../InputControls/InputControls.InputModule";
 import { mountControls } from "../InputRegistry";
 
 /**
@@ -270,5 +271,98 @@ describe("mountControls", () => {
 
     const types = [...(node?.querySelectorAll("button") ?? [])].map((button) => (button as HTMLButtonElement).type);
     expect(types).toEqual(["button", "button"]);
+  });
+});
+
+describe("action presets", () => {
+  it("expands a pair from one name, and mixes with literal objects", () => {
+    const actions = normaliseActions(["editor", "repeater", { type: "copy", label: "Copy", onClick: () => undefined }]);
+
+    expect(actions.map((action) => action.type)).toEqual(["edit", "save", "add", "delete", "copy"]);
+    expect(actions[4].label).toBe("Copy");
+  });
+
+  it("gives a shorthand button a label and a no-op callback — the behaviour is built in", () => {
+    const [edit] = normaliseActions(["edit"]);
+
+    expect(edit.label).toBe("Edit");
+    expect(typeof edit.onClick).toBe("function");
+  });
+
+  it("renders and locks through the shorthand alone", () => {
+    const { fieldset, name, tier } = group();
+    const node = mountControls(fieldset, ["editor"]);
+
+    expect([...(node?.querySelectorAll("button") ?? [])].map((b) => b.textContent?.trim())).toEqual(["Edit", "Save"]);
+    expect(name.readOnly).toBe(true);
+    expect(tier.disabled).toBe(true);
+
+    (node?.querySelector("button.edit") as HTMLButtonElement).click();
+    expect(name.readOnly).toBe(false);
+  });
+});
+
+describe("dropdown inside a control set", () => {
+  /** The dropdown's real shape: a visible box, a hidden value, and a menu. */
+  const dropdownGroup = () => group(`<fieldset class="form-group" id="rec-4">
+    <div class="field dropdown">
+      <input class="dropdown" type="text" />
+      <input type="hidden" name="tier" value="gold" />
+      <div class="menu"><div class="item">Gold</div></div>
+    </div>
+  </fieldset>`);
+
+  it("locks both inputs and the menu, and unlocks them together", () => {
+    const { fieldset } = dropdownGroup();
+    const box = fieldset.querySelector("input.dropdown") as HTMLInputElement;
+    const value = fieldset.querySelector("input[type='hidden']") as HTMLInputElement;
+    const root = fieldset.querySelector(".dropdown") as HTMLElement;
+
+    controls(fieldset, editSave());
+
+    // A readOnly box still opens the popover and the hidden value still submits.
+    expect(box.disabled).toBe(true);
+    expect(value.disabled).toBe(true);
+    expect(root.getAttribute("data-locked")).toBe("true");
+
+    (fieldset.querySelector("button.edit") as HTMLButtonElement).click();
+
+    expect(box.disabled).toBe(false);
+    expect(value.disabled).toBe(false);
+    expect(root.hasAttribute("data-locked")).toBe(false);
+  });
+});
+
+describe("repeated scope", () => {
+  it("does not inherit the locked state as the clone's baseline", () => {
+    const { fieldset, name } = group();
+    controls(fieldset, [...editSave(), { type: "add", label: "Add", onClick: () => undefined }]);
+    expect(name.readOnly).toBe(true);
+
+    (fieldset.querySelector("button.add") as HTMLButtonElement)?.click?.();
+
+    const clone = document.querySelectorAll("fieldset.form-group")[1] as HTMLElement;
+    const cloneName = clone.querySelector("#rec-name-1") as HTMLInputElement;
+
+    // Edit on the clone must open the clone — the bug was that the clone's snapshot
+    // recorded "locked" as its starting state, so nothing could unlock it.
+    (clone.querySelector("button.edit") as HTMLButtonElement).click();
+
+    expect(cloneName.readOnly).toBe(false);
+    expect(name.readOnly).toBe(true);
+  });
+
+  it("keeps an editable field editable in the clone", () => {
+    const { fieldset } = group(`<fieldset class="form-group" id="rec-5">
+      <div class="field" data-editable="true"><input id="note" name="note" type="text" /></div>
+      <div class="field"><input id="total" name="total" type="text" /></div>
+    </fieldset>`);
+    controls(fieldset, [...editSave(), { type: "add", label: "Add", onClick: () => undefined }]);
+
+    (fieldset.querySelector("button.add") as HTMLButtonElement).click();
+    const clone = document.querySelectorAll("fieldset.form-group")[1] as HTMLElement;
+
+    expect((clone.querySelector("#note-1") as HTMLInputElement).readOnly).toBe(false);
+    expect((clone.querySelector("#total-1") as HTMLInputElement).readOnly).toBe(true);
   });
 });

@@ -112,11 +112,12 @@
     }
   }
 
-  /* 5. A group (fieldset) owns a set too: the buttons sit in the header corner so the
-        fields keep their full width. Their colours are restated because a group-level
-        button is not glued to an input — it needs a solid surface to stay legible on the
-        card rather than inheriting the translucent input fill. */
-  & fieldset.form-group {
+  /* 5. A group (fieldset) or a row owns a set too: the buttons sit in the header corner so
+        the fields keep their full width. Their colours are restated because a
+        container-level button is not glued to an input — it needs a solid surface to stay
+        legible on the card rather than inheriting the translucent input fill. */
+  & fieldset.form-group,
+  & .field.group {
     position: relative;
 
     & > .controls {

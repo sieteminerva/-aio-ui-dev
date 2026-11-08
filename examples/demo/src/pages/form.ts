@@ -216,40 +216,24 @@ export const InputControlSet = {
     {
       id: "lookup",
       title: "Cari pesanan lama",
-      actions: [
-        {
-          type: "search",
-          label: "Cari",
-          onClick: (_scope: HTMLElement, context: any) => {
-            console.log("[lookup] search", context.result);
-          },
-        },
-        { type: "copy", label: "Copy", onClick: () => { } },
-      ],
+      // `search` reads the group; `copy` copies it. One word each — no callbacks needed.
+      actions: ["search", "copy"],
       group: [
         { type: "text", id: "lookup-invoice", title: "No. invoice", placeholder: "INV-…" },
         { type: "select", id: "lookup-status", title: "Status", options: ["Baru", "Diproses", "Selesai"] },
       ] as iBasicInputNode[],
     },
-    // `edit` + `save` turn the group into a record viewer: locked until Edit is pressed.
+    // Two words replace four buttons: `editor` = edit+save, `repeater` = add+delete.
     {
       id: "customer",
       title: "Data pelanggan",
-      actions: [
-        {
-          type: "add",
-          label: "new",
-          onClick: (_e: Event, payload: any) => {
-            console.log("action!! ADD", payload)
-          }
-        },
-        { type: "edit", label: "Edit", onClick: () => { } },
-        { type: "save", label: "Simpan", onClick: () => { } },
-      ],
+      actions: ["editor", "repeater"],
       group: [
         // `editable: true` keeps this one field writable while Edit/Save lock the group.
         { type: "text", id: "customer-name", title: "Nama pelanggan", placeholder: "Belum diisi", editable: true },
         { type: "select", id: "customer-tier", title: "Tier", options: ["Bronze", "Silver", "Gold"] },
+        // A dropdown is part of the set's job too: locked as a unit (box + hidden value).
+        { type: "dropdown", id: "customer-city", title: "Kota", config: { style: "datalist", options: ["Bandung", "Jakarta", "Surabaya"] } },
       ] as iBasicInputNode[],
     },
 
@@ -317,6 +301,17 @@ export const DropdownSet = {
 const schema = [
 
   InputControlSet,
+  // A row is a scope as well, not only a fieldset: same `actions`, buttons in the corner.
+  {
+    id: "row-record",
+    title: "Baris record",
+    column: 2,
+    actions: ["editor"],
+    row: [
+      { type: "text", id: "row-sku", title: "SKU", config: { wide: 50 } },
+      { type: "text", id: "row-qty", title: "Qty", config: { wide: 50 } },
+    ] as iBasicInputNode[],
+  },
   {
     id: "order",
     title: "Detail pesanan",

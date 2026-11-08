@@ -439,19 +439,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
     // 🧩 A group can carry its own control set (add/edit/save/search). The form only
     // offers the fieldset; the controls module owns the buttons and what they do.
-    const groupActions = groupInput.actions ?? groupInput.config?.actions;
-    if (groupActions) {
-      for (const feature of this.#features) {
-        const nodes = feature.renderActions?.(fieldset, {
-          actions: groupActions,
-          position: groupInput.actionsPosition ?? groupInput.config?.position,
-        });
-        if (nodes && nodes.length) {
-          fieldset.append(...nodes);
-          break;
-        }
-      }
-    }
+    this.#appendActions(fieldset, groupInput);
 
     return fieldset;
   }
@@ -521,7 +509,36 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       container.appendChild(element);
     });
 
+    // 🧩 A row is a scope too (it is a layout container, not a group, but its children can
+    // be a record). Same offer as `renderGroup`: the controls module owns the buttons.
+    this.#appendActions(container, rowInput);
+
     return container;
+  }
+
+  /**
+   * Offers a group/row container to the loaded modules for a control set.
+   *
+   * @param container - `<fieldset>` or row `<div>` that declares `actions`.
+   * @param node - Group/row schema node.
+   *
+   * @summary The first module that answers wins, exactly like `renderTable`: the form never
+   * imports the controls builder, and a preset without it simply renders no buttons.
+   */
+  #appendActions(container: HTMLElement, node: any): void {
+    const actions = node.actions ?? node.config?.actions;
+    if (!actions) return;
+
+    for (const feature of this.#features) {
+      const nodes = feature.renderActions?.(container, {
+        actions,
+        position: node.actionsPosition ?? node.config?.position,
+      });
+      if (nodes && nodes.length) {
+        container.append(...nodes);
+        return;
+      }
+    }
   }
 
   /**
