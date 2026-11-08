@@ -32,6 +32,12 @@ export const componentAssets = {
     "@aio-ui/fabmenu/FabMenu.css": () => import("@aio-ui/fabmenu/FabMenu.css?inline"),
     "@aio-ui/footer/Footer.css": () => import("@aio-ui/footer/Footer.css?inline"),
     "@aio-ui/form/Form.css": () => import("@aio-ui/form/Form.css?inline"),
+    // Nested builders (dropdown, uploader, controls, toast) declare their own sheet and
+    // reach it through this map — no component imports its own CSS.
+    "@aio-ui/form/Dropdown/Dropdown.css": () => import("@aio-ui/form/Dropdown/Dropdown.css?inline"),
+    "@aio-ui/form/FileUploader/FileUploader.css": () => import("@aio-ui/form/FileUploader/FileUploader.css?inline"),
+    "@aio-ui/form/InputControls/inputControls.css": () => import("@aio-ui/form/InputControls/inputControls.css?inline"),
+    "@aio-ui/message/Message.css": () => import("@aio-ui/message/Message.css?inline"),
     "@aio-ui/menu/Menu.css": () => import("@aio-ui/menu/Menu.css?inline"),
     "@aio-ui/modal/Modal.css": () => import("@aio-ui/modal/Modal.css?inline"),
     "@aio-ui/modeswitcher/ModeSwitcher.css": () => import("@aio-ui/modeswitcher/ModeSwitcher.css?inline"),

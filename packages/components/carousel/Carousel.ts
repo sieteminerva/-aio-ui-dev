@@ -1,6 +1,5 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
-// import "./Carousel.css";
 
 export type CarouselElementType =
   | "@container"

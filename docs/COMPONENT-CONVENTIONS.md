@@ -313,11 +313,17 @@ Anything that needs a real DOM belongs in the demo page, not the suite.
 - Declare `readonly stylesheet = "./MyWidget.css"` **and** pass
   `stylesheet: "@aio-ui/my-widget/MyWidget.css"` in the host manifest. The registry
   derives it from the script path when the manifest omits it.
-- **Never `import "./MyWidget.css"` inside the builder.** The registry already injects the
-  sheet from the manifest; a second import is an untracked duplicate.
-  The exception is a builder that instantiates a child builder **directly** (not through
-  the registry): that child's sheet would never be injected, so the parent's CSS
-  `@import`s it — see `ProductGrid.css` → `@import "./ProductCard.css";`.
+- **Never `import "./MyWidget.css"` inside the builder.** The bundler resolves that
+  statically, so the sheet rides inside the JS chunk and the loader injects the same
+  rules a second time — the opposite of loading the component on demand. Instead
+  `Builder.create()` asks the shared seam (`ensureStylesheet`, `@aio-ui/core/Stylesheets`)
+  for the declared sheet on every build; the seam resolves the specifier against the
+  host's `styles` asset map (exact path, then normalized, then by file name — the sheet
+  sits next to the component under a name no sibling reuses), injects one
+  `<style id="rajutan-lazy-css__…">`, and is idempotent with the registry's own
+  injection. A collaborator that is not a `Builder` (say `FileUploader`) asks for its
+  sheet in its constructor; `ProductGrid.css` may still `@import "./ProductCard.css";`
+  when the child is created directly.
 - Respect `prefers-reduced-motion` for any transition.
 
 ---

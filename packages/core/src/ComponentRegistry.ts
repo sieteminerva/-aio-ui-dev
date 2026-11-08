@@ -2,6 +2,7 @@ import type { iBasicNode, iBuilderRegistry } from "./interface";
 import type { iEventEmit } from "./types/events";
 import { Registry } from "./Registry";
 import { getBuilderAdapter } from "./BuilderPort";
+import { injectLazyCss, isStyleInjected, useStylesheetAssets } from "./Stylesheets";
 
 /**
  * Layered config for one build: `theme < emitter < manifest < node`.
@@ -232,9 +233,15 @@ export class ComponentRegistry {
   /**
    * @summary Stores the host asset maps used for every lazy component load.
    * @param assets - Vite glob maps declared by the host application.
+   *
+   * The style map is also published to the shared stylesheet seam, so a component
+   * built *outside* the registry (a table inside a form field) can still get its CSS
+   * without importing it — a static CSS import would ride along in the JS chunk and be
+   * injected twice.
    */
   constructor(assets: iComponentAssetMaps) {
     this.#assets = assets;
+    useStylesheetAssets(assets.styles);
   }
 
   /**
@@ -252,11 +259,6 @@ export class ComponentRegistry {
   }
 
   private registeredSheets = new Set<CSSStyleSheet>();
-  // 🧯 Fallback <style> tags saat CSSStyleSheet.replaceSync() melempar
-  // (CSS modern mentah — nesting, @starting-style, ::picker — yang belum
-  // didukung penuh parser CSSOM browser). ID di-dedup via DOM supaya
-  // preload + build paralel / instance-ulang tidak menggandakan style tag.
-  private _injectedStyleTags = new Set<string>();
   // 💡 Deklarasikan cache secara formal agar tipe data aman dan tidak memakai (this as any)
   private _resolvedCache = new Map<string, any>();
 
@@ -670,42 +672,24 @@ export class ComponentRegistry {
    * (document.adoptedStyleSheets)? Stylesheet yang di-`adopt` TIDAK muncul
    * sebagai node DOM — Anda buka DevTools > Elements, cari <style>/<link>,
    * tidak ada → tampak "stylesheet tidak loaded" padahal sesungguhnya CSS
-   * sudah ter-pakai. Itu persis yang Anda alami sekarang: log bilang
-   * "injected" (replaceSync sukses, pola adoptStyleSheets), tapi di pohon
-   * DOM tidak ada <style> karena adoptedStyleSheets memang tak membentuk
-   * node. Elemen <style> nyata membuat inject gampang diverifikasi.
+   * sudah ter-pakai. Elemen <style> nyata membuat inject gampang diverifikasi.
    *
    * Selain itu ini juga lebih andal daripada jalur CSSOM: beberapa browser
    * melempar SyntaxError dari replaceSync pada CSS modern mentah (nesting,
    * @starting-style, ::picker, position-area, dst) — yang dulu membuat
    * stylesheet diam-diam TIDAK pernah masuk DOM sama sekali.
    *
-   * CSS di-set sebagai styleText dari elemen <style>, ditulis secara
-   * sinkron tepat sebelum build() me-render → jaminan anti-FOUC (ledger
-   * _stylesReady) tetap utuh.
+   * Id `<style>` dan dedupe-nya milik seam bersama (`Stylesheets`), sehingga
+   * komponen yang dibangun DI LUAR registry (tabel di dalam field form) memakai
+   * jalur injeksi yang sama dan tidak pernah menghasilkan style ganda.
    */
   private injectCssString(rawCss: string, normCss: string): void {
-    if (!rawCss) return;
+    if (!rawCss || isStyleInjected(normCss)) return;
 
-    const styleId = `rajutan-lazy-css__${normCss.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
-
-    // 🧯 Dedup ganda: memori + query DOM, biar preload/build paralel yang
-    // menyentuh file yang sama tidak menggandakan <style>.
-    if (this._injectedStyleTags.has(styleId)) return;
-    if (document.getElementById(styleId)) {
-      this._injectedStyleTags.add(styleId);
-      return;
-    }
-
-    const style = document.createElement("style");
-    style.id = styleId;
-    style.setAttribute("data-lazy-component", "true");
-    style.textContent = rawCss;
-    document.head.appendChild(style);
-    this._injectedStyleTags.add(styleId);
+    injectLazyCss(rawCss, normCss);
 
     if (DEV) {
-      // console.log(`[ComponentRegistry] 📦 <style id="${styleId}"> injected in <head> (${rawCss.length} chars)`);
+      // console.log(`[ComponentRegistry] 📦 stylesheet injected: ${normCss} (${rawCss.length} chars)`);
     }
   }
 

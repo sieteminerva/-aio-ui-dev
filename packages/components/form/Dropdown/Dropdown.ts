@@ -7,7 +7,7 @@
  */
 import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
-import "./Dropdown.css";
+
 
 export type DropdownElementType =
   | "@dropdown"
@@ -61,7 +61,7 @@ export interface iDropdownState {
 export class DropdownBuilder extends Builder<DropdownElementType, iDropdownConfig> {
   readonly builderId: keyof iBuilderRegistry = "dropdown";
   readonly name: keyof iBuilderRegistry = "dropdown";
-  readonly stylesheet: string = "";
+  readonly stylesheet: string = "./Dropdown.css";
 
   private listId: string;
   private debounceTimeout: any = null;

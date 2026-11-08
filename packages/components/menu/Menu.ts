@@ -1,7 +1,6 @@
 
 import type { iElementProperty, iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
-// import "./Menu.css";
 
 
 export const ELEMENT_KEYS = [

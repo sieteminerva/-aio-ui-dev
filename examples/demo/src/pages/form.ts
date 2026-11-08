@@ -12,7 +12,7 @@ import type { iBasicInputNode } from "@aio-ui/form/Input";
  * inside the element catalogue it would look like "just another builder".
  */
 let isEditing = false;
-const selectors = { "@field>label": { tagName: "label", attrs: { "animation": "typewriter", "animation-chain": "true", "animated-once": "true" } } }
+const selectors = { "@field>label": { tagName: "label", /* attrs: { "animation": "typewriter", "animation-chain": "true", "animated-once": "true" } */ } }
 
 // ID ADDRESS input sets
 export const AddressSet = {
@@ -45,9 +45,9 @@ export const AddressSet = {
         selectors,
         attributes: [
           { name: "data-level", value: "propinsi" },
-          { name: "animation", value: "fade-in" },
-          { name: "animation-chain", value: "true" },
-          { name: "animated-once", value: "true" },
+          // { name: "animation", value: "fade-in" },
+          // { name: "animation-chain", value: "true" },
+          // { name: "animated-once", value: "true" },
         ]
       }
     },
@@ -61,9 +61,9 @@ export const AddressSet = {
         selectors,
         attributes: [
           { name: "data-level", value: "kota" },
-          { name: "animation", value: "fade-in" },
-          { name: "animation-chain", value: "true" },
-          { name: "animated-once", value: "true" },
+          // { name: "animation", value: "fade-in" },
+          // { name: "animation-chain", value: "true" },
+          // { name: "animated-once", value: "true" },
         ]
       }
     },
@@ -78,9 +78,9 @@ export const AddressSet = {
         selectors,
         attributes: [
           { name: "data-level", value: "kecamatan" },
-          { name: "animation", value: "fade-in" },
-          { name: "animation-chain", value: "true" },
-          { name: "animated-once", value: "true" },
+          // { name: "animation", value: "fade-in" },
+          // { name: "animation-chain", value: "true" },
+          // { name: "animated-once", value: "true" },
         ]
       }
     },
@@ -95,9 +95,9 @@ export const AddressSet = {
         selectors,
         attributes: [
           { name: "data-level", value: "kelurahan" },
-          { name: "animation", value: "fade-in" },
-          { name: "animation-chain", value: "true" },
-          { name: "animated-once", value: "true" },
+          // { name: "animation", value: "fade-in" },
+          // { name: "animation-chain", value: "true" },
+          // { name: "animated-once", value: "true" },
         ]
       }
     },
@@ -112,9 +112,9 @@ export const AddressSet = {
         selectors,
         attributes: [
           { name: "data-level", value: "kodepos" },
-          { name: "animation", value: "fade-in" },
-          { name: "animation-chain", value: "true" },
-          { name: "animated-once", value: "true" },
+          // { name: "animation", value: "fade-in" },
+          // { name: "animation-chain", value: "true" },
+          // { name: "animated-once", value: "true" },
         ]
       }
     },
@@ -274,6 +274,17 @@ const schema = [
       { type: "email", id: "email", title: "Email", placeholder: "nama@email.com" },
       { type: "tel", id: "phone", title: "Telepon", placeholder: "+62…" },
       { type: "select", id: "size", title: "Ukuran", options: ["S", "M", "L", "XL"] },
+      // Dropdowns are a module, and their stylesheet arrives through the lazy seam —
+      // nothing in the bundle imports `Dropdown.css`.
+      {
+        type: "dropdown",
+        id: "material",
+        title: "Bahan",
+        config: {
+          style: "datalist",
+          options: ["Katun Combed 30s", "Katun Combed 24s", "Cvc", "Linen", "Rajut"],
+        },
+      },
       { type: "number", id: "qty", title: "Jumlah", placeholder: "1" },
       { type: "textarea", id: "notes", title: "Catatan", placeholder: "Warna, sablon, atau deadline" },
       { type: "checkbox", id: "agree", position: "right", title: "Saya setuju dengan ketentuan pesanan" },

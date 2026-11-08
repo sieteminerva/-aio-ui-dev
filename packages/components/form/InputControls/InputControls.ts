@@ -7,7 +7,6 @@
 import type { iActionType, iBasicInputNode, iInputActionContext, iInputActionDefinition } from "../Input";
 import type { iBuilderConfig, iElementProperty } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
-import "./inputControls.css";
 
 export type InputControlsElementType =
   | "@controls"       // Kontainer pembungkus input + tombol aksi (.ui.action.input)

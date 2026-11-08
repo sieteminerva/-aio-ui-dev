@@ -1,5 +1,6 @@
 import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iNodeRecordItem, iNodeRecordRelations } from "@aio-ui/core/interface";
 // import { TemplateRegistry } from "@aio-ui/template-registry";
+import { ensureStylesheet } from "@aio-ui/core/Stylesheets";
 // import { ElementCreatedEventBus } from "../Services/EventBus";
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
 import { HydrationGate } from "./BaseAdapters/HydrationGate";
@@ -201,6 +202,22 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
    * invisible to the registry (class fields never land on the prototype), so the CSS would
    * never auto-load. (TS has no `abstract static`, hence documented convention instead.)
    */
+
+  /**
+   * Stylesheet specifier declared by this builder, wherever it was put.
+   *
+   * @returns The specifier from the instance, else from the class (`static stylesheet`),
+   *   else `""` — a builder without a sheet simply has none.
+   *
+   * @summary Subclasses disagree on where they declare it, and this is read on every
+   * `create()`, so both places are checked instead of trusting one convention.
+   */
+  #stylesheetSpecifier(): string {
+    const fromInstance = (this as unknown as { stylesheet?: unknown }).stylesheet;
+    if (typeof fromInstance === "string" && fromInstance) return fromInstance;
+    const fromClass = (this.constructor as unknown as { stylesheet?: unknown }).stylesheet;
+    return typeof fromClass === "string" ? fromClass : "";
+  }
 
   /**
    * The frozen state configuration container holding consolidated options, emitters, and structural selectors.
@@ -506,6 +523,12 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
 
   public create(content: any, config?: Partial<TConfig>): HTMLElement {
     // console.log({ content, config });
+    // 🎨 No component imports its own CSS: the sheet is requested here, so a builder
+    // created outside the registry (a table inside a form field, a dropdown inside an
+    // input) is styled by the same lazy loader the registry uses — and a static import
+    // would otherwise ride in the JS chunk and be injected a second time.
+    void ensureStylesheet(this.#stylesheetSpecifier()).catch(() => null);
+
     const effectiveConfig = config || (content && typeof content === "object" ? (content as any).config : undefined);
     if (effectiveConfig) this.config = this.resolveConfig(this.config, effectiveConfig);
 

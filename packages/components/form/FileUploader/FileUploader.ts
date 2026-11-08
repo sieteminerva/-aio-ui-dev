@@ -6,7 +6,7 @@
  * layers need through `InputBuilder` statics.
  */
 import { truncateText } from "@aio-ui/utilities/helper";
-import './FileUploader.css';
+import { ensureStylesheet } from "@aio-ui/core/Stylesheets";
 
 interface FileUploaderConfigMessages {
   selectedFiles: (count: number) => string;
@@ -132,6 +132,11 @@ export class FileUploader {
    * 8. **Instance Storage**: Stores the instance on the input element for future reference.
    */
   constructor(input: HTMLInputElement, config: Partial<FileUploaderConfig> = {}) {
+    // The uploader is not a `Builder`, so `Builder.create()` never runs for it: it asks
+    // for its own stylesheet here. The seam dedupes, and a host that declares no loader
+    // simply gets an unstyled uploader instead of a crash.
+    void ensureStylesheet("./FileUploader.css").catch(() => null);
+
     // Step 1: Prevent re-initialization if an instance already exists on this input.
     // @ts-ignore
     if (input._uploaderInstance) return input._uploaderInstance;

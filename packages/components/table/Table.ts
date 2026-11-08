@@ -25,9 +25,6 @@ import {
   type TableCellOptions,
   type TableFooterOptions,
 } from "./Table.helper";
-// The stylesheet travels with the component: a table built directly — as the form's CSV
-// preview does — never passes through the registry, so nobody else would load it.
-import "./Table.css";
 /**
  * Table element type keys for the builder's selector system.
  * These correspond to the structural parts of a table component.
