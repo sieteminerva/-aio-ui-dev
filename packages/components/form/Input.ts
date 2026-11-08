@@ -76,6 +76,7 @@ export type InputElementType =
   | "@field>select>option"
   | "@field>checkbox"
   | "@field>radio"
+  | "@field>toggle"
   | "@field>file"
   | "@field>info";
 
@@ -216,6 +217,8 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
       "@field>select>option": { tagName: "option" },
       "@field>checkbox": { tagName: "input", type: "checkbox" as InputType, wrapper: ".switch.control" },
       "@field>radio": { tagName: "input", type: "radio" as InputType },
+      // Same switch shell for a radio: `config.style: "toggle"` opts into it.
+      "@field>toggle": { tagName: "input", wrapper: ".switch.control" },
       "@field>file": { tagName: "input", type: "file" as InputType },
       "@field>info": { tagName: "small", className: "info" }
     };
@@ -330,8 +333,15 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
       }
     }
 
-    if (!inputEl && definition.control) {
-      inputEl = this.render(definition.control, this.#input) as HTMLElement;
+    // A toggle renders the same switch shell a checkbox has. `style: "toggle"` is the
+    // opt-in for a radio, whose default is the native dot: a group of options should not
+    // turn into a wall of switches unless the schema asks for it.
+    const controlKey: InputElementType | null = this.#input.type === "radio" && this.#isToggleStyle()
+      ? "@field>toggle"
+      : definition.control;
+
+    if (!inputEl && controlKey) {
+      inputEl = this.render(controlKey, this.#input) as HTMLElement;
     }
 
     if (!inputEl) {
@@ -433,6 +443,19 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
         (el as HTMLInputElement).checked = payload.checked === true;
         break;
 
+      case "@field>toggle": {
+        // Serves checkbox and radio: the type comes from the field, the shell is shared.
+        const toggle = el as HTMLInputElement;
+        toggle.type = payload.type === "radio" ? "radio" : "checkbox";
+        toggle.checked = payload.checked === true;
+
+        const slider = document.createElement("div");
+        slider.className = "slider";
+        slider.setAttribute("data-shape", payload.config?.shape ?? "round");
+        el.__outer.appendChild(slider);
+        break;
+      }
+
       case "@field>file":
         (el as HTMLInputElement).type = "file";
         el.setAttribute("data-uploader", "");
@@ -464,6 +487,12 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
         _el?.insertAdjacentHTML("beforeend", this.#input.config?.popover);
       }
     }
+  }
+
+  /** Whether this field asked for the switch shell (`config.style: "toggle"`). */
+  #isToggleStyle(): boolean {
+    const style = String(this.#input.config?.style ?? "").toLowerCase();
+    return style === "toggle";
   }
 
   /**

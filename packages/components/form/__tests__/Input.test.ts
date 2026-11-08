@@ -277,3 +277,39 @@ describe("input module registry", () => {
     expect(container.querySelectorAll("label")).toHaveLength(1);
   });
 });
+
+describe("InputBuilder toggle style", () => {
+  it("renders a radio as a switch when config.style is toggle", () => {
+    const { container, control } = build({ type: "radio", id: "pickup", name: "delivery", title: "Ambil sendiri", config: { style: "toggle" } });
+
+    expect((control as HTMLInputElement).type).toBe("radio");
+    expect(container.querySelector(".switch.control")).not.toBeNull();
+    expect(container.querySelector(".slider")).not.toBeNull();
+    expect(container.querySelector("label")?.getAttribute("data-position")).toBe("right");
+  });
+
+  it("keeps the native dot for a radio without the toggle style", () => {
+    const { container, control } = build({ type: "radio", id: "courier", name: "delivery", title: "Kirim kurir" });
+
+    expect((control as HTMLInputElement).type).toBe("radio");
+    expect(container.querySelector(".switch.control")).toBeNull();
+  });
+
+  it("does not start a toggle checked unless the schema says so", () => {
+    const off = build({ type: "radio", id: "a", name: "g", title: "A", config: { style: "toggle" } }).control;
+    const on = build({ type: "radio", id: "b", name: "g", title: "B", checked: true, config: { style: "toggle" } }).control;
+
+    expect((off as HTMLInputElement).checked).toBe(false);
+    expect((on as HTMLInputElement).checked).toBe(true);
+  });
+
+  it("keeps radio group semantics: same name, one value each", () => {
+    const first = build({ type: "radio", id: "a", name: "delivery", value: "pickup", title: "A", config: { style: "toggle" } }).control as HTMLInputElement;
+    const second = build({ type: "radio", id: "b", name: "delivery", value: "courier", title: "B", config: { style: "toggle" } }).control as HTMLInputElement;
+
+    expect(first.name).toBe("delivery");
+    expect(second.name).toBe("delivery");
+    expect(first.value).toBe("pickup");
+    expect(second.value).toBe("courier");
+  });
+});

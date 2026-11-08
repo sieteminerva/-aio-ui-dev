@@ -40,9 +40,9 @@ export interface iFormRowNode {
   column?: number;
   /** Children, in order. They wrap automatically when they do not fit. */
   row: iFormRowChild[];
-  /** Heading, rendered as `.group-title` spanning every column. */
+  /** Heading, rendered as `.title` spanning every column. */
   label?: string;
-  /** Optional note, rendered as `.group-desc` spanning every column. */
+  /** Optional note, rendered as `.desc` spanning every column. */
   description?: string;
   id?: string;
   className?: string;

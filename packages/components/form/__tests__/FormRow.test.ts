@@ -27,30 +27,31 @@ describe("form rows", () => {
   ];
 
   it("renders a layout container, not a fieldset", () => {
-    const row = renderForm(schema).querySelector(".field.row") as HTMLElement;
+    const row = renderForm(schema).querySelector(".field.group[data-column]") as HTMLElement;
 
     expect(row).not.toBeNull();
     expect(row.tagName).toBe("DIV");
     expect(row.querySelector("legend")).toBeNull();
     expect(row.classList.contains("group")).toBe(true);
+    expect(row.classList.contains("row")).toBe(false);
   });
 
   it("declares its column count for the grid", () => {
-    const row = renderForm(schema).querySelector(".field.row") as HTMLElement;
+    const row = renderForm(schema).querySelector(".field.group[data-column]") as HTMLElement;
 
     expect(row.dataset.column).toBe("2");
     expect(row.style.getPropertyValue("--items")).toBe("2");
   });
 
   it("renders the label as a heading that spans the row", () => {
-    const row = renderForm(schema).querySelector(".field.row") as HTMLElement;
-    const title = row.querySelector(".group-title");
+    const row = renderForm(schema).querySelector(".field.group[data-column]") as HTMLElement;
+    const title = row.querySelector(".title");
 
     expect(title?.textContent).toBe("Identitas");
   });
 
   it("applies each child's width as a column span", () => {
-    const row = renderForm(schema).querySelector(".field.row") as HTMLElement;
+    const row = renderForm(schema).querySelector(".field.group[data-column]") as HTMLElement;
     const fields = [...row.querySelectorAll(":scope > .field")];
 
     expect(fields).toHaveLength(3);
@@ -60,7 +61,7 @@ describe("form rows", () => {
   });
 
   it("keeps every field intact inside the row", () => {
-    const row = renderForm(schema).querySelector(".field.row") as HTMLElement;
+    const row = renderForm(schema).querySelector(".field.group[data-column]") as HTMLElement;
 
     expect(row.querySelector("#first")).not.toBeNull();
     expect(row.querySelector('label[for="street"]')?.textContent).toBe("Alamat");
@@ -85,8 +86,8 @@ describe("form rows", () => {
       },
     ];
     const form = renderForm(nested);
-    const outer = form.querySelector(".field.row") as HTMLElement;
-    const inner = outer.querySelector(":scope > .field.row") as HTMLElement;
+    const outer = form.querySelector(".field.group[data-column]") as HTMLElement;
+    const inner = outer.querySelector(":scope > .field.group[data-column]") as HTMLElement;
 
     expect(inner).not.toBeNull();
     expect(inner.dataset.column).toBe("1");
@@ -99,6 +100,6 @@ describe("form rows", () => {
     const form = renderForm([{ id: "plain", title: "Biasa", group: [{ type: "text", id: "x", title: "X" }] }]);
 
     expect(form.querySelector("fieldset.form-group")).not.toBeNull();
-    expect(form.querySelector(".field.row")).toBeNull();
+    expect(form.querySelector(".field.group[data-column]")).toBeNull();
   });
 });

@@ -754,11 +754,13 @@ select:focus-visible {
    columns are used up, and each child's width comes from `--span` (set by
    FormLayout from `config.wide`: 50 = half, "auto" = full row).
 
-   Selectors are `.field.group.row` on purpose: the base field block
-   (`.native.form .field`, `.field:is(.group) .field`) sets `display: block` and
-   `width: 100%`, and a two-class selector would lose to it.
+   The hook is `[data-column]`, written by `applyRowColumns` — no extra class,
+   and it keeps the single-field inline variant (`.field.group[data-display]`)
+   untouched. Child selectors carry the full `.field.group` prefix because the
+   base field block (`.native.form .field`, `.field:is(.group) .field`) sets
+   `display: block; width: 100%` and would win otherwise.
    ========================================================================== */
-.field.group.row {
+.field.group[data-column] {
   display: grid;
   grid-template-columns: repeat(var(--items, 2), minmax(0, 1fr));
   gap: 0.25em 1em;
@@ -768,7 +770,7 @@ select:focus-visible {
 
   /* A child is a grid cell, not a block: no full width, no bottom margin. */
   & > .field,
-  & > .field.group.row,
+  & > .field.group[data-column],
   & > .form-group {
     display: block;
     width: auto;
@@ -778,13 +780,13 @@ select:focus-visible {
   }
 
   /* Row heading and note read across the whole row. */
-  & > .group-title,
-  & > .group-desc {
+  & > .title,
+  & > .desc {
     grid-column: 1 / -1;
     margin-bottom: 0;
   }
 
-  & > .group-title {
+  & > .title {
     font-weight: 600;
   }
 
@@ -798,11 +800,11 @@ select:focus-visible {
 }
 
 @media (max-width: 640px) {
-  .field.group.row {
+  .field.group[data-column] {
     grid-template-columns: 1fr;
 
     & > .field,
-    & > .field.group.row,
+    & > .field.group[data-column],
     & > .form-group {
       grid-column: auto;
     }
@@ -849,7 +851,7 @@ select:focus-visible {
       align-content: center;
     }
     & > .switch.control,
-    & > .switch.control > input[type="checkbox"] {
+    & > .switch.control > input:is([type="checkbox"], [type="radio"]) {
       width: 47px;
       height: 26px;
     }
@@ -858,7 +860,7 @@ select:focus-visible {
       grid-area: control;
       display: inline-block;
 
-      & > input[type="checkbox"] {
+      & > input:is([type="checkbox"], [type="radio"]) {
         position: absolute;
         inset: 0;
         z-index: 1;
@@ -905,21 +907,21 @@ select:focus-visible {
         }
       }
 
-      & > input[type="checkbox"]:hover ~ .slider {
+      & > input:is([type="checkbox"], [type="radio"]):hover ~ .slider {
         border: 1px solid var(--input-text-color-light);
       }
 
-      & > input[type="checkbox"]:checked ~ .slider {
+      & > input:is([type="checkbox"], [type="radio"]):checked ~ .slider {
         background-color: color-mix(in hsl, var(--input-background-color) 30%, rgba(90, 90, 90, 0.6) 40%);
         box-shadow: 0px 0px 2px 1px inset rgba(46, 46, 44, 0.1);
         /* border: 1px solid var(--input-border-color); */
       }
-      & > input[type="checkbox"] ~ .slider::before {
+      & > input:is([type="checkbox"], [type="radio"]) ~ .slider::before {
         box-shadow:
           -1px 0px 1px 1px rgba(20, 20, 12, 0.1),
           -1px -1px 1px 0px rgba(20, 20, 12, 0.1);
       }
-      & > input[type="checkbox"]:checked ~ .slider:before {
+      & > input:is([type="checkbox"], [type="radio"]):checked ~ .slider:before {
         box-shadow:
           1px 0px 1px 1px rgba(20, 20, 12, 0.1),
           2px 0px 1px 0px rgba(20, 20, 12, 0.1);

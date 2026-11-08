@@ -112,11 +112,11 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       "@container": { tagName: "div", className: "form-widget-wrapper" },
       "@form": { tagName: "form", className: "native form" },
       "@form>group": { tagName: "fieldset", className: "form-group" },
-      "@form>group>legend": { tagName: "legend", className: "group-title" },
-      "@form>group>desc": { tagName: "p", className: "group-desc" },
+      "@form>group>legend": { tagName: "legend", className: "title" },
+      "@form>group>desc": { tagName: "p", className: "desc" },
       // A row is layout, not a fieldset: fields + nested rows in a CSS grid.
-      "@form>row": { tagName: "div", className: "field group row" },
-      "@form>row>title": { tagName: "p", className: "group-title" },
+      "@form>row": { tagName: "div", className: "field group" },
+      "@form>row>title": { tagName: "p", className: "title" },
       "@form>actions": { tagName: "div", className: "form-actions" },
       "@form>actions>submit": { tagName: "button", className: "submit", type: "submit" as "submit" },
       "@form>actions>submit-group": { tagName: "button", className: "submit", type: "button" as "button" },
@@ -581,14 +581,14 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
         const legendText = payload?.legend || payload?.title;
         if (legendText) {
           const legend = document.createElement("legend"); // Element internal pendukung kaku
-          legend.className = "group-title";
+          legend.className = "title";
           legend.textContent = String(legendText);
           el.appendChild(legend);
         }
 
         if (payload?.description) {
           const desc = document.createElement("p");
-          desc.className = "group-desc";
+          desc.className = "desc";
           desc.textContent = String(payload.description);
           el.appendChild(desc);
         }

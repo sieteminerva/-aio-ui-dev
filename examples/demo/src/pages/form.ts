@@ -277,6 +277,9 @@ const schema = [
       { type: "number", id: "qty", title: "Jumlah", placeholder: "1" },
       { type: "textarea", id: "notes", title: "Catatan", placeholder: "Warna, sablon, atau deadline" },
       { type: "checkbox", id: "agree", position: "right", title: "Saya setuju dengan ketentuan pesanan" },
+      // Radios sharing a name form one group; `style: "toggle"` asks for the switch shell.
+      { type: "radio", id: "pickup", name: "delivery", value: "pickup", title: "Ambil sendiri", config: { style: "toggle" } },
+      { type: "radio", id: "courier", name: "delivery", value: "courier", title: "Kirim kurir", checked: true, config: { style: "toggle" } },
     ] as iBasicInputNode[],
   },
   // Inline row: `column` is the column count, `config.wide` the share a field takes
