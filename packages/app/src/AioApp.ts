@@ -136,6 +136,52 @@ function resolveContainer(target: HTMLElement | string): HTMLElement {
   return element;
 }
 
+/** One registered slot: a class (+ its config), or an instance the host already built. */
+interface iPortRegistration {
+  module: iAppModuleClass | null;
+  config: unknown;
+  instance: unknown;
+}
+
+/**
+ * Wraps the page in a shell, but only when the source declares menu/footer slots.
+ *
+ * A LITE page tree usually carries its own nav and footer, so the page itself stays the
+ * root and the authored DOM remains byte-identical.
+ */
+function assembleShell(menu: HTMLElement | null, page: HTMLElement, footer: HTMLElement | null): HTMLElement {
+  if (!menu && !footer) return page;
+
+  const shell = document.createElement("div");
+  shell.className = SHELL_CLASS;
+  if (menu) shell.appendChild(menu);
+  shell.appendChild(page);
+  if (footer) shell.appendChild(footer);
+  return shell;
+}
+
+/** What `ctx.http` is when no data module was registered: a failure with a hint, not a crash. */
+const NO_HTTP: iHttpPort = {
+  get: () => Promise.reject(new Error('[AioApp] No module registered for slot "http" (HttpService).')),
+  post: () => Promise.reject(new Error('[AioApp] No module registered for slot "http" (HttpService).')),
+};
+
+/**
+ * Creates the port for one slot.
+ *
+ * An instance registration is used as-is; a class registration is constructed with
+ * `(config, context)` — the single constructor rule of the module convention.
+ */
+function createPort(slot: iAppSlot, registration: iPortRegistration, context: iAppModuleContext): unknown {
+  if (!registration.module) return registration.instance;
+
+  try {
+    return new registration.module(registration.config, context);
+  } catch (error) {
+    throw new Error(`[AioApp] Failed to create module for slot "${slot}": ${(error as Error).message}`);
+  }
+}
+
 // ====================================================
 // 2. THE SHELL
 // ====================================================
@@ -151,10 +197,7 @@ export class AioApp implements iApp {
   readonly #pages = new Map<string, iPageContent>();
 
   /** Registered modules, keyed by slot. Insertion order is creation order. */
-  #registrations = new Map<
-    iAppSlot,
-    { module: iAppModuleClass | null; config: unknown; instance: unknown }
-  >();
+  #registrations = new Map<iAppSlot, iPortRegistration>();
 
   /**
    * Page behaviour, keyed by route.
@@ -169,17 +212,43 @@ export class AioApp implements iApp {
 
   /** Cancels work of the previous pass when navigation moves on. */
   #abort: AbortController | null = null;
-  #registry: iComponentRegistryPort | null = null;
-  #router: iRouterPort | null = null;
-  #renderer: iRendererPort | null = null;
-  #animation: iAnimationPort | null = null;
-  #events: iEventPort | null = null;
-  #http: iHttpPort = {
-    get: () => Promise.reject(new Error("[AioApp] No module registered for slot \"http\" (HttpService).")),
-    post: () => Promise.reject(new Error("[AioApp] No module registered for slot \"http\" (HttpService).")),
-  };
-  #storage: iStoragePort | null = null;
-  #themes: iThemePort | null = null;
+
+  /**
+   * Ports created for this app, keyed by slot.
+   *
+   * One store instead of eight parallel fields: adding a slot used to mean editing the
+   * declaration, the creation `if/else`, the `#portOf` switch and the teardown block — and
+   * forgetting one of them left a port running. The getters below keep every call site
+   * reading `this.#registry?.…`, so the storage can change shape without churn.
+   */
+  #ports = new Map<iAppSlot, unknown>();
+
+  get #registry(): iComponentRegistryPort | null {
+    return (this.#ports.get("registry") as iComponentRegistryPort | undefined) ?? null;
+  }
+  get #router(): iRouterPort | null {
+    return (this.#ports.get("router") as iRouterPort | undefined) ?? null;
+  }
+  get #renderer(): iRendererPort | null {
+    return (this.#ports.get("renderer") as iRendererPort | undefined) ?? null;
+  }
+  get #animation(): iAnimationPort | null {
+    return (this.#ports.get("animation") as iAnimationPort | undefined) ?? null;
+  }
+  get #events(): iEventPort | null {
+    return (this.#ports.get("events") as iEventPort | undefined) ?? null;
+  }
+  get #storage(): iStoragePort | null {
+    return (this.#ports.get("storage") as iStoragePort | undefined) ?? null;
+  }
+  get #themes(): iThemePort | null {
+    return (this.#ports.get("theme") as iThemePort | undefined) ?? null;
+  }
+  /** Data access degrades to a loud stub instead of `undefined` at the call site. */
+  get #http(): iHttpPort {
+    return (this.#ports.get("http") as iHttpPort | undefined) ?? NO_HTTP;
+  }
+
   #container: HTMLElement | null = null;
   #root: HTMLElement | null = null;
 
@@ -222,7 +291,18 @@ export class AioApp implements iApp {
         return app;
       },
       use(themeId: string): void {
-        app.#useTheme(themeId);
+        if (themeId === app.#theme) return;
+
+        // The router owns the address bar and re-emits the route change, so a switch follows
+        // exactly the path of a visitor who arrived with `?theme=`. Setting #theme here and
+        // re-rendering on our own would leave the URL lying.
+        if (app.#router) {
+          app.#router.navigate(app.#route || app.#defaultRoute, themeId, app.#fragment);
+          return;
+        }
+
+        app.#theme = themeId;
+        app.#log("theme:changed", { themeId, via: "direct" });
       },
       get ids(): string[] {
         return app.#themes?.ids ?? [];
@@ -235,35 +315,20 @@ export class AioApp implements iApp {
 
   #registerTheme(theme: iThemeModule): void {
     if (!this.#themes) {
-      // No theme port yet: queue it, and mount() flushes the queue once the port exists.
+      // No theme port yet: queue it, and the port creation flushes the queue.
       this.#pendingThemes.push(theme);
       return;
     }
 
     if (typeof this.#themes.register !== "function") {
       throw new Error(
-        `[AioApp] The registered theme module cannot accept "${theme?.themeId ?? "?"}" after mount: ` +
+        `[AioApp] The registered theme module cannot accept "${theme?.themeId ?? "?"}" after render: ` +
         "its port has no register(). Pass the themes in registerModule(ThemeRenderer, { themes })."
       );
     }
 
     this.#themes.register(theme);
     this.#log("theme:registered", { themeId: theme.themeId });
-  }
-
-  #useTheme(themeId: string): void {
-    if (themeId === this.#theme) return;
-
-    // The router owns the address bar and re-emits the route change, so switching a theme
-    // follows exactly the same path as a visitor who arrived with `?theme=`. Anything else
-    // (setting #theme here and re-rendering) would leave the URL lying.
-    if (this.#router) {
-      this.#router.navigate(this.#route || this.#defaultRoute, themeId, this.#fragment);
-      return;
-    }
-
-    this.#theme = themeId;
-    this.#log("theme:changed", { themeId, via: "direct" });
   }
 
   /** Route currently rendered. Empty until `mount()` finishes. */
@@ -414,8 +479,8 @@ export class AioApp implements iApp {
     // Phase 1 — storage, so the theme can be restored before any consumer exists.
     const storage = this.#registrations.get("storage");
     if (storage) {
-      this.#storage = this.#createPort("storage", storage, context) as iStoragePort;
-      const persisted = this.#storage.get(THEME_STORAGE_KEY);
+      this.#ports.set("storage", createPort("storage", storage, context));
+      const persisted = this.#storage?.get(THEME_STORAGE_KEY);
       if (persisted) {
         this.#theme = persisted;
         context.theme = persisted;
@@ -428,15 +493,8 @@ export class AioApp implements iApp {
     try {
       for (const [slot, registration] of this.#registrations) {
         if (slot === "storage") continue;
-        const port = this.#createPort(slot, registration, context);
+        this.#ports.set(slot, createPort(slot, registration, context));
         created.push(slot);
-        if (slot === "registry") this.#registry = port as iComponentRegistryPort;
-        else if (slot === "router") this.#router = port as iRouterPort;
-        else if (slot === "renderer") this.#renderer = port as iRendererPort;
-        else if (slot === "animation") this.#animation = port as iAnimationPort;
-        else if (slot === "events") this.#events = port as iEventPort;
-        else if (slot === "http") this.#http = port as iHttpPort;
-        else if (slot === "theme") this.#themes = port as iThemePort;
       }
     } catch (error) {
       this.#releasePorts(created.reverse());
@@ -451,41 +509,13 @@ export class AioApp implements iApp {
     this.#log("modules:created", { slots: created });
   }
 
-  /**
-   * Returns the port of one registration.
-   *
-   * An instance registration is used as-is; a class registration is constructed with
-   * `(config, context)` — the single constructor rule of the module convention.
-   */
-  #createPort(
-    slot: iAppSlot,
-    registration: { module: iAppModuleClass | null; config: unknown; instance: unknown },
-    context: iAppModuleContext
-  ): unknown {
-    if (!registration.module) return registration.instance;
-
-    try {
-      return new registration.module(registration.config, context);
-    } catch (error) {
-      throw new Error(`[AioApp] Failed to create module for slot "${slot}": ${(error as Error).message}`);
-    }
-  }
-
   /** Runs controller teardown, cancels in-flight work, releases modules, unmounts. */
   public destroy(): void {
     this.#abort?.abort();
     this.#release();
 
-    // Reverse registration order: a module created last is released first.
-    this.#releasePorts([...this.#registrations.keys()].reverse());
-
-    this.#registry = null;
-    this.#router = null;
-    this.#renderer = null;
-    this.#animation = null;
-    this.#events = null;
-    this.#storage = null;
-    this.#themes = null;
+    // Reverse creation order: a module created last is released first.
+    this.#releasePorts([...this.#ports.keys()].reverse());
 
     this.#root?.remove();
     this.#root = null;
@@ -497,28 +527,17 @@ export class AioApp implements iApp {
     this.#log("destroy", {});
   }
 
-  /** Returns the port currently created for a slot, for module teardown. */
-  #portOf(slot: iAppSlot): unknown {
-    switch (slot) {
-      case "registry": return this.#registry;
-      case "router": return this.#router;
-      case "renderer": return this.#renderer;
-      case "animation": return this.#animation;
-      case "events": return this.#events;
-      case "storage": return this.#storage;
-      default: return null;
-    }
-  }
-
   /**
-   * Releases ports in the given order.
+   * Releases ports in the given order and forgets them.
    *
-   * A port owns its resources when it exposes `destroy()`; nothing else is assumed,
-   * so a module that needs no teardown simply has no such method.
+   * A port owns its resources when it exposes `destroy()`; nothing else is assumed, so a
+   * module that needs no teardown simply has no such method.
    */
   #releasePorts(slots: iAppSlot[]): void {
     for (const slot of slots) {
-      const port = this.#portOf(slot) as { destroy?: () => void } | null;
+      const port = this.#ports.get(slot) as { destroy?: () => void } | undefined;
+      this.#ports.delete(slot);
+
       if (!port || typeof port.destroy !== "function") continue;
       try {
         port.destroy();
@@ -571,7 +590,17 @@ export class AioApp implements iApp {
       if (this.#route && this.#route !== target) this.#release();
 
       const { controller, context } = this.#createPage(target, fragment, abort.signal);
-      const prepared = await this.#prepare(target, context, controller);
+
+      // `onPrepare` failing is reported, not fatal: the route keeps whatever DOM it had.
+      let prepared: iPageContent | void = undefined;
+      if (controller?.onPrepare) {
+        try {
+          prepared = await controller.onPrepare(context);
+        } catch (error) {
+          if (!context.signal.aborted) this.#fail(target, "onPrepare failed", error);
+        }
+      }
+
       if (sequence !== this.#sequence) return this.#log("render:superseded", { route: target, sequence });
 
       const page = prepared ?? context.page;
@@ -601,12 +630,12 @@ export class AioApp implements iApp {
 
       const menuEl = menuNode ? this.#renderNode(menuNode) : null;
       const footerEl = footerNode ? this.#renderNode(footerNode) : null;
-      const tree = this.#assemble(menuEl, pageEl, footerEl);
+      const tree = assembleShell(menuEl, pageEl, footerEl);
 
-      this.#commit(tree, themed);
+      // `#paint` consumes `#fragment`, so route state is settled before the swap.
       this.#route = target;
       this.#fragment = fragment || "";
-      this.#afterCommit(tree);
+      this.#paint(tree, themed);
       if (sequence !== this.#sequence) return;
 
       this.#events?.emit("ready", { route: target, shell: tree });
@@ -617,8 +646,7 @@ export class AioApp implements iApp {
 
       // The previous DOM stays mounted on purpose: a broken route must not blank
       // the application.
-      console.error(`[AioApp] Render failed for route "${target}":`, error);
-      this.#events?.emit("error", { message: "Render failed", route: target, error });
+      this.#fail(target, "Render failed", error);
     }
   }
 
@@ -647,29 +675,10 @@ export class AioApp implements iApp {
     return { controller, context };
   }
 
-  /** Runs `onPrepare`; a failure is reported but never blanks the route. */
-  async #prepare(
-    route: string,
-    context: iPageContext,
-    controller: iPageController | null
-  ): Promise<iPageContent | void> {
-    if (!controller?.onPrepare) return undefined;
-
-    try {
-      return await controller.onPrepare(context);
-    } catch (error) {
-      if (context.signal.aborted) return undefined;
-      console.error(`[AioApp] onPrepare failed for route "${route}":`, error);
-      this.#events?.emit("error", { message: "onPrepare failed", route, error });
-      return undefined;
-    }
-  }
-
   /** Lets the controller rewrite the menu node. The app calls it, once per render. */
   #menu(controller: iPageController | null): iBasicNode | HTMLElement | null {
     const menu = this.#source.menu ?? null;
-    if (!menu || !controller?.attachMenu) return menu;
-    if (menu instanceof HTMLElement) return menu;
+    if (!menu || !controller?.attachMenu || menu instanceof HTMLElement) return menu;
 
     try {
       return controller.attachMenu(menu);
@@ -677,24 +686,6 @@ export class AioApp implements iApp {
       console.error("[AioApp] attachMenu failed:", error);
       return menu;
     }
-  }
-
-  /**
-   * Builds the mounted root.
-   *
-   * A LITE page tree usually contains its own nav and footer, so no wrapper is created
-   * unless the source declares a slot. Keeping the page itself as the root is what makes
-   * the authored DOM byte-identical.
-   */
-  #assemble(menu: HTMLElement | null, page: HTMLElement, footer: HTMLElement | null): HTMLElement {
-    if (!menu && !footer) return page;
-
-    const shell = document.createElement("div");
-    shell.className = SHELL_CLASS;
-    if (menu) shell.appendChild(menu);
-    shell.appendChild(page);
-    if (footer) shell.appendChild(footer);
-    return shell;
   }
 
   /** Reports the mounted page to its controller and to the theme. */
@@ -765,50 +756,51 @@ export class AioApp implements iApp {
     return renderer.render(node, renderFn, buildFn, { scopeId: this.#route });
   }
 
-  /** Replaces the mounted page, keeping the container as the stable mount point. */
-  #commit(tree: HTMLElement, page: iPageContent): void {
+  /**
+   * Builds the tree and paints it.
+   *
+   * These steps are never used apart — replace the children, set the title, release any
+   * scroll lock a previous route left, animate, honour a deep link — so they live in one
+   * place instead of a chain of one-call helpers.
+   */
+  #paint(tree: HTMLElement, page: iPageContent): void {
     const container = this.#container;
     if (!container) return;
+
     container.replaceChildren(tree);
     this.#root = tree;
 
-    // The container scroll lock is a shell concern: a route that opened a modal
-    // or an overlay must not leave the page frozen.
+    // A route that opened a modal or overlay must not leave the page frozen.
     document.body.style.overflow = "";
 
     const title = isPageDocument(page) ? page.title : undefined;
     if (title) document.title = title;
-  }
 
-  /** Post-commit work that needs the DOM to be live: animation, anchor. */
-  #afterCommit(tree: HTMLElement): void {
     this.#animation?.init(tree);
-    this.#scrollToFragment();
-  }
 
-  /** A deep link like `#blog/post-2` scrolls to the fragment after the render. */
-  #scrollToFragment(): void {
     const fragment = this.#fragment;
     this.#fragment = "";
     if (!fragment || typeof requestAnimationFrame !== "function") return;
 
     requestAnimationFrame(() => {
-      const target = document.getElementById(fragment);
-      target?.scrollIntoView({ block: "start", behavior: "auto" });
+      document.getElementById(fragment)?.scrollIntoView({ block: "start", behavior: "auto" });
     });
+  }
+
+  /** Reports a failed pass. The previous DOM stays mounted on purpose. */
+  #fail(route: string, message: string, error: unknown): void {
+    console.error(`[AioApp] ${message} for route "${route}":`, error);
+    this.#events?.emit("error", { message, route, error });
   }
 
   /** Falls back to the default route, then to the first known route, for an unknown hash. */
   #resolveRoute(route: string): string {
-    const candidate = normalizeRoute(route, this.#defaultRoute);
-    if (this.#known(candidate)) return candidate;
-    if (this.#known(this.#defaultRoute)) return this.#defaultRoute;
-    return this.routes[0] ?? this.#defaultRoute;
-  }
+    const known = (name: string): boolean => this.#pages.has(name) || this.#controllers.has(name);
 
-  /** A route exists when it has content, a controller, or both. */
-  #known(route: string): boolean {
-    return this.#pages.has(route) || this.#controllers.has(route);
+    const candidate = normalizeRoute(route, this.#defaultRoute);
+    if (known(candidate)) return candidate;
+    if (known(this.#defaultRoute)) return this.#defaultRoute;
+    return this.routes[0] ?? this.#defaultRoute;
   }
 
   #log(event: string, payload: unknown): void {

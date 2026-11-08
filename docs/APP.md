@@ -148,8 +148,8 @@ page controller (optional) ─────────────────�
 
 ## Themes — a namespace, not another `register*`
 
-`registerModule` answers *which object fills which slot*; `registerPage` answers *who
-renders which route*. Both are structural, one-per-key. Adding a theme is neither: it
+`registerModule` answers _which object fills which slot_; `registerPage` answers _who
+renders which route_. Both are structural, one-per-key. Adding a theme is neither: it
 appends to a collection that already has an owner, so it gets a collection-shaped door
 rather than a third `register*` method (which would make the app a growing list of verbs).
 
