@@ -2,9 +2,9 @@ import type { iPageContent } from "@aio-ui/app";
 
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { CORE_FORM_MODULES } from "@aio-ui/form/FormRegistry";
-import { tableFormAdapter } from "@aio-ui/table/Table.FormAdapter";
+import { tableFormAdapter } from "@aio-ui/table/adapters/FormAdapter";
 import { idAddressFormAdapter } from "@aio-ui/id-address/form";
-import { messageFormAdapter } from "@aio-ui/message/Message.FormAdapter";
+import { messageFormAdapter } from "@aio-ui/message/adapters/FormAdapter";
 import { demoNav, pageIntro } from "../nav";
 import { themeSwitcher } from "../theme-switcher";
 import type { iBasicInputNode } from "@aio-ui/input/Input";

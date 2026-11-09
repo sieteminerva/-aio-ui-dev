@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./Message.ts",
+    "./Message": "./Message.ts",
+    "./Message.css": "./Message.css",
+    "./adapters/FormAdapter": "./adapters/FormAdapter.ts"
+  },
   "dependencies": {
     "@aio-ui/base": "*",
     "@aio-ui/core": "*",

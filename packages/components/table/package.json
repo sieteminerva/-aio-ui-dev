@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./Table.ts",
+    "./Table": "./Table.ts",
+    "./Table.css": "./Table.css",
+    "./adapters/FormAdapter": "./adapters/FormAdapter.ts"
+  },
   "dependencies": {
     "@aio-ui/base": "*",
     "@aio-ui/core": "*",
