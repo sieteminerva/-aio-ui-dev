@@ -612,7 +612,6 @@ select:focus-visible {
 }
 
 /* 7. Spinner Icons & Dynamic Indicators */
-.form,
 .field,
 .field:is(.group),
 .field:is(.group) .field {
@@ -847,8 +846,6 @@ select:focus-visible {
 }
 
 @starting-style {
-  .native.form,
-  .form .field,
   .field,
   .field:is(.group),
   .field:is(.group) .field {

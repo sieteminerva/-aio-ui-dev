@@ -657,6 +657,30 @@ Actions Controls
   /* Layout, not a token: it used to ride along inside the input token block. */
   margin: 0 auto;
 
+  /* Form-level loading spinner. `Form.ts` puts `.loading` on the form element while it
+     submits, and that is form chrome: `input.css` no longer names `.form`, so the rule
+     lives here instead of being inherited from the field layer. Same look as the field
+     spinner (spinner mask, 0.8 × `--input-icon-size`, pinned right). */
+  &.loading:has(input:not([type="checkbox"])) {
+    position: relative;
+
+    &::after {
+      content: "";
+      mask-image: var(--spinner-content);
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      mask-mode: alpha;
+      background-color: var(--input-primary-color);
+      width: calc(var(--input-icon-size) * 0.8);
+      height: calc(var(--input-icon-size) * 0.8);
+      display: block;
+      position: absolute;
+      right: 21px;
+      bottom: calc(var(--input-icon-size) - 0.83em);
+      z-index: 7;
+    }
+  }
+
   /* Grid Container Button */
   & .buttons.set {
     display: flex;
