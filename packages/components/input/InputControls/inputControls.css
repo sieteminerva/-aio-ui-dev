@@ -1,84 +1,153 @@
-.form {
-  --input-margin-bottom: 1em;
+/* ==========================================================================
+   Input controls — the action set that sits beside (or above) a field.
 
-  /* 1. Atur container utama menggunakan Flexbox */
-  & .field {
-    &:is(.actions) {
-      display: flex !important;
-      flex-wrap: wrap; /* Agar label tetap di atas jika dibutuhkan */
-      align-items: stretch; /* Memaksa input dan tombol sama tinggi secara alami */
-      margin-bottom: var(--input-margin-bottom);
+   Owned by @aio-ui/input: a control set is a field-level thing, so nothing here
+   is scoped under `.form` any more (it was, which meant a set rendered outside a
+   form got no styling at all). The glue between an input and its buttons lives
+   here too — `Form.css` carried a second, drifted copy of these rules; it is
+   gone, so `.field.actions` now has exactly one owner.
+   ========================================================================== */
 
-      /* Label memenuhi 100% lebar agar input turun ke bawahnya */
-      & label {
-        flex: 0 0 100%;
-        margin-bottom: 0.35em;
-      }
+/* 1. A field that carries an action set: the label takes its own line and the
+      input + buttons read as one composite control. */
+.field:is(.actions) {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: stretch;
+  margin-bottom: 1em;
 
-      /* Input mengambil sisa ruang yang tersedia */
-      & input,
-      & select {
-        flex: 1;
-        /* Style input Anda lainnya di sini */
-      }
+  & label {
+    flex: 0 0 100%;
+    margin-bottom: 0.35em;
+  }
 
-      /* 2. Kondisi Modifikator Posisi menggunakan :has() */
-      &:has(.controls[position="right"]) {
-        & input,
-        & select {
-          border-top-right-radius: 0;
-          border-bottom-right-radius: 0;
-          border-right: none;
-        }
-      }
+  &:has(.controls) {
+    & input,
+    & select,
+    & .dropdown,
+    & textarea {
+      flex: 1;
+      outline: none;
+      border-width: 1px;
+      border-style: solid;
+      border-color: var(--input-border-color);
+    }
 
-      &:has(.controls[position="left"]) {
-        flex-direction: row-reverse; /* Membalik urutan visual tanpa ubah HTML */
-        & input,
-        & select {
-          border-top-left-radius: 0;
-          border-bottom-left-radius: 0;
-          border-left: none;
-        }
-      }
+    & input:hover,
+    & select:hover,
+    & .dropdown:hover,
+    & textarea:hover {
+      outline: none;
+      border-right-color: transparent;
     }
   }
 
-  /* 3. Styling Grup Tombol (Controls) */
-  & .controls {
+  /* A lone `button.controls` (no `.controls` wrapper) is the button itself. */
+  &:has(.controls:is(button)) {
+    & input,
+    & select,
+    & .dropdown,
+    & textarea {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      border-right-color: transparent;
+
+      &:hover {
+        & ~ button {
+          border: 1px solid var(--input-primary-color);
+        }
+        border-right-color: transparent;
+      }
+    }
+
+    &:has(button:hover) input,
+    &:has(button:hover) select,
+    &:has(button:hover) .dropdown,
+    &:has(button:hover) textarea {
+      border: 1px solid var(--input-primary-color);
+      border-right-color: transparent;
+    }
+
+    & .controls:is(button) {
+      padding: 6px 1em;
+      border-top-right-radius: var(--input-border-radius, 4px);
+      border-bottom-right-radius: var(--input-border-radius, 4px);
+    }
+  }
+
+  /* Position modifiers: `data-position` is the newer spelling, `position` stays so
+     the markup written before it keeps working. */
+  &:has(.controls[position="right"]),
+  &:has(.controls[data-position="right"]) {
+    & > select,
+    & > input,
+    & > .dropdown,
+    & > textarea {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+  }
+
+  &:has(.controls[position="left"]),
+  &:has(.controls[data-position="left"]) {
+    flex-direction: row-reverse;
+    & > select,
+    & > input,
+    & > .dropdown,
+    & > textarea {
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+  }
+
+  &:has(> .controls[position="left"], > .controls[position="right"]),
+  &:has(> .controls[data-position="left"], > .controls[data-position="right"]) {
+    & > select,
+    & > input,
+    & > .dropdown,
+    & > textarea {
+      border-radius: 0 !important;
+    }
+  }
+}
+
+/* 2. The set itself. */
+.field:is(.actions) {
+  & .controls,
+  & > button.controls {
     display: inline-flex;
     align-items: stretch;
-
-    /* Hilangkan float dan top/bottom hacks */
     float: none;
     position: static;
 
-    /* Pengaturan Border Radius untuk Posisi Kanan */
-    &[position="right"] {
+    &[position="right"],
+    &[data-position="right"] {
       & button:last-child {
-        border-top-right-radius: var(--input-border-radius);
-        border-bottom-right-radius: var(--input-border-radius);
+        border-top-right-radius: var(--input-border-radius, 4px);
+        border-bottom-right-radius: var(--input-border-radius, 4px);
       }
+
       & button:not(:last-child) {
         border-right: none;
       }
     }
 
-    /* Pengaturan Border Radius untuk Posisi Kiri */
-    &[position="left"] {
+    &[position="left"],
+    &[data-position="left"] {
       & button:first-child {
-        border-top-left-radius: var(--input-border-radius);
-        border-bottom-left-radius: var(--input-border-radius);
+        border-top-left-radius: var(--input-border-radius, 4px);
+        border-bottom-left-radius: var(--input-border-radius, 4px);
       }
+
       & button:not(:first-child) {
-        border-left: none; /* Perbaikan dari border-right */
+        border-left: none;
       }
     }
 
-    /* 4. Styling Tombol di dalam Controls */
+    &:is(button),
     & button {
       padding: 6px 1em;
-      font-size: var(--input-font-size);
+      font-size: var(--input-font-size, 0.75rem);
       font-weight: 400;
       cursor: pointer;
       transition:
@@ -91,13 +160,14 @@
       gap: 0.35em;
       border-radius: 0; /* Reset default radius */
 
-      color: color-mix(in srgb, var(--input-text-color) 80%, white 50%);
-      border: 2px solid var(--input-accent-color);
-      background-color: color-mix(in srgb, var(--input-primary-color) 50%, var(--input-accent-color) 5%);
+      color: color-mix(in srgb, var(--input-text-color) 20%, white 70%);
+      border: 1px solid var(--input-accent-color);
+      background-color: color-mix(in srgb, var(--input-accent-color) 90%, var(--input-primary-color) 5%);
 
       &:hover {
         color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
-        background-color: color-mix(in srgb, var(--input-primary-color) 90%, rgb(245, 244, 244, 0.8));
+        background-color: color-mix(in srgb, var(--input-accent-color) 90%, rgb(245, 244, 244, 0.8));
+        border: 1px solid var(--input-primary-color) !important;
       }
 
       &:active {
@@ -111,47 +181,48 @@
       }
     }
   }
+}
 
-  /* 5. A group (fieldset) or a row owns a set too: the buttons sit in the header corner so
-        the fields keep their full width. Their colours are restated because a
-        container-level button is not glued to an input — it needs a solid surface to stay
-        legible on the card rather than inheriting the translucent input fill. */
-  & fieldset.form-group,
-  & .field.group {
-    position: relative;
+/* 3. A group (fieldset) or a row owns a set too: the buttons sit in the header
+      corner so the fields keep their full width. Their colours are restated
+      because a container-level button is not glued to an input — it needs a
+      solid surface to stay legible on the card rather than inheriting the
+      translucent input fill. */
+fieldset.form-group,
+.field:is(.group) {
+  position: relative;
 
-    & > .controls {
-      position: absolute;
-      top: 0.6em;
-      right: 0.6em;
-      z-index: 1;
-      display: inline-flex;
+  & > .controls {
+    position: absolute;
+    top: 0.6em;
+    right: 0.6em;
+    z-index: 1;
+    display: inline-flex;
 
-      & button {
+    & button {
+      color: #fff;
+      background-color: var(--input-primary-color);
+      border-color: var(--input-primary-color);
+
+      &:hover {
         color: #fff;
-        background-color: var(--input-primary-color);
-        border-color: var(--input-primary-color);
-
-        &:hover {
-          color: #fff;
-          background-color: color-mix(in srgb, var(--input-primary-color) 80%, black 20%);
-        }
+        background-color: color-mix(in srgb, var(--input-primary-color) 80%, black 20%);
       }
     }
   }
+}
 
-  /* 6. States a control set owns. `locked` is the resting state of a record viewer
-        (`data-locked`), `searching` is an in-flight search. */
-  & [data-locked="true"] {
-    & input,
-    & select,
-    & textarea {
-      cursor: default;
-    }
+/* 4. States a control set owns. `locked` is the resting state of a record viewer
+      (`data-locked`), `searching` is an in-flight search. */
+[data-locked="true"] {
+  & input,
+  & select,
+  & textarea {
+    cursor: default;
   }
+}
 
-  & .searching .controls button.search {
-    cursor: progress;
-    opacity: 0.65;
-  }
+.searching .controls button.search {
+  cursor: progress;
+  opacity: 0.65;
 }
