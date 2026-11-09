@@ -237,6 +237,18 @@ export const InputControlSet = {
       ] as iBasicInputNode[],
     },
 
+    // A row is a scope as well, not only a fieldset: same `actions`, buttons in the corner.
+    {
+      id: "row-record",
+      title: "Baris record",
+      column: 2,
+      actions: ["editor"],
+      row: [
+        { type: "text", id: "row-sku", title: "SKU", config: { wide: 50 } },
+        { type: "text", id: "row-qty", title: "Qty", config: { wide: 50 } },
+      ] as iBasicInputNode[],
+    },
+
   ]
 
 }
@@ -301,17 +313,7 @@ export const DropdownSet = {
 const schema = [
 
   InputControlSet,
-  // A row is a scope as well, not only a fieldset: same `actions`, buttons in the corner.
-  {
-    id: "row-record",
-    title: "Baris record",
-    column: 2,
-    actions: ["editor"],
-    row: [
-      { type: "text", id: "row-sku", title: "SKU", config: { wide: 50 } },
-      { type: "text", id: "row-qty", title: "Qty", config: { wide: 50 } },
-    ] as iBasicInputNode[],
-  },
+
   {
     id: "order",
     title: "Detail pesanan",

@@ -102,4 +102,33 @@ describe("form rows", () => {
     expect(form.querySelector("fieldset.form-group")).not.toBeNull();
     expect(form.querySelector(".field.group[data-column]")).toBeNull();
   });
+
+  it("renders a row nested inside a group as a grid, not as one field", () => {
+    // The row used to fall through to the field renderer: no `type`, so a single nameless
+    // input appeared where the whole grid should be.
+    const form = renderForm([
+      {
+        id: "wrap",
+        group: [
+          {
+            id: "inner-row",
+            column: 2,
+            row: [
+              { type: "text", id: "sku", title: "SKU" },
+              { type: "text", id: "qty", title: "Qty" },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    const row = form.querySelector("fieldset.form-group > .field.group[data-column]") as HTMLElement;
+
+    expect(row).not.toBeNull();
+    expect(row.id).toBe("inner-row");
+    expect(row.querySelectorAll("input")).toHaveLength(2);
+    expect(form.querySelector("#sku")).not.toBeNull();
+    // No stray field rendered from the row descriptor itself (the row is `.field.group`).
+    expect(form.querySelectorAll("fieldset.form-group > .field:not(.group)")).toHaveLength(0);
+  });
 });

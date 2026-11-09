@@ -392,7 +392,15 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
           const s = fieldset.querySelector("[type='submit']")
           if (s) s.id = this.submitButtonId!;
         }
-        // Case 2: Nested Group Object -> RECURSE!
+        // Case 2: Nested Row Object -> a layout grid inside the group, not a field.
+        // Without this branch a `{ row: [...] }` child fell through to `_renderField`,
+        // whose builder had no `type` and rendered one nameless text input.
+        else if (innerInput && typeof innerInput === "object" && "row" in innerInput) {
+          const nestedRow = this.renderRow(innerInput, formId, cascadeActive ? `${cascadePath}.group.${_index}` : undefined);
+          if (innerInput.id) nestedRow.id = innerInput.id;
+          fieldset.appendChild(nestedRow);
+        }
+        // Case 3: Nested Group Object -> RECURSE!
         else if (innerInput && typeof innerInput === "object" && "group" in innerInput) {
           const nestedFieldset = this.renderGroup(innerInput, formId, cascadeActive ? `${cascadePath}.group.${_index}` : undefined);
           if (innerInput.id) nestedFieldset.id = innerInput.id;

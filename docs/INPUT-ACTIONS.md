@@ -2,10 +2,10 @@
 
 A **control set** is a row of buttons attached to a **scope**. Two scopes exist:
 
-| Scope     | Declared as                                   | Owned by                                 |
-| --------- | --------------------------------------------- | ---------------------------------------- |
-| One field | `{ type, id, config: { actions: [...] } }`    | `InputBuilder` (module `controls`)       |
-| A group   | `{ id, title, actions: [...], group: [...] }` | `FormBuilder` → `Fieldset` → same module |
+| Scope     | Declared as                                   | Owned by                                  |
+| --------- | --------------------------------------------- | ----------------------------------------- |
+| One field | `{ type, id, config: { actions: [...] } }`    | `InputBuilder` (module `controls`)        |
+| A group   | `{ id, title, actions: [...], group: [...] }` | `FormBuilder` → `Fieldset` → same module  |
 | A row     | `{ id, title, actions: [...], row: [...] }`   | `FormBuilder` → row `<div>` → same module |
 
 `<form>` is deliberately **not** a scope: a set that can clone or delete its host is a
@@ -27,12 +27,14 @@ is a **preset**: built-in behaviour, label from the type, no callback needed. An
 taken literally and exists for a project that wants its own label or work.
 
 ```ts
-config: { actions: ["editor", "repeater", { type: "copy", label: "Copy", onClick }] }
+config: {
+  actions: ["editor", "repeater", { type: "copy", label: "Copy", onClick }];
+}
 ```
 
-| Preset     | Expands to  |
-| ---------- | ----------- |
-| `editor`   | edit + save |
+| Preset     | Expands to   |
+| ---------- | ------------ |
+| `editor`   | edit + save  |
 | `repeater` | add + delete |
 
 | Action              | What it does on a scope                                                                                                |
