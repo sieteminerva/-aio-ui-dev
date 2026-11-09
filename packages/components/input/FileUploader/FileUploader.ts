@@ -8,6 +8,15 @@
 import { truncateText } from "@aio-ui/utilities/helper";
 import { ensureStylesheet } from "@aio-ui/core/Stylesheets";
 
+/**
+ * Where this sheet is fetched from, spelled as the host keys it.
+ *
+ * Resolution falls back to the file name, so this must end in the same name the host
+ * uses (`@aio-ui/input/file-uploader.css`) — `"./FileUploader.css"` matched nothing and
+ * the uploader rendered unstyled without an error.
+ */
+export const FILE_UPLOADER_STYLESHEET = "./file-uploader.css";
+
 interface FileUploaderConfigMessages {
   selectedFiles: (count: number) => string;
   readyFiles: (count: number) => string;
@@ -135,7 +144,7 @@ export class FileUploader {
     // The uploader is not a `Builder`, so `Builder.create()` never runs for it: it asks
     // for its own stylesheet here. The seam dedupes, and a host that declares no loader
     // simply gets an unstyled uploader instead of a crash.
-    void ensureStylesheet("./FileUploader.css").catch(() => null);
+    void ensureStylesheet(FILE_UPLOADER_STYLESHEET).catch(() => null);
 
     // Step 1: Prevent re-initialization if an instance already exists on this input.
     // @ts-ignore
