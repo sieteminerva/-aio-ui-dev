@@ -1,41 +1,23 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
 import type { iFormModuleContext } from "../FormModuleTypes";
+import type {
+  CalculationPrimitive,
+  CalculationValues,
+  iCalculationContext,
+  iCalculationFormula,
+  iCalculationLineItem,
+} from "../CalculationTypes";
 
-export type CalculationPrimitive = string | number | boolean | null;
-export type CalculationValues = Record<string, CalculationPrimitive>;
-
-export interface iCalculationLineItem {
-  id: string;
-  groupId?: string;
-  label: string;
-  specification?: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-  details?: Record<string, unknown>;
-}
-
-export interface iCalculationContext<TData = unknown> {
-  form: HTMLFormElement;
-  groupId?: string;
-  data?: TData;
-  values: Readonly<CalculationValues>;
-  get: (inputId: string) => CalculationPrimitive;
-  getNumber: (inputId: string) => number;
-}
-
-export interface iCalculationFormula<TData = unknown> {
-  id: string;
-  groupId?: string;
-  /** Optional readonly/text control to receive this formula's total. */
-  outputId?: string;
-  data?: TData;
-  /** Optional predicate for custom activation logic, in addition to group visibility. */
-  when?: (context: iCalculationContext<TData>) => boolean;
-  /** Return null when this formula should not produce a summary row. */
-  formula: (context: iCalculationContext<TData>) => iCalculationLineItem | null;
-}
+// Calculation vocabulary lives in a leaf file: the input layer (`config.calculator`)
+// must be able to name it without importing this handler.
+export type {
+  CalculationPrimitive,
+  CalculationValues,
+  iCalculationContext,
+  iCalculationFormula,
+  iCalculationLineItem,
+} from "../CalculationTypes";
 
 export interface iCalculationStrategies {
   formula: Array<iCalculationFormula<any>>;

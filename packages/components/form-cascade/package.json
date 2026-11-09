@@ -1,0 +1,12 @@
+{
+  "name": "@aio-ui/form-cascade",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@aio-ui/module-loader": "*"
+  },
+  "peerDependencies": {
+    "@aio-ui/form": "*"
+  }
+}

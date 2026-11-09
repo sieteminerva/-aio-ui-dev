@@ -1,7 +1,8 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base/Base";
 import type { iMessageContent } from "@aio-ui/message/Message";
-import type { FormCascade, FormCascadeHost, iCascadeEventDetail } from "./Handlers/Cascade";
+import type { FormCascade } from "@aio-ui/form-cascade/Cascade";
+import type { FormCascadeHost, iCascadeEventDetail } from "./FormModuleTypes";
 import type { FormMultistepHandler, FormMultistepHost } from "./Handlers/Multistep";
 import type { FormValidationHandler } from "./Handlers/Validation";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
@@ -610,13 +611,14 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       autoDisableNextStep: this.config.autoDisableNextStep ?? (this.config.cascading === true && this.config.multistep === true),
       onCascade: typeof this.config.onCascade === "function" ? this.config.onCascade : null,
       emit: typeof this.config.emit === "function" ? this.config.emit : null,
-      fieldConfig: {
-        themeId: this.config.themeId ?? undefined,
-        namespace: this.config.namespace ?? undefined,
-        emit: typeof this.config.emit === "function" ? this.config.emit : null,
-      },
       renderGroup: (group, formId, path) => this.renderGroup(group, formId, path),
       renderRow: (row, formId, path) => this.renderRow(row, formId, path),
+      // The engine builds conditional fields without knowing `InputBuilder`, and asks the
+      // input adapters to mount the area it just created.
+      renderField: (item, formId) => this._renderField(item, formId),
+      mountInputs: (root) => {
+        for (const feature of this.#features) feature.mount?.(root);
+      },
       refreshSteps: (form) => this.#multistep?.refresh(form),
       // 🧾 Tombol next terkunci kondisi kaskade → jalur terpusat.
       reportCascadeBlocked: (info) => this.#validation?.reportCascadeBlocked(info),

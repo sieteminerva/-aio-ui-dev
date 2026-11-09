@@ -5,88 +5,26 @@
 // dan delegasi listener berjalan di dalam engine, tanpa membebani Form.ts.
 // ======================================================================
 
-import { InputBuilder } from "../Input";
-import { mountInputModules } from "../InputRegistry";
-import type { CascadeBlockedInfo } from "./Validation";
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
-import { FORM_MODULE_IDS } from "../FormModuleTypes";
-import type { iFormModuleContext } from "../FormModuleTypes";
+import { FORM_MODULE_IDS } from "@aio-ui/form/FormModuleTypes";
+import type {
+  CascadeBlockedInfo,
+  FormCascadeHost,
+  FormCascadeMode,
+  iCascadeEventDetail,
+  iCascadeState,
+  iFormCondition,
+  iFormModuleContext,
+} from "@aio-ui/form/FormModuleTypes";
 
 /**
- * Aturan kaskade form: menentukan kapan sebuah input/group boleh "lahir" ke DOM.
- * Bisa berupa fungsi `(value, state) => boolean` atau objek deklaratif.
+ * Cascade engine.
  *
- * @example
- * condition: { field: "web-type", equals: "ecommerce" }
- * condition: { field: ["email", "company"], filled: true, message: "Lengkapi kontak dulu" }
- * condition: (value, state) => value === "ecommerce"
+ * @summary Owns every rule about when a conditional input or group may exist: hold,
+ * evaluate, mount/unmount, the multistep gate, and the delegated listeners. It is a
+ * package of its own because it needs nothing from `@aio-ui/form` at runtime — the form
+ * only offers the fieldset/row renderers through {@link FormCascadeHost}.
  */
-export interface iFormCondition {
-  field?: string | string[];   // nama/id input "sebelum" yang menjadi sumber nilai
-  equals?: any;                // nilai harus sama persis (perbandingan longgar via String())
-  in?: any[];                  // nilai harus termasuk salah satu dari daftar
-  notEquals?: any;             // nilai harus TIDAK sama
-  notIn?: any[];               // nilai harus di luar daftar
-  filled?: boolean;            // nilai harus terisi (tidak kosong)
-  when?: (value: any, state: Record<string, any>) => boolean; // resolver kustom
-  message?: string;            // pesan bimbingan saat gate multistep mengunci langkah
-}
-
-export interface iCascadeEventDetail {
-  action: "mount" | "unmount";
-  key: string;                            // posisi skema item, mis. "2" atau "2.group.1"
-  element: HTMLElement | null;            // elemen yang di-mount / di-unmount
-  descriptor: any;                        // deskriptor input/group asli pembawa .condition
-  condition: iFormCondition;
-  state: Record<string, any>;             // snapshot nilai form saat itu
-}
-
-export type iCascadeState = {
-  form: HTMLFormElement;
-  inputs: any[];
-};
-
-/** Kontrak minimal yang wajib dipenuhi host (FormBuilder) agar engine bekerja */
-/** How conditional items are held until their condition passes. */
-export type FormCascadeMode = "template" | "hidden";
-
-export interface FormCascadeHost {
-  builder: string;
-  inputs: any[];
-  multistep: boolean;
-  /** Gerbang tombol next: null/undefined = ikuti cascading && multistep;
-   * true = kunci selama ada kondisi belum terpenuhi; false = nonaktif. */
-  autoDisableNextStep?: boolean;
-  /**
-   * How a not-yet-met conditional item is kept.
-   *
-   * - `template` (default): a `<template>` placeholder, the real element is built only
-   *   when the condition passes. Cheapest, and the item cannot be touched while hidden.
-   * - `hidden`: the item is built immediately and toggled with the `hidden` attribute.
-   *   Needed by chained inputs (an address picker injecting options into the *next*
-   *   select) because a `<template>` gives them nothing to inject into.
-   */
-  cascadeMode?: FormCascadeMode;
-  onCascade?: null | ((detail: iCascadeEventDetail) => void);
-  emit?: any;
-  /**
-   * Builder-level config for fields this engine builds while it holds them.
-   *
-   * @summary A conditional field is created here, not by the input module, so the
-   * cascade path needs the host's `themeId`/`namespace`/`emit` too — otherwise the
-   * field it births is deaf to the application bus while its siblings are not.
-   */
-  fieldConfig?: { themeId?: string; namespace?: string; emit?: any };
-  /** Bangun <fieldset> dari deskriptor group (termasuk menahan anak ber-condition) */
-  renderGroup(group: any, formId: string, path?: string): HTMLElement;
-  /** Bangun row layout dari deskriptor row (termasuk menahan anak ber-condition) */
-  renderRow(row: any, formId: string, path?: string): HTMLElement;
-  /** Perbaiki langkah aktif bila sebuah step di-unmount oleh kaskade */
-  refreshSteps?(form: HTMLFormElement): void;
-  /** Laporkan tombol "next" terkunci karena sebuah condition belum terpenuhi */
-  reportCascadeBlocked?(info: CascadeBlockedInfo): void;
-}
-
 export class FormCascadeHandler {
 
   /** Objek skema pembawa .condition (bukan elemen DOM / string) */
@@ -385,12 +323,12 @@ export class FormCascade {
         // buttons live at form level as one shared set.
         if (this.host.multistep && !path.includes(".")) el.dataset.index = path;
         // Wake the input adapters in the new area, including raw HTML fields.
-        mountInputModules(el);
+        this.host.mountInputs?.(el);
       }
     } else if (item && typeof item === "object" && "row" in item) {
       el = this.#buildRow(item, formId, path);
     } else {
-      el = new InputBuilder({ ...this.host.fieldConfig, formId } as any).create(item) as HTMLElement;
+      el = this.host.renderField(item, formId);
     }
 
     if (!el) {
@@ -398,7 +336,7 @@ export class FormCascade {
       throw new Error(
         `[Form Cascade] Gagal membangun elemen kaskade pada path "${path}"` +
         (label ? ` untuk "${label}"` : "") +
-        ". Pastikan selektor '@form>group' terkonfigurasi & InputBuilder mengembalikan elemen yang valid (render() mengembalikan undefined bila selektor tidak dikenal)."
+        ". Pastikan selektor '@form>group' terkonfigurasi & host.renderField mengembalikan elemen yang valid."
       );
     }
 

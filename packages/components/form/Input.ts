@@ -7,7 +7,7 @@ import {
   type iInputAdapter,
   type iInputModuleContext,
 } from "./InputRegistry";
-import type { iCalculationFormula } from "./Handlers/Calculation";
+import type { iCalculationFormula } from "./CalculationTypes";
 
 /**
  * Attributes `applyAttributes` knows how to map, in application order.

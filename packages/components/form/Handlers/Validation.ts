@@ -13,10 +13,9 @@
 // ======================================================================
 
 import type { iMessageContent } from "@aio-ui/message/Message";
-import type { iFormCondition } from "./Cascade";
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
-import type { iFormModuleContext } from "../FormModuleTypes";
+import type { CascadeBlockedInfo, iFormCondition, iFormModuleContext } from "../FormModuleTypes";
 
 export interface iInvalidField {
   name?: string;
@@ -46,15 +45,6 @@ export interface FormValidationOptions {
   builder?: string;
   emit?: (event: string, payload: any) => void;
   showMessage?: (content: iMessageContent) => void;
-}
-
-/** Info gerbang kaskade yang dikirim engine Cascade → handler ini. */
-export interface CascadeBlockedInfo {
-  form: HTMLFormElement;
-  guidance: string;
-  condition: iFormCondition | null;
-  step: number;
-  path?: string;
 }
 
 export class FormValidationHandler {

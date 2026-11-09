@@ -1,8 +1,97 @@
 import type { iBuilderConfig } from "@aio-ui/core/interface";
 import type { iMessageContent } from "@aio-ui/message/Message";
 import type { iFormConfig } from "./Form";
-import type { FormCascadeHost } from "./Handlers/Cascade";
 import type { FormMultistepHost } from "./Handlers/Multistep";
+
+/**
+ * Cascade contracts.
+ *
+ * @summary These describe what `FormBuilder` **offers** to a cascade engine, so they live
+ * with the form and not with the engine package: `@aio-ui/form-cascade` may be swapped,
+ * while the form that hosts it must keep offering the same hooks.
+ */
+
+/**
+ * Aturan kaskade form: menentukan kapan sebuah input/group boleh "lahir" ke DOM.
+ * Bisa berupa fungsi `(value, state) => boolean` atau objek deklaratif.
+ *
+ * @example
+ * condition: { field: "web-type", equals: "ecommerce" }
+ * condition: { field: ["email", "company"], filled: true, message: "Lengkapi kontak dulu" }
+ * condition: (value, state) => value === "ecommerce"
+ */
+export interface iFormCondition {
+  field?: string | string[];   // nama/id input "sebelum" yang menjadi sumber nilai
+  equals?: any;                // nilai harus sama persis (perbandingan longgar via String())
+  in?: any[];                  // nilai harus termasuk salah satu dari daftar
+  notEquals?: any;             // nilai harus TIDAK sama
+  notIn?: any[];               // nilai harus di luar daftar
+  filled?: boolean;            // nilai harus terisi (tidak kosong)
+  when?: (value: any, state: Record<string, any>) => boolean; // resolver kustom
+  message?: string;            // pesan bimbingan saat gate multistep mengunci langkah
+}
+
+/** Payload of the `onCascade` callback and the cascade events. */
+export interface iCascadeEventDetail {
+  action: "mount" | "unmount";
+  key: string;                            // posisi skema item, mis. "2" atau "2.group.1"
+  element: HTMLElement | null;            // elemen yang di-mount / di-unmount
+  descriptor: any;                        // deskriptor input/group asli pembawa .condition
+  condition: iFormCondition;
+  state: Record<string, any>;             // snapshot nilai form saat itu
+}
+
+/** Form + schema a cascade rule is evaluated against. */
+export type iCascadeState = {
+  form: HTMLFormElement;
+  inputs: any[];
+};
+
+/** How conditional items are held until their condition passes. */
+export type FormCascadeMode = "template" | "hidden";
+
+/** What the form reports to the user when a gate blocks "next". */
+export interface CascadeBlockedInfo {
+  form: HTMLFormElement;
+  guidance: string;
+  condition: iFormCondition | null;
+  step: number;
+  path?: string;
+}
+
+/** Kontrak minimal yang wajib dipenuhi host (FormBuilder) agar engine bekerja */
+export interface FormCascadeHost {
+  builder: string;
+  inputs: any[];
+  multistep: boolean;
+  /** Gerbang tombol next: null/undefined = ikuti cascading && multistep;
+   * true = kunci selama ada kondisi belum terpenuhi; false = nonaktif. */
+  autoDisableNextStep?: boolean;
+  /**
+   * How a not-yet-met conditional item is kept.
+   *
+   * - `template` (default): a `<template>` placeholder, the real element is built only
+   *   when the condition passes. Cheapest, and the item cannot be touched while hidden.
+   * - `hidden`: the item is built immediately and toggled with the `hidden` attribute.
+   *   Needed by chained inputs (an address picker injecting options into the *next*
+   *   select) because a `<template>` gives them nothing to inject into.
+   */
+  cascadeMode?: FormCascadeMode;
+  onCascade?: null | ((detail: iCascadeEventDetail) => void);
+  emit?: any;
+  /** Bangun <fieldset> dari deskriptor group (termasuk menahan anak ber-condition) */
+  renderGroup(group: any, formId: string, path?: string): HTMLElement;
+  /** Bangun row layout dari deskriptor row (termasuk menahan anak ber-condition) */
+  renderRow(row: any, formId: string, path?: string): HTMLElement;
+  /** Bangun satu field dari deskriptor; engine tidak tahu `InputBuilder` */
+  renderField(input: any, formId: string): HTMLElement;
+  /** Pasang adapter input di area yang baru lahir (uploader, dropdown, dsb.) */
+  mountInputs?(root: HTMLElement): void;
+  /** Perbaiki langkah aktif bila sebuah step di-unmount oleh kaskade */
+  refreshSteps?(form: HTMLFormElement): void;
+  /** Laporkan tombol "next" terkunci karena sebuah condition belum terpenuhi */
+  reportCascadeBlocked?(info: CascadeBlockedInfo): void;
+}
 
 /**
  * Stable ids for Form sub-modules.
