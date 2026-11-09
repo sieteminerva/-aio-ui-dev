@@ -1,7 +1,7 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import type { iFormModuleContext } from "./FormModuleTypes";
 import { calculationFormAdapter } from "./Handlers/Calculation";
-import { cascadeFormAdapter } from "@aio-ui/form-cascade/Cascade";
+import { cascadeFormAdapter } from "./adapters/Cascade";
 import { multistepFormAdapter } from "./Handlers/Multistep";
 import { validationFormAdapter } from "./Handlers/Validation";
 import { idAddressFormAdapter } from "./IdAddress/IdAddress.FormAdapter";
