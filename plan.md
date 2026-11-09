@@ -633,3 +633,29 @@ would break every consumer schema, so it stays an alias; the attribute matrix mu
 | 2026-11-09 | **`input.css` no longer names a form, anywhere.** Two selector lists still carried form ancestors: the `@starting-style` popup block (`.native.form, .form .field, .field, …`) and the spinner block (§7 opened with `.form,`). Both are now `.field`-only. The `.form` entry in §7 was load-bearing, not cosmetic — `Form.ts` sets `.loading` on the *form element* while submitting, so `.form.loading::after` was the submit spinner; that rule moved to `Form.css` as form chrome (same mask/size/anchor, `position: relative` on the form). Verified: 0 of 110 selectors in `input.css` mention `.form`/`native` (checked through the parsed sheet, not the source), gate 286 tests / 32 files, boundaries clean, browser: `form.loading::after` → spinner mask, 19.19px, `absolute`, `right 21px`, `bottom 9.4px`, `z 7`, form `position: relative`; `@starting-style { .field, .field:is(.group), .field:is(.group) .field { … } }` intact. |
 
 | 2026-11-09 | **An action set has one owner: `@aio-ui/input`.** `inputControls.css` was both (a) scoped entirely under `.form` — so a set mounted outside a form got no styling — and (b) a second, drifted copy of the `.field.actions` rules that `Form.css` also carried (`border: 2px` vs `1px`, `[position]` only vs `[position]`+`[data-position]`, no `.dropdown`/`textarea`/single-button variants). `Form.css`'s two blocks (`.form .field, .field { &:is(.actions) }` + `#3 Styling Grup Tombol`) are deleted; `inputControls.css` became field-only and absorbed the union: layout and input-glue rules from the Form copy (the newer, complete variant set), button styling with the values that were actually winning, plus the pieces only it had (group/fieldset corner placement, `[data-locked]` cursor, `.searching`). Verified byte-for-byte in the browser: button `1px` accent border, same `color-mix` bg/colour, `6px 1em`, `17.6px`; `.field.actions` → `flex/wrap/stretch`, `margin-bottom 17.57px`; all five sets still correct — two inline rows `static`, three group corners `absolute 10.54px/10.54px z-index 1` with solid `#925408` bg and white text. Gate 286 tests / 32 files, boundaries clean, demo build OK. |
+
+## Bug backlog — recorded 2026-11-09 (belum diperbaiki)
+
+Ditemukan saat review CSS/ownership; sengaja dicatat dulu supaya tidak hilang sebelum
+pekerjaan registry. Urutan = urutan laporan, bukan prioritas.
+
+1. **`input-controls` edit/save hanya sekali.** Setelah satu kali Edit → Save, tombol tidak
+   merespons lagi. Kecurigaan: listener (`click`) terpasang ulang/hilang saat scope di-lock,
+   atau state `#editableState` (WeakMap) tidak dipulihkan sehingga baseline lock berikutnya
+   kosong. Perlu diuji: dua siklus edit/save berurutan, lalu `delete`/`add` setelahnya.
+2. **Control set di `<fieldset>` dan `.field.group` tidak terstyle benar.** Set yang duduk di
+   corner group (`position: absolute`) memakai jalur CSS terpisah; yang perlu dicek: komposisi
+   `.field:is(.actions)` (inline) vs `fieldset.form-group > .controls` (corner), dan apakah
+   aturan `border-radius`/`border` dari varian inline ikut bocor ke group.
+3. **Beberapa input dropdown tidak terkena `editState` input-controls.** Dropdown adalah
+   builder terpisah dengan hidden input + kotak `.dropdown[data-style]`; lock/unlock menyentuh
+   `input` di dalamnya tetapi tidak selalu kotaknya. Beberapa instance "mati" (tidak ikut
+   terkunci/terbuka). Perlu inventaris: dropdown di dalam scope mana saja, dan statusnya per
+   siklus edit.
+4. **`examples/demo/src/pages/form.ts` baris 334–342 tidak terbuka.** Field `dropdown` id
+   `material`, `config.style: "datalist"`, ada di group `order`. Yang lain (datalist di
+   `customer-city`) jalan, jadi indikasi: interaksi dengan `datalist` + `options` datar
+   (array string, bukan `{value,label}`) atau dengan modul dropdown yang ter-mount ganda.
+   Butuh investigasi terpisah dari pekerjaan registry.
+
+| 2026-11-09 | **`LITE_FORM_MODULES` deleted** — it was `CORE_FORM_MODULES` minus the engines, and nothing imported it (`grep` across `packages/` + `examples/` found only the file itself and a doc comment). Keeping it was actively misleading: it implied "lite ≠ core" is a supported axis, when `Form` already degrades without engines (`Form.ts` loads each by id and calls through `?.`), so "lite" is just `new ModuleLoader("form", [inputFormAdapter])` at the call site. `CORE_FORM_MODULES` stays, and its doc now says why: it is the default that makes `new FormBuilder({ schema })` render at all, it is what `ModuleLoader` validates (`scope` label, duplicate ids, `requires` → `MISSING/CYCLIC_DEPENDENCY`), and it is "what the form is" — anything owned by another package is composed by the host. Gate 286 tests / 32 files, boundaries clean, both builds green. |

@@ -89,7 +89,7 @@ class InputFormAdapter {
  * and fails loudly instead of rendering an empty form.
  *
  * @example
- * // registered by CORE_FORM_MODULES and LITE_FORM_MODULES
+ * // registered by CORE_FORM_MODULES (the form's default set)
  */
 export const inputFormAdapter: iModuleDefinition<iFormModuleContext, InputFormAdapter> = {
   id: FORM_MODULE_IDS.input,

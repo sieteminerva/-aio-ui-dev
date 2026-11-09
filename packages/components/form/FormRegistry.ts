@@ -10,19 +10,17 @@ import { inputFormAdapter } from "./Input.FormAdapter";
 export type FormModuleDefinition = iModuleDefinition<iFormModuleContext, any>;
 
 /**
- * Lite preset: field rendering only.
- *
- * @summary No engines and no optional adapters. The input module is still
- * required, because a form with no field renderer cannot produce anything.
- */
-export const LITE_FORM_MODULES: FormModuleDefinition[] = [inputFormAdapter];
-
-/**
  * Core preset: every engine and adapter the form has always provided.
  *
- * @summary This is the default set used when no loader is injected. Registration
- * order is also mount order for adapters, so `input` runs before `idAddress`,
- * matching the previous hardcoded sequence. `requires` drives dependency order.
+ * @summary This is the default set used when no loader is injected, so it is what makes
+ * `new FormBuilder({ schema })` render anything at all: `input` is required for a field
+ * to exist, the four engines are the form's own behaviour (they degrade to no-ops when
+ * absent — `Form` loads them by id and calls through `?.`). Everything that belongs to
+ * another package (`table`, `message`, `id-address`) is composed by the host instead, so
+ * this list is "what the form is", not "what a project may want".
+ *
+ * @summary Registration order is also mount order for adapters, so `input` runs before
+ * `idAddress`, matching the previous hardcoded sequence. `requires` drives dependency order.
  */
 export const CORE_FORM_MODULES: FormModuleDefinition[] = [
   validationFormAdapter,
