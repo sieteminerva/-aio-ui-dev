@@ -1,0 +1,487 @@
+{
+  "packages": {
+    "@aio-ui/accordion": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "AccordionBuilder"
+      ],
+      "types": [
+        "iAccordionConfig"
+      ]
+    },
+    "@aio-ui/animations": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "AnimationsService"
+      ],
+      "types": [
+        "AnimationServiceConfig"
+      ]
+    },
+    "@aio-ui/app": {
+      "kind": "package",
+      "barrel": "./src/index.ts",
+      "values": [
+        "AioApp",
+        "AppStorage",
+        "blockToNode",
+        "isPageDocument",
+        "normalizeRoute",
+        "pageToNode"
+      ],
+      "types": [
+        "iAnimationPort",
+        "iApp",
+        "iAppConfig",
+        "iAppModuleClass",
+        "iAppModuleContext",
+        "iAppOptions",
+        "iAppRouteState",
+        "iAppSlot",
+        "iAppSlots",
+        "iAppSource",
+        "iComponentRegistryPort",
+        "iEventPort",
+        "iHttpPort",
+        "iPageBlock",
+        "iPageContent",
+        "iPageContext",
+        "iPageController",
+        "iPageControllerClass",
+        "iPageDocument",
+        "iPageReadyContext",
+        "iRendererPort",
+        "iRouterFactory",
+        "iRouterPort",
+        "iStorageConfig",
+        "iStorageDriver",
+        "iStoragePort"
+      ]
+    },
+    "@aio-ui/article": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "ArticleBuilder"
+      ],
+      "types": [
+        "iArticleConfig",
+        "iArticleSlotSpec"
+      ]
+    },
+    "@aio-ui/badge": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "BadgeBuilder"
+      ],
+      "types": [
+        "iBadgeConfig",
+        "iBadgeItem"
+      ]
+    },
+    "@aio-ui/base": {
+      "kind": "package",
+      "barrel": "./src/index.ts",
+      "values": [
+        "Builder",
+        "GLOBAL_INSTANCE_COUNTER",
+        "HydrationGate"
+      ],
+      "types": []
+    },
+    "@aio-ui/carousel": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "CarouselBuilder"
+      ],
+      "types": [
+        "iCarouselAttrsConfig",
+        "iCarouselConfig"
+      ]
+    },
+    "@aio-ui/core": {
+      "kind": "package",
+      "barrel": "./src/index.ts",
+      "values": [
+        "ComponentRegistry",
+        "DOMRenderer",
+        "getBuilderAdapter",
+        "mergeBuildConfig",
+        "setBuilderAdapter"
+      ],
+      "types": [
+        "RegisterFn",
+        "iBuilderAdapter",
+        "iComponentAssetMaps",
+        "iComponentEvents",
+        "iComponentManifest",
+        "iComponentModuleRef",
+        "iEventCallback",
+        "iEventEmit",
+        "iPageEvents",
+        "iPagePhase"
+      ]
+    },
+    "@aio-ui/event-emitter": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "EventEmitter"
+      ],
+      "types": [
+        "iPageEvents"
+      ]
+    },
+    "@aio-ui/fabmenu": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "FabMenuBuilder"
+      ],
+      "types": [
+        "FabPosition",
+        "iFabMenuConfig"
+      ]
+    },
+    "@aio-ui/footer": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "FooterBuilder"
+      ],
+      "types": [
+        "iFooterAction",
+        "iFooterColumn",
+        "iFooterConfig",
+        "iFooterContent"
+      ]
+    },
+    "@aio-ui/form": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "DEFAULT_FORM_MESSAGES",
+        "FormBuilder",
+        "composeMessage",
+        "messageDraft",
+        "resolveStyle"
+      ],
+      "types": [
+        "iFormConfig",
+        "iFormMessage",
+        "iFormMessageCategory",
+        "iFormMessageCompose",
+        "iFormMessageField",
+        "iFormMessageParams",
+        "iFormMessageStyle",
+        "iFormMessages"
+      ]
+    },
+    "@aio-ui/frameworks": {
+      "kind": "aggregator",
+      "barrel": "./index.ts",
+      "reexports": [
+        "@aio-ui/core",
+        "@aio-ui/base",
+        "@aio-ui/app"
+      ],
+      "values": [],
+      "types": []
+    },
+    "@aio-ui/http-service": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "HttpService"
+      ],
+      "types": [
+        "iHttpServiceConfig"
+      ]
+    },
+    "@aio-ui/id-address": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "IdAddressBuilder"
+      ],
+      "types": [
+        "IdAddressCacheConfig",
+        "IdAddressConfig",
+        "IdAddressDetail",
+        "IdAddressEventArgs",
+        "IdAddressEventHandler",
+        "IdAddressSchemaRef",
+        "IdAddressTextContentConfig"
+      ]
+    },
+    "@aio-ui/input": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "InputBuilder"
+      ],
+      "types": [
+        "InputType",
+        "iActionType",
+        "iBasicInputConfig",
+        "iBasicInputNode",
+        "iBasicSelectOption",
+        "iInputActionContext",
+        "iInputActionDefinition",
+        "iInputActionHandler",
+        "iInputConfig"
+      ]
+    },
+    "@aio-ui/masonry": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "MasonryBuilder"
+      ],
+      "types": [
+        "iMasonryConfig"
+      ]
+    },
+    "@aio-ui/menu": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "MenuBuilder"
+      ],
+      "types": [
+        "iMenuConfig",
+        "iMenuSplit"
+      ]
+    },
+    "@aio-ui/message": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "MessageBuilder"
+      ],
+      "types": [
+        "iMessageConfig",
+        "iMessageContent"
+      ]
+    },
+    "@aio-ui/modal": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "ModalBuilder"
+      ],
+      "types": [
+        "iModalConfig",
+        "iModalControls"
+      ]
+    },
+    "@aio-ui/modeswitcher": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "ModeSwitcherBuilder"
+      ],
+      "types": [
+        "iModeSwitcherConfig"
+      ]
+    },
+    "@aio-ui/module-loader": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "ModuleLoader",
+        "ModuleRegistry"
+      ],
+      "types": [
+        "iModuleDefinition",
+        "iModuleLoaderOptions",
+        "iModuleRegistryOptions"
+      ]
+    },
+    "@aio-ui/modules": {
+      "kind": "aggregator",
+      "barrel": "./index.ts",
+      "reexports": [
+        "@aio-ui/module-loader",
+        "@aio-ui/router",
+        "@aio-ui/http-service",
+        "@aio-ui/event-emitter",
+        "@aio-ui/theme",
+        "@aio-ui/animations"
+      ],
+      "values": [],
+      "types": []
+    },
+    "@aio-ui/pricingcard": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "PricingCardBuilder"
+      ],
+      "types": []
+    },
+    "@aio-ui/product": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "ProductCardBuilder",
+        "ProductDetailBuilder",
+        "ProductGridBuilder"
+      ],
+      "types": [
+        "iProductCardConfig",
+        "iProductColor",
+        "iProductDetailConfig",
+        "iProductGridConfig",
+        "iProductRecord"
+      ]
+    },
+    "@aio-ui/rating": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "RatingBuilder"
+      ],
+      "types": [
+        "RatingVisualType",
+        "iRatingConfig"
+      ]
+    },
+    "@aio-ui/router": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "HashRouter"
+      ],
+      "types": [
+        "iHashRouterConfig",
+        "iHashRouterContext",
+        "iRouteState"
+      ]
+    },
+    "@aio-ui/section": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "SectionBuilder"
+      ],
+      "types": [
+        "iSectionAction",
+        "iSectionBlock",
+        "iSectionColumn",
+        "iSectionConfig"
+      ]
+    },
+    "@aio-ui/styles": {
+      "kind": "package",
+      "barrel": "./src/index.css",
+      "values": [],
+      "types": []
+    },
+    "@aio-ui/tab": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "TabBuilder"
+      ],
+      "types": [
+        "iTabConfig",
+        "iTabContent",
+        "iTabFooterProperty",
+        "iTabItemContent",
+        "iTabItemProperty",
+        "iTabMenuProperty"
+      ]
+    },
+    "@aio-ui/table": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "TableBuilder"
+      ],
+      "types": [
+        "iTableConfig"
+      ]
+    },
+    "@aio-ui/theme": {
+      "kind": "package",
+      "barrel": "./src/index.ts",
+      "values": [
+        "ThemeRegistry",
+        "ThemeRenderer"
+      ],
+      "types": [
+        "iThemeConfig",
+        "iThemeContext"
+      ]
+    },
+    "@aio-ui/theme-cyberpunk": {
+      "kind": "package",
+      "barrel": "./src/index.ts",
+      "values": [
+        "CyberpunkTheme"
+      ],
+      "types": []
+    },
+    "@aio-ui/theme-default": {
+      "kind": "package",
+      "barrel": "./src/index.ts",
+      "values": [
+        "DefaultTheme"
+      ],
+      "types": []
+    },
+    "@aio-ui/theme-horizontal": {
+      "kind": "package",
+      "barrel": "./src/index.ts",
+      "values": [
+        "HorizontalTheme"
+      ],
+      "types": []
+    },
+    "@aio-ui/themes": {
+      "kind": "aggregator",
+      "barrel": "./index.ts",
+      "reexports": [
+        "@aio-ui/theme-default",
+        "@aio-ui/theme-cyberpunk",
+        "@aio-ui/theme-horizontal"
+      ],
+      "values": [],
+      "types": []
+    },
+    "@aio-ui/utilities": {
+      "kind": "package",
+      "barrel": "./src/index.ts",
+      "values": [
+        "EMPTY_TABLE",
+        "applyAttrDictionary",
+        "applyAttributeList",
+        "buildNamespace",
+        "createImageError",
+        "detectDelimiter",
+        "ensureMetadataIdentity",
+        "generateRandomColor",
+        "hexToRgb",
+        "hexToRgba",
+        "mergeInputConfig",
+        "numberToText",
+        "parseTableRecords",
+        "parseTableText",
+        "selectorToTree",
+        "setMetadata",
+        "splitCsvRows",
+        "toBeString",
+        "truncateText"
+      ],
+      "types": [
+        "iAttributeSpec",
+        "iParsedTableFile"
+      ]
+    }
+  }
+}

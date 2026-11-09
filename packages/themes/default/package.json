@@ -11,9 +11,9 @@
   },
   "exports": {
     ".": {
-      "development": "./src/DefaultTheme.ts",
-      "types": "./dist/DefaultTheme.d.ts",
-      "default": "./dist/DefaultTheme.js"
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./DefaultTheme": {
       "development": "./src/DefaultTheme.ts",

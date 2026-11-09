@@ -304,8 +304,7 @@ function buildInOrder() {
 
   for (const entry of packages) visit(entry);
 
-  let failed = 0;
-  for (const entry of ordered) {
+  const compile = (entry) => {
     copyStylesheets(entry.dir);
     const result = spawnSync(
       process.execPath,
@@ -316,11 +315,30 @@ function buildInOrder() {
         shell: false,
       },
     );
+    return result.status === 0 ? null : (result.stdout || "") + (result.stderr || "");
+  };
 
-    if (result.status !== 0) {
-      failed += 1;
-      console.log(`\nFAIL ${entry.name}\n${(result.stdout || "") + (result.stderr || "")}`);
+  const failures = new Map();
+  for (const entry of ordered) {
+    const error = compile(entry);
+    if (error) failures.set(entry.name, { entry, error });
+  }
+
+  // `form` and `message` are a declared type-level cycle, so the topological sort has to
+  // break the loop somewhere and one of the two may compile before the other has emitted
+  // `dist`. One retry costs nothing and is honest about the cycle, instead of pretending
+  // the order is acyclic.
+  if (failures.size) {
+    for (const [name, { entry }] of [...failures]) {
+      const error = compile(entry);
+      if (!error) failures.delete(name);
     }
+  }
+
+  let failed = 0;
+  for (const { entry, error } of failures.values()) {
+    failed += 1;
+    console.log(`\nFAIL ${entry.name}\n${error}`);
   }
 
   console.log(failed ? `\n${failed} package(s) failed` : `\nbuilt ${ordered.length} package(s)`);

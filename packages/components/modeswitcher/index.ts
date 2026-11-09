@@ -1,1 +1,4 @@
-export * from "./ModeSwitcher";
+/** Public surface of `@aio-ui/modeswitcher` — curated, never `export *`. */
+
+export { ModeSwitcherBuilder } from "./ModeSwitcher";
+export type { iModeSwitcherConfig } from "./ModeSwitcher";

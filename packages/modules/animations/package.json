@@ -14,9 +14,9 @@
   },
   "exports": {
     ".": {
-      "development": "./Animations.ts",
-      "types": "./dist/Animations.d.ts",
-      "default": "./dist/Animations.js"
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./Animations": {
       "development": "./Animations.ts",

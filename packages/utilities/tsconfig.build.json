@@ -8,15 +8,15 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": ".",
+    "rootDir": "./src",
     "paths": {
       "@aio-ui/utilities/*": [
-        "./*"
+        "./src/*"
       ]
     }
   },
   "include": [
-    "**/*.ts"
+    "src"
   ],
   "exclude": [
     "dist/**",

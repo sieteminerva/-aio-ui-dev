@@ -4,7 +4,8 @@
 > imports, so a component can move internally without breaking a host, a generated site,
 > or a preset.
 >
-> Status: **barrels and aggregators implemented** (0.1.0). Aliases stay until 0.2.0.
+> Status: **barrels curated + aggregators shipped + surface gate in `verify`** (0.1.0).
+> Aliases stay until 0.2.0.
 > Last updated 2026-11-11 — see §9 for what actually changed.
 
 ## 1. Taxonomy (the rule we adopt)
@@ -70,7 +71,7 @@ minor, then remove; _internal_ = drop from `exports`.
 | Package                                   | Root barrel exports                                                               | Subpaths kept                                                                                                                                                                                  | Removed                                                                                                                                                                                 |
 | ----------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `core`                                    | `ComponentRegistry`, `DOMRenderer`, `mergeBuildConfig`, builder port, event types | `./interface` (types), `./Stylesheets` (capability)                                                                                                                                            | `./node ./builder ./registry ./content ./page ./renderer ./api ./events` (alias→remove in 0.2.0), `./TemplateRegistry`, `./BuilderPort`, `./ComponentRegistry`, `./DOMRenderer` (alias) |
-| `base`                                    | `Builder`, `GLOBAL_INSTANCE_COUNTER`, `HydrationGate`, base types                 | `./Base` (alias)                                                                                                                                                                               | `./BaseAdapters/*` (internal)                                                                                                                                                           |
+| `base`                                    | `Builder`, `GLOBAL_INSTANCE_COUNTER`, `HydrationGate`, base types                 | `./Base` (alias)                                                                                                                                                                               | `./BaseAdapters/*` (internal) @aio-ui/frameworks                                                                                                                                        |
 | `app`                                     | as today                                                                          | `./types`, `./ports` (types contracts)                                                                                                                                                         | `./AioApp` (alias)                                                                                                                                                                      |
 | `module-loader`                           | **new** `ModuleLoader`, `ModuleRegistry`, definition types                        | `./ModuleRegistry`, `./ModuleLoader` (alias)                                                                                                                                                   | —                                                                                                                                                                                       |
 | `utilities`                               | **new** all helpers re-exported                                                   | all 7 helper subpaths                                                                                                                                                                          | —                                                                                                                                                                                       |
@@ -139,11 +140,11 @@ question ("can `base` + `core` be one door?") was answered yes.
 
 ### Aggregators — `packages/kits/*`
 
-| Package             | Contents                                                   |
-| ------------------- | ---------------------------------------------------------- |
-| `@aio-ui/frameworks`| `core` + `base` + `app` (public interfaces included)       |
-| `@aio-ui/modules`   | `module-loader` + router, http, events, theme, animations   |
-| `@aio-ui/themes`    | the three shipped themes                                   |
+| Package              | Contents                                                  |
+| -------------------- | --------------------------------------------------------- |
+| `@aio-ui/frameworks` | `core` + `base` + `app` (public interfaces included)      |
+| `@aio-ui/modules`    | `module-loader` + router, http, events, theme, animations |
+| `@aio-ui/themes`     | the three shipped themes                                  |
 
 A kit is a **re-export only** package: no logic, no CSS, one `index.ts`. Consequences,
 all enforced rather than agreed:
@@ -151,7 +152,7 @@ all enforced rather than agreed:
 - `scripts/bounds.mjs` gives `kits` its own category (may point anywhere) and rejects
   any non-kit package that imports a kit — so aggregators can never become a hidden
   dependency of the framework itself.
-- A kit is *not* a replacement for subpaths: `@aio-ui/modules` pulls every module, so
+- A kit is _not_ a replacement for subpaths: `@aio-ui/modules` pulls every module, so
   generated sites keep importing `@aio-ui/router` etc. one by one.
 - `packages/kits` is registered in `npm workspaces`, `build-pack` (`GROUPS`), `bounds`
   (`describe`/`categoryOf`/`allowed`), `version`, `release` and `.draft/preset/layout.mjs`.

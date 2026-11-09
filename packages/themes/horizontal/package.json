@@ -11,9 +11,9 @@
   },
   "exports": {
     ".": {
-      "development": "./src/HorizontalTheme.ts",
-      "types": "./dist/HorizontalTheme.d.ts",
-      "default": "./dist/HorizontalTheme.js"
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./HorizontalTheme": {
       "development": "./src/HorizontalTheme.ts",

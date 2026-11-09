@@ -25,6 +25,7 @@ npm run verify         # the full gate — run before claiming anything works
 | Build every package (`dist` + `.d.ts` + CSS) | `npm run build:pkgs`                               |
 | Typecheck the workspace                      | `npm run typecheck`                                |
 | Dependency-edge check                        | `npm run check:bounds`                             |
+| Public-surface check                         | `npm run check:api` (snapshot: `scripts/api.mjs --write`) |
 | Tests                                        | `npm test` (`vitest run`)                          |
 | Version report / check                       | `npm run version:report` · `npm run version:check` |
 | Bump all packages                            | `node scripts/version.mjs --apply --version 0.1.1` |
@@ -117,6 +118,8 @@ Ignored, local-only working areas:
   and ids. `scope` states intent, **ids decide**.
 - **Tokens at `:root`**, themes put `--app-*` on `body[data-theme]`.
 - **Boundaries are mechanical** — `npm run check:bounds` fails an undeclared import edge.
+- **Barrels are curated** — a package `index.ts` lists its exports; `export *` is only
+  allowed in an aggregator, and `npm run check:api` fails when the surface drifts.
 - **Fixed versioning** — one number for every package; peers are rewritten together.
 - **Reversible tooling** — scripts are dry-run by default; `--apply` writes only
   git-tracked files. Undo with `git restore packages package.json`.

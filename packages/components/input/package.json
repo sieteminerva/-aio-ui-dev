@@ -12,9 +12,9 @@
   ],
   "exports": {
     ".": {
-      "development": "./Input.ts",
-      "types": "./dist/Input.d.ts",
-      "default": "./dist/Input.js"
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./Input": {
       "development": "./Input.ts",

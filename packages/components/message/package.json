@@ -10,9 +10,9 @@
   ],
   "exports": {
     ".": {
-      "development": "./Message.ts",
-      "types": "./dist/Message.d.ts",
-      "default": "./dist/Message.js"
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./Message": {
       "development": "./Message.ts",

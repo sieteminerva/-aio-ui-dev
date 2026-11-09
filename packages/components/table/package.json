@@ -10,9 +10,9 @@
   ],
   "exports": {
     ".": {
-      "development": "./Table.ts",
-      "types": "./dist/Table.d.ts",
-      "default": "./dist/Table.js"
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./Table": {
       "development": "./Table.ts",

@@ -10,9 +10,9 @@
   ],
   "exports": {
     ".": {
-      "development": "./Form.ts",
-      "types": "./dist/Form.d.ts",
-      "default": "./dist/Form.js"
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./Form": {
       "development": "./Form.ts",

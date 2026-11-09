@@ -12,9 +12,9 @@
   },
   "exports": {
     ".": {
-      "development": "./HashRouter.ts",
-      "types": "./dist/HashRouter.d.ts",
-      "default": "./dist/HashRouter.js"
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./HashRouter": {
       "development": "./HashRouter.ts",
