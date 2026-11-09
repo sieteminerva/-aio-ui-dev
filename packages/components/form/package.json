@@ -6,20 +6,20 @@
   "exports": {
     ".": "./Form.ts",
     "./Form": "./Form.ts",
+    "./Form.css": "./Form.css",
+    "./FormLayout": "./FormLayout.ts",
     "./FormModuleTypes": "./FormModuleTypes.ts",
     "./FormRegistry": "./FormRegistry.ts",
-    "./FormLayout": "./FormLayout.ts",
-    "./Input.FormAdapter": "./Input.FormAdapter.ts",
-    "./Handlers/Multistep": "./Handlers/Multistep.ts",
-    "./Handlers/Validation": "./Handlers/Validation.ts",
-    "./Handlers/Calculation": "./Handlers/Calculation.ts",
-    "./cascade-adapter": "./adapters/Cascade.ts",
-    "./IdAddress/id-address-builder": "./IdAddress/id-address-builder.ts",
-    "./IdAddress/id-address-adapter": "./IdAddress/id-address-adapter.ts",
-    "./IdAddress/id-address-adapter.native": "./IdAddress/id-address-adapter.native.ts",
-    "./IdAddress/id-address-adapter.base": "./IdAddress/id-address-adapter.base.ts",
     "./IdAddress/IdAddress.FormAdapter": "./IdAddress/IdAddress.FormAdapter.ts",
-    "./Form.css": "./Form.css"
+    "./IdAddress/id-address-adapter": "./IdAddress/id-address-adapter.ts",
+    "./IdAddress/id-address-adapter.base": "./IdAddress/id-address-adapter.base.ts",
+    "./IdAddress/id-address-adapter.native": "./IdAddress/id-address-adapter.native.ts",
+    "./IdAddress/id-address-builder": "./IdAddress/id-address-builder.ts",
+    "./Input.FormAdapter": "./Input.FormAdapter.ts",
+    "./calculation-adapter": "./adapters/Calculation.ts",
+    "./cascade-adapter": "./adapters/Cascade.ts",
+    "./multistep-adapter": "./adapters/Multistep.ts",
+    "./validation-adapter": "./adapters/Validation.ts"
   },
   "dependencies": {
     "@aio-ui/base": "*",
@@ -27,7 +27,6 @@
     "@aio-ui/http-service": "*",
     "@aio-ui/message": "*",
     "@aio-ui/module-loader": "*",
-    "@aio-ui/table": "*",
     "@aio-ui/utilities": "*",
     "@aio-ui/input": "*"
   }

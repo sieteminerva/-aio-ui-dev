@@ -1,13 +1,11 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import type { iFormModuleContext } from "./FormModuleTypes";
-import { calculationFormAdapter } from "./Handlers/Calculation";
+import { calculationFormAdapter } from "./adapters/Calculation";
 import { cascadeFormAdapter } from "./adapters/Cascade";
-import { multistepFormAdapter } from "./Handlers/Multistep";
-import { validationFormAdapter } from "./Handlers/Validation";
+import { multistepFormAdapter } from "./adapters/Multistep";
+import { validationFormAdapter } from "./adapters/Validation";
 import { idAddressFormAdapter } from "./IdAddress/IdAddress.FormAdapter";
 import { inputFormAdapter } from "./Input.FormAdapter";
-import { messageFormAdapter } from "@aio-ui/message/Message.FormAdapter";
-import { tableFormAdapter } from "@aio-ui/table/Table.FormAdapter";
 
 /** Erased definition type for the preset arrays, where module results differ per id. */
 export type FormModuleDefinition = iModuleDefinition<iFormModuleContext, any>;
@@ -34,6 +32,4 @@ export const CORE_FORM_MODULES: FormModuleDefinition[] = [
   calculationFormAdapter,
   inputFormAdapter,
   idAddressFormAdapter,
-  tableFormAdapter,
-  messageFormAdapter,
 ];

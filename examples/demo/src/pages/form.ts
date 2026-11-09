@@ -1,5 +1,9 @@
 import type { iPageContent } from "@aio-ui/app";
 
+import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
+import { CORE_FORM_MODULES } from "@aio-ui/form/FormRegistry";
+import { tableFormAdapter } from "@aio-ui/table/Table.FormAdapter";
+import { messageFormAdapter } from "@aio-ui/message/Message.FormAdapter";
 import { demoNav, pageIntro } from "../nav";
 import { themeSwitcher } from "../theme-switcher";
 import type { iBasicInputNode } from "@aio-ui/input/Input";
@@ -382,8 +386,17 @@ const ADDRESS_URL = "https://script.google.com/macros/s/AKfycbwjQ_iNQClJuyf5z1Zl
 
 const addressSource = { url: ADDRESS_URL };
 
+/**
+ * The host composes the module set: the form ships its own engines, while `table` and
+ * `message` contribute their adapters — the form never imports them.
+ */
+function formModules() {
+  return new ModuleLoader("form", [...CORE_FORM_MODULES, tableFormAdapter, messageFormAdapter]);
+}
+
 const formConfig = {
   id: "demo-order-form",
+  modules: formModules(),
   address: addressSource,
   // Cascade needs the engine on; `hidden` keeps conditional fields alive so a chained
   // picker (address, dependent select) can inject into them before they are shown.
@@ -439,7 +452,7 @@ export function formContent(): iPageContent {
             ".form-host.multistep": {
               builder: ["form"],
               onCreated: (el: HTMLElement, _render: any, build: any) => {
-                const form = build("form", { schema: multiStepSchema, config: { id: "demo-multistep", multistep: true } });
+                const form = build("form", { schema: multiStepSchema, config: { id: "demo-multistep", multistep: true, modules: formModules() } });
                 el.mount(form);
 
                 const log = document.createElement("pre");

@@ -1,7 +1,7 @@
 import type { iBuilderConfig } from "@aio-ui/core/interface";
 import type { iMessageContent } from "@aio-ui/message/Message";
 import type { iFormConfig } from "./Form";
-import type { FormMultistepHost } from "./Handlers/Multistep";
+import type { FormMultistepHost } from "./adapters/Multistep";
 
 /**
  * Cascade contracts.
