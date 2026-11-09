@@ -15,6 +15,20 @@ import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { applyRowColumns, applyRowSpan, childSpanOf, columnsOf } from "./FormLayout";
 import { collectFormValues } from "@aio-ui/input/FormValues";
 import type { HttpService } from "@aio-ui/http-service";
+import type { iFormMessages } from "./FormMessages";
+
+// Sentences live in one module; re-exported here so a host that already imports
+// the form entry can reach them without a second specifier.
+export { composeMessage, resolveStyle, DEFAULT_FORM_MESSAGES, messageDraft } from "./FormMessages";
+export type {
+  iFormMessage,
+  iFormMessageCategory,
+  iFormMessageCompose,
+  iFormMessageField,
+  iFormMessageParams,
+  iFormMessages,
+  iFormMessageStyle,
+} from "./FormMessages";
 // 🎨 Gaya baseline field milik form: adaptor input juga mengimpornya untuk
 // pemakaian mandiri, tetapi form tetap memuatnya agar tampilan tidak bergantung
 // pada modul input mana yang dipasang (mis. renderer kustom).
@@ -66,6 +80,23 @@ export interface iFormConfig extends iBuilderConfig<FormElementType> {
   calculation?: boolean;
   footer?: HTMLElement | string | null;
   onSubmit?: null | Function;
+  /**
+   * Every sentence the form says back to the user.
+   *
+   * Validation, cascade gates, multistep notices, calculation failures and the
+   * submit toast all resolve through this config; anything left out keeps the
+   * built-in default. Values are template strings (`"{label} maksimal {max}."`)
+   * so they can come from a spreadsheet, or functions when a template is not
+   * enough:
+   *
+   * ```ts
+   * messages: {
+   *   validation: { field: ({ field, fallback }) => `${field?.label}: ${fallback}` },
+   *   submit: { success: "Terima kasih!", error: "Periksa kembali isian Anda." },
+   * }
+   * ```
+   */
+  messages?: iFormMessages;
   /**
    * What a submit does with the files selected in the form.
    *
@@ -287,6 +318,9 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
       excludeEmpty: false,
       address: null,
       modules: null,
+      // Empty object = "no overrides"; every lookup then falls through to
+      // DEFAULT_FORM_MESSAGES, so behaviour matches the old hard-coded strings.
+      messages: {},
     };
     this.config = this.resolveConfig(defaultConfig, config);
 

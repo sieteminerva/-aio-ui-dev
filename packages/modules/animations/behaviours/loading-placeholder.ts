@@ -17,6 +17,8 @@
  * 4. Menyalakan `onDone` → AnimationsService menembakkan event
  *    `animation:done` (chained animation kembali mengalir normal).
  */
+import type { AnimationBehaviour } from './types';
+
 export interface LoadingPlaceholderOptions {
   /** Jeda tunggu (ms) sebelum pelepasan dimulai — default mengikuti globalDelay. */
   duration: number;
@@ -32,11 +34,12 @@ export interface LoadingPlaceholderOptions {
   restoreFallbackOpacity?: string;
 }
 
-export class LoadingPlaceholderBehaviour {
+class LoadingPlaceholderBehaviour {
   public static async animate(
     node: HTMLElement,
     options: LoadingPlaceholderOptions,
-    onDone: () => void
+    onDone: () => void,
+    isStopped: () => boolean = () => false
   ): Promise<void> {
     // ⏳ Resolusi urutan prioritas delay:
     // data-delay milik node > konfigurasi modul > fallback 500ms.
@@ -49,6 +52,10 @@ export class LoadingPlaceholderBehaviour {
     const settledDelay = Number.isFinite(duration) ? Math.max(0, duration) : 0;
 
     window.setTimeout(() => {
+      // Diabort = run sudah tidak relevan; jangan menembak onDone agar rantai
+      // tidak maju di atas elemen yang sedang di-reset/dilepas.
+      if (isStopped()) return;
+
       // Elemen boleh saja sudah dicabut layar saat menunggu — hindari operasi mayat.
       if (!node.isConnected) {
         onDone();
@@ -108,3 +115,11 @@ export class LoadingPlaceholderBehaviour {
     }, settledDelay);
   }
 }
+
+/** `animation="loading-placeholder"` — anti-FOUC release of a frozen placeholder. */
+export const loadingPlaceholderBehaviour: AnimationBehaviour<LoadingPlaceholderOptions> = {
+  type: 'loading-placeholder',
+  optionKey: 'loadingPlaceholder',
+  animate: ({ node, options, stopped, done }) =>
+    LoadingPlaceholderBehaviour.animate(node, options, () => done(), stopped),
+};

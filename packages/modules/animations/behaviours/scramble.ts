@@ -1,3 +1,5 @@
+import type { AnimationBehaviour } from './types';
+
 export interface ScrambleOptions {
   /** Pool karakter acak yang dipakai untuk mengacak teks (gaya Matrix/Cyberpunk) */
   chars: string;
@@ -13,7 +15,7 @@ export interface ScrambleOptions {
  * dengan pengecekan node.isConnected di tiap loop utama dan sub-loop,
  * lalu memicu event 'animation:done' tepat setelah efek selesai total.
  */
-export class ScrambleBehaviour {
+class ScrambleBehaviour {
   /** Utilitas jeda non-blocking */
   private static sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -25,7 +27,12 @@ export class ScrambleBehaviour {
   }
 
   /** Core Engine Text-Scramble */
-  public static async animate(node: HTMLElement, options: ScrambleOptions, onDone: () => void): Promise<void> {
+  public static async animate(
+    node: HTMLElement,
+    options: ScrambleOptions,
+    onDone: () => void,
+    isStopped: () => boolean = () => false
+  ): Promise<void> {
     const targetText = (node.textContent || '').trim();
     node.textContent = '';
     node.style.opacity = '1';
@@ -42,11 +49,11 @@ export class ScrambleBehaviour {
     const maxCycles = 12; // Berapa kali karakter diacak sebelum memadat jadi huruf asli
 
     for (let i = 0; i < targetChars.length; i++) {
-      if (!node.isConnected) return;
+      if (!node.isConnected || isStopped()) return;
 
       // Animasi mengacak karakter fungsional
       for (let cycle = 0; cycle < maxCycles; cycle++) {
-        if (!node.isConnected) return;
+        if (!node.isConnected || isStopped()) return;
 
         // Taruh karakter acak dari pool pada indeks saat ini
         currentTextArray[i] = pool[this.rng(0, pool.length)];
@@ -70,3 +77,11 @@ export class ScrambleBehaviour {
     onDone();
   }
 }
+
+/** `animation="text-scramble"` — Matrix/Cyberpunk decode entrance. */
+export const scrambleBehaviour: AnimationBehaviour<ScrambleOptions> = {
+  type: 'text-scramble',
+  optionKey: 'scramble',
+  animate: ({ node, options, stopped, done }) =>
+    ScrambleBehaviour.animate(node, options, () => done(), stopped),
+};

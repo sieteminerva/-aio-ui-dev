@@ -1,8 +1,10 @@
 {
   "name": "@aio-ui/styles",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "exports": {
     ".": "./src/index.css",
     "./index.css": "./src/index.css",

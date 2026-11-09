@@ -1,10 +1,14 @@
 import "./Animations.css";
-import { TypewriterBehaviour, type TypewriterOptions } from "./behaviours/typewriter";
-import { StaggerFadeBehaviour, type StaggerFadeOptions } from "./behaviours/stagger-fade";
-import { FadeInBehaviour, type FadeInOptions } from "./behaviours/fade-in";
-import { ScrambleBehaviour, type ScrambleOptions } from "./behaviours/scramble";
-import { CountUpBehaviour } from "./behaviours/count-up";
-import { LoadingPlaceholderBehaviour, type LoadingPlaceholderOptions } from "./behaviours/loading-placeholder";
+import type { TypewriterOptions } from "./behaviours/typewriter";
+import type { StaggerFadeOptions } from "./behaviours/stagger-fade";
+import type { FadeInOptions } from "./behaviours/fade-in";
+import type { ScrambleOptions } from "./behaviours/scramble";
+import type { LoadingPlaceholderOptions } from "./behaviours/loading-placeholder";
+import type { AnimationBehaviour } from "./behaviours/types";
+import { ANIMATION_BEHAVIOURS, indexBehaviours } from "./behaviours/registry";
+
+export type { AnimationBehaviour, AnimationContext } from "./behaviours/types";
+export { ANIMATION_BEHAVIOURS, ANIMATION_TYPES } from "./behaviours/registry";
 
 export interface AnimationServiceConfig {
   typewriter?: TypewriterOptions;
@@ -13,6 +17,11 @@ export interface AnimationServiceConfig {
   fade?: Partial<FadeInOptions>;
   loadingPlaceholder?: Partial<LoadingPlaceholderOptions>;
   delay?: number; // Properti global di level atas
+  /**
+   * Extra behaviours registered at construction time. They extend (or override)
+   * the built-in set; use `AnimationsService.use()` to add one after construction.
+   */
+  behaviours?: readonly AnimationBehaviour<any>[];
 }
 
 
@@ -34,7 +43,11 @@ export interface AnimationRecord {
     html?: string;
     text?: string;
   };
-  controller: { shouldStop: boolean };
+  /**
+   * Cancels the current run. Aborted on stop, unmount and destroy, so behaviours
+   * can release timers, listeners and animation frames through one channel.
+   */
+  controller: AbortController;
 }
 
 /**
@@ -60,16 +73,16 @@ export class AnimationsService {
   private mutationObserver: MutationObserver | null = null;
   private viewObserver: IntersectionObserver | null = null;
 
-  static #known = new Set([
-    'typewriter',
-    'stagger-fade',
-    'fade-in',
-    'text-scramble',
-    'count-up',
-    'loading-placeholder'
-  ]);
+  /** `animation` attribute value → behaviour definition. */
+  readonly #behaviours: Map<string, AnimationBehaviour<any>>;
+
+  /** Added nodes waiting for the batched scan (one rAF per mutation batch). */
+  #pendingScan: Set<HTMLElement> = new Set();
+  #scanFrame: number | null = null;
 
   constructor(config: AnimationServiceConfig = {}) {
+    this.#behaviours = indexBehaviours([...ANIMATION_BEHAVIOURS, ...(config.behaviours ?? [])]);
+
     this.globalDelay = config.delay ?? 500;
     this.config = {
       typewriter: {
@@ -111,6 +124,27 @@ export class AnimationsService {
   }
 
   /**
+   * Registers a behaviour at runtime, keyed by its `type`.
+   *
+   * Overrides an existing type deliberately: the engine keeps one definition per
+   * attribute value, so a host can restyle `fade-in` without touching the DOM.
+   *
+   * @returns This service, for chaining.
+   */
+  public use(behaviour: AnimationBehaviour<any>): this {
+    if (!behaviour?.type) {
+      throw new Error('[AnimationsService] A behaviour definition is missing its `type`.');
+    }
+    this.#behaviours.set(behaviour.type, behaviour);
+    return this;
+  }
+
+  /** The `animation` attribute values this service can currently run. */
+  public get types(): string[] {
+    return [...this.#behaviours.keys()];
+  }
+
+  /**
    * Scans a subtree for elements with `[animation]` in document order and mounts them.
    */
   public scan(root: ParentNode = document.body): HTMLElement[] {
@@ -148,7 +182,7 @@ export class AnimationsService {
     if (this.records.has(node)) return;
 
     const type = node.getAttribute('animation') || '';
-    if (!AnimationsService.#known.has(type)) {
+    if (!this.#behaviours.has(type)) {
       console.warn(`[AnimationsService] Unknown animation type: "${type}"`);
       return;
     }
@@ -173,7 +207,7 @@ export class AnimationsService {
       scope,
       state: chained ? 'waiting' : 'idle',
       snapshot,
-      controller: { shouldStop: false },
+      controller: new AbortController(),
     };
 
     if (chained) {
@@ -208,15 +242,22 @@ export class AnimationsService {
     if (!rec) return;
 
     this.stop(node);
-    this.unobserve(node);
 
     if (rec.chained) {
       const chainList = this.scopes.get(rec.scope);
       if (chainList) {
         const idx = chainList.indexOf(node);
         if (idx !== -1) chainList.splice(idx, 1);
-        if (chainList.length === 0) this.scopes.delete(rec.scope);
+        if (chainList.length === 0) {
+          this.scopes.delete(rec.scope);
+          // Observers hold strong references to their targets: a scope that is
+          // left observed after its last chained node is gone pins the whole
+          // detached page in memory and keeps firing callbacks on it.
+          this.viewObserver?.unobserve(rec.scope);
+        }
       }
+    } else {
+      this.viewObserver?.unobserve(node);
     }
 
     this.records.delete(node);
@@ -242,11 +283,13 @@ export class AnimationsService {
   }
 
   /**
-   * Unobserves a node from viewport tracking.
+   * Unobserves the element a record actually observes — for chained nodes that is
+   * the scope container, not the node itself.
    */
   public unobserve(node: HTMLElement): void {
     if (!this.viewObserver) return;
-    this.viewObserver.unobserve(node);
+    const rec = this.records.get(node);
+    this.viewObserver.unobserve(rec?.chained ? rec.scope : node);
   }
 
   /**
@@ -259,88 +302,61 @@ export class AnimationsService {
     // animated-once: elemen yang sudah pernah diputar TIDAK pernah diputar ulang.
     if (rec.once && rec.played) return;
 
+    const behaviour = this.#behaviours.get(rec.type);
+    if (!behaviour) return;
+
+    // Setiap run memiliki controller sendiri: run lama di-abort lebih dulu supaya
+    // perilakunya benar-benar berhenti (timer, listener, rAF) sebelum run baru mulai.
     if (rec.state === 'running') {
       this.stop(node);
     }
 
     rec.state = 'running';
     rec.played = true;
-    rec.controller = { shouldStop: false };
+    rec.controller = new AbortController();
+
+    const signal = rec.controller.signal;
 
     // Release pre-hide suppression styles so element becomes visible
     this._release(node, rec.snapshot);
 
-    const isStopped = (): boolean => rec.controller.shouldStop || !node.isConnected;
+    const isStopped = (): boolean => signal.aborted || !node.isConnected;
 
-    const done = (): void => {
-      if (rec.state !== 'running') return;
+    // done() must be idempotent: behaviours may report completion per segment.
+    let reported = false;
+    const done = (target?: HTMLElement): void => {
+      if (reported || rec.state !== 'running') return;
+      reported = true;
       rec.state = 'done';
-      this._dispatch(node, 'animation:done');
+      this._dispatch(target ?? node, 'animation:done');
 
       if (rec.chained) {
         this.next(rec.scope);
       }
     };
 
-    switch (rec.type) {
-      case 'typewriter':
-        TypewriterBehaviour.animate(
-          node,
-          { ...(this.config.typewriter as TypewriterOptions), delay: this._delay(node) },
-          done,
-          isStopped
-        );
-        break;
+    const context = {
+      node,
+      options: this._optionsOf(behaviour),
+      delay: this._delay(node),
+      signal,
+      stopped: isStopped,
+      done,
+    };
 
-      case 'stagger-fade':
-        StaggerFadeBehaviour.animate(
-          node,
-          {
-            delay: this.config.staggerFade?.delay!,
-            duration: this.config.staggerFade?.duration!,
-          },
-          (el) => {
-            this._dispatch(el, 'animation:done');
-            done();
+    try {
+      const result = behaviour.animate(context);
+      // Async behaviours must never surface as unhandled rejections.
+      if (result && typeof (result as Promise<unknown>).catch === 'function') {
+        (result as Promise<unknown>).catch((error: unknown) => {
+          if (!isStopped()) {
+            console.error(`[AnimationsService] Behaviour "${rec.type}" failed:`, error);
           }
-        );
-        break;
-
-      case 'fade-in':
-        FadeInBehaviour.animate(
-          node,
-          { duration: this.config.fade?.duration! },
-          done
-        );
-        break;
-
-      case 'text-scramble':
-        ScrambleBehaviour.animate(
-          node,
-          {
-            chars: this.config.scramble?.chars!,
-            speed: this.config.scramble?.speed!,
-          },
-          done
-        );
-        break;
-
-      case 'count-up':
-        CountUpBehaviour.animate(node);
-        done();
-        break;
-
-      case 'loading-placeholder':
-        LoadingPlaceholderBehaviour.animate(
-          node,
-          {
-            duration: this.config.loadingPlaceholder?.duration!,
-            instantRevealDelayTime: this.config.loadingPlaceholder?.instantRevealDelayTime,
-            restoreFallbackOpacity: this.config.loadingPlaceholder?.restoreFallbackOpacity,
-          },
-          done
-        );
-        break;
+        });
+      }
+    } catch (error) {
+      console.error(`[AnimationsService] Behaviour "${rec.type}" failed:`, error);
+      rec.state = 'idle';
     }
   }
 
@@ -371,7 +387,7 @@ export class AnimationsService {
     const rec = this.records.get(node);
     if (!rec) return;
 
-    rec.controller.shouldStop = true;
+    rec.controller.abort();
     if (rec.state === 'running') {
       rec.state = 'idle';
     }
@@ -439,9 +455,15 @@ export class AnimationsService {
     }
 
     this.records.forEach((rec, node) => {
-      rec.controller.shouldStop = true;
+      rec.controller.abort();
       this.stop(node);
     });
+
+    if (this.#scanFrame !== null) {
+      cancelAnimationFrame(this.#scanFrame);
+      this.#scanFrame = null;
+    }
+    this.#pendingScan.clear();
 
     this.records.clear();
     this.scopes.clear();
@@ -457,6 +479,10 @@ export class AnimationsService {
     this.viewObserver = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         const target = entry.target as HTMLElement;
+
+        // A detached scope never becomes visible again; reacting to it would
+        // keep animating a page the user already left.
+        if (!target.isConnected) return;
 
         if (entry.isIntersecting) {
           // A. Target is a registered scope holding chained elements
@@ -561,9 +587,20 @@ export class AnimationsService {
   }
 
   private _delay(node: HTMLElement): number {
-    return node.hasAttribute('data-delay')
-      ? parseInt(node.getAttribute('data-delay') || '', 10)
-      : this.globalDelay;
+    if (!node.hasAttribute('data-delay')) return this.globalDelay;
+    // parseInt('') is NaN: fall back instead of passing NaN into a behaviour.
+    const parsed = parseInt(node.getAttribute('data-delay') || '', 10);
+    return Number.isFinite(parsed) ? parsed : this.globalDelay;
+  }
+
+  /**
+   * Resolves a behaviour's options: definition defaults first, then the config
+   * block for this behaviour (keyed by `optionKey`, else by `type`).
+   */
+  private _optionsOf<O>(behaviour: AnimationBehaviour<O>): O {
+    const key = behaviour.optionKey ?? behaviour.type;
+    const provided = (this.config as Record<string, unknown>)[key] as Partial<O> | undefined;
+    return { ...(behaviour.defaults ?? {}), ...(provided ?? {}) } as O;
   }
 
   private _dispatch(node: HTMLElement, eventName: string, detail?: any): void {
@@ -590,16 +627,36 @@ export class AnimationsService {
 
         mutation.addedNodes.forEach((node) => {
           if (!(node instanceof HTMLElement)) return;
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              if (!node.isConnected) return;
-              this.scan(node);
-            });
-          });
+          this._queueScan(node);
         });
       });
     });
 
     this.mutationObserver.observe(document.body, { childList: true, subtree: true });
+  }
+
+  /**
+   * Batches added nodes into one scan.
+   *
+   * The previous implementation scheduled two animation frames *per node*, so a
+   * single page swap queued hundreds of callbacks. Collecting the roots first
+   * keeps the cost proportional to the number of mutations, not nodes.
+   */
+  private _queueScan(root: HTMLElement): void {
+    this.#pendingScan.add(root);
+    if (this.#scanFrame !== null) return;
+
+    this.#scanFrame = requestAnimationFrame(() => {
+      this.#scanFrame = requestAnimationFrame(() => {
+        this.#scanFrame = null;
+
+        const roots = [...this.#pendingScan];
+        this.#pendingScan.clear();
+
+        roots.forEach((node) => {
+          if (node.isConnected) this.scan(node);
+        });
+      });
+    });
   }
 }

@@ -1,3 +1,5 @@
+import type { AnimationBehaviour } from './types';
+
 export interface TypewriterOptions {
   /** Loop terus-menerus / batas jumlah putaran. Dioverride oleh atribut data-tw-loop. */
   loop: boolean | number;
@@ -21,7 +23,7 @@ interface RewriteBlock {
   sentences: string[];
 }
 
-export class TypewriterBehaviour {
+class TypewriterBehaviour {
   /**
    * Pemecah karakter menggunakan Intl.Segmenter (grapheme murni)
    */
@@ -376,3 +378,12 @@ export class TypewriterBehaviour {
     }
   }
 }
+
+/** `animation="typewriter"` — typing engine with rewrite and loop scenarios. */
+export const typewriterBehaviour: AnimationBehaviour<TypewriterOptions> = {
+  type: 'typewriter',
+  // `delay` is resolved per node by the engine (`data-delay` > global default),
+  // so it always wins over whatever the config block carries.
+  animate: ({ node, options, delay, stopped, done }) =>
+    TypewriterBehaviour.animate(node, { ...options, delay }, () => done(), stopped),
+};

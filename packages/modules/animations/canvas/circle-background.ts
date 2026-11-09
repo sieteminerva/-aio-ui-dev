@@ -1,6 +1,15 @@
 import { generateRandomColor, hexToRgba } from "@aio-ui/utilities/color.utils";
 
-export function BackgroundCircleAnimation(canvas: HTMLCanvasElement) {
+/** Handle returned by `BackgroundCircleAnimation`, so a host can stop the loop. */
+export interface CircleAnimationHandle {
+  /**
+   * Stops the animation frame loop and detaches every listener.
+   * Idempotent: calling it twice is safe.
+   */
+  destroy(): void;
+}
+
+export function BackgroundCircleAnimation(canvas: HTMLCanvasElement): CircleAnimationHandle {
   /*--------------------
   Config
   --------------------*/
@@ -10,6 +19,14 @@ export function BackgroundCircleAnimation(canvas: HTMLCanvasElement) {
   let Circles: Circle[] = [];
   const maxCircles = 7;
   let isDragged = false;
+
+  // Teardown state. The loop used to re-schedule itself forever and the window
+  // listeners were anonymous, so nothing could ever stop them: every mount of
+  // this canvas leaked one rAF loop plus four listeners for the page lifetime.
+  let running = true;
+  let frameId: number | null = null;
+  const controller = new AbortController();
+  const { signal } = controller;
 
   /*--------------------
     Coloring
@@ -100,8 +117,9 @@ export function BackgroundCircleAnimation(canvas: HTMLCanvasElement) {
   Animate
   --------------------*/
   function animate() {
+    if (!running) return;
     ctx.clearRect(0, 0, winW, winH);
-    window.requestAnimationFrame(animate);
+    frameId = window.requestAnimationFrame(animate);
     Circles.forEach(circle => {
       circle.update();
       circle.draw();
@@ -110,10 +128,10 @@ export function BackgroundCircleAnimation(canvas: HTMLCanvasElement) {
 
   /*--------------------
     Event Listener
-    --------------------*/
+  --------------------*/
   window.addEventListener('touchstart', () => {
     isDragged = true;
-  });
+  }, { signal });
 
   window.addEventListener('touchmove', (e) => {
     if (isDragged) {
@@ -129,7 +147,7 @@ export function BackgroundCircleAnimation(canvas: HTMLCanvasElement) {
       });
       rotateColor(++angle);
     }
-  });
+  }, { signal });
 
   window.addEventListener('touchend', (e) => {
     if (isDragged) {
@@ -154,16 +172,33 @@ export function BackgroundCircleAnimation(canvas: HTMLCanvasElement) {
       });
       isDragged = false;
     }
-  });
+  }, { signal });
 
   window.addEventListener('resize', () => {
     init();
-  });
+  }, { signal });
 
   /*--------------------
     Execute
-    --------------------*/
+  --------------------*/
   init();
   animate();
 
-}
+  /*--------------------
+    Teardown
+  --------------------*/
+  function destroy(): void {
+    if (!running) return;
+    running = false;
+
+    if (frameId !== null) {
+      window.cancelAnimationFrame(frameId);
+      frameId = null;
+    }
+
+    controller.abort(); // Removes touchstart/touchmove/touchend/resize in one call.
+    Circles = [];
+  }
+
+  return { destroy }
+};

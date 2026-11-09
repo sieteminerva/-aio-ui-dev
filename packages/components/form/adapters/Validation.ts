@@ -16,6 +16,8 @@ import type { iMessageContent } from "@aio-ui/message/Message";
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
 import type { CascadeBlockedInfo, iFormCondition, iFormModuleContext } from "../FormModuleTypes";
+import type { iFormMessageCompose, iFormMessageParams, iFormMessages } from "../FormMessages";
+import { composeMessage, messageDraft, resolveStyle } from "../FormMessages";
 
 export interface iInvalidField {
   name?: string;
@@ -23,6 +25,63 @@ export interface iInvalidField {
   type?: string;
   label?: string;
   message?: string;
+  /** Machine-readable reason derived from `ValidityState`, e.g. `VALUE_MISSING`. */
+  code?: string;
+  /** Constraint metadata for the composer (min, max, maxLength, pattern, …). */
+  params?: iFormMessageParams;
+}
+
+/**
+ * Reason codes, in priority order.
+ *
+ * The browser already computes every one of these flags through
+ * `checkValidity()`, so the form never re-implements constraint logic: it only
+ * gives each flag a stable, translatable name for the message composer.
+ * Order matters when several flags are true at once.
+ */
+const VALIDITY_CODES: ReadonlyArray<readonly [keyof ValidityState, string]> = [
+  ["valueMissing", "VALUE_MISSING"],
+  ["typeMismatch", "TYPE_MISMATCH"],
+  ["patternMismatch", "PATTERN_MISMATCH"],
+  ["tooLong", "TOO_LONG"],
+  ["tooShort", "TOO_SHORT"],
+  ["rangeOverflow", "RANGE_OVERFLOW"],
+  ["rangeUnderflow", "RANGE_UNDERFLOW"],
+  ["stepMismatch", "STEP_MISMATCH"],
+  ["badInput", "BAD_INPUT"],
+  ["customError", "CUSTOM_ERROR"],
+];
+
+/** Maps a control's `ValidityState` to one stable code. */
+export function validityCode(el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): string {
+  for (const [flag, code] of VALIDITY_CODES) {
+    if (el.validity[flag]) return code;
+  }
+  return "INVALID";
+}
+
+/**
+ * Reads constraint metadata off the element.
+ *
+ * Only attributes are read — never `el.value` — so a message can explain the
+ * limit without echoing what the user typed.
+ */
+export function validityParams(
+  el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement,
+): iFormMessageParams {
+  const num = (name: string): number | undefined => {
+    const parsed = parseFloat(el.getAttribute(name) ?? "");
+    return Number.isFinite(parsed) ? parsed : undefined;
+  };
+
+  return {
+    min: num("min"),
+    max: num("max"),
+    minLength: num("minlength"),
+    maxLength: num("maxlength"),
+    step: num("step"),
+    pattern: el.getAttribute("pattern") ?? undefined,
+  };
 }
 
 export type FormValidationReason = "native" | "cascade";
@@ -39,12 +98,19 @@ export interface iFormValidationDetail {
   condition?: iFormCondition | null;
   path?: string;
   data?: any;
+  /**
+   * The draft this message was composed from, so listeners (and the toast
+   * presenter) can re-render or restyle it without rebuilding the context.
+   */
+  compose?: iFormMessageCompose;
 }
 
 export interface FormValidationOptions {
   builder?: string;
   emit?: (event: string, payload: any) => void;
   showMessage?: (content: iMessageContent) => void;
+  /** User-configurable sentences; missing entries fall back to the defaults. */
+  messages?: iFormMessages;
 }
 
 export class FormValidationHandler {
@@ -104,6 +170,9 @@ export class FormValidationHandler {
           type: el.type || el.tagName.toLowerCase(),
           label: this.resolveLabel(scope, el),
           message: el.validationMessage || "Isian ini belum diisi / tidak valid.",
+          // The browser already knows *why*; we only name it.
+          code: validityCode(el),
+          params: validityParams(el),
         });
       });
     return fields;
@@ -113,31 +182,61 @@ export class FormValidationHandler {
   buildNativeDetail(form: HTMLFormElement, step?: number): iFormValidationDetail {
     const fields = FormValidationHandler.collectInvalidFields(form, step);
     const first = fields[0];
-    const message = first
-      ? `${first.label ? `"${first.label}" — ` : ""}${first.message || "Isian belum valid."}`
-      : "Pastikan seluruh isian wajib telah diisi dengan benar.";
+
+    // The composed draft is the single input to both the sentence and the toast
+    // style, so "why it failed" is decided exactly once.
+    const compose = first
+      ? messageDraft({
+        category: "validation",
+        slot: "field",
+        code: first.code ?? "INVALID",
+        formId: form.id,
+        fallback: first.message || "Isian belum valid.",
+        field: { id: first.id, name: first.name, label: first.label, type: first.type },
+        params: first.params ?? {},
+      })
+      : messageDraft({
+        category: "validation",
+        slot: "form",
+        code: "FORM_INVALID",
+        formId: form.id,
+        fallback: "Pastikan seluruh isian wajib telah diisi dengan benar.",
+        params: { count: fields.length },
+      });
+
     return {
       formId: form.id,
       builder: this.options.builder,
       reason: "native",
       valid: fields.length === 0,
       step,
-      message,
+      message: composeMessage(this.options.messages, compose),
       fields,
+      compose,
     };
   }
 
   /** Bangun detail untuk gerbang KASKADE (tombol next terkunci kondisi). */
   buildCascadeDetail(info: CascadeBlockedInfo): iFormValidationDetail {
+    const compose = messageDraft({
+      category: "cascade",
+      slot: "gate",
+      code: "GATE_BLOCKED",
+      formId: info.form.id,
+      fallback: info.guidance || "Lengkapi isian sebelumnya untuk membuka langkah berikutnya.",
+      params: { stepIndex: info.step },
+    });
+
     return {
       formId: info.form.id,
       builder: this.options.builder,
       reason: "cascade",
       valid: false,
       step: info.step,
-      message: info.guidance || "Lengkapi isian sebelumnya untuk membuka langkah berikutnya.",
+      message: composeMessage(this.options.messages, compose),
       condition: info.condition,
       path: info.path,
+      compose,
     };
   }
 
@@ -164,11 +263,22 @@ export class FormValidationHandler {
     // c) Tampilkan info langsung memakai createMessage host.
     if (typeof this.options.showMessage === "function") {
       try {
+        // Style is resolved from the same draft as the sentence: a configured
+        // `titles`/`types`/`icons` entry changes the toast, not just the text.
+        const compose = detail.compose ?? messageDraft({
+          category: detail.reason === "cascade" ? "cascade" : "validation",
+          slot: detail.reason === "cascade" ? "gate" : (detail.fields?.length ? "field" : "form"),
+          code: detail.reason === "cascade" ? "GATE_BLOCKED" : "INVALID",
+          formId: detail.formId,
+          fallback: detail.message,
+        });
+        const style = resolveStyle(this.options.messages, compose);
+
         this.options.showMessage({
-          header: detail.reason === "cascade" ? "Selangkah Lagi" : "Periksa Kembali",
+          header: style.title || undefined,
           message: detail.message,
-          type: detail.reason === "cascade" ? "warning" : "error",
-          icon: detail.reason === "cascade" ? "notification icon" : "icon error",
+          type: style.type || undefined,
+          icon: style.icon || undefined,
         });
       } catch (error) {
         console.warn("[Form Validation] showMessage failed:", error);
@@ -214,6 +324,8 @@ export const validationFormAdapter: iModuleDefinition<iFormModuleContext, FormVa
       // `undefined` is what the handler checks for, so a missing emitter stays inert.
       emit: context.emit ?? undefined,
       showMessage: context.showMessage,
+      // Sentences come from the form config; the handler owns the fallbacks.
+      messages: context.config?.messages,
     }),
 
   /**

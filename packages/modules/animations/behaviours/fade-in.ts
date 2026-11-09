@@ -1,3 +1,5 @@
+import type { AnimationBehaviour } from './types';
+
 export interface FadeInOptions {
   /** Durasi transisi CSS (mis. '0.5s' atau '500ms'), di-set sebagai variabel --fade-duration */
   duration: string;
@@ -14,7 +16,7 @@ export interface FadeInOptions {
  *   translateY(10px) -> 0 (500ms, ease-out) via WAAPI fill:forwards,
  * - event 'animation:done' dipicu lewat Promise .finished bawaan WAAPI.
  */
-export class FadeInBehaviour {
+class FadeInBehaviour {
   public static async animate(node: HTMLElement, options: FadeInOptions, onDone: () => void): Promise<void> {
     // Contoh animasi lain: Menyiapkan delay dinamis jika diatur via HTML
     const delay = node.getAttribute('data-fade-delay') || '0s';
@@ -52,3 +54,11 @@ export class FadeInBehaviour {
       });
   }
 }
+
+/** `animation="fade-in"` — WAAPI opacity/translate entrance. */
+export const fadeInBehaviour: AnimationBehaviour<FadeInOptions> = {
+  type: 'fade-in',
+  // The config block predates the hyphenated attribute value.
+  optionKey: 'fade',
+  animate: ({ node, options, done }) => FadeInBehaviour.animate(node, options, () => done()),
+};

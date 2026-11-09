@@ -9,7 +9,9 @@
  * implementasinya), sehingga modul ini juga sengaja belum menyediakan onDone.
  * Modul ini tidak punya konfigurasi, sehingga tidak perlu interface Options.
  */
-export class CountUpBehaviour {
+import type { AnimationBehaviour } from './types';
+
+class CountUpBehaviour {
   public static animate(node: HTMLElement): void {
     // Contoh animasi angka dinamis (misal statistik: 0 ke 100)
     const targetNumber = parseInt(node.textContent || '', 10) || 0;
@@ -17,3 +19,13 @@ export class CountUpBehaviour {
     // Logika JS count-up Anda di sini...
   }
 }
+
+/** `animation="count-up"` — reads the target number and hands it to the counter. */
+export const countUpBehaviour: AnimationBehaviour = {
+  type: 'count-up',
+  animate: ({ node, done }) => {
+    CountUpBehaviour.animate(node);
+    // Synchronous behaviour: completes as soon as the target is recorded.
+    done();
+  },
+};

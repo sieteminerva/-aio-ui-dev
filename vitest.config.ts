@@ -8,7 +8,9 @@ import { defineConfig } from "vitest/config";
  */
 export default defineConfig({
   test: {
-    include: ["packages/**/*.test.ts"],
+    // `.draft/` holds work that is not a package yet (the preset engine).
+    // It is tested from day one so it can move later without re-proving itself.
+    include: ["packages/**/*.test.ts", ".draft/**/*.test.ts"],
     environment: "node",
   },
 });

@@ -16,70 +16,122 @@ following the same contract pioneered by `typewriter.ts`.
 Services/Animations/
 ├── Animations.css          # Base visibility rules + cursor/mask keyframes
 ├── Animations.ts           # Orchestrator: scanning, config, chaining, lifecycle
-└── behaviours/
-    ├── typewriter.ts       # TypewriterBehaviour   (type / rewrite / loop engine)
-    ├── stagger-fade.ts     # StaggerFadeBehaviour  (per-sentence or per-line reveal)
-    ├── fade-in.ts          # FadeInBehaviour       (WAAPI translate+opacity entrance)
-    ├── scramble.ts         # ScrambleBehaviour     (Matrix/Cyberpunk text decode)
-    └── count-up.ts         # CountUpBehaviour      (numeric stub, see roadmap)
+├── behaviours/             # Declarative [animation="…"] handlers
+│   ├── types.ts            # AnimationContext / AnimationBehaviour (the contract)
+│   ├── registry.ts         # ANIMATION_BEHAVIOURS + indexBehaviours()
+│   ├── typewriter.ts       # `typewriter`        (type / rewrite / loop engine)
+│   ├── stagger-fade.ts     # `stagger-fade`      (per-sentence or per-line reveal)
+│   ├── fade-in.ts          # `fade-in`           (WAAPI translate+opacity entrance)
+│   ├── scramble.ts         # `text-scramble`     (Matrix/Cyberpunk text decode)
+│   ├── count-up.ts         # `count-up`          (numeric stub, see roadmap)
+│   └── loading-placeholder.ts # `loading-placeholder` (anti-FOUC release)
+└── canvas/                 # Standalone canvas toys — NOT [animation] handlers
+    ├── circle-background.ts
+    └── gravity-simulation.ts
 ```
+
+`canvas/` is kept apart on purpose: those modules own a canvas element and run their
+own frame loop. They are not selected by an `animation` attribute and are never mounted
+by the service.
 
 ## 🧩 Module matrix
 
-| `animation="…"` | Module | Class | Status |
-|---|---|---|---|
-| `typewriter` | `behaviours/typewriter.ts` | `TypewriterBehaviour` | ✅ Full (type / delete / rewrite / loop) |
-| `stagger-fade` | `behaviours/stagger-fade.ts` | `StaggerFadeBehaviour` | ✅ Full (WAAPI, sentence/line modes) |
-| `fade-in` | `behaviours/fade-in.ts` | `FadeInBehaviour` | ✅ Full (WAAPI) |
-| `text-scramble` | `behaviours/scramble.ts` | `ScrambleBehaviour` | ✅ Full |
-| `count-up` | `behaviours/count-up.ts` | `CountUpBehaviour` | 🚧 Stub (writes `data-target-number`) |
+| `animation="…"`       | Module (definition)           | Status                                   |
+| --------------------- | ----------------------------- | ---------------------------------------- |
+| `typewriter`          | `typewriterBehaviour`         | ✅ Full (type / delete / rewrite / loop) |
+| `stagger-fade`        | `staggerFadeBehaviour`        | ✅ Full (WAAPI, sentence/line modes)     |
+| `fade-in`             | `fadeInBehaviour`             | ✅ Full (WAAPI)                          |
+| `text-scramble`       | `scrambleBehaviour`           | ✅ Full                                  |
+| `count-up`            | `countUpBehaviour`            | 🚧 Stub (writes `data-target-number`)    |
+| `loading-placeholder` | `loadingPlaceholderBehaviour` | ✅ Full (anti-FOUC shimmer release)      |
 
 ## 🏗 Architecture
 
 ```
-HTML [animation] ──▶ AnimationsService.init()
-                      │  querySelectorAll('[animation]')
-                      │  ├─ animation-chain="true" → hide now, wait for predecessor's 'animation:done'
-                      │  └─ otherwise              → _triggerAnimation(node)
+HTML [animation] ──▶ AnimationsService.mount()
+                      │  #behaviours.has(type)   ← registry lookup, not a switch
+                      │  animation-chain="true" → hide now, wait for predecessor's 'animation:done'
                       ▼
-                switch (animationType)                    // _triggerAnimation
-                      ├── TypewriterBehaviour.animate(node, opts, () => done(node))
-                      ├── StaggerFadeBehaviour.animate(node, opts, el => done(el)) ← per segment!
-                      ├── FadeInBehaviour.animate(node, opts, () => done(node))
-                      ├── ScrambleBehaviour.animate(node, opts, () => done(node))
-                      └── CountUpBehaviour.animate(node)                            // no event yet
+                 AnimationsService.trigger(node)
+                      │  new AbortController() → context.signal
+                      │  context = { node, options, delay, signal, stopped(), done() }
                       ▼
-   _dispatchDoneEvent(originEl)
-        new CustomEvent('animation:done', { bubbles: true, detail: { origin } })
-        dispatched on the element's PARENT.
+                 behaviour.animate(context)          // one uniform signature
                       ▼
-   Next chained sibling — listening { once: true } on that same parent — starts.
+                 done(target?)  →  new CustomEvent('animation:done', { bubbles: true })
+                      ▼
+            Next chained sibling — listening { once: true } — starts.
 ```
 
 ### The behaviour-module contract
 
-Every file in `behaviours/` follows the same shape:
+Every declarative behaviour exports **one definition object** and implements
+`AnimationBehaviour<Options>` from `behaviours/types.ts`:
 
-1. **Exported `<Name>Options` interface** — the tuning surface (mirrored as
-   `Partial<...>` fields inside `AnimationServiceConfig`).
-2. **Exported class** exposing a single static entry point:
-   `animate(node, options, onDone?)`.
-3. **All internals `_`-prefixed private statics** (`_typeOut`, `_buildSegments`,
-   `_punctuationRhythm`, …) so public API and helpers are visually distinct.
-4. **Attribute resolution lives inside the behaviour** (`data-tw-loop`,
-   `data-stagger-mode`, …); the service only feeds tuning options from config.
-5. **Completion is reported only through `onDone`**, which the service converts into the
-   `animation:done` event. Stagger-fade is the one deliberate exception: its callback is
-   `onSegmentDone(el)` because the legacy engine fired the event per segment.
+```ts
+export const fadeInBehaviour: AnimationBehaviour<FadeInOptions> = {
+  type: "fade-in", // the `animation="…"` value
+  optionKey: "fade", // config block that tunes it (defaults to `type`)
+  defaults: {
+    /* … */
+  }, // applied before the service config
+  animate: ({ node, options, delay, signal, stopped, done }) => {
+    /* … */
+  },
+};
+```
+
+Rules:
+
+1. **One entry point** — `animate(context)`. No positional arguments, so the engine can
+   add capabilities without breaking third-party behaviours.
+2. **Completion via `done(target?)`.** Call it once; later calls are ignored. Pass a target
+   only when the run completes per sub-element (`stagger-fade`).
+3. **Cancellation via `signal`.** `signal.aborted` / `stopped()` must be checked in every
+   loop iteration and before every DOM write. Use `addEventListener(…, { signal })` for
+   listeners and `clearTimeout`/`cancelAnimationFrame` on abort.
+4. **Attribute resolution lives inside the behaviour** (`data-tw-loop`, `data-stagger-mode`,
+   …); the service only feeds tuning options from config.
+5. **Options types stay exported** (`TypewriterOptions`, …); the runner classes are
+   module-private implementation details.
+
+Registering a custom behaviour:
+
+```ts
+const animations = new AnimationsService({
+  behaviours: [
+    {
+      type: "wiggle",
+      animate: ({ node, done }) => {
+        /* … */ done();
+      },
+    },
+  ],
+});
+
+// …or after construction; same `type` replaces the built-in one.
+animations.use(wiggleBehaviour);
+```
+
+Duplicate types are rejected by `indexBehaviours()` — silently keeping the last one hides
+real configuration mistakes (two packages claiming `animation="fade-in"`).
 
 ### Lifecycle & memory safety
 
-- Long-running loops check `node.isConnected` between every tick/step, bailing out the
-  moment an animated node leaves the DOM.
-- A document-wide `MutationObserver` (`childList, subtree`) watches for removed nodes;
-  when a tracked animated element is detached, its `shouldStop` flag is raised and the
-  entry is deleted from `activeAnimations`.
-- `destroy()` disconnects the observer and force-stops every tracked animation.
+- **One `AbortController` per run.** `stop()`, `unmount()` and `destroy()` abort it, so
+  timers, listeners and frame loops are released through a single channel instead of a
+  boolean the engine could forget to reset.
+- **Observers hold strong references.** When the last chained node of a scope unmounts,
+  the scope is explicitly `unobserve()`d; otherwise the `IntersectionObserver` would pin
+  the whole detached page in memory and keep firing callbacks on it.
+- **Detached targets are ignored** by the intersection callback (`if (!target.isConnected) return`).
+- A document-wide `MutationObserver` (`childList, subtree`) batches added roots into **one
+  double-`requestAnimationFrame` scan per mutation batch** (previously two frames per node,
+  which queued hundreds of callbacks on a page swap).
+- Removed nodes are unmounted immediately: animation aborted, record dropped, chain entry
+  spliced out.
+- `destroy()` disconnects both observers, cancels the pending scan frame and aborts every
+  tracked run. `AioApp.destroy()` calls it through the module port convention.
 - `getCharacters` / segment splitting uses `Intl.Segmenter` (grapheme/sentence), so emoji
   and multi-codepoint characters survive intact; locale falls back to `document.documentElement.lang`
   or `'id'`.
@@ -93,11 +145,11 @@ To drive it manually:
 import { AnimationsService } from "@lib/LandingPageBuilder/Services/Animations/Animations";
 
 const animations = new AnimationsService({
-  delay: 500,                                    // global inter-sentence pause (ms)
-  typewriter:  { interval: 40, loop: false },
-  staggerFade: { delay: 120, duration: '0.6s' },
-  fade:        { duration: '0.5s' },
-  scramble:    { chars: '!<>-_\\/[]{}—=+*^?#________', speed: 40 },
+  delay: 500, // global inter-sentence pause (ms)
+  typewriter: { interval: 40, loop: false },
+  staggerFade: { delay: 120, duration: "0.6s" },
+  fade: { duration: "0.5s" },
+  scramble: { chars: "!<>-_\\/[]{}—=+*^?#________", speed: 40 },
 });
 
 // Call ONCE after your page / Virtual-DOM has been rendered:
@@ -109,49 +161,53 @@ animations.destroy();
 
 ## ⚙️ Config reference (`AnimationServiceConfig`)
 
-| Key | Type | Default | Used by |
-|---|---|---|---|
-| `delay` | `number` | `500` | Global fallback for inter-sentence typing pauses |
-| `typewriter.loop` | `boolean \| number` | `false` | typewriter |
-| `typewriter.interval` | `number \| number[]` | `30` | typewriter (array ⇒ random per-character rhythm) |
-| `typewriter.delay` | `number` | `config.delay` | typewriter *(note ¹)* |
-| `typewriter.rewrite` | `boolean` | `false` | typewriter rewrite mode |
-| `staggerFade.delay` | `number` | `5000` ⚠️ | stagger-fade — ms added *per segment index* |
-| `staggerFade.duration` | `string` | `'0.6s'` | stagger-fade segment duration (`'s'` or `'ms'`) |
-| `fade.duration` | `string` | `'0.5s'` | fade-in (exposed as CSS var `--fade-duration`) |
-| `scramble.chars` | `string` | `'!<>-_\\/[]{}—=+*^?#________'` | scramble pool |
-| `scramble.speed` | `number` | `40` | scramble step duration (ms) |
+| Key                                         | Type                   | Default                         | Used by                                              |
+| ------------------------------------------- | ---------------------- | ------------------------------- | ---------------------------------------------------- |
+| `delay`                                     | `number`               | `500`                           | Global fallback for inter-sentence typing pauses     |
+| `typewriter.loop`                           | `boolean \| number`    | `false`                         | typewriter                                           |
+| `typewriter.interval`                       | `number \| number[]`   | `30`                            | typewriter (array ⇒ random per-character rhythm)     |
+| `typewriter.delay`                          | `number`               | `config.delay`                  | typewriter _(note ¹)_                                |
+| `typewriter.rewrite`                        | `boolean`              | `false`                         | typewriter rewrite mode                              |
+| `staggerFade.delay`                         | `number`               | `5000` ⚠️                       | stagger-fade — ms added _per segment index_          |
+| `staggerFade.duration`                      | `string`               | `'0.6s'`                        | stagger-fade segment duration (`'s'` or `'ms'`)      |
+| `fade.duration`                             | `string`               | `'0.5s'`                        | fade-in (exposed as CSS var `--fade-duration`)       |
+| `scramble.chars`                            | `string`               | `'!<>-_\\/[]{}—=+*^?#________'` | scramble pool                                        |
+| `scramble.speed`                            | `number`               | `40`                            | scramble step duration (ms)                          |
+| `loadingPlaceholder.duration`               | `number`               | `config.delay`                  | loading-placeholder release wait (ms)                |
+| `loadingPlaceholder.instantRevealDelayTime` | `number`               | `200`                           | Extra delay before the shimmer class is dropped (ms) |
+| `loadingPlaceholder.restoreFallbackOpacity` | `string`               | `—`                             | Opacity used when the backup attribute is empty      |
+| `behaviours`                                | `AnimationBehaviour[]` | `[]`                            | Extra behaviours registered at construction          |
 
 > **¹ Parity note:** although `typewriter.delay` exists in config, the runtime sentence
 > pause always comes from the element's `data-delay` attribute, falling back to the global
 > `delay` (`_getDelayTime`). This deliberately preserves the legacy handler's behaviour and
 > is enforced by a documented contract on `TypewriterOptions.delay`.
 
-> ⚠️ **`staggerFade.delay` default is a legacy value (5000 ms *per segment*).** Set it
+> ⚠️ **`staggerFade.delay` default is a legacy value (5000 ms _per segment_).** Set it
 > yourself — e.g. `80–150` — unless you want a multi-second theatrical cascade.
 
 ---
 
 ## 🌐 HTML API (attributes)
 
-| Attribute | Values | Effect |
-|---|---|---|
-| `animation` | type name | **Required.** Selects the behaviour module. |
-| `animation-chain="true"` | flag | Start hidden; run only after the previous sibling finishes. |
-| `data-delay` | integer ms | Override global typing-pause delay for this element. |
-| `data-tw-loop` | `"true"` \| number | Per-element typewriter loop override. |
-| `data-tw-rewrite` | `"true"` | Per-element typewriter rewrite-mode override. |
-| `data-stagger-mode` | `"sentence"` (default) \| `"line"` | How stagger-fade segments content. |
-| `data-fade-delay` | CSS time (`'0.2s'`) | Fade-in delay via `--fade-delay`. |
+| Attribute                | Values                             | Effect                                                      |
+| ------------------------ | ---------------------------------- | ----------------------------------------------------------- |
+| `animation`              | type name                          | **Required.** Selects the behaviour module.                 |
+| `animation-chain="true"` | flag                               | Start hidden; run only after the previous sibling finishes. |
+| `data-delay`             | integer ms                         | Override global typing-pause delay for this element.        |
+| `data-tw-loop`           | `"true"` \| number                 | Per-element typewriter loop override.                       |
+| `data-tw-rewrite`        | `"true"`                           | Per-element typewriter rewrite-mode override.               |
+| `data-stagger-mode`      | `"sentence"` (default) \| `"line"` | How stagger-fade segments content.                          |
+| `data-fade-delay`        | CSS time (`'0.2s'`)                | Fade-in delay via `--fade-delay`.                           |
 
 ## 🎨 CSS hooks shipped in `Animations.css`
 
-| Selector | Purpose |
-|---|---|
-| `[animation="typewriter"]` | `overflow:hidden` clipping baseline for typed text. |
-| `[animation="fade-in"]` | `display:none` until the WAAPI keyframe reveals it. |
-| `.tw-writing` + `@keyframes tw-blink` | Blinking `\|` caret appended while typing. |
-| `.stagger-reveal-item` | Legacy gradient-mask reveal styles kept for reference; motion is now driven by WAAPI instead. |
+| Selector                              | Purpose                                                                                       |
+| ------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `[animation="typewriter"]`            | `overflow:hidden` clipping baseline for typed text.                                           |
+| `[animation="fade-in"]`               | `display:none` until the WAAPI keyframe reveals it.                                           |
+| `.tw-writing` + `@keyframes tw-blink` | Blinking `\|` caret appended while typing.                                                    |
+| `.stagger-reveal-item`                | Legacy gradient-mask reveal styles kept for reference; motion is now driven by WAAPI instead. |
 
 ---
 
@@ -170,7 +226,7 @@ Three internal scenarios:
 
 - **Single element** — plain sequential typing.
 - **Rewrite mode** (`rewrite: true` or `data-tw-rewrite="true"`) — uses the element's
-  existing *child blocks* (`<span>`, `<blockquote>`, …) as sentences; each is typed,
+  existing _child blocks_ (`<span>`, `<blockquote>`, …) as sentences; each is typed,
   paused, deleted, then replaced by the next. Perfect for long-form paragraphs that rewrite
   themselves (used by `pages/wizard.ts`).
 - **Multi-element loop** — several sibling children typed one after another while looping.
@@ -192,7 +248,7 @@ new AnimationsService({ typewriter: { interval: [30, 70] } }).init();
   "tagName": "p",
   "className": "description",
   "attrs": { "animation": "typewriter", "data-tw-rewrite": "true", "data-delay": "800" },
-  "content": "<span>First idea appears here…</span><span>and maybe another thought:</span><blockquote>\"A quoted question stands out.\"</blockquote>"
+  "content": "<span>First idea appears here…</span><span>and maybe another thought:</span><blockquote>\"A quoted question stands out.\"</blockquote>",
 }
 ```
 
@@ -201,9 +257,10 @@ Each child becomes one rewrite cycle: typed fully → short “reading” pause
 paragraph stays intact unless `loop`/`data-tw-loop` re-runs it.
 
 **Gotchas**
+
 - Give the container a reserved height (e.g. `min-height`) so layout doesn't jump between
   blocks of different lengths.
-- Numeric `loop` values currently behave as *infinite* loop (a preserved legacy quirk).
+- Numeric `loop` values currently behave as _infinite_ loop (a preserved legacy quirk).
 
 ## 🪜 Stagger Fade
 
@@ -217,10 +274,10 @@ pre-hidden instantly so nothing flashes before its turn.
 
 Segmentation semantics:
 
-| Mode | Behaviour |
-|---|---|
-| `sentence` *(default)* | Node text split via `Intl.Segmenter`; original children are REPLACED with `inline-block <span>` segments. |
-| `line` | Reuses existing element children when present; otherwise splits plain text on `\n` into fresh `<p>` nodes. |
+| Mode                   | Behaviour                                                                                                  |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `sentence` _(default)_ | Node text split via `Intl.Segmenter`; original children are REPLACED with `inline-block <span>` segments.  |
+| `line`                 | Reuses existing element children when present; otherwise splits plain text on `\n` into fresh `<p>` nodes. |
 
 > ⚠️ Both modes **mutate your DOM** (content is rebuilt into segment elements). Avoid using
 > it on containers whose inner markup you need afterwards.
@@ -232,7 +289,7 @@ Segmentation semantics:
 ```
 
 ```ts
-new AnimationsService({ staggerFade: { delay: 150, duration: '0.6s' } }).init();
+new AnimationsService({ staggerFade: { delay: 150, duration: "0.6s" } }).init();
 // Sentence #n starts after n × 150 ms; each lasts ~600 ms.
 ```
 
@@ -248,7 +305,7 @@ new AnimationsService({ staggerFade: { delay: 150, duration: '0.6s' } }).init();
 ### Chain caveat
 
 The legacy engine dispatches `animation:done` **once per finished segment**, not once at
-the end. Because chained listeners use `{ once: true }`, anything chained *after* a
+the end. Because chained listeners use `{ once: true }`, anything chained _after_ a
 stagger-fade element triggers as soon as its **first** segment lands — kept intentionally
 for 1:1 parity, but plan your choreography accordingly.
 
@@ -270,12 +327,13 @@ which then lock character-by-character into the original content. Uses `Intl.Seg
 
 ```ts
 new AnimationsService({
-  scramble: { chars: '!<>-_\\/[]{}—=+*^?#________', speed: 40 },
+  scramble: { chars: "!<>-_\\/[]{}—=+*^?#________", speed: 40 },
 }).init();
 // → "M#<a" … "Mu!lai" … "Mulai", done event fires, chain continues.
 ```
 
 **Gotchas**
+
 - The element's `textContent` starts empty, so width can collapse while decoding — give
   buttons/fixed labels an explicit `min-width` or reserve space in CSS.
 - Look-ahead flicker touches up to 2 characters beyond the current one (`i+1…i+3`),
@@ -300,23 +358,23 @@ Web Animations API entrance: `display:none → block`, opacity `0→1`,
 ### Example B — delayed via attribute
 
 ```html
-<figure animation="fade-in" data-fade-delay="0.3s"><img src="hero.jpg"></figure>
+<figure animation="fade-in" data-fade-delay="0.3s"><img src="hero.jpg" /></figure>
 ```
 
 ```ts
-new AnimationsService({ fade: { duration: '0.5s' } }).init();
+new AnimationsService({ fade: { duration: "0.5s" } }).init();
 ```
 
 > The base stylesheet keeps `[animation="fade-in"]` at `display:none`; the keyframe end
 > state (`display:block` + `fill:'forwards'`) is what leaves it visible afterwards.
 
-## 🔢 Count Up  🚧
+## 🔢 Count Up 🚧
 
 Deliberate stub ported verbatim from the legacy handler:
 
 - reads the element's numeric text, stores it as `data-target-number`;
 - **does not animate yet**, and **does not fire `animation:done`** (parity + roadmap).
-- Note it *is* wired into the dispatcher now, so `animation="count-up"` runs instead of
+- Note it _is_ wired into the dispatcher now, so `animation="count-up"` runs instead of
   warning about an unknown type.
 
 ### Example (current behaviour)
@@ -332,7 +390,7 @@ module (e.g. fade-in) or drive counting manually:
 
 ```ts
 const el = document.querySelector('[animation="count-up"]')!;
-const target = Number(el.getAttribute('data-target-number'));
+const target = Number(el.getAttribute("data-target-number"));
 // your own requestAnimationFrame + easing loop from here…
 ```
 
@@ -353,7 +411,7 @@ and `pointer-events`) and run.
 
 ```html
 <p animation="typewriter" data-tw-rewrite="true">…spans + blockquote…</p>
-<h4 animation="fade-in"   animation-chain="true">Siap memulai…?</h4>
+<h4 animation="fade-in" animation-chain="true">Siap memulai…?</h4>
 <button animation="text-scramble" animation-chain="true">Mulai</button>
 ```
 
@@ -383,7 +441,7 @@ The Virtual-DOM equivalent (exactly how `pages/wizard.ts` declares it):
 
 **Fine print**
 
-- The completion event is dispatched on the *parent* with `detail.origin` = the element
+- The completion event is dispatched on the _parent_ with `detail.origin` = the element
   (or stagger-fade segment) that just finished, so only siblings under the same parent
   can chain directly.
 - Each chained element only reacts when the event's `detail.origin` is its **immediately
@@ -404,17 +462,20 @@ The Virtual-DOM equivalent (exactly how `pages/wizard.ts` declares it):
 1. Create `behaviours/your-anim.ts`:
 
    ```ts
-   export interface YourAnimOptions { speed: number }
+   export interface YourAnimOptions {
+     speed: number;
+   }
 
    export class YourAnimBehaviour {
-     private static _ease(t: number): number { return t * (2 - t); } // helpers `_`-prefixed
+     private static _ease(t: number): number {
+       return t * (2 - t);
+     } // helpers `_`-prefixed
 
-     public static async animate(node: HTMLElement, options: YourAnimOptions,
-                                 onDone: () => void): Promise<void> {
+     public static async animate(node: HTMLElement, options: YourAnimOptions, onDone: () => void): Promise<void> {
        // …check node.isConnected inside every loop…
        if (!node.isConnected) return;
-       node.textContent = 'done!';
-       onDone();                     // ← mandatory for chain compatibility
+       node.textContent = "done!";
+       onDone(); // ← mandatory for chain compatibility
      }
    }
    ```
@@ -426,13 +487,13 @@ The Virtual-DOM equivalent (exactly how `pages/wizard.ts` declares it):
 
 ## 📎 Preserved legacy quirks (documented for posterity)
 
-| Quirk | Why it stays |
-|---|---|
-| Numeric `data-tw-loop` behaves like infinite loop | Legacy handler did `count++` but never compared it. |
+| Quirk                                                  | Why it stays                                                  |
+| ------------------------------------------------------ | ------------------------------------------------------------- |
+| Numeric `data-tw-loop` behaves like infinite loop      | Legacy handler did `count++` but never compared it.           |
 | Fade-in is hard-coded 500 ms despite `--fade-duration` | CSS var set for future use; keyframe kept at legacy constant. |
-| Stagger-fade `animation:done` per segment | Earliest-possible chain triggering was the original intent. |
-| `staggerFade.delay` defaults to 5000 ms | Legacy config default; override it in your own code. |
-| Count-up sets `data-target-number` only | Ported verbatim from the roadmap stub. |
+| Stagger-fade `animation:done` per segment              | Earliest-possible chain triggering was the original intent.   |
+| `staggerFade.delay` defaults to 5000 ms                | Legacy config default; override it in your own code.          |
+| Count-up sets `data-target-number` only                | Ported verbatim from the roadmap stub.                        |
 
 ## ✅ Health check
 

@@ -1,14 +1,16 @@
 {
   "name": "@aio-ui/animations",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "files": [
     "dist",
-    "*.ts"
+    "*.ts",
+    "behaviours",
+    "canvas"
   ],
   "peerDependencies": {
-    "@aio-ui/core": "^0.0.0",
-    "@aio-ui/utilities": "^0.0.0"
+    "@aio-ui/core": "^0.1.0",
+    "@aio-ui/utilities": "^0.1.0"
   },
   "exports": {
     ".": {
@@ -21,7 +23,22 @@
       "types": "./dist/Animations.d.ts",
       "default": "./dist/Animations.js"
     },
-    "./Animations.css": "./Animations.css"
+    "./Animations.css": "./Animations.css",
+    "./behaviours": {
+      "development": "./behaviours/registry.ts",
+      "types": "./dist/behaviours/registry.d.ts",
+      "default": "./dist/behaviours/registry.js"
+    },
+    "./behaviours/*": {
+      "development": "./behaviours/*.ts",
+      "types": "./dist/behaviours/*.d.ts",
+      "default": "./dist/behaviours/*.js"
+    },
+    "./canvas/*": {
+      "development": "./canvas/*.ts",
+      "types": "./dist/canvas/*.d.ts",
+      "default": "./dist/canvas/*.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

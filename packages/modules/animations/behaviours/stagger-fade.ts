@@ -1,3 +1,5 @@
+import type { AnimationBehaviour } from './types';
+
 export interface StaggerFadeOptions {
   /** Jeda bertingkat antar segmen (ms): segmen ke-n muncul setelah n × delay */
   delay: number;
@@ -16,7 +18,7 @@ export interface StaggerFadeOptions {
  *   sehingga rantai bisa terpicu sedini segmen pertama selesai. Oleh karena
  *   itu callback-nya bernama onSegmentDone dan menerima elemen segmen.
  */
-export class StaggerFadeBehaviour {
+class StaggerFadeBehaviour {
   /** Konversi string durasi CSS ('0.6s' | '600ms') ke angka milidetik untuk WAAPI */
   private static _toMs(durationStr: string): number {
     return durationStr.endsWith('ms')
@@ -112,3 +114,13 @@ export class StaggerFadeBehaviour {
     });
   }
 }
+
+/** `animation="stagger-fade"` — segment-by-segment entrance. */
+export const staggerFadeBehaviour: AnimationBehaviour<StaggerFadeOptions> = {
+  type: 'stagger-fade',
+  optionKey: 'staggerFade',
+  // Completion is reported per segment (parity with the original engine).
+  animate: ({ node, options, done }) => {
+    StaggerFadeBehaviour.animate(node, options, (segment) => done(segment));
+  },
+};

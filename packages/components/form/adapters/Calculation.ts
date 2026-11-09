@@ -1,6 +1,9 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
 import type { iFormModuleContext } from "../FormModuleTypes";
+import type { iMessageContent } from "@aio-ui/message/Message";
+import type { iFormMessages } from "../FormMessages";
+import { composeMessage, messageDraft, resolveStyle } from "../FormMessages";
 import type {
   CalculationPrimitive,
   CalculationValues,
@@ -33,6 +36,10 @@ export interface iCalculationUpdate {
 export interface iFormCalculationConfig {
   strategies: iCalculationStrategies;
   onUpdate?: (update: iCalculationUpdate) => void;
+  /** User-configurable sentences; `messages.calculation.failed` explains a broken formula. */
+  messages?: iFormMessages;
+  /** Host message sink (the form's `showMessage`), so a failure is not just a console line. */
+  notify?: (content: iMessageContent) => void;
 }
 
 /**
@@ -46,6 +53,12 @@ export class FormCalculationHandler {
   private values: CalculationValues = {};
   private onChange: ((event: Event) => void) | null = null;
   private started = false;
+  /**
+   * Identity of the last reported failure set (`"a|b"`), empty when everything
+   * worked. `recalculate()` runs on every keystroke, so without this a single
+   * broken formula would emit a toast per input event.
+   */
+  private lastFailureKey = "";
 
   constructor(form: HTMLFormElement, config: iFormCalculationConfig) {
     this.form = form;
@@ -96,6 +109,47 @@ export class FormCalculationHandler {
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
+  /**
+   * Reports broken formulas through the host message sink.
+   *
+   * @param failures - Formulas that threw during this pass, in schema order.
+   *
+   * @summary Deduplicated by formula id: the same broken set never reports twice,
+   * but a recovered-then-broken formula reports again. Recovery itself is silent —
+   * a working total is its own feedback.
+   */
+  private reportFailures(failures: Array<{ id: string; error: unknown }>): void {
+    const key = failures.map((failure) => failure.id).sort().join("|");
+    if (key === this.lastFailureKey) return;
+    this.lastFailureKey = key;
+
+    if (failures.length === 0) return;
+
+    // The console line is the debugging trail; the toast is the user-facing one.
+    for (const failure of failures) {
+      console.warn(`[Form Calculation] Formula "${failure.id}" failed:`, failure.error);
+    }
+
+    if (typeof this.config.notify !== "function") return;
+
+    const compose = messageDraft({
+      category: "calculation",
+      slot: "failed",
+      code: "FORMULA_FAILED",
+      formId: this.form.id,
+      fallback: `Perhitungan ${failures[0].id} tidak dapat dijalankan.`,
+      params: { formula: failures[0].id },
+    });
+    const style = resolveStyle(this.config.messages, compose);
+
+    this.config.notify({
+      header: style.title || undefined,
+      message: composeMessage(this.config.messages, compose),
+      type: style.type || undefined,
+      icon: style.icon || undefined,
+    });
+  }
+
   /** Current form snapshot, keyed by id/name. */
   getValues(): CalculationValues {
     return { ...this.values };
@@ -116,6 +170,7 @@ export class FormCalculationHandler {
   recalculate(): iCalculationUpdate {
     this.values = this.collectValues();
     const summary: iCalculationLineItem[] = [];
+    const failures: Array<{ id: string; error: unknown }> = [];
 
     for (const strategy of this.config.strategies.formula ?? []) {
       if (strategy.groupId && !this.isGroupMounted(strategy.groupId)) {
@@ -145,9 +200,13 @@ export class FormCalculationHandler {
         });
       } catch (error) {
         this.writeOutput(strategy.outputId, "");
-        console.warn(`[Form Calculation] Formula "${strategy.id}" failed:`, error);
+        failures.push({ id: strategy.id, error });
       }
     }
+
+    // Announce once per changed failure set — a formula broken on load is visible,
+    // and typing does not turn it into a toast storm.
+    this.reportFailures(failures);
 
     this.summary = summary;
     const update: iCalculationUpdate = {
@@ -291,6 +350,9 @@ export const calculationFormAdapter: iModuleDefinition<iFormModuleContext, FormC
     // Step 1: Build the formula set from the schema.
     const handler = new FormCalculationHandler(context.form, {
       strategies: { formula: collectFormulas(context.inputs) },
+      // Sentences come from the form config, delivery from the form's message host.
+      messages: context.config?.messages,
+      notify: (content) => context.showMessage(content),
     }).create();
 
     // Step 2: Expose the engine on the form element, as the legacy path did.

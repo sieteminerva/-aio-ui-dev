@@ -436,163 +436,9 @@ export const ConfirmationSet = {
   ]
 }
 
-let isEditing = false;
-// @ts-ignore
-const TestSet = {
-  id: "test-set",
-  group: [
-    {
-      type: "text",
-      id: "test-1",
-      title: "Test Text",
-      placeholder: "Isi apa aja",
-      config: {
-        actions: [
-          {
-            type: "copy",
-            label: "copy",
-            onClick: (_e: Event, payload: any) => {
-              console.log("action!! COPY", payload)
-            }
-          },
-          {
-            type: "delete",
-            label: "delete",
-            onClick: (_e: Event, payload: any) => {
-              console.log("action!! delete", payload)
-            }
-          },
-          {
-            type: "add",
-            label: "new",
-            onClick: (_e: Event, payload: any) => {
-              console.log("action!! ADD", payload)
-            }
-          },
-          {
-            type: "edit",
-            label: "edit",
-            onClick: (_e: Event, payload: any) => {
-              isEditing = !isEditing;
-              console.log("action!! EDIT", `isEditing: ${isEditing}`, payload)
-            }
-          }
-        ]
-      }
-    },
-    {
-      type: "select",
-      id: "test-2",
-      title: "Test Text",
-      placeholder: "Pilih mana saja",
-      config: {
-        options: [
-          "A", "B", "C", "D"
-        ],
-        actions: [
-          {
-            type: "copy",
-            label: "",
-            onClick: (_e: Event, payload: any) => {
-              console.log("action!! COPY", payload)
-            }
-          },
-          {
-            type: "delete",
-            label: "",
-            onClick: (_e: Event, payload: any) => {
-              console.log("action!! delete", payload)
-            }
-          },
-          {
-            type: "add",
-            label: "",
-            onClick: (_e: Event, payload: any) => {
-              console.log("action!! ADD", payload)
-            }
-          },
-          {
-            type: "edit",
-            label: "edit",
-            onClick: (_e: Event, payload: any) => {
-              isEditing = !isEditing;
-              console.log("action!! EDIT", `isEditing: ${isEditing}`, payload)
-            }
-          }
-        ]
-      }
-    },
-    // ══ Test bed: Dropdown mode select (Semantic-UI style) ──────────────
-    {
-      type: "dropdown",
-      id: "test-dropdown-single",
-      title: "Satu pilihan (style=select)",
-      placeholder: "Ketik atau pilih satu...",
-      config: {
-        style: "select",
-        min: 1,
-        max: 6,
-        options: [
-          { value: "jakarta", label: "Jakarta" },
-          { value: "bandung", label: "Bandung" },
-          { value: "surabaya", label: "Surabaya" },
-          { value: "yogyakarta", label: "Yogyakarta" },
-          { value: "bali", label: "Bali" },
-          { value: "makassar", label: "Makassar" }
-        ],
-        onSelect: (value: string, id: string | null) => {
-          console.log("[Dropdown single] onSelect", { value, id });
-        }
-      }
-    },
-    {
-      type: "dropdown",
-      id: "test-dropdown-multi",
-      title: "Banyak pilihan (style=select + isMultiple)",
-      placeholder: "Ketik lalu pilih banyak...",
-      config: {
-        style: "select",
-        isMultiple: true,
-        min: 1,
-        max: 15,
-        options: [
-          "Kopi",
-          "Teh",
-          "Jus Alpukat",
-          "Kue Lapis",
-          "Klepon",
-          "Wajik",
-          "Sekoteng",
-          "Semar Mendem",
-          "Jenang",
-          "Nasi Liwet",
-          "Tengkleng"
-        ],
-        onMultiChange: (items: any[]) => {
-          console.log("[Dropdown multi] onMultiChange", items);
-        }
-      }
-    },
-    {
-      type: "checkbox",
-      id: "confirmation",
-      // condition: { field: "kodepos", filled: true },
-      title: "Saya setuju dan bertanggung jawab sepenuhnya atas konten tersebut",
-      position: "left",
-      config: {
-        selectors: {
-          "@field": {
-            tagName: "div",
-            className: "field",
-            attrs: { "animation": "fade-in", "animation-chain": "true", "animated-once": "true" }
-          }
-        },
-        style: "toggle",
 
-      }
-    }
-  ]
-}
+// @ts-ignore
+
 const formConfig = {
   id: "wizardo",
   // multistep: true,
@@ -604,13 +450,13 @@ const formConfig = {
   },
   // submitButton: false,
 };
+
 const formContent = [
-  TestSet,
-  // IntroSet,
-  // DetailSetShop,
-  // ContactSet,
-  // AddressSet,
-  // ConfirmationSet,
+  IntroSet,
+  DetailSetShop,
+  ContactSet,
+  AddressSet,
+  ConfirmationSet,
 ]
 
 const wizard = {

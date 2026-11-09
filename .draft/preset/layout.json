@@ -1,0 +1,188 @@
+{
+  "@aio-ui/app": {
+    "dir": "packages/app",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/base": {
+    "dir": "packages/base",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/core": {
+    "dir": "packages/core",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/styles": {
+    "dir": "packages/styles",
+    "stylesRoot": "src"
+  },
+  "@aio-ui/utilities": {
+    "dir": "packages/utilities",
+    "entry": "dist/Metadata.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/accordion": {
+    "dir": "packages/components/accordion",
+    "entry": "dist/Accordion.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/article": {
+    "dir": "packages/components/article",
+    "entry": "dist/Article.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/badge": {
+    "dir": "packages/components/badge",
+    "entry": "dist/Badge.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/carousel": {
+    "dir": "packages/components/carousel",
+    "entry": "dist/Carousel.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/fabmenu": {
+    "dir": "packages/components/fabmenu",
+    "entry": "dist/FabMenu.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/footer": {
+    "dir": "packages/components/footer",
+    "entry": "dist/Footer.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/form": {
+    "dir": "packages/components/form",
+    "entry": "dist/Form.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/id-address": {
+    "dir": "packages/components/id-address",
+    "entry": "dist/id-address-builder.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/input": {
+    "dir": "packages/components/input",
+    "entry": "dist/Input.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/masonry": {
+    "dir": "packages/components/masonry",
+    "entry": "dist/Masonry.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/menu": {
+    "dir": "packages/components/menu",
+    "entry": "dist/Menu.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/message": {
+    "dir": "packages/components/message",
+    "entry": "dist/Message.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/modal": {
+    "dir": "packages/components/modal",
+    "entry": "dist/Modal.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/modeswitcher": {
+    "dir": "packages/components/modeswitcher",
+    "entry": "dist/ModeSwitcher.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/pricingcard": {
+    "dir": "packages/components/pricingcard",
+    "entry": "dist/PricingCard.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/product": {
+    "dir": "packages/components/product",
+    "entry": "dist/ProductCard.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/rating": {
+    "dir": "packages/components/rating",
+    "entry": "dist/Rating.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/section": {
+    "dir": "packages/components/section",
+    "entry": "dist/Section.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/tab": {
+    "dir": "packages/components/tab",
+    "entry": "dist/Tab.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/table": {
+    "dir": "packages/components/table",
+    "entry": "dist/Table.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/animations": {
+    "dir": "packages/modules/animations",
+    "entry": "dist/Animations.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/event-emitter": {
+    "dir": "packages/modules/event-emitter",
+    "entry": "dist/EventEmitter.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/http-service": {
+    "dir": "packages/modules/http-service",
+    "entry": "dist/HttpService.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/module-loader": {
+    "dir": "packages/modules/module-loader",
+    "entry": "dist/ModuleRegistry.js",
+    "stylesRoot": "dist",
+    "bare": false
+  },
+  "@aio-ui/router": {
+    "dir": "packages/modules/router",
+    "entry": "dist/HashRouter.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/theme": {
+    "dir": "packages/modules/theme",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/theme-cyberpunk": {
+    "dir": "packages/themes/cyberpunk",
+    "entry": "dist/CyberpunkTheme.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/theme-default": {
+    "dir": "packages/themes/default",
+    "entry": "dist/DefaultTheme.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/theme-horizontal": {
+    "dir": "packages/themes/horizontal",
+    "entry": "dist/HorizontalTheme.js",
+    "stylesRoot": "dist"
+  }
+}

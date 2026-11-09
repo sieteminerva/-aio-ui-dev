@@ -8,8 +8,10 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-.guidance
 .archives
+# Local workspace: the generator engine is tracked, its scratch output is not.
+.draft/*
+!.draft/preset/
 dist
 dist-ssr
 *.local
