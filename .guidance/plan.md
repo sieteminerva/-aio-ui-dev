@@ -280,6 +280,16 @@ tagged release (stage D). The framework side is ready; the generator side is sti
 ## 8. Verification gate
 
 `npm run verify` = `build:pkgs` (33 packages, dependency-ordered, `dist` + `.d.ts` + copied
-CSS) → typecheck → `check:bounds` → `test` → examples build. Current: **329 tests / 38 files**,
+CSS) → typecheck → `check:bounds` → `test` → examples build. Current: **413 tests / 45 files**,
 boundaries clean, both builds green. Browser claims are measured (`getBoundingClientRect`,
 `getComputedStyle`, DOM counts), not eyeballed.
+
+## Target selanjutnya (urutan yang saya sarankan)
+
+1. Perbaiki form di situs store — bug yang tertangkap browser: <div id="checkout-form"> kosong. Ini satu-satunya lubang fungsional di jalur generator. Gate: halaman store-dynamic_v1/dev menampilkan form (fieldset + field) tanpa error console.
+2. Schema content final (Sheets ↔ @aio-ui) — yang kamu sebut belum didesain. Konkret: satu tabel per model (products, posts, orders), kolom → tipe field, aturan validasi, dan batasan messages. Gate: model store lengkap satu siklus — sheet nyata → /exec → HttpService → komponen menampilkan baris.
+3. Release workflow GitHub — tag v0.1.0 → verify → release.mjs → unggah 37 aset. Gate: satu tag bisa dipakai dua cara (tarball & import map).
+4. Smoke test build-free di browser memakai tag nyata — menutup klaim "build-free" yang sekarang hanya diuji struktural.
+5. Batch kebersihan dokumen (tiga item di atas).
+
+mulai dari #1 (form store) karena itu paling cepat memberi sinyal bahwa pipeline generate→render benar, lalu lanjut #2 schema sebagai pekerjaan desain terbesar.

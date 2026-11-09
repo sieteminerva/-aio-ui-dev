@@ -8,6 +8,11 @@
     "*.css"
   ],
   "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./Menu": {
       "development": "./Menu.ts",
       "types": "./dist/Menu.d.ts",

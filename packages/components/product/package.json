@@ -8,6 +8,11 @@
     "*.css"
   ],
   "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./ProductCard": {
       "development": "./ProductCard.ts",
       "types": "./dist/ProductCard.d.ts",

@@ -19,7 +19,7 @@ import { join, relative } from "node:path";
 
 const ROOT = process.cwd();
 const SCOPE = "@aio-ui/";
-const SECTIONS = ["packages/components", "packages/modules", "packages/themes", "packages/utilities", "packages/styles"];
+const SECTIONS = ["packages/components", "packages/modules", "packages/themes", "packages/kits", "packages/utilities", "packages/styles"];
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);

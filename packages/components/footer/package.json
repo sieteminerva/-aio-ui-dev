@@ -8,6 +8,11 @@
     "*.css"
   ],
   "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./Footer": {
       "development": "./Footer.ts",
       "types": "./dist/Footer.d.ts",

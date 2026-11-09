@@ -88,9 +88,7 @@ function emitApp(preset: iWebPreset, plan: PresetPlan, site: EmittedSite): strin
   const has = (capability: string): boolean => plan.capabilities.includes(capability);
 
   const imports = [
-    `import { ComponentRegistry } from "@aio-ui/core/ComponentRegistry";`,
-    `import { DOMRenderer } from "@aio-ui/core/DOMRenderer";`,
-    `import { AioApp } from "@aio-ui/app";`,
+    `import { ComponentRegistry, DOMRenderer, AioApp } from "@aio-ui/frameworks";`,
     `import { HashRouter } from "@aio-ui/router";`,
   ];
   if (has("http-service")) imports.push(`import { HttpService } from "@aio-ui/http-service";`);

@@ -38,7 +38,7 @@ describe("emitPlan", () => {
 
   it("attaches styles to the module they belong to", () => {
     const emitted = emitSite(storePreset, fakeResolver);
-    const form = emitted.table.find((row) => row.specifier === "@aio-ui/form/Form");
+    const form = emitted.table.find((row) => row.specifier === "@aio-ui/form");
 
     expect(form?.styles).toEqual(["https://cdn.test/styles/_aio-ui_form_Form.css"]);
   });

@@ -8,6 +8,11 @@
     "*.css"
   ],
   "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./Article": {
       "development": "./Article.ts",
       "types": "./dist/Article.d.ts",

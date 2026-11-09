@@ -48,6 +48,10 @@ npm run verify         # the full gate — run before claiming anything works
 │   ├── modules/            router, http-service, event-emitter, module-loader,
 │   │                       theme, animations
 │   ├── themes/             default, cyberpunk, horizontal
+│   ├── kits/               aggregators — re-exports only, no logic
+│   │   ├── frameworks/     @aio-ui/frameworks = core + base + app
+│   │   ├── modules/        @aio-ui/modules = module-loader + the runtime modules
+│   │   └── themes/         @aio-ui/themes = the three themes
 │   └── components/         accordion article badge carousel fabmenu footer form
 │                           id-address input masonry menu message modal
 │                           modeswitcher pricingcard product rating section tab table
@@ -86,23 +90,24 @@ Ignored, local-only working areas:
 
 ## Where to look
 
-| I need…                                    | Read                                                                          |
-| ------------------------------------------ | ----------------------------------------------------------------------------- |
-| Product vision, market framing             | `docs/presentation0.md`                                                       |
-| How generated sites are produced (Rajutan) | `.guidance/RAJUTAN.md`                                                        |
-| Open work / what is next                   | `.guidance/plan.md`                                                           |
-| Rules an agent must follow                 | `.guidance/AGENT_RULES.md`, `.guidance/mandatory/`                            |
-| Renderer internals                         | `docs/DOMRenderer.md`                                                         |
-| Component conventions / template / data    | `docs/COMPONENT-CONVENTIONS.md`, `COMPONENT-TEMPLATE.md`, `COMPONENT-DATA.md` |
-| Input field types & actions                | `docs/FIELD-TYPES.md`, `docs/INPUT-ACTIONS.md`                                |
-| App shell (`AioApp`)                       | `docs/APP.md`, `docs/API.md`                                                  |
-| Dependency rules                           | `docs/BOUNDARIES.md` (+ enforced by `scripts/bounds.mjs`)                     |
-| Events bus                                 | `docs/eventbus.MD`                                                            |
-| Address picker                             | `docs/idAddress.MD`, `packages/components/id-address/README.MD`               |
-| Sheets CMS / REST API / deployment         | `docs/GoogleSheets CMS/`                                                      |
-| Apps Script orchestrator flow              | `docs/apps-script-integration.md`                                             |
-| Generator engine internals                 | `.draft/preset/README.md`                                                     |
-| The AI prompt that writes content          | `.draft/preset/prompt.content.md`                                             |
+| I need…                                     | Read                                                                          |
+| ------------------------------------------- | ----------------------------------------------------------------------------- |
+| Product vision, market framing              | `docs/presentation0.md`                                                       |
+| How generated sites are produced (Rajutan)  | `.guidance/RAJUTAN.md`                                                        |
+| Open work / what is next                    | `.guidance/plan.md`                                                           |
+| Rules an agent must follow                  | `.guidance/AGENT_RULES.md`, `.guidance/mandatory/`                            |
+| Renderer internals                          | `docs/DOMRenderer.md`                                                         |
+| Component conventions / template / data     | `docs/COMPONENT-CONVENTIONS.md`, `COMPONENT-TEMPLATE.md`, `COMPONENT-DATA.md` |
+| Input field types & actions                 | `docs/FIELD-TYPES.md`, `docs/INPUT-ACTIONS.md`                                |
+| App shell (`AioApp`)                        | `docs/APP.md`, `docs/API.md`                                                  |
+| Dependency rules                            | `docs/BOUNDARIES.md` (+ enforced by `scripts/bounds.mjs`)                     |
+| Import path policy (root barrel vs subpath) | `docs/PUBLIC-API.md`                                                          |
+| Events bus                                  | `docs/eventbus.MD`                                                            |
+| Address picker                              | `docs/idAddress.MD`, `packages/components/id-address/README.MD`               |
+| Sheets CMS / REST API / deployment          | `docs/GoogleSheets CMS/`                                                      |
+| Apps Script orchestrator flow               | `docs/apps-script-integration.md`                                             |
+| Generator engine internals                  | `.draft/preset/README.md`                                                     |
+| The AI prompt that writes content           | `.draft/preset/prompt.content.md`                                             |
 
 ## Conventions in one screen
 

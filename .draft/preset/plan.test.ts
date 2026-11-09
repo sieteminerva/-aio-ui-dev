@@ -18,10 +18,9 @@ describe("plan — base layer", () => {
     const result = plan(galleryPreset);
     expect(specifiers(result.assets)).toEqual(
       expect.arrayContaining([
-        "@aio-ui/base/Base",
-        "@aio-ui/core/ComponentRegistry",
-        "@aio-ui/core/DOMRenderer",
-        "@aio-ui/core/Stylesheets",
+        "@aio-ui/frameworks",
+        "@aio-ui/core",
+        "@aio-ui/base",
         "@aio-ui/app",
         "@aio-ui/router",
         "@aio-ui/theme",
@@ -45,15 +44,15 @@ describe("plan — static site stays static", () => {
 
   it("loads no form, input or message package", () => {
     const list = specifiers(result.assets);
-    expect(list).not.toContain("@aio-ui/form/Form");
-    expect(list).not.toContain("@aio-ui/input/Input");
-    expect(list).not.toContain("@aio-ui/message/Message");
+    expect(list).not.toContain("@aio-ui/form");
+    expect(list).not.toContain("@aio-ui/input");
+    expect(list).not.toContain("@aio-ui/message");
   });
 
   it("adds the components the pages use", () => {
     const list = specifiers(result.assets);
-    expect(list).toContain("@aio-ui/masonry/Masonry");
-    expect(list).toContain("@aio-ui/carousel/Carousel");
+    expect(list).toContain("@aio-ui/masonry");
+    expect(list).toContain("@aio-ui/carousel");
   });
 
   it("detects animation in attrs and in raw HTML", () => {
@@ -80,11 +79,11 @@ describe("plan — store pulls in what it declares", () => {
   });
 
   it("adds form, input and the always-on submit path", () => {
-    expect(list).toContain("@aio-ui/form/Form");
-    expect(list).toContain("@aio-ui/input/Input");
+    expect(list).toContain("@aio-ui/form");
+    expect(list).toContain("@aio-ui/input");
     expect(list).toContain("@aio-ui/form/validation-adapter");
     expect(list).toContain("@aio-ui/form/Input.FormAdapter");
-    expect(list).toContain("@aio-ui/message/Message");
+    expect(list).toContain("@aio-ui/message");
     expect(list).toContain("@aio-ui/message/adapters/FormAdapter");
   });
 
@@ -102,14 +101,14 @@ describe("plan — store pulls in what it declares", () => {
   });
 
   it("adds the table bridge and the address capability", () => {
-    expect(list).toContain("@aio-ui/table/Table");
+    expect(list).toContain("@aio-ui/table");
     expect(list).toContain("@aio-ui/table/adapters/FormAdapter");
     expect(list).toContain("@aio-ui/id-address/form");
   });
 
   it("attaches a package's stylesheets to its own module entry", () => {
-    expect(stylesOf(storePreset, "@aio-ui/form/Form")).toEqual(["@aio-ui/form/Form.css"]);
-    expect(stylesOf(storePreset, "@aio-ui/input/Input")).toEqual(["@aio-ui/input/input.css"]);
+    expect(stylesOf(storePreset, "@aio-ui/form")).toEqual(["@aio-ui/form/Form.css"]);
+    expect(stylesOf(storePreset, "@aio-ui/input")).toEqual(["@aio-ui/input/input.css"]);
     expect(stylesOf(storePreset, "@aio-ui/input/dropdown/module")).toEqual(["@aio-ui/input/dropdown.css"]);
   });
 });

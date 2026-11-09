@@ -7,6 +7,11 @@
     "src"
   ],
   "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./Metadata": {
       "development": "./src/Metadata.ts",
       "types": "./dist/Metadata.d.ts",

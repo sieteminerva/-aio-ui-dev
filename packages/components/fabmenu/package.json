@@ -8,6 +8,11 @@
     "*.css"
   ],
   "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./FabMenu": {
       "development": "./FabMenu.ts",
       "types": "./dist/FabMenu.d.ts",

@@ -27,7 +27,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const APPLY = process.argv.includes("--apply");
-const GROUPS = ["packages", "packages/components", "packages/modules", "packages/themes"];
+const GROUPS = ["packages", "packages/components", "packages/modules", "packages/themes", "packages/kits"];
 
 /** Every directory that carries a `package.json`, skipping the examples. */
 function packageDirs() {

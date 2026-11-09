@@ -8,6 +8,11 @@
     "*.css"
   ],
   "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./ModeSwitcher": {
       "development": "./ModeSwitcher.ts",
       "types": "./dist/ModeSwitcher.d.ts",

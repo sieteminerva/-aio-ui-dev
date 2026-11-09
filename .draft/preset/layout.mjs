@@ -26,6 +26,7 @@ const SECTIONS = [
   "packages/components",
   "packages/modules",
   "packages/themes",
+  "packages/kits",
   "packages/utilities",
   "packages/styles",
 ];

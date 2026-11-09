@@ -20,45 +20,38 @@
   },
   "@aio-ui/utilities": {
     "dir": "packages/utilities",
-    "entry": "dist/Metadata.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/accordion": {
     "dir": "packages/components/accordion",
-    "entry": "dist/Accordion.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/article": {
     "dir": "packages/components/article",
-    "entry": "dist/Article.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/badge": {
     "dir": "packages/components/badge",
-    "entry": "dist/Badge.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/carousel": {
     "dir": "packages/components/carousel",
-    "entry": "dist/Carousel.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/fabmenu": {
     "dir": "packages/components/fabmenu",
-    "entry": "dist/FabMenu.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/footer": {
     "dir": "packages/components/footer",
-    "entry": "dist/Footer.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/form": {
     "dir": "packages/components/form",
@@ -77,15 +70,13 @@
   },
   "@aio-ui/masonry": {
     "dir": "packages/components/masonry",
-    "entry": "dist/Masonry.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/menu": {
     "dir": "packages/components/menu",
-    "entry": "dist/Menu.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/message": {
     "dir": "packages/components/message",
@@ -94,45 +85,38 @@
   },
   "@aio-ui/modal": {
     "dir": "packages/components/modal",
-    "entry": "dist/Modal.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/modeswitcher": {
     "dir": "packages/components/modeswitcher",
-    "entry": "dist/ModeSwitcher.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/pricingcard": {
     "dir": "packages/components/pricingcard",
-    "entry": "dist/PricingCard.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/product": {
     "dir": "packages/components/product",
-    "entry": "dist/ProductCard.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/rating": {
     "dir": "packages/components/rating",
-    "entry": "dist/Rating.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/section": {
     "dir": "packages/components/section",
-    "entry": "dist/Section.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/tab": {
     "dir": "packages/components/tab",
-    "entry": "dist/Tab.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/table": {
     "dir": "packages/components/table",
@@ -156,9 +140,8 @@
   },
   "@aio-ui/module-loader": {
     "dir": "packages/modules/module-loader",
-    "entry": "dist/ModuleRegistry.js",
-    "stylesRoot": "dist",
-    "bare": false
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
   },
   "@aio-ui/router": {
     "dir": "packages/modules/router",
@@ -183,6 +166,21 @@
   "@aio-ui/theme-horizontal": {
     "dir": "packages/themes/horizontal",
     "entry": "dist/HorizontalTheme.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/frameworks": {
+    "dir": "packages/kits/frameworks",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/modules": {
+    "dir": "packages/kits/modules",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist"
+  },
+  "@aio-ui/themes": {
+    "dir": "packages/kits/themes",
+    "entry": "dist/index.js",
     "stylesRoot": "dist"
   }
 }

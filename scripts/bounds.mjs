@@ -33,8 +33,14 @@ const ALLOWED = {
   themes: ["core", "utilities"],
   components: ["base", "core", "utilities", "modules", "themes", "components"],
   app: ["core"],
+  // A kit is a pure aggregator: it re-exports other packages and holds no logic, so it
+  // is allowed to point at any category. Nothing may depend on a kit.
+  kits: "*",
   examples: "*",
 };
+
+/** Aggregator package names — the only packages that live under `packages/kits`. */
+const KIT_NAMES = new Set(["frameworks", "modules", "themes"]);
 
 /** Files the scanner reads. */
 const SOURCE = /\.(ts|tsx|mts|js|mjs)$/;
@@ -51,6 +57,7 @@ function describe(path) {
   if (group === "modules") return { category: "modules", dir: join(ROOT, "packages", "modules", leaf ?? "") };
   if (group === "themes") return { category: "themes", dir: join(ROOT, "packages", "themes", leaf ?? "") };
   if (group === "components") return { category: "components", dir: join(ROOT, "packages", "components", leaf ?? "") };
+  if (group === "kits") return { category: "kits", dir: join(ROOT, "packages", "kits", leaf ?? "") };
   return { category: group, dir: join(ROOT, "packages", group) };
 }
 
@@ -76,9 +83,11 @@ function categoryOf(specifier) {
       ? "modules"
       : name === "theme" || name.startsWith("theme-")
         ? "themes"
-        : ["core", "base", "app", "utilities", "styles"].includes(name)
-          ? name
-          : "components";
+        : ["frameworks", "modules", "themes"].includes(name) && KIT_NAMES.has(name)
+          ? "kits"
+          : ["core", "base", "app", "utilities", "styles"].includes(name)
+            ? name
+            : "components";
 
   return { category, package: name, sub: rest.join("/") || undefined };
 }
@@ -89,7 +98,7 @@ function subpathResolves(name, sub) {
   const mounted = join(ROOT, "node_modules", "@aio-ui", name);
   const dir = existsSync(mounted)
     ? mounted
-    : (["components", "modules", "themes"]
+    : (["components", "modules", "themes", "kits"]
         .map((group) => join(ROOT, "packages", group, name))
         .find((candidate) => existsSync(candidate)) ?? join(ROOT, "packages", "components", name));
 
@@ -125,6 +134,11 @@ function scan(file) {
     const allowed = ALLOWED[category] ?? [];
     if (allowed !== "*" && !allowed.includes(target.category)) {
       violations.push(`${label}: ${category} → ${target.category} is not allowed (${specifier})`);
+    }
+
+    // A kit is an entry point for consumers only; workspace code uses the real packages.
+    if (target.category === "kits" && category !== "kits" && category !== "examples") {
+      violations.push(`${label}: ${category} must not depend on the kit @aio-ui/${target.package}`);
     }
 
     if (category === "app" && target.category === "core" && !/^\s*type\b/.test(clause)) {

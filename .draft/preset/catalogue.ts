@@ -34,10 +34,12 @@ export interface CatalogueEntry {
  * utilities every builder imports, and the theme registry.
  */
 export const BASE_ASSETS: PresetAsset[] = [
-  { specifier: "@aio-ui/base/Base", styles: [], package: "@aio-ui/base" },
-  { specifier: "@aio-ui/core/ComponentRegistry", styles: [], package: "@aio-ui/core" },
-  { specifier: "@aio-ui/core/DOMRenderer", styles: [], package: "@aio-ui/core" },
-  { specifier: "@aio-ui/core/Stylesheets", styles: [], package: "@aio-ui/core" },
+  // One door for core + base + app. The three roots below it are listed too,
+  // because the kit's own `export * from "@aio-ui/core"` is a bare specifier the
+  // browser must find in the import map (prefixes only cover subpaths).
+  { specifier: "@aio-ui/frameworks", styles: [], package: "@aio-ui/frameworks" },
+  { specifier: "@aio-ui/core", styles: [], package: "@aio-ui/core" },
+  { specifier: "@aio-ui/base", styles: [], package: "@aio-ui/base" },
   { specifier: "@aio-ui/app", styles: [], package: "@aio-ui/app" },
   // The generated app always routes through the hash router, even for one page:
   // AioApp's route pipeline is what renders a page at all.
@@ -48,10 +50,9 @@ export const BASE_ASSETS: PresetAsset[] = [
 /**
  * Stylesheets every site links, independent of the components it uses.
  *
- * `@aio-ui/utilities` is deliberately absent from the base assets: it has no
- * bare export (only `@aio-ui/utilities/<file>`), so importing it directly fails.
- * Components pull their utilities through their own imports, covered by the
- * import-map prefixes.
+ * `@aio-ui/utilities` is deliberately absent from the base assets: it is a set of
+ * named helpers with no single entry that every site needs, so components pull the
+ * subpaths they want through the import-map prefixes.
  */
 export const BASE_STYLES = ["@aio-ui/styles/index.css"];
 
@@ -69,27 +70,27 @@ export const THEME_ASSETS: Record<string, PresetAsset> = {
  * with extra rules (`plan.ts`) because their requirements depend on config.
  */
 export const BUILDER_CATALOGUE: Record<string, CatalogueEntry> = {
-  carousel: { capability: "carousel", modules: ["@aio-ui/carousel/Carousel"], styles: ["@aio-ui/carousel/Carousel.css"] },
-  accordion: { capability: "accordion", modules: ["@aio-ui/accordion/Accordion"], styles: ["@aio-ui/accordion/Accordion.css"] },
-  "pricing-card": { capability: "pricing", modules: ["@aio-ui/pricingcard/PricingCard"], styles: ["@aio-ui/pricingcard/PricingCard.css"] },
-  masonry: { capability: "masonry", modules: ["@aio-ui/masonry/Masonry"], styles: ["@aio-ui/masonry/Masonry.css"] },
-  section: { capability: "section", modules: ["@aio-ui/section/Section"], styles: ["@aio-ui/section/Section.css"] },
-  menu: { capability: "menu", modules: ["@aio-ui/menu/Menu"], styles: ["@aio-ui/menu/Menu.css"] },
-  footer: { capability: "footer", modules: ["@aio-ui/footer/Footer"], styles: ["@aio-ui/footer/Footer.css"] },
-  "fab-menu": { capability: "fabmenu", modules: ["@aio-ui/fabmenu/FabMenu"], styles: ["@aio-ui/fabmenu/FabMenu.css"] },
-  modal: { capability: "modal", modules: ["@aio-ui/modal/Modal"], styles: ["@aio-ui/modal/Modal.css"] },
-  "mode-switcher": { capability: "modeswitcher", modules: ["@aio-ui/modeswitcher/ModeSwitcher"], styles: ["@aio-ui/modeswitcher/ModeSwitcher.css"] },
-  message: { capability: "message", modules: ["@aio-ui/message/Message"], styles: ["@aio-ui/message/Message.css"] },
-  article: { capability: "article", modules: ["@aio-ui/article/Article"], styles: ["@aio-ui/article/Article.css"] },
-  tab: { capability: "tab", modules: ["@aio-ui/tab/Tab"], styles: ["@aio-ui/tab/Tab.css"] },
-  badge: { capability: "badge", modules: ["@aio-ui/badge/Badge"], styles: ["@aio-ui/badge/Badge.css"] },
-  rating: { capability: "rating", modules: ["@aio-ui/rating/Rating"], styles: ["@aio-ui/rating/Rating.css"] },
+  carousel: { capability: "carousel", modules: ["@aio-ui/carousel"], styles: ["@aio-ui/carousel/Carousel.css"] },
+  accordion: { capability: "accordion", modules: ["@aio-ui/accordion"], styles: ["@aio-ui/accordion/Accordion.css"] },
+  "pricing-card": { capability: "pricing", modules: ["@aio-ui/pricingcard"], styles: ["@aio-ui/pricingcard/PricingCard.css"] },
+  masonry: { capability: "masonry", modules: ["@aio-ui/masonry"], styles: ["@aio-ui/masonry/Masonry.css"] },
+  section: { capability: "section", modules: ["@aio-ui/section"], styles: ["@aio-ui/section/Section.css"] },
+  menu: { capability: "menu", modules: ["@aio-ui/menu"], styles: ["@aio-ui/menu/Menu.css"] },
+  footer: { capability: "footer", modules: ["@aio-ui/footer"], styles: ["@aio-ui/footer/Footer.css"] },
+  "fab-menu": { capability: "fabmenu", modules: ["@aio-ui/fabmenu"], styles: ["@aio-ui/fabmenu/FabMenu.css"] },
+  modal: { capability: "modal", modules: ["@aio-ui/modal"], styles: ["@aio-ui/modal/Modal.css"] },
+  "mode-switcher": { capability: "modeswitcher", modules: ["@aio-ui/modeswitcher"], styles: ["@aio-ui/modeswitcher/ModeSwitcher.css"] },
+  message: { capability: "message", modules: ["@aio-ui/message"], styles: ["@aio-ui/message/Message.css"] },
+  article: { capability: "article", modules: ["@aio-ui/article"], styles: ["@aio-ui/article/Article.css"] },
+  tab: { capability: "tab", modules: ["@aio-ui/tab"], styles: ["@aio-ui/tab/Tab.css"] },
+  badge: { capability: "badge", modules: ["@aio-ui/badge"], styles: ["@aio-ui/badge/Badge.css"] },
+  rating: { capability: "rating", modules: ["@aio-ui/rating"], styles: ["@aio-ui/rating/Rating.css"] },
   "product-card": { capability: "product", modules: ["@aio-ui/product/ProductCard"], styles: ["@aio-ui/product/ProductCard.css"] },
   "product-card-grid": { capability: "product", modules: ["@aio-ui/product/ProductGrid"], styles: ["@aio-ui/product/ProductGrid.css"] },
   "product-detail": { capability: "product", modules: ["@aio-ui/product/ProductDetail"], styles: ["@aio-ui/product/ProductDetail.css"] },
-  table: { capability: "table", modules: ["@aio-ui/table/Table"], styles: ["@aio-ui/table/Table.css"] },
-  form: { capability: "form", modules: ["@aio-ui/form/Form"], styles: ["@aio-ui/form/Form.css"] },
-  input: { capability: "input", modules: ["@aio-ui/input/Input"], styles: ["@aio-ui/input/input.css"] },
+  table: { capability: "table", modules: ["@aio-ui/table"], styles: ["@aio-ui/table/Table.css"] },
+  form: { capability: "form", modules: ["@aio-ui/form"], styles: ["@aio-ui/form/Form.css"] },
+  input: { capability: "input", modules: ["@aio-ui/input"], styles: ["@aio-ui/input/input.css"] },
   dropdown: { capability: "dropdown", modules: ["@aio-ui/input/dropdown/module"], styles: ["@aio-ui/input/dropdown.css"] },
   "input-controls": { capability: "controls", modules: ["@aio-ui/input/controls/module"], styles: ["@aio-ui/input/controls.css"] },
 };

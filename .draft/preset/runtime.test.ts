@@ -25,7 +25,7 @@ describe("emitRuntime — index.html", () => {
 
   it("inlines the import map", () => {
     expect(html).toContain('<script type="importmap">');
-    expect(html).toContain('"@aio-ui/core/ComponentRegistry"');
+    expect(html).toContain('"@aio-ui/frameworks"');
   });
 
   it("carries the site copy into title, description and theme", () => {

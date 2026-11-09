@@ -8,6 +8,7 @@
     "packages/components/*",
     "packages/modules/*",
     "packages/themes/*",
+    "packages/kits/*",
     "examples/*"
   ],
   "scripts": {

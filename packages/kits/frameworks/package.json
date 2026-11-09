@@ -1,0 +1,26 @@
+{
+  "name": "@aio-ui/frameworks",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Aggregated public surface for frameworks.",
+  "files": [
+    "dist",
+    "*.ts"
+  ],
+  "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@aio-ui/base": "^0.1.0",
+    "@aio-ui/core": "^0.1.0",
+    "@aio-ui/app": "^0.1.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
+}
