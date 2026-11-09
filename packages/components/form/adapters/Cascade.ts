@@ -658,7 +658,7 @@ export class FormCascade {
  * blocked next step through the validation feature.
  *
  * @example
- * // registered by CORE_FORM_MODULES; no manual wiring needed
+ * // registered by FORM_ADAPTER_DEFINITIONS; no manual wiring needed
  */
 export const cascadeFormAdapter: iModuleDefinition<iFormModuleContext, FormCascade> = {
   id: FORM_MODULE_IDS.cascade,

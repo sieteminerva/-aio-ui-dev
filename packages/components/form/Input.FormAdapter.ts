@@ -26,6 +26,20 @@ class InputFormAdapter {
   }
 
   /**
+   * The input adapter set this form runs on, or `undefined` for the input layer's default.
+   *
+   * @summary The host may declare the input modules in its manifest (`scope: "input"`);
+   * when it does, fields must use *that* set. Without this the field built its own
+   * `InputBuilder` with no `modules` and quietly fell back to `CORE_INPUT_MODULES`, so a
+   * trimmed layer still shipped the uploader.
+   */
+  get #preset() {
+    // `?.` because a context built by a test (or by a third-party host) may predate the
+    // field; empty and absent both mean "use the input layer's default preset".
+    return this.#context.inputModules?.length ? this.#context.inputModules : undefined;
+  }
+
+  /**
    * Builds one field from the input schema.
    *
    * @param input - Basic input node or raw descriptor.
@@ -33,10 +47,10 @@ class InputFormAdapter {
    * @returns The rendered field element.
    *
    * @summary The host's builder config comes along, so the field inherits `themeId`,
-   * `namespace` and `emit` instead of starting blank.
+   * `namespace` and `emit` instead of starting blank — and so does its adapter set.
    */
   public renderField(input: any, formId: string): HTMLElement {
-    return new InputBuilder({ ...this.#context.builderConfig, formId } as any).create(input);
+    return new InputBuilder({ ...this.#context.builderConfig, formId, modules: this.#preset } as any).create(input);
   }
 
   /**
@@ -46,7 +60,7 @@ class InputFormAdapter {
    * @returns Nothing.
    */
   public mount(root: HTMLElement): void {
-    mountInputModules(root);
+    mountInputModules(root, this.#preset);
   }
 
   /**
@@ -61,7 +75,7 @@ class InputFormAdapter {
    * a broken fieldset.
    */
   public renderActions(fieldset: HTMLElement, spec: { actions: any; position?: "left" | "right" }): HTMLElement[] | null {
-    const controls = mountControls(fieldset, spec.actions, spec.position ?? "right");
+    const controls = mountControls(fieldset, spec.actions, spec.position ?? "right", this.#preset);
     return controls ? [controls] : null;
   }
 
@@ -77,7 +91,7 @@ class InputFormAdapter {
     const policy = this.#context.config.files;
     if (typeof policy !== "function") return;
 
-    const files = inputFilesOf(this.#context.form.id);
+    const files = inputFilesOf(this.#context.form.id, this.#preset);
     Object.assign(payload, await policy(files, this.#context.form));
   }
 }
@@ -89,7 +103,7 @@ class InputFormAdapter {
  * and fails loudly instead of rendering an empty form.
  *
  * @example
- * // registered by CORE_FORM_MODULES (the form's default set)
+ * // registered by FORM_ADAPTER_DEFINITIONS (the form's default set)
  */
 export const inputFormAdapter: iModuleDefinition<iFormModuleContext, InputFormAdapter> = {
   id: FORM_MODULE_IDS.input,

@@ -291,7 +291,7 @@ export class FormMultistepHandler {
  * `<template data-step>` placeholders and mounted on demand.
  *
  * @example
- * // registered by CORE_FORM_MODULES; no manual wiring needed
+ * // registered by FORM_ADAPTER_DEFINITIONS; no manual wiring needed
  */
 export const multistepFormAdapter: iModuleDefinition<iFormModuleContext, FormMultistepHandler> = {
   id: FORM_MODULE_IDS.multistep,

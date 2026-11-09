@@ -49,7 +49,7 @@ class MessageFormAdapter {
  * @summary Loaded with the core preset; contributes the `notify` hook.
  *
  * @example
- * // registered by CORE_FORM_MODULES; no manual wiring needed
+ * // registered by FORM_ADAPTER_DEFINITIONS; no manual wiring needed
  */
 export const messageFormAdapter: iModuleDefinition<iFormModuleContext, MessageFormAdapter> = {
   id: FORM_MODULE_IDS.message,

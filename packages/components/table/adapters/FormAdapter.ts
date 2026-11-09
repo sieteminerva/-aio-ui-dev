@@ -151,7 +151,7 @@ class TableFormAdapter {
  * declare `table`, and the file delegation only reacts to CSV/JSON inputs.
  *
  * @example
- * // registered by CORE_FORM_MODULES; no manual wiring needed
+ * // registered by FORM_ADAPTER_DEFINITIONS; no manual wiring needed
  */
 export const tableFormAdapter: iModuleDefinition<iFormModuleContext, TableFormAdapter> = {
   id: FORM_MODULE_IDS.table,

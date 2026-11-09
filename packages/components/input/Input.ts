@@ -207,8 +207,12 @@ export interface iInputConfig extends iBuilderConfig<InputElementType> {
    *
    * Leave it `null` and the core preset keeps every adapter available. Inject one to
    * trim the layer down (for example `LITE_INPUT_MODULES`), or to add a project module.
+   *
+   * An already-resolved `iInputAdapter[]` is accepted too: that is what a parent
+   * component hands over when its own manifest resolved the set — the field must not
+   * load or unload modules its host owns.
    */
-  modules?: ModuleLoader<iInputModuleContext, iInputAdapter> | null;
+  modules?: ModuleLoader<iInputModuleContext, iInputAdapter> | iInputAdapter[] | null;
 }
 
 export class InputBuilder extends Builder<InputElementType, iInputConfig> {
@@ -219,7 +223,10 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
   #input: iBasicInputNode = {};
 
   /** Owns the lifecycle of the input sub-modules: one resolve per prepare. */
-  readonly #loader: ModuleLoader<iInputModuleContext, iInputAdapter>;
+  readonly #loader: ModuleLoader<iInputModuleContext, iInputAdapter> | null;
+
+  /** Adapters handed over already-resolved by the host; when set, the loader is unused. */
+  readonly #inherited: iInputAdapter[] | null;
 
   /** Modules resolved for the field being built. */
   #modules: iInputAdapter[] = [];
@@ -258,7 +265,15 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
     this.config = this.resolveConfig(defaultConfig, config);
 
     // The loader is the only thing that knows the adapter set; `prepare()` resolves it.
-    this.#loader = this.config.modules ?? new ModuleLoader<iInputModuleContext, iInputAdapter>("input", CORE_INPUT_MODULES);
+    // An inherited set (host-owned modules) is used as-is — loading it again would give
+    // every field its own instance and its own teardown.
+    if (Array.isArray(this.config.modules)) {
+      this.#inherited = this.config.modules;
+      this.#loader = null;
+    } else {
+      this.#inherited = null;
+      this.#loader = this.config.modules ?? new ModuleLoader<iInputModuleContext, iInputAdapter>("input", CORE_INPUT_MODULES);
+    }
 
   }
 
@@ -319,7 +334,7 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
 
     // 🧩 Modules are resolved once per prepare, after the payload exists: a module decides
     // from the field what it wants to do, and `InputBuilder` never learns their names.
-    this.#modules = this.#loader.resolveAll(this.#moduleContext);
+    this.#modules = this.#inherited ?? this.#loader!.resolveAll(this.#moduleContext);
 
     const wrapper = this.render("@field", this.#input)!;
 

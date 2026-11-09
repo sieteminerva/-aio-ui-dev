@@ -20,10 +20,49 @@ import { fileUploaderInputModule } from "./FileUploader/FileUploader.InputModule
 import { inputControlsInputModule } from "./InputControls/InputControls.InputModule";
 import { popoverInputModule } from "./Popover.InputModule";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
-import type { InputModuleDefinition, iInputAdapter, iInputModuleContext } from "./InputModuleTypes";
+import type {
+  InputModuleDefinition,
+  InputModulePreset,
+  iInputAdapter,
+  iInputModuleContext,
+} from "./InputModuleTypes";
 
 export { INPUT_MODULE_IDS } from "./InputModuleTypes";
-export type { InputModuleId, iInputAdapter, iInputModuleContext, InputModuleDefinition } from "./InputModuleTypes";
+export type {
+  InputModuleId,
+  InputModulePreset,
+  iInputAdapter,
+  iInputModuleContext,
+  InputModuleDefinition,
+} from "./InputModuleTypes";
+
+/** Whether a preset item is a definition (needs loading) or a live adapter. */
+function isDefinition(item: InputModuleDefinition | iInputAdapter): item is InputModuleDefinition {
+  return typeof (item as InputModuleDefinition).load === "function";
+}
+
+/**
+ * Turns any accepted preset into adapters, plus a disposer for the ones it created.
+ *
+ * @param preset - Definitions or an already-resolved adapter set.
+ * @param context - Host configuration handed to freshly loaded modules.
+ * @returns The adapters to use and the matching cleanup.
+ */
+function adaptersOf(
+  preset: InputModulePreset,
+  context: iInputModuleContext
+): { adapters: iInputAdapter[]; dispose: () => void } {
+  if (preset.every((item) => !isDefinition(item))) {
+    // Already resolved by the caller (a parent component's manifest): never re-load.
+    return { adapters: preset as iInputAdapter[], dispose: () => { } };
+  }
+
+  const loader = new ModuleLoader<iInputModuleContext, iInputAdapter>(
+    "input",
+    preset.filter(isDefinition) as InputModuleDefinition[]
+  );
+  return { adapters: loader.resolveAll(context), dispose: () => loader.unloadAll() };
+}
 
 /**
  * Lite preset: the field itself and nothing else.
@@ -57,10 +96,10 @@ export const CORE_INPUT_MODULES: InputModuleDefinition[] = [
  * @param root - Subtree to scan.
  * @param preset - Definitions to resolve. Defaults to the core set.
  */
-export function mountInputModules(root: Document | HTMLElement, preset: InputModuleDefinition[] = CORE_INPUT_MODULES): void {
-  const loader = new ModuleLoader<iInputModuleContext, iInputAdapter>("input", preset);
-  for (const module of loader.resolveAll({ builderConfig: { themeId: "default" } })) module.mount?.(root);
-  loader.unloadAll();
+export function mountInputModules(root: Document | HTMLElement, preset: InputModulePreset = CORE_INPUT_MODULES): void {
+  const { adapters, dispose } = adaptersOf(preset, { builderConfig: { themeId: "default" } });
+  for (const module of adapters) module.mount?.(root);
+  dispose();
 }
 
 /**
@@ -80,12 +119,12 @@ export function mountControls(
   scope: HTMLElement,
   actions: any,
   position: "left" | "right" = "right",
-  preset: InputModuleDefinition[] = CORE_INPUT_MODULES
+  preset: InputModulePreset = CORE_INPUT_MODULES
 ): HTMLElement | null {
-  const loader = new ModuleLoader<iInputModuleContext, iInputAdapter>("input", preset);
-  const module = loader.resolveAll({ builderConfig: { themeId: "default" } }).find((m) => typeof m.renderActions === "function");
+  const { adapters, dispose } = adaptersOf(preset, { builderConfig: { themeId: "default" } });
+  const module = adapters.find((m) => typeof m.renderActions === "function");
   const node = module?.renderActions?.(scope, { actions, position }) ?? null;
-  loader.unloadAll();
+  dispose();
   return node;
 }
 
@@ -96,10 +135,10 @@ export function mountControls(
  * @param preset - Definitions to resolve. Defaults to the core set.
  * @returns Raw files; empty when the preset has no module that can read them.
  */
-export function inputFilesOf(formId: string, preset: InputModuleDefinition[] = CORE_INPUT_MODULES): Record<string, File[]> {
-  const loader = new ModuleLoader<iInputModuleContext, iInputAdapter>("input", preset);
-  const module = loader.resolveAll({ builderConfig: { themeId: "default" } }).find((m) => typeof m.getFiles === "function");
+export function inputFilesOf(formId: string, preset: InputModulePreset = CORE_INPUT_MODULES): Record<string, File[]> {
+  const { adapters, dispose } = adaptersOf(preset, { builderConfig: { themeId: "default" } });
+  const module = adapters.find((m) => typeof m.getFiles === "function");
   const files = module?.getFiles ? module.getFiles(formId) : {};
-  loader.unloadAll();
+  dispose();
   return files;
 }

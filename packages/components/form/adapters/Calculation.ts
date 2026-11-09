@@ -268,7 +268,7 @@ function collectFormulas(inputs: any[]): iCalculationFormula<any>[] {
  * attached.
  *
  * @example
- * // registered by CORE_FORM_MODULES; no manual wiring needed
+ * // registered by FORM_ADAPTER_DEFINITIONS; no manual wiring needed
  */
 export const calculationFormAdapter: iModuleDefinition<iFormModuleContext, FormCalculationHandler> = {
   id: FORM_MODULE_IDS.calculation,

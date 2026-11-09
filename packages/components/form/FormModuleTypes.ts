@@ -1,5 +1,6 @@
 import type { iBuilderConfig } from "@aio-ui/core/interface";
 import type { iMessageContent } from "@aio-ui/message/Message";
+import type { iInputAdapter } from "@aio-ui/input/InputModuleTypes";
 import type { iFormConfig } from "./Form";
 import type { FormMultistepHost } from "./adapters/Multistep";
 
@@ -256,6 +257,15 @@ export interface iFormModuleContext {
    * itself could publish fine.
    */
   builderConfig: Partial<iBuilderConfig<any>>;
+
+  /**
+   * Input adapters this form received from its manifest (`scope: "input"`).
+   *
+   * @summary Empty means "use the input layer's own default preset". When filled, every
+   * field is built with this exact set, so a form can run a trimmed input layer without
+   * the field silently falling back to `CORE_INPUT_MODULES`.
+   */
+  inputModules: iInputAdapter[];
 
   /** Message host callback, wired to `FormBuilder.createMessage`. */
   showMessage: (content: iMessageContent) => void;

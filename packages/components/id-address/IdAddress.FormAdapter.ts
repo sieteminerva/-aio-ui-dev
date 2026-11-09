@@ -100,7 +100,7 @@ class IdAddressFormAdapter {
  * exist yet when modules are loaded.
  *
  * @example
- * // registered by CORE_FORM_MODULES; no manual wiring needed
+ * // registered by FORM_ADAPTER_DEFINITIONS; no manual wiring needed
  */
 export const idAddressFormAdapter: iModuleDefinition<iFormModuleContext, IdAddressFormAdapter> = {
   id: FORM_MODULE_IDS.idAddress,

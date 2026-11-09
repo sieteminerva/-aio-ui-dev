@@ -97,3 +97,12 @@ export interface iInputAdapter {
 
 /** Erased definition type for the preset arrays, where module results differ per id. */
 export type InputModuleDefinition = iModuleDefinition<iInputModuleContext, iInputAdapter>;
+
+/**
+ * What a caller may hand the input layer as its adapter set.
+ *
+ * @summary Either definitions (the registry loads and owns their lifecycle) or
+ * adapters that were already resolved — the case when a parent component received
+ * them from its own manifest and must not re-create or re-load them per field.
+ */
+export type InputModulePreset = InputModuleDefinition[] | iInputAdapter[];

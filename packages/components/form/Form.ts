@@ -7,7 +7,9 @@ import type { FormMultistepHandler, FormMultistepHost } from "./adapters/Multist
 import type { FormValidationHandler } from "./adapters/Validation";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
 import type { FormModulePhase, iFormAdapter, iFormModuleContext } from "./FormModuleTypes";
-import { CORE_FORM_MODULES } from "./FormRegistry";
+import { FORM_ADAPTER_DEFINITIONS } from "./FormRegistry";
+import { INPUT_MODULE_IDS } from "@aio-ui/input/InputRegistry";
+import type { iInputAdapter } from "@aio-ui/input/InputModuleTypes";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { applyRowColumns, applyRowSpan, childSpanOf, columnsOf } from "./FormLayout";
 import { collectFormValues } from "@aio-ui/input/FormValues";
@@ -147,6 +149,30 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
   // hook opsionalnya (mount/beforeSubmit/renderTable), tanpa tahu isinya.
   #features: iFormAdapter[] = [];
 
+  // 🧩 Adapter input yang diterima dari manifest (`scope: "input"`). Kosong berarti
+  // field memakai preset bawaan input layer; terisi berarti field wajib memakai
+  // set ini, supaya lapisan input yang dipangkas tidak diam-diam kembali ke core.
+  #inputModules: iInputAdapter[] = [];
+
+  /**
+   * Memisahkan modul yang diserahkan registry menurut lapisannya.
+   *
+   * @param modules - Id modul → modul hasil resolve.
+   *
+   * @summary `Form` menaungi builder lain (`input`), jadi satu manifest memuat dua
+   * lapisan: id milik `INPUT_MODULE_IDS` menjadi preset field, sisanya milik form.
+   * Id tetap yang menentukan — `scope` di manifest hanya menyatakan niat, dan
+   * mencocokkan lewat id membuat manifest lama tanpa `scope` tetap benar.
+   */
+  public provideModules(modules: Record<string, unknown>): void {
+    super.provideModules(modules);
+
+    const inputIds = new Set<string>(Object.values(INPUT_MODULE_IDS));
+    this.#inputModules = Object.entries(modules)
+      .filter(([id]) => inputIds.has(id))
+      .map(([, module]) => module as iInputAdapter);
+  }
+
   constructor(config: Partial<iFormConfig> = {}) {
     super();
 
@@ -204,7 +230,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     this.config = this.resolveConfig(defaultConfig, config);
 
     // Step 1: Loader efektif — preset inti bila consumer tidak menyuntik loader sendiri.
-    this.#loader = this.config.modules ?? new ModuleLoader<iFormModuleContext, any>("form", CORE_FORM_MODULES);
+    this.#loader = this.config.modules ?? new ModuleLoader<iFormModuleContext, any>("form", FORM_ADAPTER_DEFINITIONS);
   }
 
   /**
@@ -587,6 +613,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
         namespace: this.config.namespace,
         emit: typeof this.config.emit === "function" ? this.config.emit : null,
       },
+      inputModules: this.#inputModules,
       showMessage: (content) => this._notify(form, false, content),
       config: this.config,
       cascadeHost: () => this._buildCascadeHost(),

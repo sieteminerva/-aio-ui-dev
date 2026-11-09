@@ -197,7 +197,7 @@ export class FormValidationHandler {
  * still emit, dispatch a `CustomEvent`, and show a message.
  *
  * @example
- * // registered by CORE_FORM_MODULES; no manual wiring needed
+ * // registered by FORM_ADAPTER_DEFINITIONS; no manual wiring needed
  */
 export const validationFormAdapter: iModuleDefinition<iFormModuleContext, FormValidationHandler> = {
   id: FORM_MODULE_IDS.validation,

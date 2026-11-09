@@ -80,6 +80,16 @@ export interface iComponentModuleRef {
    * first exported function, then the namespace object.
    */
   export?: string;
+  /**
+   * Which layer inside the component this module belongs to.
+   *
+   * @summary Free-form on purpose — the registry does not care, the component does.
+   * A component that nests another builder (`form` → `input`) uses it to route a
+   * resolved module to the right preset instead of dumping everything into one bag:
+   * `"input"` modules become the field-level adapter set, `"form"` (or omitted) the
+   * component's own. The module `id` stays authoritative; `scope` documents intent.
+   */
+  scope?: string;
   stylesheet?: string;
   config?: any;
 }
