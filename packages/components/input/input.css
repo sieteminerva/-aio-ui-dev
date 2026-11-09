@@ -535,6 +535,15 @@ select:focus-visible {
       display: none;
     }
 
+    /* A datalist is driven *by its input*: the box is a frame, there is no custom menu.
+       With `pointer-events: none` (right below, meant for `style: "select"` where the box
+       handles the click) the input can never be focused, so the native picker never opens
+       and the field looks dead. */
+    &[data-style="datalist"] > input[type="text"] {
+      pointer-events: auto;
+      cursor: text;
+    }
+
     &:has(> .tags > .badge) > input[type="text"] {
       flex: 1 1 120px;
       min-width: 60px;

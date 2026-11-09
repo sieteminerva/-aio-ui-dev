@@ -81,6 +81,25 @@ describe("controls on a group", () => {
     expect(fieldset.querySelector("button.edit")).not.toBeNull();
   });
 
+  it("swaps edit and save on its own when the set declares only edit", () => {
+    const { fieldset, name } = group();
+    const set = controls(fieldset, [{ type: "edit", label: "Edit", onClick: () => undefined }]);
+
+    // The pair toggle needs both buttons; a lone `edit` must not fall through it and stop.
+    (set.querySelector("button.edit") as HTMLButtonElement).click();
+    expect(set.querySelector("button.save")).not.toBeNull();
+    expect(name.readOnly).toBe(false);
+
+    (set.querySelector("button.save") as HTMLButtonElement).click();
+    expect(set.querySelector("button.edit")).not.toBeNull();
+    expect(name.readOnly).toBe(true);
+
+    // …and it must keep working: the second cycle used to be dead.
+    (set.querySelector("button.edit") as HTMLButtonElement).click();
+    expect(set.querySelector("button.save")).not.toBeNull();
+    expect(name.readOnly).toBe(false);
+  });
+
   it("opens a scope this set locked earlier, when the new set has no edit action", () => {
     const { fieldset, name, tier } = group();
     controls(fieldset, editSave());

@@ -187,10 +187,20 @@
       corner so the fields keep their full width. Their colours are restated
       because a container-level button is not glued to an input — it needs a
       solid surface to stay legible on the card rather than inheriting the
-      translucent input fill. */
+      translucent input fill.
+
+      The corner is out of the flow, so the content has to make room for it —
+      otherwise the set lands on the first field's label and input (measured:
+      the buttons covered the right half of the first input). The reserved band
+      is a padding, not a margin: a fieldset's own padding is what the first
+      field starts from. */
 fieldset.form-group,
 .field:is(.group) {
   position: relative;
+
+  &:has(> .controls) {
+    padding-top: 3em;
+  }
 
   & > .controls {
     position: absolute;

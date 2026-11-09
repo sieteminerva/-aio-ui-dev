@@ -243,9 +243,14 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
     // When the set declares both sides, they are a pair: enable the counterpart and step
     // back. Replacing the button instead would append a second "Simpan" next to the one
     // that was already there.
+    //
+    // The pair is only a pair when **both** buttons exist: a set may declare `edit` alone
+    // (`actions: ["edit"]` without `save`), and the first click then swaps edit → save.
+    // Bailing out on the pair branch regardless left that swap as the last thing that ever
+    // happened — the second click had nothing to switch back to and the set went dead.
     if ((actionType === "edit" || actionType === "save")
-      && actions.some((action) => action.type === actionType)) {
-      this.#togglePair(controls, actionType);
+      && actions.some((action) => action.type === actionType)
+      && this.#togglePair(controls, actionType)) {
       return;
     }
 
@@ -272,14 +277,17 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
    *
    * @param controls - The controls node holding the pair.
    * @param actionType - Which side to enable.
+   * @returns `true` when both buttons exist and the switch happened; `false` when the set
+   *   has only one side, so the caller must swap the button itself.
    */
-  #togglePair(controls: HTMLElement, actionType: "edit" | "save"): void {
+  #togglePair(controls: HTMLElement, actionType: "edit" | "save"): boolean {
     const edit = controls.querySelector<HTMLButtonElement>("button.edit");
     const save = controls.querySelector<HTMLButtonElement>("button.save");
-    if (!edit || !save) return;
+    if (!edit || !save) return false;
 
     edit.disabled = actionType !== "edit";
     save.disabled = actionType !== "save";
+    return true;
   }
 
 
