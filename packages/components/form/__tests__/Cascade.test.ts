@@ -123,3 +123,59 @@ describe("multistep gate", () => {
     expect(active(form)).toBe("s2");
   });
 });
+
+/**
+ * A conditional item must follow its condition in **every** live instance, and a repeated
+ * copy must be driven by its *own* inputs: the copy's controls are suffixed (`sku` →
+ * `sku-1`), so the resolution is scoped to the instance that owns the condition.
+ */
+describe("cascade and a repeated scope", () => {
+  const repeatable = [
+    {
+      id: "line",
+      title: "Baris",
+      actions: [{ type: "add", label: "Add", onClick: () => undefined }],
+      group: [
+        { type: "text", id: "sku", title: "SKU" },
+        { type: "text", id: "note", title: "Catatan", condition: { field: "sku", filled: true } },
+      ],
+    },
+  ];
+
+  const render = (mode: "template" | "hidden") =>
+    new FormBuilder().create(repeatable as any, { cascading: true, cascadeMode: mode } as any) as HTMLFormElement;
+
+  const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  for (const mode of ["hidden", "template"] as const) {
+    it(`drives each copy from its own inputs (${mode})`, async () => {
+      const form = render(mode);
+      await tick();
+
+      // No SKU yet: the note is held away — hidden in `hidden` mode, a placeholder in
+      // `template` mode. Either way it is not a live element.
+      const held = form.querySelector('[data-cascade]:not(template)') as HTMLElement | null;
+      if (mode === "hidden") expect(held?.hidden).toBe(true);
+      else expect(held).toBeNull();
+
+      (form.querySelector("button.add") as HTMLButtonElement).click();
+      await tick();
+
+      const clone = form.querySelector("#line-1") as HTMLElement;
+      const cloneSku = clone.querySelector("#sku-1") as HTMLInputElement;
+      cloneSku.value = "ABC";
+      cloneSku.dispatchEvent(new Event("input", { bubbles: true }));
+      await tick();
+
+      // The copy shows its note, built with the copy's own id…
+      expect(clone.querySelector("#note-1")).not.toBeNull();
+      const cloneNote = clone.querySelector('[data-cascade]:not(template)') as HTMLElement;
+      expect(cloneNote.hidden).toBe(false);
+
+      // …while the original still shows nothing: conditions do not leak across copies.
+      const sourceItem = (form.querySelector("#line") as HTMLElement).querySelector("[data-cascade]");
+      const sourceIsPlaceholder = sourceItem instanceof HTMLTemplateElement;
+      expect(sourceIsPlaceholder || (sourceItem as HTMLElement).hidden).toBe(true);
+    });
+  }
+});

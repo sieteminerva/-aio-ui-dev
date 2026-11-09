@@ -354,6 +354,9 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
     clone.removeAttribute("data-locked");
     clone.classList.remove("locked");
     clone.querySelectorAll("[data-locked]").forEach((element) => element.removeAttribute("data-locked"));
+    // Marks the copy as its own instance: the cascade resolves a conditional field inside
+    // the copy that owns it (`sku` → `sku-1`) instead of the first one in the document.
+    clone.setAttribute("data-instance", "true");
 
     const clonedControls = clone.querySelector<HTMLElement>(".controls");
     const sourceButtons = scope.querySelectorAll<HTMLButtonElement>(".controls button");
@@ -377,6 +380,11 @@ export class InputControlsBuilder extends Builder<InputControlsElementType> {
       };
       this.initialize(clonedControls, { content: { actions, scope: clone } });
     }
+
+    // A new scope is new DOM the engines have not seen: it copied whatever state the
+    // source was in (a visible conditional field, a locked control). Announcing it lets
+    // the cascade re-evaluate the copy against the copy's own (empty) values.
+    clone.dispatchEvent(new CustomEvent("scopeAdded", { bubbles: true, detail: { scope: clone } }));
 
     return clone;
   }

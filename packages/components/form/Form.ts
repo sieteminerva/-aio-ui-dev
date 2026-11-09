@@ -848,10 +848,16 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     const toggleLoadingState = (success: boolean) => {
       form.classList.remove("loading");
       form.querySelectorAll(".field").forEach((f) => f.classList.remove("error"));
-      if (!success) {
-        form.querySelectorAll(".field").forEach((f) => f.classList.add("error"));
-      }
+      if (!success) form.querySelectorAll(".field").forEach((f) => f.classList.add("error"));
     };
+
+    // 🧩 A control set can repeat a group or a row (`repeater`). The copy arrives with the
+    // source's state — including conditional items that were visible. Engines re-evaluate
+    // against the copy's own (empty) values instead of inheriting that state.
+    form.addEventListener("scopeAdded", () => {
+      this.#cascade?.sync();
+      this.#multistep?.refresh(form);
+    });
 
     // 🪜 Multistep: engine melahirkan langkah awal + memasang delegasi next/back.
     // Setiap fieldset step yang lahir (termasuk step 0) ditawarkan ke seluruh

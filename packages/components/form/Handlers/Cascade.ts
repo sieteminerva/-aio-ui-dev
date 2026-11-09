@@ -203,13 +203,44 @@ export class FormCascadeHandler {
     return undefined;
   }
 
-  /** Urutan lookup nilai: kontrol DOM → descriptor skema */
-  static resolveFieldValue(state: iCascadeState, field: string): any {
-    const control = state.form?.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-      `[name="${CSS.escape(field)}"], #${CSS.escape(field)}`
-    );
+  /**
+   * Urutan lookup nilai: kontrol di dalam instance → kontrol form → descriptor skema.
+   *
+   * @param state - Form, schema inputs.
+   * @param field - Field name the condition refers to.
+   * @param scope - Element the condition lives in. A repeated group is its own instance,
+   *   and its controls are suffixed (`sku` → `sku-1`), so the lookup starts there.
+   */
+  static resolveFieldValue(state: iCascadeState, field: string, scope?: Element | null): any {
+    const control = this.findControl(scope, field) ?? this.findControl(state.form, field);
     if (control) return this.readControlValue(state.form, control);
     return this.findSchemaValue(state.inputs, field);
+  }
+
+  /**
+   * Finds the control that stands for a schema field under a root.
+   *
+   * @param root - Element to search (instance first, then the form).
+   * @param field - Field name or id.
+   * @returns The control, or `null`.
+   *
+   * @summary Exact name/id first; then the clone form `field-<n>` that a repeated group
+   * writes, so one copy's conditional field follows that copy's own value.
+   */
+  static findControl(root: Element | null | undefined, field: string): HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null {
+    if (!root) return null;
+
+    const exact = root.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+      `[name="${CSS.escape(field)}"], #${CSS.escape(field)}`
+    );
+    if (exact) return exact;
+
+    const clonePattern = new RegExp(`^${field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-\\d+$`);
+    const candidates = root.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("[name], [id]");
+    for (const candidate of Array.from(candidates)) {
+      if (clonePattern.test(candidate.getAttribute("name") ?? "") || clonePattern.test(candidate.id)) return candidate;
+    }
+    return null;
   }
 
 }
@@ -284,6 +315,55 @@ export class FormCascade {
 
   /** Elements held by the `hidden` mode: path → live element. */
   private hiddenItems = new Map<string, HTMLElement>();
+
+  /**
+   * Every live, non-template node stamped with a cascade path.
+   *
+   * @param form - Form the engine is attached to.
+   * @param path - Cascade path key.
+   * @returns The instances, in document order (a repeated group has more than one).
+   */
+  #instances(form: HTMLFormElement, path: string): HTMLElement[] {
+    return this.#cascadeNodes(form, path).filter((node) => !(node instanceof HTMLTemplateElement)) as HTMLElement[];
+  }
+
+  /** Every node — placeholders included — stamped with a cascade path. */
+  #cascadeNodes(form: HTMLFormElement, path: string): Element[] {
+    return Array.from(form.querySelectorAll(`[data-cascade="${CSS.escape(path)}"]`));
+  }
+
+  /** A fresh placeholder for an item that is being held again. */
+  #placeholderFor(path: string): HTMLTemplateElement {
+    const placeholder = document.createElement("template");
+    placeholder.dataset.cascade = path;
+    this.placeholders.set(path, placeholder);
+    return placeholder;
+  }
+
+  /**
+   * Builds a conditional item for the copy of a repeated group.
+   *
+   * @param item - Schema item to build.
+   * @param formId - Owning form id.
+   * @param path - Cascade path key.
+   * @param instance - Repeated scope the item belongs to, when there is one.
+   * @returns The built element, with the copy's id/name suffix applied.
+   *
+   * @summary `#build` renders from the schema, so a field built inside a copy would get
+   * the original's id (`note`) and collide with it. The copy's own suffix (`-1`) is
+   * applied the same way duplication does it.
+   */
+  #buildForInstance(item: any, formId: string, path: string, instance: HTMLElement | null): HTMLElement {
+    const element = this.#build(item, formId, path);
+    const suffix = instance ? /(-\d+)$/.exec(instance.id)?.[1] ?? "" : "";
+    if (!suffix) return element;
+
+    if (element.id) element.id += suffix;
+    element.querySelectorAll<HTMLElement>("[id]").forEach((child) => { child.id += suffix; });
+    element.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>("input, select, textarea")
+      .forEach((control) => { if (control.name) control.name += suffix; });
+    return element;
+  }
 
   /**
    * Builds the real element for a conditional item.
@@ -394,7 +474,9 @@ export class FormCascade {
     const form = this.form;
     if (!form) return;
     const values = FormCascadeHandler.collectValues(form);
-    const resolve = (field: string) => FormCascadeHandler.resolveFieldValue({ form, inputs: this.host.inputs }, field);
+    // A repeated group is its own instance: its condition reads its own controls.
+    const resolveIn = (scope: Element | null | undefined, field: string) =>
+      FormCascadeHandler.resolveFieldValue({ form, inputs: this.host.inputs }, field, scope);
 
     // Hidden mode: elements are live from the start, so this only flips `hidden`. Nothing
     // is rebuilt — which is what lets an address picker keep the options it injected into
@@ -408,16 +490,18 @@ export class FormCascade {
         FormCascadeHandler.walkInputs(this.host.inputs, "", (item, path) => {
           if (!FormCascadeHandler.isCascadeItem(item)) return;
 
-          const element = this.hiddenItems.get(path);
-          if (!element) return false;
+          // Every live instance of this item, not just the one the map remembers: a
+          // repeated group carries a clone with the same path, and it follows the same
+          // condition as the original.
+          const elements = this.#instances(form, path);
+          if (!elements.length) return false;
 
-          const met = FormCascadeHandler.conditionMet(
-            FormCascadeHandler.normalizeCondition(item.condition),
-            resolve,
-            values
-          );
+          const condition = FormCascadeHandler.normalizeCondition(item.condition);
 
-          if (met === element.hidden) {
+          for (const element of elements) {
+            const scope = element.closest("[data-instance]") ?? element.parentElement;
+            const met = FormCascadeHandler.conditionMet(condition, (field) => resolveIn(scope, field), values);
+            if (met === !element.hidden) continue;
             element.hidden = !met;
             element.toggleAttribute("data-cascade-hidden", !met);
             toggled++;
@@ -435,31 +519,46 @@ export class FormCascade {
     }
 
     // Template mode: a placeholder is planted where the element would be; the real element
-    // is built only while the condition holds.
+    // is built only while the condition holds. Also per instance: with a repeated group
+    // each copy has its own placeholder, and `querySelector` would only ever see the first.
     let changed = false;
     let pass = 0;
     do {
       changed = false;
       FormCascadeHandler.walkInputs(this.host.inputs, "", (item, path) => {
         if (!FormCascadeHandler.isCascadeItem(item)) return; // bukan kandidat → turuni anaknya
-        const placeholder = this.placeholders.get(path);
-        if (!(placeholder instanceof HTMLElement)) return false; // group di atasnya masih ditahan
-        const mounted = form.querySelector<HTMLElement>(`[data-cascade="${CSS.escape(path)}"]:not(template)`);
-        const met = FormCascadeHandler.conditionMet(FormCascadeHandler.normalizeCondition(item.condition), resolve, values);
-        if (met) {
-          if (!mounted) {
-            // A build failure throws — it is not swallowed.
-            const el = this.#build(item, form.id, path);
-            placeholder.replaceWith(el);
-            changed = true;
-            this.emit(form, "mount", el, item, path);
-          }
-        } else if (mounted) {
-          mounted.replaceWith(placeholder);
+
+        const nodes = this.#cascadeNodes(form, path);
+        if (!nodes.length) return false; // group di atasnya masih ditahan
+
+        const placeholders = nodes.filter((node) => node instanceof HTMLTemplateElement) as HTMLTemplateElement[];
+        const mounted = nodes.filter((node) => !(node instanceof HTMLTemplateElement)) as HTMLElement[];
+        const condition = FormCascadeHandler.normalizeCondition(item.condition);
+
+        for (const placeholder of placeholders) {
+          const instance = placeholder.closest("[data-instance]") as HTMLElement | null;
+          const met = FormCascadeHandler.conditionMet(condition, (field) => resolveIn(instance ?? placeholder.parentElement, field), values);
+          if (!met) continue;
+
+          // A build failure throws — it is not swallowed. The copy keeps its own ids.
+          const el = this.#buildForInstance(item, form.id, path, instance);
+          placeholder.replaceWith(el);
           changed = true;
-          this.emit(form, "unmount", mounted, item, path);
+          this.emit(form, "mount", el, item, path);
         }
-        return Boolean(mounted); // group kaskade hanya dituruni saat sedang terpasang
+
+        for (const element of mounted) {
+          const scope = element.parentElement as HTMLElement | null;
+          const met = FormCascadeHandler.conditionMet(condition, (field) => resolveIn(scope, field), values);
+          if (met) continue;
+
+          element.replaceWith(this.#placeholderFor(path));
+          changed = true;
+          this.emit(form, "unmount", element, item, path);
+        }
+
+        // A group cascade is only descended into while it is mounted.
+        return mounted.length > 0;
       });
       pass++;
     } while (changed && pass < 10); // ulang sebentar untuk kaskade berantai

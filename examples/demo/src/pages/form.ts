@@ -242,10 +242,12 @@ export const InputControlSet = {
       id: "row-record",
       title: "Baris record",
       column: 2,
-      actions: ["editor"],
+      actions: ["editor", "repeater"],
       row: [
         { type: "text", id: "row-sku", title: "SKU", config: { wide: 50 } },
         { type: "text", id: "row-qty", title: "Qty", config: { wide: 50 } },
+        // Cascade inside a locked scope: appears once SKU has a value, i.e. after Edit.
+        { type: "text", id: "row-note", title: "Catatan baris", condition: { field: "row-sku", filled: true } },
       ] as iBasicInputNode[],
     },
 
