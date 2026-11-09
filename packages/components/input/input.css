@@ -6,56 +6,59 @@
    actions, multistep) stayed in the form package's Form.css.
    ========================================================================== */
 
-:root {
+/* --------------------------------------------------------------------------
+   Tokens are declared ONCE per document, never per `.field`: 22 declarations
+   on every field would be inherited by its whole subtree (dropdown, popover,
+   menu…) and, worse, would shadow any `--input-*` override coming from an
+   ancestor. `[data-theme]` is included because the themes put `--app-*` on
+   the shell element, and a custom property is substituted where it is
+   declared — so the derived tokens must be re-derived there too.
+   -------------------------------------------------------------------------- */
+:root,
+[data-theme] {
   --dropdown-arrow-content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M12.707 14.707a1 1 0 0 1-1.414 0l-5-5a1 1 0 0 1 1.414-1.414L12 12.586l4.293-4.293a1 1 0 1 1 1.414 1.414l-5 5Z' fill='black'/%3E%3C/svg%3E");
   --spinner-content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8' fill='none' stroke='rgba(138,138,178,0.3)' stroke-width='4'/%3E%3Ccircle cx='10' cy='10' r='8' fill='none' stroke='rgba(91, 63, 134, 0.65)' stroke-width='3' stroke-linecap='round' stroke-dasharray='45'%3E%3CanimateTransform attributeName='transform' attributeType='XML' type='rotate' from='0 10 10' to='360 10 10' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='stroke-dashoffset' values='0;90;180' dur='3s' repeatCount='indefinite'/%3E%3C/circle%3E%3C/svg%3E");
+
+  /* coloring */
+  --input-primary-color: var(--app-primary-color, darkgoldenrod);
+  --input-accent-color: var(--app-accent-color, rgba(184, 135, 11, 0.384));
+
+  --input-border-color: var(--input-primary-color);
+
+  --input-text-color: color-mix(in srgb, var(--input-accent-color) 30%, var(--input-primary-color) 45%);
+  --input-label-color: var(--input-accent-color);
+  --input-text-color-light: color-mix(in srgb, var(--input-primary-color) 40%, white 50%);
+  --input-text-color-hover: color-mix(in srgb, var(--input-primary-color) 40%, black 30%);
+  --input-placeholder-color: color-mix(in srgb, grey 15%, var(--input-text-color) 30%);
+
+  --input-background-color: color-mix(in srgb, var(--input-accent-color) 30%, #fff 100%);
+  --input-background-color-hover: color-mix(in srgb, var(--input-accent-color) 50%, #fff 15%);
+  --input-picker-background: color-mix(in srgb, var(--input-background-color) 100%, #fff 90%);
+  --input-popover-background-color: var(--input-picker-color);
+
+  /* sizing */
+  --input-font-size: 1.1rem;
+  --input-label-size: calc(var(--input-font-size) * 0.75);
+  --input-border-radius: 0.55em;
+  --input-line-height: 1.6;
+  --input-icon-size: 24px;
+  --input-min-height: 1lh;
+  --input-picker-height: calc(3 * var(--input-line-height, 37px));
+  --scrollbar-width: 10px;
+  --dropdown-transition-delay: 30ms;
+
+  /* popup choreography (single source of truth — dipakai ::picker(select),
+       .menu, dan inline picker agar timing tak pernah drift antar-surface) */
+  --popup-duration: 150ms;
+  --popup-easing: ease;
+  --popup-distance: 4px;
 }
 
-
-.field,
-.form {
-    /* coloring */
-    --input-primary-color: var(--app-primary-color, darkgoldenrod);
-    --input-accent-color: var(--app-accent-color, rgba(184, 135, 11, 0.384));
-
-    --input-border-color: var(--input-primary-color);
-
-    --input-text-color: color-mix(in srgb, var(--input-accent-color) 30%, var(--input-primary-color) 45%);
-    --input-label-color: var(--input-accent-color);
-    --input-text-color-light: color-mix(in srgb, var(--input-primary-color) 40%, white 50%);
-    --input-text-color-hover: color-mix(in srgb, var(--input-primary-color) 40%, black 30%);
-    --input-placeholder-color: color-mix(in srgb, grey 15%, var(--input-text-color) 30%);
-
-    --input-background-color: color-mix(in srgb, var(--input-accent-color) 30%, #fff 100%);
-    --input-background-color-hover: color-mix(in srgb, var(--input-accent-color) 50%, #fff 15%);
-    --input-picker-background: color-mix(in srgb, var(--input-background-color) 100%, #fff 90%);
-    --input-popover-background-color: var(--input-picker-color);
-
-    /* sizing */
-    --input-font-size: 1.1rem;
-    --input-label-size: calc(var(--input-font-size) * 0.75);
-    --input-border-radius: 0.55em;
-    --input-line-height: 1.6;
-    --input-icon-size: 24px;
-    --input-min-height: 1lh;
-    --input-picker-height: calc(3 * var(--input-line-height, 37px));
-    --scrollbar-width: 10px;
-    --dropdown-transition-delay: 30ms;
-
-    /* popup choreography (single source of truth — dipakai ::picker(select),
-       .menu, dan inline picker agar timing tak pernah drift antar-surface) */
-    --popup-duration: 150ms;
-    --popup-easing: ease;
-    --popup-distance: 4px;
-    margin: 0 auto;
-    /* min-width: 1000px; */
-  }
-
-  input:focus-visible,
-  input:is(:autofill),
-  textarea:focus-visible,
-  select:focus-visible {
-    outline: none;
+input:focus-visible,
+input:is(:autofill),
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
 }
 /* ==========================================================================
    2. Input Wrapper & Display Layouts
@@ -725,7 +728,6 @@
   }
 }
 
-
 /* ==========================================================================
    8. Toggle Switch Components
    ========================================================================== */
@@ -844,3 +846,16 @@
   }
 }
 
+@starting-style {
+  .native.form,
+  .form .field,
+  .field,
+  .field:is(.group),
+  .field:is(.group) .field {
+    & > select:open::picker(select) {
+      display: block;
+      opacity: 0;
+      transform: translateY(calc(var(--popup-distance, 4px) * -1)) scaleY(0%) scaleX(99.7%);
+    }
+  }
+}

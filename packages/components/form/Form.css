@@ -7,7 +7,6 @@
    rows, fieldsets, action sets, multistep, inline variants, cascade visibility.
    ========================================================================== */
 
-
 /* 4. Native Fieldset & Structural Legends */
 .form > fieldset {
   display: grid;
@@ -575,18 +574,6 @@ Actions Controls
 }
 
 @starting-style {
-  .native.form,
-  .form .field,
-  .field,
-  .field:is(.group),
-  .field:is(.group) .field {
-    & > select:open::picker(select) {
-      display: block;
-      opacity: 0;
-      transform: translateY(calc(var(--popup-distance, 4px) * -1)) scaleY(0%) scaleX(99.7%);
-    }
-  }
-
   .form {
     &:is(.inline),
     & fieldset:is(.inline-style) {
@@ -667,6 +654,9 @@ Actions Controls
 }
 
 .form {
+  /* Layout, not a token: it used to ride along inside the input token block. */
+  margin: 0 auto;
+
   /* Grid Container Button */
   & .buttons.set {
     display: flex;
