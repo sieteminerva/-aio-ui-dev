@@ -235,14 +235,14 @@ Example:
 
 ### Built-in adapters
 
-| `useAdapter` | Drives | Notes |
-| --- | --- | --- |
-| `native` *(default)* | A plain `<select>`, or an `<input>` fed by a `<datalist>` | The platform's controls, written to directly. Kept as the default so existing markup keeps working. |
-| `aio` | `@aio-ui` markup: `option.placeholder`, `.dropdown[data-style="datalist" \| "select"]`, the hidden value carrier, `.field` state | Understands all three level flavours and dispatches `change`/`input`, so the component's own listeners (`elementChanged`, form values) see the answer. |
-| `base` | Nothing (headless) | Selected automatically when `headless: true`. |
+| `useAdapter`         | Drives                                                                                                                           | Notes                                                                                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `native` _(default)_ | A plain `<select>`, or an `<input>` fed by a `<datalist>`                                                                        | The platform's controls, written to directly. Kept as the default so existing markup keeps working.                                                    |
+| `aio`                | `@aio-ui` markup: `option.placeholder`, `.dropdown[data-style="datalist" \| "select"]`, the hidden value carrier, `.field` state | Understands all three level flavours and dispatches `change`/`input`, so the component's own listeners (`elementChanged`, form values) see the answer. |
+| `base`               | Nothing (headless)                                                                                                               | Selected automatically when `headless: true`.                                                                                                          |
 
-The markup is identical between the two UI adapters — the difference is *which parts of it
-are authoritative*. `native` builds a select's prompt by renaming `options[0]`, which is
+The markup is identical between the two UI adapters — the difference is _which parts of it
+are authoritative_. `native` builds a select's prompt by renaming `options[0]`, which is
 invisible to `input.css` (`select:has(option.placeholder:checked)`), and it only knows the
 `data-style="datalist"` flavour of a custom dropdown; a `data-style="select"` level received
 its rows and dropped them. `aio` treats both as first-class:
@@ -250,7 +250,7 @@ its rows and dropped them. `aio` treats both as first-class:
 ```ts
 const picker = new IdAddressBuilder({
   container: "#address-form",
-  loader: (query) => http.get(query),   // or `url`
+  loader: (query) => http.get(query), // or `url`
   useAdapter: "aio",
 });
 ```
@@ -311,12 +311,12 @@ The package is installable on its own — it needs neither `@aio-ui/form` nor
 npm install @aio-ui/id-address @aio-ui/http-service
 ```
 
-| Entry | What it gives you |
-| ----- | ----------------- |
-| `@aio-ui/id-address` | `IdAddressBuilder` and the adapters |
-| `@aio-ui/id-address/adapter`, `/adapter.native`, `/adapter.base` | the individual adapters |
-| `@aio-ui/id-address/form` | the form module (`idAddressFormAdapter`); needs `@aio-ui/form`, which is an **optional peer** |
-| `@aio-ui/id-address/id-address.css` | state styling (`loading`, `error`) for the controls it decorates |
+| Entry                                                            | What it gives you                                                                             |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `@aio-ui/id-address`                                             | `IdAddressBuilder` and the adapters                                                           |
+| `@aio-ui/id-address/adapter`, `/adapter.native`, `/adapter.base` | the individual adapters                                                                       |
+| `@aio-ui/id-address/form`                                        | the form module (`idAddressFormAdapter`); needs `@aio-ui/form`, which is an **optional peer** |
+| `@aio-ui/id-address/id-address.css`                              | state styling (`loading`, `error`) for the controls it decorates                              |
 
 The builder requests that sheet through `@aio-ui/core/Stylesheets` on `init()`, so a host
 only has to declare where it can be fetched (its `styles` asset map) — the same seam every

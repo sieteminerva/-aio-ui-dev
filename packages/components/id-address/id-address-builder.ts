@@ -450,6 +450,34 @@ export class IdAddressBuilder {
   }
 
   /**
+   * The elements that actually carry a level's value.
+   *
+   * @param container - Element holding the `[data-level]` markup.
+   * @returns One node per level, in document order.
+   *
+   * @summary `[data-level]` is not unique to the value carrier: a custom dropdown marks
+   * its wrapper *and* its hidden input (the same attribute list is applied to both), so a
+   * naive `querySelectorAll` returned two nodes per level — the wrapper took the level's
+   * slot and the real carrier became a duplicate that never received its rows. Only
+   * controls are levels; everything else that mentions the level is decoration.
+   */
+  private _levelNodes(container: Element): any[] {
+    const carriers = [...container.querySelectorAll<HTMLElement>("[data-level]")].filter(
+      (el) => el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement
+    );
+
+    // A level declared twice (visible box + hidden value) belongs to its carrier only;
+    // keep the first one so the document order of the levels is preserved.
+    const seen = new Set<string>();
+    return carriers.filter((el) => {
+      const level = el.dataset.level ?? "";
+      if (seen.has(level)) return false;
+      seen.add(level);
+      return true;
+    });
+  }
+
+  /**
    * Initializes the address builder by mapping DOM elements to the internal schema,
    * setting up adapters, and triggering the initial data load.
    *
@@ -506,7 +534,7 @@ export class IdAddressBuilder {
     let nodes = [];
 
     if (!this.config.headless) {
-      nodes = [...containerEl.querySelectorAll("[data-level]")];
+      nodes = this._levelNodes(containerEl);
     } else {
       this.config.useAdapter = "base";
       nodes = this._levelOrder.map((level) => ({

@@ -73,6 +73,34 @@ describe("aio adapter — select flavour", () => {
     expect(select.options).toHaveLength(1);
     expect(select.querySelectorAll("option.placeholder")).toHaveLength(1);
   });
+
+  it("does not answer its own announcement", () => {
+    // The element that announces an answer is the one `onLevelChange` listens to, so an
+    // unguarded dispatch recursed: write → change → "level changed" → load → write …
+    const holder = field(`<select data-level="kota"><option class="placeholder" value=""></option></select>`);
+    const select = holder.querySelector("select") as HTMLSelectElement;
+
+    const levelChanged = vi.fn();
+    IdAddressAdapterAio.setOptions(select, {
+      options: [{ kota_id: 161, kota_name: "BANDUNG" }],
+      onLevelChange: levelChanged,
+    });
+    IdAddressAdapterAio.onLevelChange?.(select);
+
+    // Outward: the page still hears the answer.
+    const pageSaw = vi.fn();
+    select.addEventListener("change", pageSaw);
+    IdAddressAdapterAio.setSelectedOption(select, "161");
+    expect(pageSaw).toHaveBeenCalledTimes(1);
+
+    // Inward: the picker must not treat its own write as the visitor picking a level.
+    expect(levelChanged).not.toHaveBeenCalled();
+
+    // A real change still reports it.
+    select.value = "";
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+    expect(levelChanged).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("aio adapter — dropdown flavours", () => {
@@ -123,26 +151,60 @@ describe("aio adapter — dropdown flavours", () => {
     expect(box.querySelector<HTMLInputElement>("input.dropdown")?.value).toBe("SUKAJADI");
   });
 
-  it("shows loading and error on the field wrapper, where the stylesheet looks", () => {
+  it("draws the loading spinner once: the box owns it for a dropdown", () => {
+    // `input.css` paints `.field.loading::after` *and* `.dropdown[data-style].loading::after`;
+    // setting both put two spinners on the same spot.
     const holder = field(`
       <div class="dropdown" data-style="datalist">
-        <input class="dropdown" type="text" list="dl-2" data-level="kodepos" />
+        <input type="text" list="dl-2" data-level="kodepos" />
         <input type="hidden" data-level="kodepos" />
         <datalist id="dl-2"></datalist>
       </div>`);
+    const box = holder.querySelector(".dropdown") as HTMLElement;
     const hidden = holder.querySelector<HTMLInputElement>("input[type='hidden']")!;
 
-    IdAddressAdapterAio.setOptions(hidden, { options: [], state: "loading" });
-    expect(holder.classList.contains("loading")).toBe(true);
+    IdAddressAdapterAio.setOptions(hidden, { options: [], state: "start" });
+    expect(box.classList.contains("loading")).toBe(true);
+    expect(holder.classList.contains("loading")).toBe(false);
 
     IdAddressAdapterAio.setOptions(hidden, { options: [], state: "complete" });
+    expect(box.classList.contains("loading")).toBe(false);
     expect(holder.classList.contains("loading")).toBe(false);
 
     IdAddressAdapterAio.onError?.(hidden, "boom");
     expect(holder.classList.contains("error")).toBe(true);
-    expect(hidden.closest(".dropdown")?.classList.contains("error")).toBe(true);
+    expect(box.classList.contains("error")).toBe(true);
 
     IdAddressAdapterAio.clear(hidden);
     expect(holder.classList.contains("error")).toBe(false);
+  });
+
+  it("writes the single row into a plain input — the postal code has no list", () => {
+    const holder = field(`<input type="text" data-level="kodepos" placeholder="kodepos" />`);
+    const input = holder.querySelector("input") as HTMLInputElement;
+
+    IdAddressAdapterAio.setOptions(input, { options: [], state: "start" });
+    expect(input.value).toBe("");
+
+    IdAddressAdapterAio.setOptions(input, {
+      options: [{ kodepos_id: 40123, kodepos_name: "40123" }],
+      state: "complete",
+    });
+
+    // Without a datalist and without a menu, the row *is* the value.
+    expect(input.value).toBe("40123");
+    expect(IdAddressAdapterAio.getValue?.(input)).toBe("40123");
+  });
+
+  it("draws the loading spinner once: a select owns it itself", () => {
+    const holder = field(`<select data-level="kota"><option class="placeholder" value=""></option></select>`);
+    const select = holder.querySelector("select") as HTMLSelectElement;
+
+    IdAddressAdapterAio.setOptions(select, { options: [], state: "start" });
+
+    // A select's spinner is its picker icon (`select:is(.loading)::picker-icon`); the
+    // field-level one would be the second.
+    expect(select.classList.contains("loading")).toBe(true);
+    expect(holder.classList.contains("loading")).toBe(false);
   });
 });

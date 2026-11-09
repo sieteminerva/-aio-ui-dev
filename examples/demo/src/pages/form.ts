@@ -38,73 +38,81 @@ export const AddressSet = {
       }
     },
     {
-      type: "select",
+      type: "dropdown",
       id: "address-propinsi",
-      // condition: { field: "jalan", filled: true },
       title: "Tepatnya, wilayah tersebut berada di cakupan wilayah",
-      placeholder: "pilih provinsi   ",
+      placeholder: "pilih provinsi",
+      // A `.dropdown` box rather than a bare `<select>`: it is searchable by typing, and
+      // the picker's `aio` adapter speaks exactly this markup.
       config: {
-        className: "loading",
-        selectors,
-        attributes: [
-          { name: "data-level", value: "propinsi" },
-          // { name: "animation", value: "fade-in" },
-          // { name: "animation-chain", value: "true" },
-          // { name: "animated-once", value: "true" },
-        ]
-      }
+        style: "select",
+        min: 1,
+        // A level can be large (61 districts in BANDUNG). `max` is the dropdown's render
+        // cap, not a search limit — with the default 10 the list stayed short after typing.
+        max: 100,
+        attributes: [{
+          name: "data-level",
+          value: "propinsi",
+        }],
+      },
     },
     {
-      type: "select",
+      type: "dropdown",
       id: "address-kota",
-      // condition: { field: "jalan", filled: true },
       title: "pada wilayah administrasi daerah",
-      placeholder: "pilih kota/kabupaten   ",
+      placeholder: "pilih kota/kabupaten",
+      // A `.dropdown` box rather than a bare `<select>`: it is searchable by typing, and
+      // the picker's `aio` adapter speaks exactly this markup.
       config: {
-        selectors,
-        attributes: [
-          { name: "data-level", value: "kota" },
-          // { name: "animation", value: "fade-in" },
-          // { name: "animation-chain", value: "true" },
-          // { name: "animated-once", value: "true" },
-        ]
-      }
+        style: "select",
+        min: 1,
+        // A level can be large (61 districts in BANDUNG). `max` is the dropdown's render
+        // cap, not a search limit — with the default 10 the list stayed short after typing.
+        max: 100,
+        attributes: [{
+          name: "data-level",
+          value: "kota",
+        }],
+      },
     },
-
     {
-      type: "select",
+      type: "dropdown",
       id: "address-kecamatan",
-      // condition: { field: "jalan", filled: true },
       title: "meluas ke area wilayah tingkat",
-      placeholder: "pilih kecamatan   ",
+      placeholder: "pilih kecamatan",
+      // A `.dropdown` box rather than a bare `<select>`: it is searchable by typing, and
+      // the picker's `aio` adapter speaks exactly this markup.
       config: {
-        selectors,
-        attributes: [
-          { name: "data-level", value: "kecamatan" },
-          // { name: "animation", value: "fade-in" },
-          // { name: "animation-chain", value: "true" },
-          // { name: "animated-once", value: "true" },
-        ]
-      }
+        style: "select",
+        min: 1,
+        // A level can be large (61 districts in BANDUNG). `max` is the dropdown's render
+        // cap, not a search limit — with the default 10 the list stayed short after typing.
+        max: 100,
+        attributes: [{
+          name: "data-level",
+          value: "kecamatan",
+        }],
+      },
     },
-
     {
-      type: "select",
+      type: "dropdown",
       id: "address-kelurahan",
-      // condition: { field: "jalan", filled: true },
       title: "hingga menyentuh batas terkecil di",
-      placeholder: "pilih kelurahan   ",
+      placeholder: "pilih kelurahan",
+      // A `.dropdown` box rather than a bare `<select>`: it is searchable by typing, and
+      // the picker's `aio` adapter speaks exactly this markup.
       config: {
-        selectors,
-        attributes: [
-          { name: "data-level", value: "kelurahan" },
-          // { name: "animation", value: "fade-in" },
-          // { name: "animation-chain", value: "true" },
-          // { name: "animated-once", value: "true" },
-        ]
-      }
+        style: "select",
+        min: 1,
+        // A level can be large (61 districts in BANDUNG). `max` is the dropdown's render
+        // cap, not a search limit — with the default 10 the list stayed short after typing.
+        max: 100,
+        attributes: [{
+          name: "data-level",
+          value: "kelurahan",
+        }],
+      },
     },
-
     {
       type: "text",
       id: "address-kodepos",

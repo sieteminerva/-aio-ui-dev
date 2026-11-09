@@ -1,8 +1,8 @@
 {
   "name": "@aio-ui/id-address",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "files": ["*.ts", "*.css"],
   "exports": {
     ".": "./id-address-builder.ts",
     "./builder": "./id-address-builder.ts",
@@ -13,12 +13,10 @@
     "./form": "./IdAddress.FormAdapter.ts",
     "./id-address.css": "./id-address.css"
   },
-  "dependencies": {
-    "@aio-ui/http-service": "*",
-    "@aio-ui/module-loader": "*",
-    "@aio-ui/core": "*"
-  },
   "peerDependencies": {
+    "@aio-ui/http-service": "^0.0.0",
+    "@aio-ui/module-loader": "^0.0.0",
+    "@aio-ui/core": "^0.0.0",
     "@aio-ui/form": "*"
   },
   "peerDependenciesMeta": {

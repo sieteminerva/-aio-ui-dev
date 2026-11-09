@@ -1,4 +1,4 @@
-import { __setloadingState, __setErrorState, type IAddressAdapter } from "./id-address-adapter";
+import { type IAddressAdapter } from "./id-address-adapter";
 
 /**
  * Adapter for `@aio-ui` markup.
@@ -38,17 +38,36 @@ interface iCarrier {
   box: HTMLElement | null;
 }
 
+/** The visible box of a custom dropdown: the text input the visitor types into. */
+function visibleOf(box: HTMLElement | null): HTMLInputElement | null {
+  if (!box) return null;
+  return box.querySelector<HTMLInputElement>(':scope > input[type="text"], :scope > input:not([type="hidden"])');
+}
+
 /** Resolves the elements a level is built from, per flavour. */
 function carrierOf(el: HTMLInputElement | HTMLSelectElement): iCarrier {
   const box = el.closest<HTMLElement>(".dropdown");
   const hidden = el instanceof HTMLInputElement && el.type === "hidden" ? el : null;
 
-  if (hidden) {
-    return { visible: box?.querySelector<HTMLInputElement>("input.dropdown:not([type='hidden'])") ?? hidden, hidden, box };
+  // Some hosts mark the wrapper itself (`div.dropdown[data-level]`) instead of — or in
+  // addition to — the hidden input. Resolve the carrier from the box in that case.
+  if (el instanceof HTMLElement && el.classList.contains("dropdown")) {
+    const carrier = box?.querySelector<HTMLInputElement>(':scope > input[type="hidden"]') ?? null;
+    return { visible: visibleOf(box) ?? el, hidden: carrier, box };
   }
 
-  const isBox = el instanceof HTMLInputElement && el.classList.contains("dropdown");
-  return { visible: el, hidden: isBox ? box?.querySelector<HTMLInputElement>("input[type='hidden']") ?? null : null, box };
+  if (hidden) {
+    return { visible: visibleOf(box) ?? hidden, hidden, box };
+  }
+
+  // The visible box itself: its answer carrier is the hidden input beside it, when there
+  // is one. (The framework renders `<input type="text" list>` + `<input type="hidden">`,
+  // both direct children of `div.dropdown` — nothing carries a `.dropdown` class.)
+  if (el instanceof HTMLInputElement) {
+    return { visible: el, hidden: box?.querySelector<HTMLInputElement>(':scope > input[type="hidden"]') ?? null, box };
+  }
+
+  return { visible: el, hidden: null, box };
 }
 
 /** The `.field` a control lives in: the element that carries aio's loading/error state. */
@@ -76,16 +95,86 @@ function placeholderOf(select: HTMLSelectElement): HTMLOptionElement {
 }
 
 /**
+ * What a level says when it has nothing to offer yet.
+ *
+ * @param level - Level name (`propinsi`, `kota`, …).
+ * @param state - Current load state.
+ * @returns Prompt text for the control.
+ */
+function promptTextOf(level: string, state: string): string {
+  if (state === "start" || state === "loading") return `Loading ${level} `;
+  if (state === "empty") return `Tidak ada ${level}`;
+  if (state === "error") return `Gagal memuat ${level}`;
+  return level === "kodepos" ? "Isi kodepos tujuan" : `Pilih ${level}`;
+}
+
+/**
+ * Writes the prompt without touching the rows.
+ *
+ * @param el - Select or visible input of a custom dropdown.
+ * @param text - Prompt text.
+ *
+ * @summary The native helpers (`setPlaceholderText` / `__setloadingState`) clear the
+ * element with `innerHTML = ""` before writing — fatal for a `<select>`, whose options
+ * *are* its content: every state change wiped the prompt and the loaded rows, so the
+ * placeholder vanished while loading and stayed an empty option afterwards even though
+ * the request had answered.
+ */
+function setPromptText(el: HTMLInputElement | HTMLSelectElement, text: string): void {
+  if (el instanceof HTMLSelectElement) {
+    const prompt = placeholderOf(el);
+    prompt.textContent = text;
+    prompt.selected = true;
+    return;
+  }
+  el.placeholder = text;
+}
+
+/** Drops the rows of a level, keeping its prompt. */
+function dropRows(el: HTMLInputElement | HTMLSelectElement, visible: HTMLInputElement | HTMLSelectElement, box: HTMLElement | null): void {
+  if (el instanceof HTMLSelectElement) {
+    while (el.options.length > 1) el.remove(1);
+    el.selectedIndex = 0;
+    return;
+  }
+
+  menuOf(box)?.replaceChildren();
+  const listId = visible.getAttribute("list");
+  if (listId) document.getElementById(listId)?.replaceChildren();
+  visible.value = "";
+}
+
+/**
+ * Marker on the events this adapter dispatches itself.
+ *
+ * @summary The carrier that announces an answer is the same element `onLevelChange()`
+ * listens to, so a naive `dispatchEvent()` re-entered the builder: write → `change` →
+ * "level changed" → load next → write → … until the stack overflowed. The marker keeps the
+ * announcement outward-only: components and pages of the host still see it, this adapter's
+ * own listener ignores it.
+ */
+const SYNTHETIC = "__aioSyntheticAnswer";
+
+/** Whether an event was dispatched by this adapter rather than by a visitor. */
+function isSynthetic(event: Event): boolean {
+  return Boolean((event as any)[SYNTHETIC]);
+}
+
+/**
  * Tells the page that a level changed.
  *
  * @param el - The element carrying the answer (the hidden input for a custom dropdown).
  *
  * @summary `native` called the builder's private callback; an aio control is a component
- * with listeners of its own, so the standard event has to be dispatched as well.
+ * with listeners of its own, so the standard event has to be dispatched as well — marked,
+ * so the adapter does not answer its own announcement.
  */
 function announce(el: HTMLElement): void {
-  el.dispatchEvent(new Event("change", { bubbles: true }));
-  el.dispatchEvent(new Event("input", { bubbles: true }));
+  for (const type of ["change", "input"] as const) {
+    const event = new Event(type, { bubbles: true });
+    (event as any)[SYNTHETIC] = true;
+    el.dispatchEvent(event);
+  }
 }
 
 export const IdAddressAdapterAio: IAddressAdapter = {
@@ -95,26 +184,43 @@ export const IdAddressAdapterAio: IAddressAdapter = {
   },
 
   setOptions(el: HTMLInputElement | HTMLSelectElement, args: any) {
-    const level = el.dataset.level;
+    const level = el.dataset.level as string;
     const { options = [], state = "complete", onLevelChange } = args ?? {};
     const { visible, hidden, box } = carrierOf(el);
     const field = fieldOf(el);
 
-    // Loading / error state lives on the field wrapper here (`input.css` draws the
-    // spinner from `.field.loading`), not on the control itself.
-    __setloadingState(visible as HTMLInputElement, level, state, visible as HTMLInputElement);
-    field?.classList.toggle("loading", state === "loading" || state === "start");
+    // Loading / error state has exactly one owner per flavour. `input.css` §7 draws a
+    // spinner for `.field.loading` (input fields), for `select:is(.loading)::picker-icon`
+    // (selects) and for `> .dropdown[data-style].loading::after` (custom dropdowns) — set
+    // two of them and the field shows two spinners, one on top of the other.
+    const busy = state === "start" || state === "loading";
+    if (box) {
+      // The box draws its own spinner; the field must stay out of it.
+      box.classList.toggle("loading", busy);
+      field?.classList.remove("loading");
+    } else {
+      el.classList.toggle("loading", busy);
+      // A select already carries its spinner in the picker icon; a plain input has none
+      // of its own, so that one lives on the field.
+      if (!(el instanceof HTMLSelectElement)) field?.classList.toggle("loading", busy);
+    }
+    field?.classList.toggle("error", state === "error");
 
-    if (state !== "complete") return;
+    // The prompt survives every state: it is the answer to "what is this level for",
+    // and it used to be the first casualty of a reload.
+    setPromptText(el instanceof HTMLSelectElement ? el : visible, promptTextOf(level, state));
 
-    field?.classList.remove("loading");
+    if (state !== "complete") {
+      // A stale child list under a reloading parent is worse than no list at all.
+      dropRows(el, visible, box);
+      if (hidden) hidden.value = "";
+      el.__onLevelChange = onLevelChange;
+      return;
+    }
 
     // ── Flavour 1: a native select rendered by `InputBuilder` ─────────────────────
     if (el instanceof HTMLSelectElement) {
-      const prompt = placeholderOf(el);
-      while (el.options.length > 1) el.remove(1);
-      el.selectedIndex = 0;
-      prompt.selected = true;
+      dropRows(el, visible, box);
 
       for (const row of options as any[]) {
         const option = document.createElement("option");
@@ -165,7 +271,19 @@ export const IdAddressAdapterAio: IAddressAdapter = {
       visible.value = "";
       if (hidden) hidden.value = "";
       el.__onLevelChange = onLevelChange;
+      return;
     }
+
+    // ── Flavour 4: a plain input (the postal code) ────────────────────────────────
+    // No list, no menu: this level resolves to exactly one row and the answer *is* the
+    // input's value. Without this branch the row arrived and was dropped, so `kodepos`
+    // stayed empty while the request had succeeded.
+    const first = (options as any[])[0];
+    if (first) {
+      const answer = first[`${level}_name`] ?? first[`${level}_id`] ?? "";
+      visible.value = answer === null || answer === undefined ? "" : String(answer);
+    }
+    el.__onLevelChange = onLevelChange;
   },
 
   setSelectedOption(el: HTMLInputElement | HTMLSelectElement, value: any) {
@@ -212,7 +330,11 @@ export const IdAddressAdapterAio: IAddressAdapter = {
 
     if (source.__aioChangeHandler) source.removeEventListener("change", source.__aioChangeHandler);
 
-    source.__aioChangeHandler = () => {
+    source.__aioChangeHandler = (event: Event) => {
+      // Our own announcement — the answer is already recorded, answering it again would
+      // reload the level and recurse.
+      if (isSynthetic(event)) return;
+
       const carrier = carrierOf(el);
       const value = carrier.hidden ? carrier.hidden.value : (el instanceof HTMLSelectElement ? el.value : el.value);
       const label = carrier.hidden
@@ -230,17 +352,22 @@ export const IdAddressAdapterAio: IAddressAdapter = {
   },
 
   onError(el: HTMLInputElement | HTMLSelectElement, message: string) {
-    const level = el.dataset.level;
+    const level = el.dataset.level as string;
     const { visible, hidden, box } = carrierOf(el);
 
     el.classList.add("error");
     box?.classList.add("error");
     fieldOf(el)?.classList.add("error");
+
+    dropRows(el, visible, box);
     el.value = "";
     if (hidden) hidden.value = "";
     if (visible !== el) visible.value = "";
 
-    __setErrorState(visible as HTMLSelectElement, level, message, visible as HTMLInputElement);
+    // The message is advisory: the prompt states what happened, `data-error` keeps the
+    // full text available without turning the control into a text block.
+    setPromptText(el instanceof HTMLSelectElement ? el : visible, message || promptTextOf(level, "error"));
+    el.dataset.error = message;
   },
 
   getValue(el: HTMLInputElement | HTMLSelectElement) {
