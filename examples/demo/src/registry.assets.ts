@@ -23,6 +23,22 @@ export const componentAssets = {
     "@aio-ui/section/Section": () => import("@aio-ui/section/Section"),
     "@aio-ui/tab/Tab": () => import("@aio-ui/tab/Tab"),
     "@aio-ui/table/Table": () => import("@aio-ui/table/Table"),
+
+    // Sub-modules declared by a manifest (`FORM_ADAPTER_MANIFEST`). Each one is its own
+    // chunk: the registry fetches an entry only when a manifest asks for that id.
+    "@aio-ui/form/validation-adapter": () => import("@aio-ui/form/validation-adapter"),
+    "@aio-ui/form/cascade-adapter": () => import("@aio-ui/form/cascade-adapter"),
+    "@aio-ui/form/multistep-adapter": () => import("@aio-ui/form/multistep-adapter"),
+    "@aio-ui/form/calculation-adapter": () => import("@aio-ui/form/calculation-adapter"),
+    "@aio-ui/form/Input.FormAdapter": () => import("@aio-ui/form/Input.FormAdapter"),
+    "@aio-ui/input/dropdown/module": () => import("@aio-ui/input/dropdown/module"),
+    "@aio-ui/input/file-uploader/module": () => import("@aio-ui/input/file-uploader/module"),
+    "@aio-ui/input/controls/module": () => import("@aio-ui/input/controls/module"),
+    "@aio-ui/input/popover/module": () => import("@aio-ui/input/popover/module"),
+    // Adapters owned by other packages: the form never imports them, the host declares them.
+    "@aio-ui/id-address/form": () => import("@aio-ui/id-address/form"),
+    "@aio-ui/table/adapters/FormAdapter": () => import("@aio-ui/table/adapters/FormAdapter"),
+    "@aio-ui/message/adapters/FormAdapter": () => import("@aio-ui/message/adapters/FormAdapter"),
   } as Record<string, () => Promise<unknown>>,
   styles: {
     "@aio-ui/accordion/Accordion.css": () => import("@aio-ui/accordion/Accordion.css?inline"),

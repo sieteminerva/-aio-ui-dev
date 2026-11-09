@@ -1,10 +1,7 @@
 import type { iPageContent } from "@aio-ui/app";
 
-import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
-import { FORM_ADAPTER_DEFINITIONS } from "@aio-ui/form/FormRegistry";
-import { tableFormAdapter } from "@aio-ui/table/adapters/FormAdapter";
-import { idAddressFormAdapter } from "@aio-ui/id-address/form";
-import { messageFormAdapter } from "@aio-ui/message/adapters/FormAdapter";
+import type { iComponentModuleRef } from "@aio-ui/core/ComponentRegistry";
+import { FORM_ADAPTER_MANIFEST } from "@aio-ui/form/FormRegistry";
 import { demoNav, pageIntro } from "../nav";
 import { themeSwitcher } from "../theme-switcher";
 import type { iBasicInputNode } from "@aio-ui/input/Input";
@@ -388,16 +385,25 @@ const ADDRESS_URL = "https://script.google.com/macros/s/AKfycbwjQ_iNQClJuyf5z1Zl
 const addressSource = { url: ADDRESS_URL };
 
 /**
- * The host composes the module set: the form ships its own engines, while `table` and
- * `message` contribute their adapters — the form never imports them.
+ * The form's module stack, as the registry manifest.
+ *
+ * @summary The form ships its own adapters (`FORM_ADAPTER_MANIFEST`); the three below
+ * belong to other packages, so the host composes them — the form never imports `table`,
+ * `message` or `id-address`. Declaring them here (instead of handing the page a
+ * `ModuleLoader`) is what makes the wiring official: the registry resolves each entry as
+ * its own chunk, `Form.provideModules()` partitions them, and the page only owns a schema.
  */
-function formModules() {
-  return new ModuleLoader("form", [...FORM_ADAPTER_DEFINITIONS, idAddressFormAdapter, tableFormAdapter, messageFormAdapter]);
+export function formManifest(): iComponentModuleRef[] {
+  return [
+    ...FORM_ADAPTER_MANIFEST,
+    { id: "idAddress", path: "@aio-ui/id-address/form", export: "idAddressFormAdapter" },
+    { id: "table", path: "@aio-ui/table/adapters/FormAdapter", export: "tableFormAdapter" },
+    { id: "message", path: "@aio-ui/message/adapters/FormAdapter", export: "messageFormAdapter" },
+  ];
 }
 
 const formConfig = {
   id: "demo-order-form",
-  modules: formModules(),
   address: addressSource,
   // Cascade needs the engine on; `hidden` keeps conditional fields alive so a chained
   // picker (address, dependent select) can inject into them before they are shown.
@@ -453,7 +459,7 @@ export function formContent(): iPageContent {
             ".form-host.multistep": {
               builder: ["form"],
               onCreated: (el: HTMLElement, _render: any, build: any) => {
-                const form = build("form", { schema: multiStepSchema, config: { id: "demo-multistep", multistep: true, modules: formModules() } });
+                const form = build("form", { schema: multiStepSchema, config: { id: "demo-multistep", multistep: true } });
                 el.mount(form);
 
                 const log = document.createElement("pre");

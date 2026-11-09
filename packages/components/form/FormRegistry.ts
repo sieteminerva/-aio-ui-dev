@@ -1,5 +1,6 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import type { iComponentModuleRef } from "@aio-ui/core/ComponentRegistry";
+import { INPUT_MODULE_MANIFEST } from "@aio-ui/input/InputRegistry";
 import type { iFormModuleContext } from "./FormModuleTypes";
 import { calculationFormAdapter } from "./adapters/Calculation";
 import { cascadeFormAdapter } from "./adapters/Cascade";
@@ -55,10 +56,9 @@ export const FORM_ADAPTER_MANIFEST: iComponentModuleRef[] = [
   { id: "multistep", path: "@aio-ui/form/multistep-adapter", export: "multistepFormAdapter", scope: "form" },
   { id: "calculation", path: "@aio-ui/form/calculation-adapter", export: "calculationFormAdapter", scope: "form" },
   { id: "input", path: "@aio-ui/form/Input.FormAdapter", export: "inputFormAdapter", scope: "form" },
-  { id: "dropdown", path: "@aio-ui/input/Dropdown/Dropdown.InputModule", export: "dropdownInputModule", scope: "input" },
-  { id: "file", path: "@aio-ui/input/FileUploader/FileUploader.InputModule", export: "fileUploaderInputModule", scope: "input" },
-  { id: "controls", path: "@aio-ui/input/InputControls/InputControls.InputModule", export: "inputControlsInputModule", scope: "input" },
-  { id: "popover", path: "@aio-ui/input/Popover.InputModule", export: "popoverInputModule", scope: "input" },
+  // The input layer's own manifest, labelled with the layer it belongs to. Re-declaring
+  // the four entries here by hand is how the two lists would drift apart.
+  ...INPUT_MODULE_MANIFEST.map((ref) => ({ ...ref, scope: "input" })),
 ];
 
 /** Ids of the definitions above, so a test can pin the two shapes together. */

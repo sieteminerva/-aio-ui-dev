@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { InputBuilder } from "../Input";
 import { InputAttributeBuilder } from "../Attribute";
 import { INPUT_TYPE_REGISTRY, inputTypeOf, scanInputAttributes } from "../FieldTypes";
-import { CORE_INPUT_MODULES, LITE_INPUT_MODULES } from "../InputRegistry";
+import { INPUT_MODULE_DEFINITIONS } from "../InputRegistry";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 
 /**
@@ -244,14 +244,14 @@ describe("input module registry", () => {
   };
 
   it("decorates a field with the action set when the controls module is registered", () => {
-    const { container } = build(withActions, { modules: new ModuleLoader("input", CORE_INPUT_MODULES) });
+    const { container } = build(withActions, { modules: new ModuleLoader("input", INPUT_MODULE_DEFINITIONS) });
 
     expect(container.classList.contains("actions")).toBe(true);
     expect(container.querySelector("button")).not.toBeNull();
   });
 
   it("renders the bare field when the controls module is not registered", () => {
-    const { container } = build(withActions, { modules: new ModuleLoader("input", LITE_INPUT_MODULES) });
+    const { container } = build(withActions, { modules: new ModuleLoader("input", []) });
 
     expect(container.classList.contains("actions")).toBe(false);
     expect(container.querySelector("button")).toBeNull();
@@ -267,7 +267,7 @@ describe("input module registry", () => {
     });
 
     const loader = new ModuleLoader("input", [
-      ...CORE_INPUT_MODULES,
+      ...INPUT_MODULE_DEFINITIONS,
       { id: "rating", load: () => ({ renderControl }) },
     ]);
     const { container } = build({ type: "rating", id: "score", title: "Score" }, { modules: loader });
@@ -279,7 +279,7 @@ describe("input module registry", () => {
   it("keeps a plain field free of modules entirely", () => {
     const { container, control } = build(
       { type: "text", id: "name", title: "Nama" },
-      { modules: new ModuleLoader("input", LITE_INPUT_MODULES) }
+      { modules: new ModuleLoader("input", []) }
     );
 
     expect(control.tagName).toBe("INPUT");

@@ -30,7 +30,7 @@ class InputFormAdapter {
    *
    * @summary The host may declare the input modules in its manifest (`scope: "input"`);
    * when it does, fields must use *that* set. Without this the field built its own
-   * `InputBuilder` with no `modules` and quietly fell back to `CORE_INPUT_MODULES`, so a
+   * `InputBuilder` with no `modules` and quietly fell back to `INPUT_MODULE_DEFINITIONS`, so a
    * trimmed layer still shipped the uploader.
    */
   get #preset() {

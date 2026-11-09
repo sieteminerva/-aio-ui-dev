@@ -89,7 +89,7 @@ class FileUploaderInputModule implements iInputAdapter {
  * File module definition.
  *
  * @example
- * // registered by CORE_INPUT_MODULES; a form that never uploads can drop it
+ * // registered by INPUT_MODULE_DEFINITIONS; a form that never uploads can drop it
  */
 export const fileUploaderInputModule: iModuleDefinition<iInputModuleContext, iInputAdapter> = {
   id: INPUT_MODULE_IDS.file,

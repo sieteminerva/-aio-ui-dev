@@ -1,4 +1,5 @@
 import { ComponentRegistry } from '@aio-ui/core/ComponentRegistry';
+import type { iComponentModuleRef } from '@aio-ui/core/ComponentRegistry';
 import { DOMRenderer } from '@aio-ui/core/DOMRenderer';
 import { AioApp, AppStorage } from '@aio-ui/app';
 import { AnimationsService } from '@aio-ui/animations';
@@ -16,7 +17,7 @@ import './style.css';
 
 import { DEMO, manifestFor } from './manifest';
 import { ArticlePage } from './pages/article';
-import { formContent } from './pages/form';
+import { formContent, formManifest } from './pages/form';
 import { kitchenContent } from './pages/kitchen';
 import { ProductPage } from './pages/product';
 import { componentAssets } from './registry.assets';
@@ -50,10 +51,11 @@ const pages = {
 const themeStorage = globalThis.localStorage;
 
 /** Page components split `{ config, schema }` instead of treating the whole node as payload. */
-function pageComponent(path: string, stylesheet?: string) {
+function pageComponent(path: string, stylesheet?: string, modules?: iComponentModuleRef[]) {
   return (data: any) => ({
     path,
     stylesheet,
+    modules,
     config: data?.config,
     schema: data?.schema !== undefined ? data.schema : data?.content !== undefined ? data.content : data,
   });
@@ -73,7 +75,9 @@ async function start(container: HTMLElement) {
     .register('product-grid' as any, pageComponent('@aio-ui/product/ProductGrid', '@aio-ui/product/ProductGrid.css'))
     .register('product-detail' as any, pageComponent('@aio-ui/product/ProductDetail', '@aio-ui/product/ProductDetail.css'))
     .register('article' as any, pageComponent('@aio-ui/article/Article', '@aio-ui/article/Article.css'))
-    .register('form' as any, pageComponent('@aio-ui/form/Form', '@aio-ui/form/Form.css'))
+    // The form's adapter stack is declared here, not inside the page: the registry resolves
+    // it, `Form.provideModules()` partitions it, and the page only supplies a schema.
+    .register('form' as any, pageComponent('@aio-ui/form/Form', '@aio-ui/form/Form.css', formManifest()))
     // The theme switcher is a fab menu with per-item handlers, so it needs config too.
     .register('fab-menu' as any, pageComponent('@aio-ui/fabmenu/FabMenu', '@aio-ui/fabmenu/FabMenu.css'));
 

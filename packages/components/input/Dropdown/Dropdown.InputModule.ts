@@ -71,7 +71,7 @@ class DropdownInputModule implements iInputAdapter {
  * Dropdown module definition.
  *
  * @example
- * // registered by CORE_INPUT_MODULES; omit it from a custom preset to drop the builder
+ * // registered by INPUT_MODULE_DEFINITIONS; omit it from a custom preset to drop the builder
  */
 export const dropdownInputModule: iModuleDefinition<iInputModuleContext, iInputAdapter> = {
   id: INPUT_MODULE_IDS.dropdown,

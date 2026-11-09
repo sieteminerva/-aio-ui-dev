@@ -25,6 +25,10 @@
     "./controls.css": "./InputControls/inputControls.css",
     "./InputControls/InputControls": "./InputControls/InputControls.ts",
     "./InputControls/InputControls.InputModule": "./InputControls/InputControls.InputModule.ts",
+    "./dropdown/module": "./Dropdown/Dropdown.InputModule.ts",
+    "./file-uploader/module": "./FileUploader/FileUploader.InputModule.ts",
+    "./controls/module": "./InputControls/InputControls.InputModule.ts",
+    "./popover/module": "./Popover.InputModule.ts",
     "./input.css": "./input.css"
   },
   "dependencies": {

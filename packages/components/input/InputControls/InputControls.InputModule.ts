@@ -117,7 +117,7 @@ export function normaliseActions(configured: any): Array<Record<string, any> & {
  * Action controls module definition.
  *
  * @example
- * // registered by CORE_INPUT_MODULES; drop it and `config.actions` silently renders nothing
+ * // registered by INPUT_MODULE_DEFINITIONS; drop it and `config.actions` silently renders nothing
  */
 export const inputControlsInputModule: iModuleDefinition<iInputModuleContext, iInputAdapter> = {
   id: INPUT_MODULE_IDS.controls,

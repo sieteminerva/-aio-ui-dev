@@ -3,9 +3,11 @@ import { Builder } from "@aio-ui/base/Base";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { inputTypeOf } from "./FieldTypes";
 import {
-  CORE_INPUT_MODULES,
+  INPUT_MODULE_DEFINITIONS,
   type iInputAdapter,
   type iInputModuleContext,
+  type InputModuleItem,
+  type InputModulePreset,
 } from "./InputRegistry";
 import type { iCalculationFormula } from "./CalculationTypes";
 
@@ -212,7 +214,7 @@ export interface iInputConfig extends iBuilderConfig<InputElementType> {
    * component hands over when its own manifest resolved the set — the field must not
    * load or unload modules its host owns.
    */
-  modules?: ModuleLoader<iInputModuleContext, iInputAdapter> | iInputAdapter[] | null;
+  modules?: ModuleLoader<iInputModuleContext, iInputAdapter> | InputModulePreset | null;
 }
 
 export class InputBuilder extends Builder<InputElementType, iInputConfig> {
@@ -225,8 +227,8 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
   /** Owns the lifecycle of the input sub-modules: one resolve per prepare. */
   readonly #loader: ModuleLoader<iInputModuleContext, iInputAdapter> | null;
 
-  /** Adapters handed over already-resolved by the host; when set, the loader is unused. */
-  readonly #inherited: iInputAdapter[] | null;
+  /** Adapters that arrived already live (host-owned); never loaded or disposed here. */
+  readonly #live: iInputAdapter[];
 
   /** Modules resolved for the field being built. */
   #modules: iInputAdapter[] = [];
@@ -264,15 +266,20 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
 
     this.config = this.resolveConfig(defaultConfig, config);
 
-    // The loader is the only thing that knows the adapter set; `prepare()` resolves it.
-    // An inherited set (host-owned modules) is used as-is — loading it again would give
-    // every field its own instance and its own teardown.
+    // Two ways to get an adapter set: a loader (host-owned lifecycle), a preset whose
+    // definitions this builder loads itself while live adapters are used as-is, or the
+    // default definitions when the host says nothing.
     if (Array.isArray(this.config.modules)) {
-      this.#inherited = this.config.modules;
-      this.#loader = null;
+      const preset = this.config.modules as InputModuleItem[];
+      const definitions = preset.filter((item) => typeof (item as any).load === "function");
+      this.#live = preset.filter((item) => typeof (item as any).load !== "function") as iInputAdapter[];
+      this.#loader = definitions.length
+        ? new ModuleLoader<iInputModuleContext, iInputAdapter>("input", definitions as any)
+        : null;
     } else {
-      this.#inherited = null;
-      this.#loader = this.config.modules ?? new ModuleLoader<iInputModuleContext, iInputAdapter>("input", CORE_INPUT_MODULES);
+      this.#live = [];
+      this.#loader = this.config.modules
+        ?? new ModuleLoader<iInputModuleContext, iInputAdapter>("input", INPUT_MODULE_DEFINITIONS);
     }
 
   }
@@ -334,7 +341,7 @@ export class InputBuilder extends Builder<InputElementType, iInputConfig> {
 
     // 🧩 Modules are resolved once per prepare, after the payload exists: a module decides
     // from the field what it wants to do, and `InputBuilder` never learns their names.
-    this.#modules = this.#inherited ?? this.#loader!.resolveAll(this.#moduleContext);
+    this.#modules = [...(this.#loader?.resolveAll(this.#moduleContext) ?? []), ...this.#live];
 
     const wrapper = this.render("@field", this.#input)!;
 

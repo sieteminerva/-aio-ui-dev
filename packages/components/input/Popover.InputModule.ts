@@ -77,7 +77,7 @@ class PopoverInputModule implements iInputAdapter {
  * Popover module definition.
  *
  * @example
- * // registered by CORE_INPUT_MODULES; drop it and `config.popover` is ignored
+ * // registered by INPUT_MODULE_DEFINITIONS; drop it and `config.popover` is ignored
  */
 export const popoverInputModule: iModuleDefinition<iInputModuleContext, iInputAdapter> = {
   id: INPUT_MODULE_IDS.popover,

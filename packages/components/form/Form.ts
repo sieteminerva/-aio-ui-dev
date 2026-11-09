@@ -8,8 +8,9 @@ import type { FormValidationHandler } from "./adapters/Validation";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
 import type { FormModulePhase, iFormAdapter, iFormModuleContext } from "./FormModuleTypes";
 import { FORM_ADAPTER_DEFINITIONS } from "./FormRegistry";
+import type { FormModuleDefinition } from "./FormRegistry";
 import { INPUT_MODULE_IDS } from "@aio-ui/input/InputRegistry";
-import type { iInputAdapter } from "@aio-ui/input/InputModuleTypes";
+import type { InputModuleItem } from "@aio-ui/input/InputModuleTypes";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { applyRowColumns, applyRowSpan, childSpanOf, columnsOf } from "./FormLayout";
 import { collectFormValues } from "@aio-ui/input/FormValues";
@@ -152,7 +153,45 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
   // 🧩 Adapter input yang diterima dari manifest (`scope: "input"`). Kosong berarti
   // field memakai preset bawaan input layer; terisi berarti field wajib memakai
   // set ini, supaya lapisan input yang dipangkas tidak diam-diam kembali ke core.
-  #inputModules: iInputAdapter[] = [];
+  #inputModules: InputModuleItem[] = [];
+
+  // 🧩 Adapter form yang diserahkan registry lewat manifest. Entri manifest adalah
+  // **definisi**, jadi yang disimpan loader-nya: memuat ulang definisi yang sama hanya
+  // akan melahirkan instance kedua yang tidak pernah dilepas.
+  #providedLoader: ModuleLoader<iFormModuleContext, any> | null = null;
+
+  // 🧩 Modul yang datang sudah hidup (bukan definisi). Jarang, tapi sebuah host boleh
+  // menyerahkan instance langsung — jangan dipaksa lewat loader.
+  #providedLive = new Map<string, any>();
+
+  /**
+   * Loader yang benar-benar dipakai: bawaan form, dari `config.modules`, atau dari
+   * definisi yang diserahkan registry.
+   */
+  get #activeLoader(): ModuleLoader<iFormModuleContext, any> {
+    return this.#providedLoader ?? this.#loader;
+  }
+
+  /**
+   * Modul form untuk satu fase: definisi yang diserahkan registry dimenangkan.
+   *
+   * @param context - Konteks host yang dioper ke definisi.
+   * @returns Hasil modul, satu per adapter.
+   */
+  #resolved(context: iFormModuleContext): iFormAdapter[] {
+    return [...this.#activeLoader.resolveAll(context), ...this.#providedLive.values()] as iFormAdapter[];
+  }
+
+  /**
+   * Satu adapter form menurut id-nya.
+   *
+   * @param id - Id sub-modul (`FORM_MODULE_IDS`).
+   * @returns Modulnya, atau `null` bila tidak tersedia.
+   */
+  #loaded(id: string): any {
+    if (this.#providedLive.has(id)) return this.#providedLive.get(id);
+    return this.#activeLoader.loaded(id) ?? null;
+  }
 
   /**
    * Memisahkan modul yang diserahkan registry menurut lapisannya.
@@ -168,9 +207,25 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     super.provideModules(modules);
 
     const inputIds = new Set<string>(Object.values(INPUT_MODULE_IDS));
-    this.#inputModules = Object.entries(modules)
-      .filter(([id]) => inputIds.has(id))
-      .map(([, module]) => module as iInputAdapter);
+    const definitions: FormModuleDefinition[] = [];
+
+    this.#inputModules = [];
+    this.#providedLive.clear();
+    this.#providedLoader = null;
+
+    for (const [id, module] of Object.entries(modules)) {
+      if (inputIds.has(id)) {
+        this.#inputModules.push(module as InputModuleItem);
+        continue;
+      }
+
+      // A manifest entry resolves to its exported *definition*; an instance (already
+      // loaded module) is used as-is.
+      if (typeof (module as any)?.load === "function") definitions.push(module as FormModuleDefinition);
+      else this.#providedLive.set(id, module);
+    }
+
+    if (definitions.length) this.#providedLoader = new ModuleLoader<iFormModuleContext, any>("form", definitions);
   }
 
   constructor(config: Partial<iFormConfig> = {}) {
@@ -270,10 +325,10 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     // 🧩 Semua modul fase prepare dimuat lewat loader: definisi yang memutuskan
     // apakah ia aktif (cascading/autoDisableNextStep, multistep), bukan Form.
     const moduleContext = this._buildModuleContext(form, "prepare");
-    this.#features = this.#loader.resolveAll(moduleContext);
-    this.#validation = this.#loader.loaded(FORM_MODULE_IDS.validation);
-    this.#cascade = this.#loader.loaded(FORM_MODULE_IDS.cascade);
-    this.#multistep = this.#loader.loaded(FORM_MODULE_IDS.multistep);
+    this.#features = this.#resolved(moduleContext);
+    this.#validation = this.#loaded(FORM_MODULE_IDS.validation);
+    this.#cascade = this.#loaded(FORM_MODULE_IDS.cascade);
+    this.#multistep = this.#loaded(FORM_MODULE_IDS.multistep);
 
     // Iterasi dan transformasikan setiap input secara murni
     for (const [index, input] of Object.entries(this.#inputs)) {
@@ -689,8 +744,11 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     }
 
     // 🧮 Fase initialize: modul yang membaca DOM final (calculation) baru layak dimuat
-    // sekarang, setelah step multistep lahir dari attach() di atas.
-    this.#features.push(...this.#loader.resolveAll(this._buildModuleContext(formElement, "initialize")));
+    // sekarang, setelah step multistep lahir dari attach() di atas. Bila registry sudah
+    // menyerahkan definisinya, loader itu yang memutuskan fasenya — jangan dobel.
+    if (!this.#providedLoader) {
+      this.#features.push(...this.#loader.resolveAll(this._buildModuleContext(formElement, "initialize")));
+    }
 
     // console.log(`[Form Engine v2] Form ID "${formElement?.id}" successfully compiled with active listeners.`);
   }

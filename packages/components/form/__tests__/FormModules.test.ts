@@ -17,7 +17,7 @@ import { FORM_ADAPTER_DEFINITIONS, FORM_ADAPTER_IDS, FORM_ADAPTER_MANIFEST } fro
  *   registry resolves one set while `new FormBuilder()` defaults to another);
  * - `scope: "input"` entries actually reach the fields — before this, `renderField()`
  *   built its `InputBuilder` with no `modules` at all, so every field fell back to
- *   `CORE_INPUT_MODULES` and a host could never trim the input layer.
+ *   `INPUT_MODULE_DEFINITIONS` and a host could never trim the input layer.
  */
 
 beforeEach(() => {

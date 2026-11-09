@@ -3,7 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { fileUploaderInputModule } from "../FileUploader/FileUploader.InputModule";
 import { inputFormAdapter } from "@aio-ui/form/Input.FormAdapter";
-import { LITE_INPUT_MODULES, mountInputModules } from "../InputRegistry";
+import { mountInputModules } from "../InputRegistry";
+import type { InputModuleDefinition } from "../InputModuleTypes";
 
 /**
  * The file capability belongs to the module, not to the input layer: no module, no
@@ -73,7 +74,8 @@ describe("file input module", () => {
   });
 
   it("has no file capability at all when the preset omits the module", () => {
-    const loader = LITE_INPUT_MODULES;
+    // An empty preset is the "lite" case: nothing to load, nothing to mount.
+    const loader: InputModuleDefinition[] = [];
     const hasFileModule = loader.some((definition) => definition.id === "file");
 
     expect(hasFileModule).toBe(false);
