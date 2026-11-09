@@ -19,9 +19,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "check:bounds": "node scripts/bounds.mjs",
     "new:component": "node scripts/new-component.mjs",
-    "verify": "npm run typecheck && npm run check:bounds && npm test && npm run build",
+    "verify": "npm run build:pkgs && npm run typecheck && npm run check:bounds && npm test && npm run build",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build:pkgs": "npm run build --workspaces --if-present"
   },
   "devDependencies": {
     "happy-dom": "^21.0.4",
