@@ -1,33 +1,9 @@
 
 import type { iElementProperty, iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
-
-
-export const ELEMENT_KEYS = [
-  "@container",
-  "@menu",
-  "@menu>brand",
-  "@menu>hamburger",
-  "@menu>navigations",
-  "@menu>navigations>item",
-  "@menu>actions",
-  "@menu>item>link",
-  "@menu>item>icon",
-] as const;
-
-export type MenuElementType = (typeof ELEMENT_KEYS)[number];
-
-export const DEFAULT_MENU_SELECTORS: Record<MenuElementType, iElementProperty> = {
-  "@container": { tagName: "aside", className: "sidebar" },
-  "@menu": { tagName: "nav", className: "nav" },
-  "@menu>brand": { tagName: "div", className: "brand", attrs: { src: "" } },
-  "@menu>hamburger": { tagName: "button", className: "hamburger-btn", attrs: { "aria-label": "Toggle menu" } },
-  "@menu>navigations": { tagName: "ul", className: "navigations" },
-  "@menu>navigations>item": { tagName: "li", className: "item" },
-  "@menu>actions": { tagName: "div", className: "actions" },
-  "@menu>item>link": { tagName: "a" },
-  "@menu>item>icon": { tagName: "i", className: "icon" },
-};
+import { DEFAULT_MENU_SELECTORS } from "./Menu.kit";
+import type { MenuElementType } from "./Menu.kit";
+import { splitMenuContent } from "./Menu.engine";
 
 export interface iMenuConfig extends iBuilderConfig<MenuElementType> {
   /** 
@@ -51,44 +27,6 @@ export interface iMenuSplit {
   brand: iElementProperty;
   navigations: iElementProperty[];
   actions: iElementProperty[];
-}
-
-/**
- * Split one flat navigation list into three sections.
- *
- * The source data is linear (a header row plus links plus a CTA), so the split is a
- * convention rather than a structure:
- *
- * - the **first** entry is the brand,
- * - an entry whose `className` is `button`, or whose `href` is a `tel:` link, is an action,
- * - everything else is a navigation link.
- *
- * Exported and pure so the rule is testable without a DOM.
- */
-export function splitMenuContent(content: any): iMenuSplit {
-  const navigations: iElementProperty[] = Array.isArray(content?.navigations)
-    ? content.navigations
-    : content?.navigations
-      ? [content.navigations]
-      : [];
-
-  const brand = navigations[0] ?? { label: "Brand", href: "#home" };
-  const rest = navigations.slice(1);
-
-  const isAction = (link: iElementProperty): boolean =>
-    link?.className === "button" || Boolean(link?.href?.includes("tel:"));
-
-  const actions = Array.isArray(content?.actions)
-    ? [...content.actions]
-    : content?.actions
-      ? [content.actions]
-      : [];
-
-  const cta = rest.find(isAction);
-  // The CTA may already be listed under `actions`; adding it twice was the old behaviour.
-  if (cta && !actions.includes(cta)) actions.push(cta);
-
-  return { brand, navigations: rest.filter((link) => !isAction(link)), actions };
 }
 
 export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
@@ -120,7 +58,6 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
         ...(config?.selectors || {})
       }
     };
-
 
     this.config = this.resolveConfig(defaultConfig, config);
 
@@ -341,7 +278,6 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
         }
         break;
 
-
     }
   }
 
@@ -373,5 +309,4 @@ export class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
     });
   }
 }
-
 

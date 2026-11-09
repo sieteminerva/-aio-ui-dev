@@ -4,8 +4,8 @@
 > imports, so a component can move internally without breaking a host, a generated site,
 > or a preset.
 >
-> Status: **barrels curated + aggregators shipped + surface gate in `verify`** (0.1.0).
-> Aliases stay until 0.2.0.
+> Status: **curated barrels, aggregators, surface gate and alias retirement — all done**
+> (0.1.0). What remains is listed at the end of §9.
 > Last updated 2026-11-11 — see §9 for what actually changed.
 
 ## 1. Taxonomy (the rule we adopt)
@@ -107,16 +107,41 @@ force a preset regeneration for every site. So: **0.1.x = add barrels + keep ali
 
 ## 5. Enforcement
 
-Add `scripts/api.mjs --check` reading a single source of truth (`docs/api-map.json`:
-package → allowed entries → kind) and failing when:
+`scripts/api.mjs --check` reads a single source of truth (`docs/api-map.json`:
+package → entries → kind) and fails when:
 
 - a package has no root barrel while its kind requires one,
 - an entry exists in `exports` but not in the map (accidental exposure),
 - a map entry is missing from `exports` (forgotten publish),
 - a CSS entry is not `./*.css`.
 
-Wire it into `verify` next to `bounds` and `version:check`. This is the same pattern that
-already works for dependency edges — mechanical, not a review checklist.
+It runs inside `verify` next to `bounds` and `version:check` — the same pattern that
+already works for dependency edges: mechanical, not a review checklist.
+
+### Alias retirement — done (0.1.0)
+
+Every subpath that was only another name for the package root is gone: 50 entries across
+25 packages (`/Accordion`, `/Badge`, … `/ProductGrid`, `/Form`, `/Message`, `/Table`,
+`/Input`, `/HashRouter`, `/HttpService`, `/EventEmitter`, `/Animations`, `/ModuleLoader`,
+`/ModuleRegistry`, `/ThemeRegistry`, `/ThemeRenderer`, `/Base`, `/AioApp`,
+`/ComponentRegistry`, `/DOMRenderer`, `/Stylesheets`, `/BuilderPort`, `/TemplateRegistry`,
+`/Registry`, `/DefaultTheme`, `/CyberpunkTheme`, `/HorizontalTheme`,
+`/HorizontalScrolling`, `/builder` (id-address), plus four zero-use legacy input
+spellings). 143 import statements were rewritten to the root.
+
+That closes the gap the previous iteration left open: the file a barrel re-exports is no
+longer reachable, so `ELEMENT_KEYS`, `DEFAULT_SELECTORS`, `normalizePayload` and friends
+are unreachable by construction, not by discipline.
+
+**Still subpaths, on purpose:**
+
+| Kind | Example | Why it stays |
+| --- | --- | --- |
+| Types-only contracts | `@aio-ui/core/interface`, `/node`, `/page`, `/api`, `/events`, `/content`, `/builder`, `/registry`, `/renderer` | one module of types without dragging the runtime |
+| Capability modules | `@aio-ui/form/validation-adapter`, `@aio-ui/input/dropdown/module`, `@aio-ui/id-address/form` | loaded on demand, one per capability |
+| Adapters | `@aio-ui/message/adapters/FormAdapter`, `@aio-ui/table/adapters/FormAdapter` | integrations, not the component |
+| Shared type contracts | `@aio-ui/form/FormMessages`, `@aio-ui/form/FormModuleTypes` | the form ↔ message type cycle, deliberately public |
+| CSS | `@aio-ui/form/Form.css` | shipped as files |
 
 ## 6. Open decisions (need an answer before coding)
 
@@ -181,9 +206,31 @@ capabilities, not entries.
 Regenerate `.draft/preset/layout.json` after adding a barrel — a package without `.`
 is marked `bare: false` and the CDN resolver refuses its root.
 
+### Internal files are named after their duty
+
+With the aliases gone, an implementation file is unreachable from outside — but a builder
+file that also carried selectors, normalisers and guards was still a bad file. The
+convention is written down in [`COMPONENT-CONVENTIONS.md`](./COMPONENT-CONVENTIONS.md)
+(§1b) and applied where the mixture was real:
+
+| Suffix | Duty | Applied so far |
+| --- | --- | --- |
+| `<Pascal>.kit.ts` | constants, key lists, selector maps, element-type unions, attribute tables | badge, menu, section, carousel, product-detail, product-grid, id-address |
+| `<Pascal>.engine.ts` | normalisation, transforms, fallbacks worth a DOM-free test | badge, menu, section, product-detail, product-grid |
+| `<Pascal>.behaviour.ts` | observers, timers, scheduling, event wiring | none yet — `animations/behaviours` is the module-level example |
+
+The builder file now holds the builder and its public types only, and no `.kit`/`.engine`
+name appears in a barrel or an `exports` map — the gate would reject it if one did. Public
+types deliberately stay with the builder: moving `iCarouselAttrsConfig` into a kit made it
+vanish from the surface; the gate caught it and the removal was accepted as internal.
+
 ### Still open
 
-- Alias retirement (`core/api`, `core/registry`, `input/Dropdown/…`, `…/HorizontalScrolling`):
-  scheduled for 0.2.0, tracked in §5.
-- `scripts/api.mjs --check` + `docs/api-map.json` as a `verify` gate (§5).
-- `animations/canvas/*` is still exported (decision 4 above).
+- `animations/canvas/*` is still exported (decision 4 above); it is a demo surface, not
+  framework API.
+- The remaining `*ElementType` unions still sit beside their builders in the twelve
+  components that never needed a kit file. They are unpublished, so this is hygiene rather
+  than a leak — move them when a component is touched for another reason.
+- `core/interface` (71 imports) is one module of types for the whole framework. It stays a
+  contract on purpose, but it is the next thing worth splitting if those type modules ever
+  start importing runtime code.

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_SELECTORS, ELEMENT_KEYS, formatPrice, imageOf, normalizeProduct } from "../ProductDetail";
-import { normalizeProducts } from "../ProductGrid";
+import { DEFAULT_SELECTORS, ELEMENT_KEYS } from "../ProductDetail.kit";
+import { formatPrice, imageOf, normalizeProduct } from "../ProductDetail.engine";
+import { normalizeProducts } from "../ProductGrid.engine";
 
 describe("product detail payload", () => {
   it("reads a record as-is and unwraps { content }", () => {

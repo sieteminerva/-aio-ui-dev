@@ -1,5 +1,6 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { AttrsConfigMap } from "./Carousel.kit";
 
 export type CarouselElementType =
   | "@container"
@@ -31,53 +32,6 @@ export interface iCarouselConfig extends iBuilderConfig<CarouselElementType> {
   pauseOnHover?: boolean;
 }
 
-export const AttrsConfigKeys = [
-  "data-carousel",
-  "data-show-control",
-  "data-show-navigation",
-  "data-autoplay",
-  "data-vertical",
-  "data-slides-per-view",
-  "data-animation",
-  "data-loop",
-  "data-slide-height",
-  "data-slide-width",
-  "data-pause-on-hover",
-] as const;
-
-type CarouselAttrKeys = typeof AttrsConfigKeys[number];
-
-export type iCarouselAttrsConfig = {
-  [K in CarouselAttrKeys]: any;
-};
-
-export const dataAttrsConfig: iCarouselAttrsConfig = {
-  "data-carousel": "",
-  "data-show-control": true,
-  "data-show-navigation": true,
-  "data-autoplay": true,
-  "data-vertical": true,
-  "data-slides-per-view": 1,
-  "data-animation": "slide-left",
-  "data-loop": true,
-  "data-slide-height": "",
-  "data-slide-width": "",
-  "data-pause-on-hover": true,
-}
-
-export const AttrsConfigMap: iCarouselAttrsConfig = {
-  "data-carousel": "carousel",
-  "data-show-control": "showControl",
-  "data-show-navigation": "showNavigation",
-  "data-autoplay": "autoPlay",
-  "data-vertical": "vertical",
-  "data-slides-per-view": "slidesPerView",
-  "data-animation": "animation",
-  "data-loop": "loop",
-  "data-slide-height": "slideHeight",
-  "data-slide-width": "slideWidth",
-  "data-pause-on-hover": "pauseOnHover",
-}
 
 type iCarouselAnimation = 'fade' | 'slide-left' | 'slide-right' | 'slide-up' | 'slide-down'
 
@@ -104,7 +58,6 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
   private slides: HTMLElement[] = [];
   private dots: HTMLElement[] = [];
   private buttons: HTMLButtonElement[] = [];
-
 
   constructor(config: Partial<iCarouselConfig> = {}) {
     super();
@@ -375,7 +328,6 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
     }
   }
 
-
   // Inside Components/CarouselBuilder.ts -> Converted to your Pure Custom Bootstrapper Specification
 
   /**
@@ -431,7 +383,6 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
 
     console.log(`✨ [Carousel Bootstrapper]: Manual HTML markup successfully activated via Legal #nodes Registration!`);
   }
-
 
   /**
   * TERMINAL MODUL 1: Menghidupkan total penataan jalur mendatar (Horizontal)
@@ -503,7 +454,6 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
 
     this.animate(true);
   }
-
 
   /**
    * 🎢 PUSAT KENDALI PENGANIMASIAN MODULAR (ANTI-JUMPING GUARANTEED)

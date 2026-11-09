@@ -3,8 +3,8 @@ import type { iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
 import { ProductCardBuilder } from "./ProductCard";
 import type { iProductCardConfig } from "./ProductCard";
-
-export type ProductGridElementType = "@grid" | "@grid>container";
+import type { ProductGridElementType } from "./ProductGrid.kit";
+import { normalizeProducts } from "./ProductGrid.engine";
 
 export interface iProductGridConfig extends iBuilderConfig<ProductGridElementType> {
   /** Forwarded to every card (shape, autoplay, button text…). */
@@ -13,15 +13,6 @@ export interface iProductGridConfig extends iBuilderConfig<ProductGridElementTyp
   onOpen?: (product: any) => void;
   /** A card's checkout button was pressed. */
   onCheckout?: (payload: any) => void;
-}
-
-/** `{ content: { data: [...] } }`, `{ content: [...] }`, `[...]`, `{ data: [...] }`. */
-export function normalizeProducts(data: any): any[] {
-  const content = data?.content ?? data;
-  if (Array.isArray(content)) return content.filter(Boolean);
-  if (Array.isArray(content?.data)) return content.data.filter(Boolean);
-  if (Array.isArray(data?.data)) return data.data.filter(Boolean);
-  return [];
 }
 
 export class ProductGridBuilder extends Builder<ProductGridElementType, iProductGridConfig> {

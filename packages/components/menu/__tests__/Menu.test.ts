@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_MENU_SELECTORS, ELEMENT_KEYS, splitMenuContent } from "../Menu";
+import { DEFAULT_MENU_SELECTORS, ELEMENT_KEYS } from "../Menu.kit";
+import { splitMenuContent } from "../Menu.engine";
 
 /**
  * The menu splits one flat navigation list into brand / links / actions. That rule is

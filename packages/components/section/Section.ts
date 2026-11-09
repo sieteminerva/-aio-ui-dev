@@ -1,5 +1,8 @@
-import type { iBuilderConfig, iBuilderSelectorsConfig } from "@aio-ui/core/interface";
+import type { iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { DEFAULT_SELECTORS } from "./Section.kit";
+import type { SectionElementType } from "./Section.kit";
+import { normalizeColumns } from "./Section.engine";
 
 /**
  * Section — one row of 2–3 content columns.
@@ -12,32 +15,6 @@ import { Builder } from "@aio-ui/base";
  * nested shape above and a flat `content: [{ title, imageUrl }]` render. Each block
  * contributes, in this order: image → eyebrow → header → description → actions.
  */
-
-export const ELEMENT_KEYS = [
-  "@section",
-  "@section>content",
-  "@section>content>image",
-  "@section>content>eyebrow",
-  "@section>content>header",
-  "@section>content>desc",
-  "@section>content>actions",
-  "@section>content>actions>item",
-] as const;
-
-export type SectionElementType = (typeof ELEMENT_KEYS)[number];
-
-export const DEFAULT_SELECTORS: iBuilderSelectorsConfig<SectionElementType> = {
-  "@section": { tagName: "section", className: "section" },
-  "@section>content": { tagName: "div", className: "section-column" },
-  "@section>content>image": { tagName: "img", className: "section-image" },
-  "@section>content>eyebrow": { tagName: "div", className: "section-eyebrow" },
-  "@section>content>header": { tagName: "h2", className: "section-title" },
-  "@section>content>desc": { tagName: "p", className: "section-desc" },
-  "@section>content>actions": { tagName: "div", className: "section-actions" },
-  // An anchor: a CTA is usually a link. Without `href` it becomes a real button via
-  // role="button" + tabindex, so both cases stay keyboard reachable.
-  "@section>content>actions>item": { tagName: "a", className: "section-cta" },
-};
 
 export interface iSectionAction {
   label?: string;
@@ -65,49 +42,6 @@ export interface iSectionColumn extends iSectionBlock {
 export interface iSectionConfig extends iBuilderConfig<SectionElementType> {
   /** Wrapper class appended to the root, e.g. `"container"`. */
   className?: string;
-}
-
-export interface iNormalizedColumn {
-  className?: string;
-  blocks: iSectionBlock[];
-  /** A pre-built node passed as `column.content`. */
-  element?: HTMLElement;
-}
-
-/**
- * Normalize the payload into columns of blocks.
- *
- * Accepts `{ content: [...] }`, a bare array, or a single column object. A column whose
- * own fields look like a block is treated as one block, which is what makes the flat
- * shape work without a nested array of one.
- */
-export function normalizeColumns(data: any): iNormalizedColumn[] {
-  const content = data?.content ?? data;
-  if (!content) return [];
-
-  // `{}` is "nothing", not "one empty column".
-  if (!Array.isArray(content) && typeof content === "object" && Object.keys(content).length === 0) return [];
-
-  const raw = Array.isArray(content) ? content : [content];
-
-  return raw.filter(Boolean).map((column: iSectionColumn) => {
-    const className = typeof column.className === "string" ? column.className : undefined;
-    const inner = column.content;
-
-    if (Array.isArray(inner)) {
-      return { className, blocks: inner.filter(Boolean) as iSectionBlock[] };
-    }
-
-    if (typeof HTMLElement !== "undefined" && inner instanceof HTMLElement) {
-      return { className, blocks: [], element: inner };
-    }
-
-    if (column.eyebrow || column.title || column.description || column.image || column.imageUrl || column.actions) {
-      return { className, blocks: [column] };
-    }
-
-    return { className, blocks: [] };
-  });
 }
 
 /** Add a space-separated class list without wiping the selector's own classes. */

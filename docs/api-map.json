@@ -99,7 +99,6 @@
         "CarouselBuilder"
       ],
       "types": [
-        "iCarouselAttrsConfig",
         "iCarouselConfig"
       ]
     },
@@ -463,6 +462,7 @@
       "kind": "package",
       "barrel": "./src/index.ts",
       "values": [
+        "HorizontalScrollingPage",
         "HorizontalTheme"
       ],
       "types": []

@@ -1,5 +1,8 @@
-import type { iBuilderConfig, iBuilderRegistry, iBuilderSelectorsConfig } from "@aio-ui/core/interface";
+import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { DEFAULT_SELECTORS } from "./ProductDetail.kit";
+import type { ProductDetailElementType } from "./ProductDetail.kit";
+import { formatPrice, imageOf, normalizeProduct } from "./ProductDetail.engine";
 
 /**
  * Product detail — the "detail" module of the product page.
@@ -9,40 +12,6 @@ import { Builder } from "@aio-ui/base";
  * price, colours) + actions (back, add to cart) and stays declarative: it does not know
  * where it is mounted or how navigation happens — the page supplies `onBack`.
  */
-
-export const ELEMENT_KEYS = [
-  "@detail",
-  "@detail>media",
-  "@detail>media>image",
-  "@detail>body",
-  "@detail>body>eyebrow",
-  "@detail>body>title",
-  "@detail>body>desc",
-  "@detail>body>price",
-  "@detail>body>colors",
-  "@detail>body>colors>item",
-  "@detail>body>actions",
-  "@detail>body>actions>back",
-  "@detail>body>actions>checkout",
-] as const;
-
-export type ProductDetailElementType = (typeof ELEMENT_KEYS)[number];
-
-export const DEFAULT_SELECTORS: iBuilderSelectorsConfig<ProductDetailElementType> = {
-  "@detail": { tagName: "article", className: "product-detail" },
-  "@detail>media": { tagName: "div", className: "product-detail-media" },
-  "@detail>media>image": { tagName: "img", className: "product-detail-image" },
-  "@detail>body": { tagName: "div", className: "product-detail-body" },
-  "@detail>body>eyebrow": { tagName: "div", className: "product-detail-eyebrow" },
-  "@detail>body>title": { tagName: "h2", className: "product-detail-title" },
-  "@detail>body>desc": { tagName: "p", className: "product-detail-desc" },
-  "@detail>body>price": { tagName: "div", className: "product-detail-price" },
-  "@detail>body>colors": { tagName: "div", className: "product-detail-colors" },
-  "@detail>body>colors>item": { tagName: "button", className: "product-detail-color" },
-  "@detail>body>actions": { tagName: "div", className: "product-detail-actions" },
-  "@detail>body>actions>back": { tagName: "button", className: "product-detail-back" },
-  "@detail>body>actions>checkout": { tagName: "button", className: "button primary product-detail-checkout" },
-};
 
 export interface iProductColor {
   name?: string;
@@ -74,32 +43,6 @@ export interface iProductDetailConfig extends iBuilderConfig<ProductDetailElemen
   onAddToCart?: (payload: { product: iProductRecord; color?: iProductColor }) => void;
   /** Called when the shopper leaves the detail view. */
   onBack?: () => void;
-}
-
-/** One record, accepting the `artwork.src` shape from the Sheets data as well as `imageUrl`. */
-export function normalizeProduct(data: any): iProductRecord {
-  const record = data?.content ?? data;
-  return record && typeof record === "object" ? record : {};
-}
-
-/** The image of a record: per-colour artwork wins, then the product artwork. */
-export function imageOf(record: iProductRecord, color?: iProductColor): string {
-  return (
-    color?.imageUrl ??
-    color?.src ??
-    record.artwork?.src ??
-    record.imageUrl ??
-    record.image ??
-    record.src ??
-    ""
-  );
-}
-
-/** `85000` → `Rp 85.000`; a string is passed through untouched. */
-export function formatPrice(value: number | string | undefined, currency = "Rp"): string {
-  if (value === undefined || value === null || value === "") return "";
-  if (typeof value === "string") return value;
-  return `${currency} ${value.toLocaleString("id-ID")}`;
 }
 
 export class ProductDetailBuilder extends Builder<ProductDetailElementType, iProductDetailConfig> {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_SELECTORS, ELEMENT_KEYS, normalizeColumns } from "../Section";
+import { DEFAULT_SELECTORS, ELEMENT_KEYS } from "../Section.kit";
+import { normalizeColumns } from "../Section.engine";
 
 /**
  * `Section` accepts two nested shapes plus a flat one, which is exactly the kind of

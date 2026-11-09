@@ -292,4 +292,11 @@ boundaries clean, both builds green. Browser claims are measured (`getBoundingCl
 4. Smoke test build-free di browser memakai tag nyata — menutup klaim "build-free" yang sekarang hanya diuji struktural.
 5. Batch kebersihan dokumen (tiga item di atas).
 
+## Selesai: API publik (0.1.0)
+
+- Barrel dikurasi di semua package (tidak ada `export *` kecuali kit), gate `npm run check:api` + `docs/api-map.json` sudah masuk `verify`.
+- 50 alias subpath dipensiunkan (semua nama kedua untuk root package), 143 import ditulis ulang ke root.
+- Konvensi file internal: `.kit.ts` (konstanta/tipe), `.engine.ts` (logika), `.behaviour.ts` (perilaku runtime) — lihat `docs/COMPONENT-CONVENTIONS.md` §1b; diterapkan di badge, menu, section, carousel, product, id-address.
+- Sisa: `animations/canvas/*`, `*ElementType` di 12 komponen, dan `core/interface` sebagai kontrak tipe — lihat `docs/PUBLIC-API.md` §9.
+
 mulai dari #1 (form store) karena itu paling cepat memberi sinyal bahwa pipeline generate→render benar, lalu lanjut #2 schema sebagai pekerjaan desain terbesar.

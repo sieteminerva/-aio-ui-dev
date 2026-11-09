@@ -40,11 +40,11 @@ packages/components/my-widget/
 and nothing else. Everything the builder needs in order to work lives next door, in a file
 named after **what it does**, never after where it happens to be used:
 
-| Suffix               | Holds                                                                                 | Test for it                                                              |
-| -------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `<Pascal>.engine.ts` | Logic with weight: payload normalisation, transforms, derived values, calculations.    | Would you want a unit test that never touches the DOM? Then it is engine. |
-| `<Pascal>.kit.ts`    | Constants and complements: `ELEMENT_KEYS`, `DEFAULT_SELECTORS`, element-type unions, attribute/config maps. No branching worth testing. | Is it a literal, a type, or a one-liner? Then it is kit.                  |
-| `<Pascal>.behaviour.ts` | Anything that changes how the component *behaves* at runtime: observers, timers, schedulers, event wiring, cleanup. | Does it keep state between calls or schedule work? Then it is behaviour. |
+| Suffix                  | Holds                                                                                                                                   | Test for it                                                               |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `<Pascal>.engine.ts`    | Logic with weight: payload normalisation, transforms, derived values, calculations.                                                     | Would you want a unit test that never touches the DOM? Then it is engine. |
+| `<Pascal>.kit.ts`       | Constants and complements: `ELEMENT_KEYS`, `DEFAULT_SELECTORS`, element-type unions, attribute/config maps. No branching worth testing. | Is it a literal, a type, or a one-liner? Then it is kit.                  |
+| `<Pascal>.behaviour.ts` | Anything that changes how the component _behaves_ at runtime: observers, timers, schedulers, event wiring, cleanup.                     | Does it keep state between calls or schedule work? Then it is behaviour.  |
 
 ```
 packages/components/my-widget/
@@ -74,15 +74,15 @@ Rules that keep this honest:
 
 ## 2. Naming
 
-| Thing                      | Convention              | Example (`my-widget`) |
-| -------------------------- | ----------------------- | --------------------- |
-| Registry key / `builderId` | The folder's kebab name | `"my-widget"`         |
-| Class                      | `<Pascal>Builder`       | `MyWidgetBuilder`     |
-| Element-type union         | `<Pascal>ElementType`   | `MyWidgetElementType` |
-| Config interface           | `i<Pascal>Config`       | `iMyWidgetConfig`     |
-| Item/record interface      | `i<Pascal>Item`         | `iMyWidgetItem`       |
-| Key list                   | `ELEMENT_KEYS`          | in `<Pascal>.kit.ts`  |
-| Selector map               | `DEFAULT_SELECTORS`     | in `<Pascal>.kit.ts`  |
+| Thing                      | Convention              | Example (`my-widget`)   |
+| -------------------------- | ----------------------- | ----------------------- |
+| Registry key / `builderId` | The folder's kebab name | `"my-widget"`           |
+| Class                      | `<Pascal>Builder`       | `MyWidgetBuilder`       |
+| Element-type union         | `<Pascal>ElementType`   | `MyWidgetElementType`   |
+| Config interface           | `i<Pascal>Config`       | `iMyWidgetConfig`       |
+| Item/record interface      | `i<Pascal>Item`         | `iMyWidgetItem`         |
+| Key list                   | `ELEMENT_KEYS`          | in `<Pascal>.kit.ts`    |
+| Selector map               | `DEFAULT_SELECTORS`     | in `<Pascal>.kit.ts`    |
 | Payload normalizer         | `normalizePayload`      | in `<Pascal>.engine.ts` |
 
 `builderId` and `name` are both the registry key and nothing else. Older components
