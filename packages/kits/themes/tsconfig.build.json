@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/themes": [
+        "./index.ts"
+      ],
       "@aio-ui/themes/*": [
         "./*"
       ]

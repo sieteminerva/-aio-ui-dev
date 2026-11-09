@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Article": {
-      "development": "./Article.ts",
-      "types": "./dist/Article.d.ts",
-      "default": "./dist/Article.js"
-    },
     "./Article.css": "./Article.css"
   },
   "scripts": {

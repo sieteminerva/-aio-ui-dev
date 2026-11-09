@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/masonry": [
+        "./index.ts"
+      ],
       "@aio-ui/masonry/*": [
         "./*"
       ]

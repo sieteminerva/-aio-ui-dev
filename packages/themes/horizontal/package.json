@@ -14,16 +14,6 @@
       "development": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./HorizontalTheme": {
-      "development": "./src/HorizontalTheme.ts",
-      "types": "./dist/HorizontalTheme.d.ts",
-      "default": "./dist/HorizontalTheme.js"
-    },
-    "./HorizontalScrolling": {
-      "development": "./src/HorizontalScrolling.ts",
-      "types": "./dist/HorizontalScrolling.d.ts",
-      "default": "./dist/HorizontalScrolling.js"
     }
   },
   "scripts": {

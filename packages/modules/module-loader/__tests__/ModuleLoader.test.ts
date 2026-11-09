@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ModuleLoader } from "../ModuleLoader";
 import type { iModuleDefinition } from "../ModuleRegistry";
-import { RegistryError } from "@aio-ui/core/Registry";
+import { RegistryError } from "@aio-ui/core";
 
 interface iTestContext {
   formId: string;

@@ -14,16 +14,6 @@
       "development": "./index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./ModuleRegistry": {
-      "development": "./ModuleRegistry.ts",
-      "types": "./dist/ModuleRegistry.d.ts",
-      "default": "./dist/ModuleRegistry.js"
-    },
-    "./ModuleLoader": {
-      "development": "./ModuleLoader.ts",
-      "types": "./dist/ModuleLoader.d.ts",
-      "default": "./dist/ModuleLoader.js"
     }
   },
   "scripts": {

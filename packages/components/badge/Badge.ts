@@ -1,44 +1,27 @@
-import type { iBuilderConfig, iBuilderRegistry, iBuilderSelectorsConfig } from "@aio-ui/core/interface";
-import { Builder } from "@aio-ui/base/Base";
+import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
+import { Builder } from "@aio-ui/base";
+import { DEFAULT_SELECTORS } from "./Badge.kit";
+import type { BadgeElementType } from "./Badge.kit";
+import { normalizePayload } from "./Badge.engine";
 
 /**
- * Badge — component skeleton.
+ * Badge — builder.
  *
- * The contract of a component file, in the order it appears below:
+ * This file is the *whole* builder and nothing else. The parts it needs live next door and
+ * are named after their duty:
  *
- *   1. `ELEMENT_KEYS`      every node this component renders. A key IS the selector token.
- *   2. `DEFAULT_SELECTORS` tag + class per key — the shape of the rendered output.
- *   3. `normalizePayload`  the single place that decides which input shapes are accepted.
- *   4. `prepare()`         builds the tree with `render()`, never `document.createElement`.
- *   5. `template()`        hydrates text/attributes per key, never HTML strings.
- *   6. `initialize()`      optional wiring; must be safe to call more than once.
+ *   - `Badge.kit.ts`     key list, element-type union, default selectors.
+ *   - `Badge.engine.ts`  `normalizePayload` — the accepted input shapes.
+ *
+ * The contract of the builder itself, in order:
+ *
+ *   1. `prepare()`     builds the tree with `render()`, never `document.createElement`.
+ *   2. `template()`    hydrates text/attributes per key, never HTML strings.
+ *   3. `initialize()`  optional wiring; must be safe to call more than once.
  *
  * Anything DOM-related that is not expressed as a key is invisible to theming: a theme
  * template can only restyle keys it can name, so keep the key list honest.
  */
-
-/** Every node this component can render. Order is documentation, not behaviour. */
-export const ELEMENT_KEYS = [
-  "@container",
-  "@badge",
-  "@badge>item",
-  "@badge>item>label",
-  "@badge>item>desc",
-] as const;
-
-export type BadgeElementType = (typeof ELEMENT_KEYS)[number];
-
-/**
- * Default shape per key. Themes and callers override this through `config.selectors`,
- * which is why it is exported: the contract is testable without a DOM.
- */
-export const DEFAULT_SELECTORS: iBuilderSelectorsConfig<BadgeElementType> = {
-  "@container": { tagName: "div", className: "badge-widget" },
-  "@badge": { tagName: "div", className: "badge" },
-  "@badge>item": { tagName: "div", className: "badge-item" },
-  "@badge>item>label": { tagName: "span", className: "badge-label" },
-  "@badge>item>desc": { tagName: "p", className: "badge-desc" },
-};
 
 /** One record this component knows how to render. Rename the fields to fit the data. */
 export interface iBadgeItem {
@@ -50,33 +33,6 @@ export interface iBadgeItem {
 export interface iBadgeConfig extends iBuilderConfig<BadgeElementType> {
   /** Example flag — replace with real options or delete. */
   emphasis?: boolean;
-}
-
-/**
- * Payload normalizer.
- *
- * Every component in this repo is called with whatever the data source produced, so the
- * accepted shapes are declared in ONE function instead of scattered `if`s:
- *
- *   - `[...]`                      bare array of records
- *   - `{ items: [...] }`           named collection
- *   - `{ content: [...] }`         the registry's default unwrapping
- *   - `{ label, description }`     a single record
- *   - `{}` / `null` / `undefined`  nothing
- */
-export function normalizePayload(data: any): iBadgeItem[] {
-  if (!data) return [];
-
-  if (Array.isArray(data)) return data.filter(Boolean);
-
-  if (typeof data === "object") {
-    if (Array.isArray(data.items)) return data.items.filter(Boolean);
-    if (Array.isArray(data.content)) return data.content.filter(Boolean);
-    if (data.label || data.description) return [data];
-    if (data.content && typeof data.content === "object") return [data.content];
-  }
-
-  return [];
 }
 
 export class BadgeBuilder extends Builder<BadgeElementType, iBadgeConfig> {

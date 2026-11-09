@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "paths": {
+      "@aio-ui/theme-horizontal": [
+        "./src/index.ts"
+      ],
       "@aio-ui/theme-horizontal/*": [
         "./src/*"
       ]

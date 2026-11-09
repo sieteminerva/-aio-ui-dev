@@ -1,4 +1,4 @@
-import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/module-loader";
 import { FileUploader } from "./FileUploader";
 import { INPUT_MODULE_IDS, type iInputAdapter, type iInputModuleContext } from "../InputModuleTypes";
 

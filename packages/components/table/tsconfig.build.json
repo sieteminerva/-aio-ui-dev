@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/table": [
+        "./index.ts"
+      ],
       "@aio-ui/table/*": [
         "./*"
       ]

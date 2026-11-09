@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/footer": [
+        "./index.ts"
+      ],
       "@aio-ui/footer/*": [
         "./*"
       ]

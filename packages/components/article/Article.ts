@@ -1,7 +1,7 @@
 import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { createImageError } from "@aio-ui/utilities/DomUtils";
 
-import { Builder } from "@aio-ui/base/Base";
+import { Builder } from "@aio-ui/base";
 
 export type ArticleElementType =
   | "@container"

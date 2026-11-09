@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/http-service": [
+        "./index.ts"
+      ],
       "@aio-ui/http-service/*": [
         "./*"
       ]

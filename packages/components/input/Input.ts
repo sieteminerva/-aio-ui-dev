@@ -1,6 +1,6 @@
 import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
-import { Builder } from "@aio-ui/base/Base";
-import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
+import { Builder } from "@aio-ui/base";
+import { ModuleLoader } from "@aio-ui/module-loader";
 import { inputTypeOf } from "./FieldTypes";
 import {
   INPUT_MODULE_DEFINITIONS,

@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Carousel": {
-      "development": "./Carousel.ts",
-      "types": "./dist/Carousel.d.ts",
-      "default": "./dist/Carousel.js"
-    },
     "./Carousel.css": "./Carousel.css"
   },
   "scripts": {

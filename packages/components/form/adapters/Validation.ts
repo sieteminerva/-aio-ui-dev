@@ -12,8 +12,8 @@
 // Dengan begitu, semua "kenapa form tidak bisa lanjut?" berpusat di satu metode.
 // ======================================================================
 
-import type { iMessageContent } from "@aio-ui/message/Message";
-import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
+import type { iMessageContent } from "@aio-ui/message";
+import type { iModuleDefinition } from "@aio-ui/module-loader";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
 import type { CascadeBlockedInfo, iFormCondition, iFormModuleContext } from "../FormModuleTypes";
 import type { iFormMessageCompose, iFormMessageParams, iFormMessages } from "../FormMessages";

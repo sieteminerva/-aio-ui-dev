@@ -1,5 +1,5 @@
 import type { iBuilderConfig } from "@aio-ui/core/interface";
-import type { iMessageContent } from "@aio-ui/message/Message";
+import type { iMessageContent } from "@aio-ui/message";
 import type { InputModuleItem } from "@aio-ui/input/InputModuleTypes";
 import type { iFormConfig } from "./Form";
 import type { FormMultistepHost } from "./adapters/Multistep";

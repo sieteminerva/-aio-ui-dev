@@ -18,11 +18,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Animations": {
-      "development": "./Animations.ts",
-      "types": "./dist/Animations.d.ts",
-      "default": "./dist/Animations.js"
-    },
     "./Animations.css": "./Animations.css",
     "./behaviours": {
       "development": "./behaviours/registry.ts",

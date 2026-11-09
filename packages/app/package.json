@@ -15,11 +15,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./AioApp": {
-      "development": "./src/AioApp.ts",
-      "types": "./dist/AioApp.d.ts",
-      "default": "./dist/AioApp.js"
-    },
     "./ports": {
       "development": "./src/ports.ts",
       "types": "./dist/ports.d.ts",

@@ -84,7 +84,7 @@ export interface iWebPreset {
 
 /** One package the generated site must load, with its stylesheets. */
 export interface PresetAsset {
-  /** Import specifier, e.g. `"@aio-ui/article/Article"`. */
+  /** Import specifier, e.g. `"@aio-ui/article"`. */
   specifier: string;
   /** Stylesheet specifiers that belong to that package. */
   styles: string[];

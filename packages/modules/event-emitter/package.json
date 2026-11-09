@@ -15,16 +15,6 @@
       "development": "./index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./EventEmitter": {
-      "development": "./EventEmitter.ts",
-      "types": "./dist/EventEmitter.d.ts",
-      "default": "./dist/EventEmitter.js"
-    },
-    "./PageEvents": {
-      "development": "./PageEvents.ts",
-      "types": "./dist/PageEvents.d.ts",
-      "default": "./dist/PageEvents.js"
     }
   },
   "scripts": {

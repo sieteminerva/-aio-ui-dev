@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/module-loader": [
+        "./index.ts"
+      ],
       "@aio-ui/module-loader/*": [
         "./*"
       ]

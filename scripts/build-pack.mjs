@@ -138,8 +138,12 @@ function buildConfig(root, extendsPath, name) {
       // A package that is part of a type-level cycle (`message` → `form` → `message`) would
       // otherwise resolve its own name through `exports` → `dist/*.d.ts` and then treat that
       // output as an input (TS5055). Pointing the package at itself keeps the cycle on
-      // sources.
-      paths: { [`${name}/*`]: [root === "src" ? "./src/*" : "./*"] },
+      // sources. The bare specifier is mapped too: now that consumers import the curated
+      // root barrel, the cycle comes back through `@aio-ui/<name>`, not just a subpath.
+      paths: {
+        [name]: [root === "src" ? "./src/index.ts" : "./index.ts"],
+        [`${name}/*`]: [root === "src" ? "./src/*" : "./*"],
+      },
       // `types` is intentionally inherited from the base config: `vite/client` is what
       // declares `import.meta.env` and `*.css` side-effect imports, and dropping it made
       // those two fail as soon as the package was compiled for real.

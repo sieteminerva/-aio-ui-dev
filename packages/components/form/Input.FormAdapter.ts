@@ -1,7 +1,7 @@
-import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/module-loader";
 import type { iFormModuleContext } from "./FormModuleTypes";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
-import { InputBuilder } from "@aio-ui/input/Input";
+import { InputBuilder } from "@aio-ui/input";
 import { inputFilesOf, mountControls, mountInputModules } from "@aio-ui/input/InputRegistry";
 
 /**

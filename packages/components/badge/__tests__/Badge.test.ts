@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_SELECTORS, ELEMENT_KEYS, normalizePayload } from "../Badge";
+import { DEFAULT_SELECTORS, ELEMENT_KEYS } from "../Badge.kit";
+import { normalizePayload } from "../Badge.engine";
 
 /**
  * Component tests stay DOM-free on purpose (the suite runs in `environment: "node"`).

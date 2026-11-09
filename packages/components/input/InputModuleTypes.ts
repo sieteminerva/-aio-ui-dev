@@ -7,7 +7,7 @@
  * solves the same problem the same way (`FormModuleTypes.ts`).
  */
 
-import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/module-loader";
 import type { iBuilderConfig } from "@aio-ui/core/interface";
 import type { iBasicInputNode } from "./Input";
 

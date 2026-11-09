@@ -4,7 +4,7 @@
 
 import type { iNodeContent } from "@aio-ui/core/interface";
 import { HomepageContent_id } from "./home_id";
-import { HorizontalScrollingPage } from "@aio-ui/theme-horizontal/HorizontalScrolling";
+import { HorizontalScrollingPage } from "@aio-ui/theme-horizontal";
 import { navigationMenu, navScroll, requestStart } from "./shared";
 
 

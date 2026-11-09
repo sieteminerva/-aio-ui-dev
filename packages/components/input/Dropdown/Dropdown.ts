@@ -6,7 +6,7 @@
  * - `style: "datalist"` renders a native `<datalist>`.
  */
 import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
-import { Builder } from "@aio-ui/base/Base";
+import { Builder } from "@aio-ui/base";
 
 
 export type DropdownElementType =

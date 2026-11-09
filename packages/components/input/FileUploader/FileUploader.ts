@@ -6,7 +6,7 @@
  * layers need through `InputBuilder` statics.
  */
 import { truncateText } from "@aio-ui/utilities/helper";
-import { ensureStylesheet } from "@aio-ui/core/Stylesheets";
+import { ensureStylesheet } from "@aio-ui/core";
 
 /**
  * Where this sheet is fetched from, spelled as the host keys it.

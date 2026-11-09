@@ -2,7 +2,7 @@
  * PRESET EMITTER — turn a plan into the three things a generated site needs:
  *
  * 1. `links`      — stylesheet URLs for `<link rel="stylesheet">`,
- * 2. `importMap`  — bare specifier → URL, so `import("@aio-ui/form/Form")` works
+ * 2. `importMap`  — bare specifier → URL, so `import("@aio-ui/form")` works
  *                   in a browser without a bundler,
  * 3. `table`      — the same mapping as data, for hosts that build a registry
  *                   (the current `componentAssets` shape).

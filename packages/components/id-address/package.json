@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./builder": {
-      "development": "./id-address-builder.ts",
-      "types": "./dist/id-address-builder.d.ts",
-      "default": "./dist/id-address-builder.js"
-    },
     "./adapter": {
       "development": "./id-address-adapter.ts",
       "types": "./dist/id-address-adapter.d.ts",

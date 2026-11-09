@@ -14,11 +14,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Message": {
-      "development": "./Message.ts",
-      "types": "./dist/Message.d.ts",
-      "default": "./dist/Message.js"
-    },
     "./Message.css": "./Message.css",
     "./adapters/FormAdapter": {
       "development": "./adapters/FormAdapter.ts",

@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/fabmenu": [
+        "./index.ts"
+      ],
       "@aio-ui/fabmenu/*": [
         "./*"
       ]

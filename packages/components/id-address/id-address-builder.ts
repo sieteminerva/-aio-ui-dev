@@ -1,6 +1,6 @@
 import type { IAddressAdapter } from "./id-address-adapter";
 import { HttpService, type iHttpServiceConfig } from "@aio-ui/http-service";
-import { ensureStylesheet } from "@aio-ui/core/Stylesheets";
+import { ensureStylesheet } from "@aio-ui/core";
 import { IdAddressAdapterNative } from "./id-address-adapter.native";
 import { IdAddressAdapterBase } from "./id-address-adapter.base";
 import { IdAddressAdapterAio } from "./id-address-adapter.aio";

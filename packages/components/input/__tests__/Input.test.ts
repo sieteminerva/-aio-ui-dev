@@ -5,7 +5,7 @@ import { InputBuilder } from "../Input";
 import { InputAttributeBuilder } from "../Attribute";
 import { INPUT_TYPE_REGISTRY, inputTypeOf, scanInputAttributes } from "../FieldTypes";
 import { INPUT_MODULE_DEFINITIONS } from "../InputRegistry";
-import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
+import { ModuleLoader } from "@aio-ui/module-loader";
 
 /**
  * First DOM-aware tests in the repo: a field is markup, so the contract can only be

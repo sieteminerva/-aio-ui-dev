@@ -1,4 +1,4 @@
-import type { iComponentManifest } from "@aio-ui/core/ComponentRegistry";
+import type { iComponentManifest } from "@aio-ui/core";
 
 /**
  * The demo table.
@@ -34,7 +34,7 @@ export const DEMO: iDemoEntry[] = [
     // First row is the output of `node scripts/new-component.mjs badge` — kept in the
     // table so the scaffold stays proven against the real registry, not just typechecked.
     name: "badge",
-    path: "@aio-ui/badge/Badge",
+    path: "@aio-ui/badge",
     stylesheet: "@aio-ui/badge/Badge.css",
     category: "content",
     kind: "element",
@@ -49,7 +49,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "accordion",
-    path: "@aio-ui/accordion/Accordion",
+    path: "@aio-ui/accordion",
     stylesheet: "@aio-ui/accordion/Accordion.css",
     category: "content",
     kind: "element",
@@ -63,7 +63,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "carousel",
-    path: "@aio-ui/carousel/Carousel",
+    path: "@aio-ui/carousel",
     stylesheet: "@aio-ui/carousel/Carousel.css",
     category: "content",
     kind: "element",
@@ -83,7 +83,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "tab",
-    path: "@aio-ui/tab/Tab",
+    path: "@aio-ui/tab",
     stylesheet: "@aio-ui/tab/Tab.css",
     category: "layout",
     kind: "element",
@@ -96,7 +96,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "section",
-    path: "@aio-ui/section/Section",
+    path: "@aio-ui/section",
     stylesheet: "@aio-ui/section/Section.css",
     category: "layout",
     kind: "element",
@@ -128,7 +128,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "footer",
-    path: "@aio-ui/footer/Footer",
+    path: "@aio-ui/footer",
     stylesheet: "@aio-ui/footer/Footer.css",
     category: "layout",
     kind: "element",
@@ -158,7 +158,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "menu",
-    path: "@aio-ui/menu/Menu",
+    path: "@aio-ui/menu",
     stylesheet: "@aio-ui/menu/Menu.css",
     category: "navigation",
     kind: "element",
@@ -178,7 +178,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "fab-menu",
-    path: "@aio-ui/fabmenu/FabMenu",
+    path: "@aio-ui/fabmenu",
     stylesheet: "@aio-ui/fabmenu/FabMenu.css",
     category: "navigation",
     kind: "element",
@@ -190,7 +190,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "mode-switcher",
-    path: "@aio-ui/modeswitcher/ModeSwitcher",
+    path: "@aio-ui/modeswitcher",
     stylesheet: "@aio-ui/modeswitcher/ModeSwitcher.css",
     category: "chrome",
     kind: "element",
@@ -198,7 +198,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "pricing-card",
-    path: "@aio-ui/pricingcard/PricingCard",
+    path: "@aio-ui/pricingcard",
     stylesheet: "@aio-ui/pricingcard/PricingCard.css",
     category: "content",
     kind: "element",
@@ -230,7 +230,7 @@ export const DEMO: iDemoEntry[] = [
   },
   {
     name: "modal",
-    path: "@aio-ui/modal/Modal",
+    path: "@aio-ui/modal",
     stylesheet: "@aio-ui/modal/Modal.css",
     category: "chrome",
     kind: "modal",

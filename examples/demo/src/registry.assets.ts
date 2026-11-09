@@ -7,22 +7,22 @@
  */
 export const componentAssets = {
   modules: {
-    "@aio-ui/accordion/Accordion": () => import("@aio-ui/accordion/Accordion"),
-    "@aio-ui/article/Article": () => import("@aio-ui/article/Article"),
-    "@aio-ui/badge/Badge": () => import("@aio-ui/badge/Badge"),
-    "@aio-ui/carousel/Carousel": () => import("@aio-ui/carousel/Carousel"),
-    "@aio-ui/fabmenu/FabMenu": () => import("@aio-ui/fabmenu/FabMenu"),
-    "@aio-ui/footer/Footer": () => import("@aio-ui/footer/Footer"),
-    "@aio-ui/form/Form": () => import("@aio-ui/form/Form"),
-    "@aio-ui/menu/Menu": () => import("@aio-ui/menu/Menu"),
-    "@aio-ui/modal/Modal": () => import("@aio-ui/modal/Modal"),
-    "@aio-ui/modeswitcher/ModeSwitcher": () => import("@aio-ui/modeswitcher/ModeSwitcher"),
-    "@aio-ui/pricingcard/PricingCard": () => import("@aio-ui/pricingcard/PricingCard"),
-    "@aio-ui/product/ProductDetail": () => import("@aio-ui/product/ProductDetail"),
-    "@aio-ui/product/ProductGrid": () => import("@aio-ui/product/ProductGrid"),
-    "@aio-ui/section/Section": () => import("@aio-ui/section/Section"),
-    "@aio-ui/tab/Tab": () => import("@aio-ui/tab/Tab"),
-    "@aio-ui/table/Table": () => import("@aio-ui/table/Table"),
+    "@aio-ui/accordion": () => import("@aio-ui/accordion"),
+    "@aio-ui/article": () => import("@aio-ui/article"),
+    "@aio-ui/badge": () => import("@aio-ui/badge"),
+    "@aio-ui/carousel": () => import("@aio-ui/carousel"),
+    "@aio-ui/fabmenu": () => import("@aio-ui/fabmenu"),
+    "@aio-ui/footer": () => import("@aio-ui/footer"),
+    "@aio-ui/form": () => import("@aio-ui/form"),
+    "@aio-ui/menu": () => import("@aio-ui/menu"),
+    "@aio-ui/modal": () => import("@aio-ui/modal"),
+    "@aio-ui/modeswitcher": () => import("@aio-ui/modeswitcher"),
+    "@aio-ui/pricingcard": () => import("@aio-ui/pricingcard"),
+    "@aio-ui/product": () => import("@aio-ui/product"),
+    "@aio-ui/product": () => import("@aio-ui/product"),
+    "@aio-ui/section": () => import("@aio-ui/section"),
+    "@aio-ui/tab": () => import("@aio-ui/tab"),
+    "@aio-ui/table": () => import("@aio-ui/table"),
 
     // Sub-modules declared by a manifest (`FORM_ADAPTER_MANIFEST`). Each one is its own
     // chunk: the registry fetches an entry only when a manifest asks for that id.

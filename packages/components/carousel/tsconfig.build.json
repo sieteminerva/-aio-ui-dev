@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/carousel": [
+        "./index.ts"
+      ],
       "@aio-ui/carousel/*": [
         "./*"
       ]

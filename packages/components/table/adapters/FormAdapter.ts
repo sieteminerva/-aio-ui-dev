@@ -1,4 +1,4 @@
-import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/module-loader";
 import type { iFormModuleContext, iFormTableTarget } from "@aio-ui/form/FormModuleTypes";
 import { FORM_MODULE_IDS } from "@aio-ui/form/FormModuleTypes";
 import { parseTableFile } from "@aio-ui/utilities/parseTableFile";

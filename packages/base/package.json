@@ -15,11 +15,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Base": {
-      "development": "./src/Base.ts",
-      "types": "./dist/Base.d.ts",
-      "default": "./dist/Base.js"
-    },
     "./BaseAdapters/*": "./src/BaseAdapters/*"
   },
   "scripts": {

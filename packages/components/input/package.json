@@ -16,11 +16,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Input": {
-      "development": "./Input.ts",
-      "types": "./dist/Input.d.ts",
-      "default": "./dist/Input.js"
-    },
     "./InputRegistry": {
       "development": "./InputRegistry.ts",
       "types": "./dist/InputRegistry.d.ts",
@@ -51,59 +46,24 @@
       "types": "./dist/CalculationTypes.d.ts",
       "default": "./dist/CalculationTypes.js"
     },
-    "./Popover.InputModule": {
-      "development": "./Popover.InputModule.ts",
-      "types": "./dist/Popover.InputModule.d.ts",
-      "default": "./dist/Popover.InputModule.js"
-    },
     "./dropdown": {
       "development": "./Dropdown/Dropdown.ts",
       "types": "./dist/Dropdown/Dropdown.d.ts",
       "default": "./dist/Dropdown/Dropdown.js"
     },
     "./dropdown.css": "./Dropdown/Dropdown.css",
-    "./Dropdown/Dropdown": {
-      "development": "./Dropdown/Dropdown.ts",
-      "types": "./dist/Dropdown/Dropdown.d.ts",
-      "default": "./dist/Dropdown/Dropdown.js"
-    },
-    "./Dropdown/Dropdown.InputModule": {
-      "development": "./Dropdown/Dropdown.InputModule.ts",
-      "types": "./dist/Dropdown/Dropdown.InputModule.d.ts",
-      "default": "./dist/Dropdown/Dropdown.InputModule.js"
-    },
     "./file-uploader": {
       "development": "./FileUploader/FileUploader.ts",
       "types": "./dist/FileUploader/FileUploader.d.ts",
       "default": "./dist/FileUploader/FileUploader.js"
     },
     "./file-uploader.css": "./FileUploader/FileUploader.css",
-    "./FileUploader/FileUploader": {
-      "development": "./FileUploader/FileUploader.ts",
-      "types": "./dist/FileUploader/FileUploader.d.ts",
-      "default": "./dist/FileUploader/FileUploader.js"
-    },
-    "./FileUploader/FileUploader.InputModule": {
-      "development": "./FileUploader/FileUploader.InputModule.ts",
-      "types": "./dist/FileUploader/FileUploader.InputModule.d.ts",
-      "default": "./dist/FileUploader/FileUploader.InputModule.js"
-    },
     "./controls": {
       "development": "./InputControls/InputControls.ts",
       "types": "./dist/InputControls/InputControls.d.ts",
       "default": "./dist/InputControls/InputControls.js"
     },
     "./controls.css": "./InputControls/inputControls.css",
-    "./InputControls/InputControls": {
-      "development": "./InputControls/InputControls.ts",
-      "types": "./dist/InputControls/InputControls.d.ts",
-      "default": "./dist/InputControls/InputControls.js"
-    },
-    "./InputControls/InputControls.InputModule": {
-      "development": "./InputControls/InputControls.InputModule.ts",
-      "types": "./dist/InputControls/InputControls.InputModule.d.ts",
-      "default": "./dist/InputControls/InputControls.InputModule.js"
-    },
     "./dropdown/module": {
       "development": "./Dropdown/Dropdown.InputModule.ts",
       "types": "./dist/Dropdown/Dropdown.InputModule.d.ts",

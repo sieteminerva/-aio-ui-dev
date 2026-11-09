@@ -1,6 +1,6 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
-import { Builder } from "@aio-ui/base/Base";
-import type { iMessageContent } from "@aio-ui/message/Message";
+import { Builder } from "@aio-ui/base";
+import type { iMessageContent } from "@aio-ui/message";
 import type { FormCascade } from "./adapters/Cascade";
 import type { FormCascadeHost, iCascadeEventDetail } from "./FormModuleTypes";
 import type { FormMultistepHandler, FormMultistepHost } from "./adapters/Multistep";
@@ -11,7 +11,7 @@ import { FORM_ADAPTER_DEFINITIONS } from "./FormRegistry";
 import type { FormModuleDefinition } from "./FormRegistry";
 import { INPUT_MODULE_IDS } from "@aio-ui/input/InputRegistry";
 import type { InputModuleItem } from "@aio-ui/input/InputModuleTypes";
-import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
+import { ModuleLoader } from "@aio-ui/module-loader";
 import { applyRowColumns, applyRowSpan, childSpanOf, columnsOf } from "./FormLayout";
 import { collectFormValues } from "@aio-ui/input/FormValues";
 import type { HttpService } from "@aio-ui/http-service";

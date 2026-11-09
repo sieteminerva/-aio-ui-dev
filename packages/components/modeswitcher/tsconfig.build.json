@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/modeswitcher": [
+        "./index.ts"
+      ],
       "@aio-ui/modeswitcher/*": [
         "./*"
       ]

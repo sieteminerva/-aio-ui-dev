@@ -19,8 +19,8 @@ import { dropdownInputModule } from "./Dropdown/Dropdown.InputModule";
 import { fileUploaderInputModule } from "./FileUploader/FileUploader.InputModule";
 import { inputControlsInputModule } from "./InputControls/InputControls.InputModule";
 import { popoverInputModule } from "./Popover.InputModule";
-import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
-import type { iComponentModuleRef } from "@aio-ui/core/ComponentRegistry";
+import { ModuleLoader } from "@aio-ui/module-loader";
+import type { iComponentModuleRef } from "@aio-ui/core";
 import type {
   InputModuleDefinition,
   InputModuleItem,

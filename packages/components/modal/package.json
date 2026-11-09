@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Modal": {
-      "development": "./Modal.ts",
-      "types": "./dist/Modal.d.ts",
-      "default": "./dist/Modal.js"
-    },
     "./Modal.css": "./Modal.css"
   },
   "scripts": {

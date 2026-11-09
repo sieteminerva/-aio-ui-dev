@@ -103,8 +103,8 @@ function buildDevProject(preset: iWebPreset, planned: PresetPlan): Record<string
 
   const has = (capability: string): boolean => planned.capabilities.includes(capability);
   const imports = [
-    `import { ComponentRegistry } from "@aio-ui/core/ComponentRegistry";`,
-    `import { DOMRenderer } from "@aio-ui/core/DOMRenderer";`,
+    `import { ComponentRegistry } from "@aio-ui/core";`,
+    `import { DOMRenderer } from "@aio-ui/core";`,
     `import { AioApp } from "@aio-ui/app";`,
     `import { HashRouter } from "@aio-ui/router";`,
   ];

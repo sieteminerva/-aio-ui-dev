@@ -1,5 +1,5 @@
 import type { iBuilderConfig, iBuilderSelectorsConfig } from "@aio-ui/core/interface";
-import { Builder } from "@aio-ui/base/Base";
+import { Builder } from "@aio-ui/base";
 
 /**
  * Section — one row of 2–3 content columns.

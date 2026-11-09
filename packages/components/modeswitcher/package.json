@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./ModeSwitcher": {
-      "development": "./ModeSwitcher.ts",
-      "types": "./dist/ModeSwitcher.d.ts",
-      "default": "./dist/ModeSwitcher.js"
-    },
     "./ModeSwitcher.css": "./ModeSwitcher.css"
   },
   "scripts": {

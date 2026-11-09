@@ -1,5 +1,5 @@
 import type { iElementProperty, iBasicNode, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
-import { Builder } from "@aio-ui/base/Base";
+import { Builder } from "@aio-ui/base";
 
 export type MasonryElementType =
   | "@container"

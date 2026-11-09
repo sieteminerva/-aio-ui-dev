@@ -1,4 +1,4 @@
-import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/module-loader";
 import { InputControlsBuilder } from "./InputControls";
 import { INPUT_MODULE_IDS, type iInputActionsSpec, type iInputAdapter, type iInputModuleContext } from "../InputModuleTypes";
 

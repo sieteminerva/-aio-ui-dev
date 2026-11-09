@@ -15,11 +15,6 @@
       "development": "./index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./HttpService": {
-      "development": "./HttpService.ts",
-      "types": "./dist/HttpService.d.ts",
-      "default": "./dist/HttpService.js"
     }
   },
   "scripts": {

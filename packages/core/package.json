@@ -56,36 +56,6 @@
       "development": "./src/types/api.ts",
       "types": "./dist/types/api.d.ts",
       "default": "./dist/types/api.js"
-    },
-    "./ComponentRegistry": {
-      "development": "./src/ComponentRegistry.ts",
-      "types": "./dist/ComponentRegistry.d.ts",
-      "default": "./dist/ComponentRegistry.js"
-    },
-    "./Stylesheets": {
-      "development": "./src/Stylesheets.ts",
-      "types": "./dist/Stylesheets.d.ts",
-      "default": "./dist/Stylesheets.js"
-    },
-    "./DOMRenderer": {
-      "development": "./src/DOMRenderer.ts",
-      "types": "./dist/DOMRenderer.d.ts",
-      "default": "./dist/DOMRenderer.js"
-    },
-    "./BuilderPort": {
-      "development": "./src/BuilderPort.ts",
-      "types": "./dist/BuilderPort.d.ts",
-      "default": "./dist/BuilderPort.js"
-    },
-    "./TemplateRegistry": {
-      "development": "./src/TemplateRegistry.ts",
-      "types": "./dist/TemplateRegistry.d.ts",
-      "default": "./dist/TemplateRegistry.js"
-    },
-    "./Registry": {
-      "development": "./src/Registry/index.ts",
-      "types": "./dist/Registry/index.d.ts",
-      "default": "./dist/Registry/index.js"
     }
   },
   "scripts": {

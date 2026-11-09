@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Tab": {
-      "development": "./Tab.ts",
-      "types": "./dist/Tab.d.ts",
-      "default": "./dist/Tab.js"
-    },
     "./Tab.css": "./Tab.css"
   },
   "scripts": {

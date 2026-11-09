@@ -1,7 +1,7 @@
-import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
+import type { iModuleDefinition } from "@aio-ui/module-loader";
 import { FORM_MODULE_IDS } from "../FormModuleTypes";
 import type { iFormModuleContext } from "../FormModuleTypes";
-import type { iMessageContent } from "@aio-ui/message/Message";
+import type { iMessageContent } from "@aio-ui/message";
 import type { iFormMessages } from "../FormMessages";
 import { composeMessage, messageDraft, resolveStyle } from "../FormMessages";
 import type {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { ThemeRenderer, ThemeRegistry } from "@aio-ui/theme";
-import { getTemplates, TemplateRegistry } from "@aio-ui/core/TemplateRegistry";
+import { getTemplates, TemplateRegistry } from "@aio-ui/core";
 
 /** A theme that rewrites the page and records its lifecycle calls. */
 function createSpyTheme(id = "spy") {

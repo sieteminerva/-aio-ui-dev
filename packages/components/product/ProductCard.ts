@@ -1,6 +1,6 @@
 // Components/ProductCardBuilder.ts (The Purely Integrated Polymorphic Product Card Specification)
 import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
-import { Builder } from "@aio-ui/base/Base";
+import { Builder } from "@aio-ui/base";
 
 // No stylesheet import here on purpose: the registry loads `ProductCard.css` from the
 // manifest (or derives it from the script path) and injects it as a real <style> node.

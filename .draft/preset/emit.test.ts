@@ -56,9 +56,9 @@ describe("emitPlan", () => {
   it("emits a static site without form, input or message assets", () => {
     const emitted = emitSite(galleryPreset, fakeResolver);
     const keys = Object.keys(emitted.importMap.imports).join(" ");
-    expect(keys).not.toContain("@aio-ui/form/Form");
-    expect(keys).not.toContain("@aio-ui/input/Input");
-    expect(keys).not.toContain("@aio-ui/message/Message");
+    expect(keys).not.toContain("@aio-ui/form");
+    expect(keys).not.toContain("@aio-ui/input");
+    expect(keys).not.toContain("@aio-ui/message");
   });
 
   it("does not duplicate a shared stylesheet", () => {

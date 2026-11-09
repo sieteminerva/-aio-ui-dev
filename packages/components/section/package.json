@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Section": {
-      "development": "./Section.ts",
-      "types": "./dist/Section.d.ts",
-      "default": "./dist/Section.js"
-    },
     "./Section.css": "./Section.css"
   },
   "scripts": {

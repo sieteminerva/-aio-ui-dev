@@ -15,11 +15,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./CyberpunkTheme": {
-      "development": "./src/CyberpunkTheme.ts",
-      "types": "./dist/CyberpunkTheme.d.ts",
-      "default": "./dist/CyberpunkTheme.js"
-    },
     "./CyberpunkTheme.css": "./src/CyberpunkTheme.css"
   },
   "scripts": {

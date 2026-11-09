@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Footer": {
-      "development": "./Footer.ts",
-      "types": "./dist/Footer.d.ts",
-      "default": "./dist/Footer.js"
-    },
     "./Footer.css": "./Footer.css"
   },
   "scripts": {

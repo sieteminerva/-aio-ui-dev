@@ -108,13 +108,32 @@
       "barrel": "./src/index.ts",
       "values": [
         "ComponentRegistry",
+        "DEFAULT_REGISTRY_SCOPE",
         "DOMRenderer",
+        "Registry",
+        "RegistryError",
+        "TemplateRegistry",
+        "assertValidId",
+        "assertValidScope",
+        "ensureStylesheet",
         "getBuilderAdapter",
+        "getTemplates",
+        "injectLazyCss",
+        "isStyleInjected",
         "mergeBuildConfig",
-        "setBuilderAdapter"
+        "normalizeStylesheetPath",
+        "qualifyId",
+        "setBuilderAdapter",
+        "setTemplates",
+        "splitQualifiedId",
+        "styleTagId",
+        "useStylesheetAssets"
       ],
       "types": [
         "RegisterFn",
+        "RegistryDuplicatePolicy",
+        "RegistryErrorCode",
+        "TemplateHandler",
         "iBuilderAdapter",
         "iComponentAssetMaps",
         "iComponentEvents",
@@ -123,7 +142,12 @@
         "iEventCallback",
         "iEventEmit",
         "iPageEvents",
-        "iPagePhase"
+        "iPagePhase",
+        "iRegistryEntry",
+        "iRegistryErrorDetails",
+        "iRegistryLike",
+        "iRegistryOptions",
+        "iStyleLoader"
       ]
     },
     "@aio-ui/event-emitter": {

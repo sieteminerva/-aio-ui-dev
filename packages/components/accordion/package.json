@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Accordion": {
-      "development": "./Accordion.ts",
-      "types": "./dist/Accordion.d.ts",
-      "default": "./dist/Accordion.js"
-    },
     "./Accordion.css": "./Accordion.css"
   },
   "scripts": {

@@ -14,16 +14,6 @@
       "development": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./ThemeRegistry": {
-      "development": "./src/ThemeRegistry.ts",
-      "types": "./dist/ThemeRegistry.d.ts",
-      "default": "./dist/ThemeRegistry.js"
-    },
-    "./ThemeRenderer": {
-      "development": "./src/ThemeRenderer.ts",
-      "types": "./dist/ThemeRenderer.d.ts",
-      "default": "./dist/ThemeRenderer.js"
     }
   },
   "scripts": {

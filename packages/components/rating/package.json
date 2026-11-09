@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Rating": {
-      "development": "./Rating.ts",
-      "types": "./dist/Rating.d.ts",
-      "default": "./dist/Rating.js"
-    },
     "./Rating.css": "./Rating.css"
   },
   "scripts": {

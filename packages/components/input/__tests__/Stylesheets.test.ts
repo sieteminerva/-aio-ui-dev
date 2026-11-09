@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ensureStylesheet, useStylesheetAssets } from "@aio-ui/core/Stylesheets";
+import { ensureStylesheet, useStylesheetAssets } from "@aio-ui/core";
 
 import { InputBuilder } from "../Input";
 import { DropdownBuilder } from "../Dropdown/Dropdown";

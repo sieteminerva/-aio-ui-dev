@@ -1,5 +1,5 @@
-import { ComponentRegistry } from '@aio-ui/core/ComponentRegistry';
-import { DOMRenderer } from '@aio-ui/core/DOMRenderer';
+import { ComponentRegistry } from '@aio-ui/core';
+import { DOMRenderer } from '@aio-ui/core';
 import { AioApp, AppStorage } from '@aio-ui/app';
 import { AnimationsService } from '@aio-ui/animations';
 import { HashRouter } from '@aio-ui/router';
@@ -67,7 +67,7 @@ async function start(container: HTMLElement) {
   const components = new ComponentRegistry(componentAssets)
     .register("form", (data: any) => {
       return {
-        path: "@aio-ui/form/Form",
+        path: "@aio-ui/form",
         stylesheet: "@aio-ui/form/Form.css",
         config: Object.assign({}, data?.config || {}, { emit: (event: any, payload: any) => emitter.emit(event, payload as any) }),
         schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
@@ -79,7 +79,7 @@ async function start(container: HTMLElement) {
 
     .register("table", (data: any) => {
       return {
-        path: "@aio-ui/table/Table",
+        path: "@aio-ui/table",
         stylesheet: "@aio-ui/table/Table.css",
         config: data?.config,
         schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
@@ -88,7 +88,7 @@ async function start(container: HTMLElement) {
 
     .register("masonry", (data: any) => {
       return {
-        path: "@aio-ui/masonry/Masonry",
+        path: "@aio-ui/masonry",
         stylesheet: "@aio-ui/masonry/Masonry.css",
         config: data?.config,
         schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),
@@ -97,7 +97,7 @@ async function start(container: HTMLElement) {
 
     .register("article", (data: any) => {
       return {
-        path: "@aio-ui/article/Article",
+        path: "@aio-ui/article",
         stylesheet: "@aio-ui/article/Article.css",
         config: data?.config,
         schema: data?.schema !== undefined ? data.schema : (data?.content !== undefined ? data.content : data),

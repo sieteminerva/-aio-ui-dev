@@ -1,10 +1,10 @@
 import type { iPageContent } from "@aio-ui/app";
 
-import type { iComponentModuleRef } from "@aio-ui/core/ComponentRegistry";
+import type { iComponentModuleRef } from "@aio-ui/core";
 import { FORM_ADAPTER_MANIFEST } from "@aio-ui/form/FormRegistry";
 import { demoNav, pageIntro } from "../nav";
 import { themeSwitcher } from "../theme-switcher";
-import type { iBasicInputNode } from "@aio-ui/input/Input";
+import type { iBasicInputNode } from "@aio-ui/input";
 
 /**
  * Form page — a form schema, not a component catalogue entry.

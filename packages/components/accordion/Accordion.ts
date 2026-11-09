@@ -1,5 +1,5 @@
 import type { iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
-import { Builder } from "@aio-ui/base/Base";
+import { Builder } from "@aio-ui/base";
 
 export type AccordionElementType =
   | "@accordion"

@@ -13,7 +13,7 @@
  */
 import type { iActionType, iBasicInputNode, iInputActionContext, iInputActionDefinition } from "../Input";
 import type { iBuilderConfig, iElementProperty } from "@aio-ui/core/interface";
-import { Builder } from "@aio-ui/base/Base";
+import { Builder } from "@aio-ui/base";
 import { collectFormValues } from "../FormValues";
 
 export type InputControlsElementType =

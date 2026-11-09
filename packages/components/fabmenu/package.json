@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./FabMenu": {
-      "development": "./FabMenu.ts",
-      "types": "./dist/FabMenu.d.ts",
-      "default": "./dist/FabMenu.js"
-    },
     "./FabMenu.css": "./FabMenu.css"
   },
   "scripts": {

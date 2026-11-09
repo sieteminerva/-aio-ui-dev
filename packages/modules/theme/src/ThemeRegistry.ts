@@ -1,4 +1,4 @@
-import { Registry } from "@aio-ui/core/Registry";
+import { Registry } from "@aio-ui/core";
 import type { iThemeModule } from "@aio-ui/core/page";
 
 /**

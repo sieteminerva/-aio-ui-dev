@@ -3,7 +3,7 @@ import { galleryPreset, storePreset } from "./fixtures.ts";
 import { assetsOf, plan } from "./plan.ts";
 import type { iWebPreset } from "./types.ts";
 
-/** Specifier lookup helper: `has(plan, "@aio-ui/form/Form")`. */
+/** Specifier lookup helper: `has(plan, "@aio-ui/form")`. */
 function specifiers(assets: { specifier: string }[]): string[] {
   return assets.map((asset) => asset.specifier);
 }

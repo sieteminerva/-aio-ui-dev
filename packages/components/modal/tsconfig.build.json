@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/modal": [
+        "./index.ts"
+      ],
       "@aio-ui/modal/*": [
         "./*"
       ]

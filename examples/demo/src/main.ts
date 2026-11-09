@@ -1,6 +1,6 @@
-import { ComponentRegistry } from '@aio-ui/core/ComponentRegistry';
-import type { iComponentModuleRef } from '@aio-ui/core/ComponentRegistry';
-import { DOMRenderer } from '@aio-ui/core/DOMRenderer';
+import { ComponentRegistry } from '@aio-ui/core';
+import type { iComponentModuleRef } from '@aio-ui/core';
+import { DOMRenderer } from '@aio-ui/core';
 import { AioApp, AppStorage } from '@aio-ui/app';
 import { AnimationsService } from '@aio-ui/animations';
 import { EventEmitter } from '@aio-ui/event-emitter';
@@ -72,14 +72,14 @@ async function start(container: HTMLElement) {
   // Page components are registered explicitly: they take config + schema, and `product`
   // is composed from two modules rather than being one builder.
   components
-    .register('product-grid' as any, pageComponent('@aio-ui/product/ProductGrid', '@aio-ui/product/ProductGrid.css'))
-    .register('product-detail' as any, pageComponent('@aio-ui/product/ProductDetail', '@aio-ui/product/ProductDetail.css'))
-    .register('article' as any, pageComponent('@aio-ui/article/Article', '@aio-ui/article/Article.css'))
+    .register('product-grid' as any, pageComponent('@aio-ui/product', '@aio-ui/product/ProductGrid.css'))
+    .register('product-detail' as any, pageComponent('@aio-ui/product', '@aio-ui/product/ProductDetail.css'))
+    .register('article' as any, pageComponent('@aio-ui/article', '@aio-ui/article/Article.css'))
     // The form's adapter stack is declared here, not inside the page: the registry resolves
     // it, `Form.provideModules()` partitions it, and the page only supplies a schema.
-    .register('form' as any, pageComponent('@aio-ui/form/Form', '@aio-ui/form/Form.css', formManifest()))
+    .register('form' as any, pageComponent('@aio-ui/form', '@aio-ui/form/Form.css', formManifest()))
     // The theme switcher is a fab menu with per-item handlers, so it needs config too.
-    .register('fab-menu' as any, pageComponent('@aio-ui/fabmenu/FabMenu', '@aio-ui/fabmenu/FabMenu.css'));
+    .register('fab-menu' as any, pageComponent('@aio-ui/fabmenu', '@aio-ui/fabmenu/FabMenu.css'));
 
   const app = new AioApp({
     container,

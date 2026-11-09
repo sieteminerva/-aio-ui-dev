@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Menu": {
-      "development": "./Menu.ts",
-      "types": "./dist/Menu.d.ts",
-      "default": "./dist/Menu.js"
-    },
     "./Menu.css": "./Menu.css"
   },
   "scripts": {

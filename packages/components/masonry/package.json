@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Masonry": {
-      "development": "./Masonry.ts",
-      "types": "./dist/Masonry.d.ts",
-      "default": "./dist/Masonry.js"
-    },
     "./Masonry.css": "./Masonry.css"
   },
   "scripts": {

@@ -9,10 +9,10 @@
  */
 export const componentAssets = {
   modules: {
-    "@aio-ui/form/Form": () => import("@aio-ui/form/Form"),
-    "@aio-ui/table/Table": () => import("@aio-ui/table/Table"),
-    "@aio-ui/masonry/Masonry": () => import("@aio-ui/masonry/Masonry"),
-    "@aio-ui/article/Article": () => import("@aio-ui/article/Article"),
+    "@aio-ui/form": () => import("@aio-ui/form"),
+    "@aio-ui/table": () => import("@aio-ui/table"),
+    "@aio-ui/masonry": () => import("@aio-ui/masonry"),
+    "@aio-ui/article": () => import("@aio-ui/article"),
   } satisfies Record<string, () => Promise<unknown>>,
   styles: {
     // `?inline` keeps stylesheet text addressable so the registry can inject it

@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/event-emitter": [
+        "./index.ts"
+      ],
       "@aio-ui/event-emitter/*": [
         "./*"
       ]

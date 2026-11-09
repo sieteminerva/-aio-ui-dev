@@ -34,6 +34,44 @@ packages/components/my-widget/
 
 ---
 
+## 1b. Internal files — `.kit` / `.engine` / `.behaviour`
+
+`MyWidget.ts` is the only file the package ever publishes, and it should hold the builder
+and nothing else. Everything the builder needs in order to work lives next door, in a file
+named after **what it does**, never after where it happens to be used:
+
+| Suffix               | Holds                                                                                 | Test for it                                                              |
+| -------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `<Pascal>.engine.ts` | Logic with weight: payload normalisation, transforms, derived values, calculations.    | Would you want a unit test that never touches the DOM? Then it is engine. |
+| `<Pascal>.kit.ts`    | Constants and complements: `ELEMENT_KEYS`, `DEFAULT_SELECTORS`, element-type unions, attribute/config maps. No branching worth testing. | Is it a literal, a type, or a one-liner? Then it is kit.                  |
+| `<Pascal>.behaviour.ts` | Anything that changes how the component *behaves* at runtime: observers, timers, schedulers, event wiring, cleanup. | Does it keep state between calls or schedule work? Then it is behaviour. |
+
+```
+packages/components/my-widget/
+├─ index.ts              curated public barrel — the only entry a consumer reads
+├─ MyWidget.ts           MyWidgetBuilder + iMyWidgetConfig, nothing else
+├─ MyWidget.kit.ts       ELEMENT_KEYS, DEFAULT_SELECTORS, MyWidgetElementType
+├─ MyWidget.engine.ts    normalizePayload
+├─ MyWidget.behaviour.ts (only if it schedules or observes something)
+├─ MyWidget.css
+└─ __tests__/
+```
+
+Rules that keep this honest:
+
+- **These files are not exported.** They are not entries in `index.ts` and not subpaths in
+  `package.json`. Tests reach them with a relative import; consumers cannot reach them at
+  all. If a consumer needs something from a `.kit`/`.engine` file, that is the signal that
+  it belonged in the public barrel instead — decide deliberately.
+- **One duty per file.** A `.kit.ts` that starts normalising, or an `.engine.ts` that
+  starts listening to events, has outgrown its name; split it, do not rename it.
+- **The suffix describes the duty, not the size.** `formatPrice` is `.engine` (it decides
+  what the user reads); `DEFAULT_SELECTORS` is `.kit` even though it is long.
+- **No `*.parts.ts`, `*.helpers.ts`, `*.utils.ts`.** Those names describe "leftovers" and
+  become the place everything is dumped.
+
+---
+
 ## 2. Naming
 
 | Thing                      | Convention              | Example (`my-widget`) |
@@ -43,9 +81,9 @@ packages/components/my-widget/
 | Element-type union         | `<Pascal>ElementType`   | `MyWidgetElementType` |
 | Config interface           | `i<Pascal>Config`       | `iMyWidgetConfig`     |
 | Item/record interface      | `i<Pascal>Item`         | `iMyWidgetItem`       |
-| Key list                   | `ELEMENT_KEYS`          | —                     |
-| Selector map               | `DEFAULT_SELECTORS`     | —                     |
-| Payload normalizer         | `normalizePayload`      | —                     |
+| Key list                   | `ELEMENT_KEYS`          | in `<Pascal>.kit.ts`  |
+| Selector map               | `DEFAULT_SELECTORS`     | in `<Pascal>.kit.ts`  |
+| Payload normalizer         | `normalizePayload`      | in `<Pascal>.engine.ts` |
 
 `builderId` and `name` are both the registry key and nothing else. Older components
 (`product-card`, `fab-menu`) predate this rule; do not copy their aliasing.

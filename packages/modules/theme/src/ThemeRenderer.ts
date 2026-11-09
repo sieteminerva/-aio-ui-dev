@@ -1,5 +1,5 @@
 import type { iBasicNode, iThemeModule } from "@aio-ui/core/interface";
-import { setTemplates, TemplateRegistry } from "@aio-ui/core/TemplateRegistry";
+import { setTemplates, TemplateRegistry } from "@aio-ui/core";
 
 import { ThemeRegistry } from "./ThemeRegistry";
 

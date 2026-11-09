@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./PricingCard": {
-      "development": "./PricingCard.ts",
-      "types": "./dist/PricingCard.d.ts",
-      "default": "./dist/PricingCard.js"
-    },
     "./PricingCard.css": "./PricingCard.css"
   },
   "scripts": {

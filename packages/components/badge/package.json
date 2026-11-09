@@ -13,11 +13,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./Badge": {
-      "development": "./Badge.ts",
-      "types": "./dist/Badge.d.ts",
-      "default": "./dist/Badge.js"
-    },
     "./Badge.css": "./Badge.css"
   },
   "scripts": {

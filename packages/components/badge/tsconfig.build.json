@@ -10,6 +10,9 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
+      "@aio-ui/badge": [
+        "./index.ts"
+      ],
       "@aio-ui/badge/*": [
         "./*"
       ]
