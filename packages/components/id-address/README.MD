@@ -278,15 +278,30 @@ The core engine never depends on a specific UI framework.
 
 # Installation
 
-```bash
-npm install github:ymgh/indonesia-administrative-areas
-```
-
-Or install a specific version:
+The package is installable on its own — it needs neither `@aio-ui/form` nor
+`@aio-ui/input`:
 
 ```bash
-npm install github:ymgh/indonesia-administrative-areas#v1.0.0
+npm install @aio-ui/id-address @aio-ui/http-service
 ```
+
+| Entry | What it gives you |
+| ----- | ----------------- |
+| `@aio-ui/id-address` | `IdAddressBuilder` and the adapters |
+| `@aio-ui/id-address/adapter`, `/adapter.native`, `/adapter.base` | the individual adapters |
+| `@aio-ui/id-address/form` | the form module (`idAddressFormAdapter`); needs `@aio-ui/form`, which is an **optional peer** |
+| `@aio-ui/id-address/id-address.css` | state styling (`loading`, `error`) for the controls it decorates |
+
+The builder requests that sheet through `@aio-ui/core/Stylesheets` on `init()`, so a host
+only has to declare where it can be fetched (its `styles` asset map) — the same seam every
+other component uses, and nothing is injected twice.
+
+## Styling
+
+The picker **does not render fields**. It decorates the `[data-level]` controls the page
+already provides, so their base styling stays with whoever renders them (`@aio-ui/input`,
+`@aio-ui/form`, or your own CSS). What this package ships is its own contribution: the
+`loading` and `error` states, written with `--app-*` tokens and plain fallbacks.
 
 ---
 
@@ -664,14 +679,26 @@ onBeforeUnmount(() => {
 
 # Cache System
 
-IdAddressBuilder includes a persistent cache layer.
+The builder no longer owns a transport or a cache. It used to carry `fetch` +
+`AbortController` + timeout + its own `localStorage` layer, which meant a second, slightly
+different HTTP stack inside a form component. Now one of three sources answers a query:
 
-Features:
+```javascript
+// 1. an endpoint (a private HttpService is built from these options)
+new IdAddressBuilder({ url: "https://…/exec", cache: { enabled: true, ttlDays: 1 } });
 
-- LocalStorage-based cache
-- Configurable TTL expiration
-- Automatic expiration validation
-- Cached hierarchical lookup optimization
+// 2. a shared service (cache, timeout and abort handling are the app's)
+new IdAddressBuilder({ service: myHttpService });
+
+// 3. a plain loader — no transport at all, which is what tests and mock data use
+new IdAddressBuilder({ loader: (query) => Promise.resolve(rows) });
+```
+
+Caching, TTL, retry and cancellation are `@aio-ui/http-service` concerns now: `cache` is
+forwarded to the service the builder creates (`cacheTtlDays`, `cachePrefix`, `delay`,
+`timeout`), and an injected service keeps its own policy. The cache key is the query's
+**values**, not its shape — `{ level: "kota", parentId: 12 }` and
+`{ level: "kecamatan", parentId: 3273 }` are different entries.
 
 ---
 

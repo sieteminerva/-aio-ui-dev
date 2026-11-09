@@ -38,6 +38,7 @@ export const componentAssets = {
     "@aio-ui/input/file-uploader.css": () => import("@aio-ui/input/file-uploader.css?inline"),
     "@aio-ui/input/controls.css": () => import("@aio-ui/input/controls.css?inline"),
     "@aio-ui/message/Message.css": () => import("@aio-ui/message/Message.css?inline"),
+    "@aio-ui/id-address/id-address.css": () => import("@aio-ui/id-address/id-address.css?inline"),
     "@aio-ui/menu/Menu.css": () => import("@aio-ui/menu/Menu.css?inline"),
     "@aio-ui/modal/Modal.css": () => import("@aio-ui/modal/Modal.css?inline"),
     "@aio-ui/modeswitcher/ModeSwitcher.css": () => import("@aio-ui/modeswitcher/ModeSwitcher.css?inline"),

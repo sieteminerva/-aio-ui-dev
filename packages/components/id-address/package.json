@@ -9,11 +9,13 @@
     "./adapter": "./id-address-adapter.ts",
     "./adapter.native": "./id-address-adapter.native.ts",
     "./adapter.base": "./id-address-adapter.base.ts",
-    "./form": "./IdAddress.FormAdapter.ts"
+    "./form": "./IdAddress.FormAdapter.ts",
+    "./id-address.css": "./id-address.css"
   },
   "dependencies": {
     "@aio-ui/http-service": "*",
-    "@aio-ui/module-loader": "*"
+    "@aio-ui/module-loader": "*",
+    "@aio-ui/core": "*"
   },
   "peerDependencies": {
     "@aio-ui/form": "*"

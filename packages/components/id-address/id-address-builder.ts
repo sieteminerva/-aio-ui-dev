@@ -1,5 +1,6 @@
 import type { IAddressAdapter } from "./id-address-adapter";
 import { HttpService, type iHttpServiceConfig } from "@aio-ui/http-service";
+import { ensureStylesheet } from "@aio-ui/core/Stylesheets";
 import { IdAddressAdapterNative } from "./id-address-adapter.native";
 import { IdAddressAdapterBase } from "./id-address-adapter.base";
 
@@ -467,6 +468,10 @@ export class IdAddressBuilder {
       console.warn("IdAddressBuilder already initialized.");
       return;
     }
+
+    // The package ships its own state sheet (loading/error on the controls it decorates).
+    // A host that declares no loader simply gets the unstyled states — never a crash.
+    void ensureStylesheet("./id-address.css").catch(() => null);
 
     this._initialized = true;
     this._destroyed = false;
