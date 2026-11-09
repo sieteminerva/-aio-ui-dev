@@ -1,0 +1,26 @@
+{
+  "name": "@aio-ui/id-address",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./id-address-builder.ts",
+    "./builder": "./id-address-builder.ts",
+    "./adapter": "./id-address-adapter.ts",
+    "./adapter.native": "./id-address-adapter.native.ts",
+    "./adapter.base": "./id-address-adapter.base.ts",
+    "./form": "./IdAddress.FormAdapter.ts"
+  },
+  "dependencies": {
+    "@aio-ui/http-service": "*",
+    "@aio-ui/module-loader": "*"
+  },
+  "peerDependencies": {
+    "@aio-ui/form": "*"
+  },
+  "peerDependenciesMeta": {
+    "@aio-ui/form": {
+      "optional": true
+    }
+  }
+}

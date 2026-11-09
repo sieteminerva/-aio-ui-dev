@@ -3,6 +3,7 @@ import type { iPageContent } from "@aio-ui/app";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { CORE_FORM_MODULES } from "@aio-ui/form/FormRegistry";
 import { tableFormAdapter } from "@aio-ui/table/Table.FormAdapter";
+import { idAddressFormAdapter } from "@aio-ui/id-address/form";
 import { messageFormAdapter } from "@aio-ui/message/Message.FormAdapter";
 import { demoNav, pageIntro } from "../nav";
 import { themeSwitcher } from "../theme-switcher";
@@ -391,7 +392,7 @@ const addressSource = { url: ADDRESS_URL };
  * `message` contribute their adapters — the form never imports them.
  */
 function formModules() {
-  return new ModuleLoader("form", [...CORE_FORM_MODULES, tableFormAdapter, messageFormAdapter]);
+  return new ModuleLoader("form", [...CORE_FORM_MODULES, idAddressFormAdapter, tableFormAdapter, messageFormAdapter]);
 }
 
 const formConfig = {

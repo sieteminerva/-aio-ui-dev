@@ -1,6 +1,6 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
-import type { iFormModuleContext } from "../FormModuleTypes";
-import { FORM_MODULE_IDS } from "../FormModuleTypes";
+import type { iFormModuleContext } from "@aio-ui/form/FormModuleTypes";
+import { FORM_MODULE_IDS } from "@aio-ui/form/FormModuleTypes";
 import { IdAddressBuilder } from "./id-address-builder";
 
 /**

@@ -4,7 +4,6 @@ import { calculationFormAdapter } from "./adapters/Calculation";
 import { cascadeFormAdapter } from "./adapters/Cascade";
 import { multistepFormAdapter } from "./adapters/Multistep";
 import { validationFormAdapter } from "./adapters/Validation";
-import { idAddressFormAdapter } from "./IdAddress/IdAddress.FormAdapter";
 import { inputFormAdapter } from "./Input.FormAdapter";
 
 /** Erased definition type for the preset arrays, where module results differ per id. */
@@ -31,5 +30,4 @@ export const CORE_FORM_MODULES: FormModuleDefinition[] = [
   multistepFormAdapter,
   calculationFormAdapter,
   inputFormAdapter,
-  idAddressFormAdapter,
 ];
