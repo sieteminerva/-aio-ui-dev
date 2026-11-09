@@ -63,6 +63,10 @@ class IdAddressFormAdapter {
       loader: address?.loader ?? null,
       service: address?.service ?? null,
       geocode: address?.geocode ?? false,
+      // Which markup does the picker drive? `aio` understands this framework's own
+      // controls (`option.placeholder`, `.menu > .item`, hidden value); `native` (the
+      // default) stays for plain `<select>`/`<input>` and for back-compat.
+      useAdapter: address?.useAdapter ?? null,
     });
     this.#picker.init();
   }

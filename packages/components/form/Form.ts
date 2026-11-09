@@ -107,6 +107,12 @@ export interface iFormConfig extends iBuilderConfig<FormElementType> {
     service?: HttpService | null;
     /** Ask for coordinates as well. */
     geocode?: boolean;
+    /**
+     * Which picker adapter drives the levels: `"aio"` for this framework's markup,
+     * `"native"` for platform controls (default), or a name registered with
+     * `IdAddressBuilder.registerAdapter()`.
+     */
+    useAdapter?: string | null;
   } | null;
   /**
    * Optional loader that supplies optional Form sub-modules.

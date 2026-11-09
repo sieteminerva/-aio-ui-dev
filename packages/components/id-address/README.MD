@@ -233,6 +233,32 @@ Example:
 - Semantic UI dropdowns
 - jQuery plugins
 
+### Built-in adapters
+
+| `useAdapter` | Drives | Notes |
+| --- | --- | --- |
+| `native` *(default)* | A plain `<select>`, or an `<input>` fed by a `<datalist>` | The platform's controls, written to directly. Kept as the default so existing markup keeps working. |
+| `aio` | `@aio-ui` markup: `option.placeholder`, `.dropdown[data-style="datalist" \| "select"]`, the hidden value carrier, `.field` state | Understands all three level flavours and dispatches `change`/`input`, so the component's own listeners (`elementChanged`, form values) see the answer. |
+| `base` | Nothing (headless) | Selected automatically when `headless: true`. |
+
+The markup is identical between the two UI adapters — the difference is *which parts of it
+are authoritative*. `native` builds a select's prompt by renaming `options[0]`, which is
+invisible to `input.css` (`select:has(option.placeholder:checked)`), and it only knows the
+`data-style="datalist"` flavour of a custom dropdown; a `data-style="select"` level received
+its rows and dropped them. `aio` treats both as first-class:
+
+```ts
+const picker = new IdAddressBuilder({
+  container: "#address-form",
+  loader: (query) => http.get(query),   // or `url`
+  useAdapter: "aio",
+});
+```
+
+Switching adapters changes no DOM: `@aio-ui/input` and `@aio-ui/form` render the same fields
+either way, so a form can adopt `aio` without touching its schema
+(`config.address = { url, useAdapter: "aio" }`).
+
 ---
 
 ## Headless Mode

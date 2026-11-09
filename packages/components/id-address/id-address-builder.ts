@@ -3,6 +3,7 @@ import { HttpService, type iHttpServiceConfig } from "@aio-ui/http-service";
 import { ensureStylesheet } from "@aio-ui/core/Stylesheets";
 import { IdAddressAdapterNative } from "./id-address-adapter.native";
 import { IdAddressAdapterBase } from "./id-address-adapter.base";
+import { IdAddressAdapterAio } from "./id-address-adapter.aio";
 
 const ADDRESS_LEVELS = ["propinsi", "kota", "kecamatan", "kelurahan", "kodepos"];
 export const ADDRESS_DETAIL_KEYS = [
@@ -335,9 +336,11 @@ export class IdAddressBuilder {
 
     // Step 2: Register default UI adapters.
     this.adapters = {
-      // by default only register base & native adapter
+      // `base` is headless, `native` drives platform controls, `aio` drives this
+      // framework's own markup (`option.placeholder`, `.menu > .item`, hidden value).
       base: IdAddressAdapterBase,
       native: IdAddressAdapterNative,
+      aio: IdAddressAdapterAio,
     };
 
     // Step 3: Initialize lifecycle and request management flags.

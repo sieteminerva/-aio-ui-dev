@@ -382,7 +382,7 @@ const schema = [
  */
 const ADDRESS_URL = "https://script.google.com/macros/s/AKfycbwjQ_iNQClJuyf5z1ZlJcJ-j6LEnINfvbBmjBFlE4T3X4dVAoxF_GzUCCv6TXZ_apfhpA/exec";
 
-const addressSource = { url: ADDRESS_URL };
+const addressSource = { url: ADDRESS_URL, useAdapter: "aio" };
 
 /**
  * The form's module stack, as the registry manifest.

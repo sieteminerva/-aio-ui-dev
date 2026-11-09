@@ -9,6 +9,7 @@
     "./adapter": "./id-address-adapter.ts",
     "./adapter.native": "./id-address-adapter.native.ts",
     "./adapter.base": "./id-address-adapter.base.ts",
+    "./adapter.aio": "./id-address-adapter.aio.ts",
     "./form": "./IdAddress.FormAdapter.ts",
     "./id-address.css": "./id-address.css"
   },
