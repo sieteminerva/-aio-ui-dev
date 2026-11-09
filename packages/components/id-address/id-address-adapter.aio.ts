@@ -1,9 +1,6 @@
 import { type IAddressAdapter } from "./id-address-adapter";
 
 /**
- * // TODO search tidak jalan karena mungkin belum dikoneksikan pencariannya ke datashetnya
- * // lalu coba kita ketik (melakukan pencarian). dataset yg tadinya ada sebagai option hilang 
- * 
  * Adapter for `@aio-ui` markup.
  *
  * The picker has always been element-agnostic: an adapter drives whatever renders a
@@ -240,12 +237,24 @@ export const IdAddressAdapterAio: IAddressAdapter = {
     // ── Flavour 2: `data-style="select"` — a hidden value and a menu of items ─────
     const menu = menuOf(box);
     if (menu) {
+      const rows = (options as any[]).map((row) => ({
+        id: String(row[`${level}_id`]),
+        label: String(row[`${level}_name`]),
+      }));
+
+      // `dataset.options` is the dropdown's own source of truth for filtering: typing
+      // re-renders the menu from it (`filterMenu`). Without it the search fell back to the
+      // dropdown's internal `#state.options` — empty, because these rows were injected from
+      // outside — so the first keystroke deleted the list instead of narrowing it.
+      menu.dataset.options = JSON.stringify(rows);
+
       menu.replaceChildren(
-        ...(options as any[]).map((row) => {
+        ...rows.map((row) => {
           const item = document.createElement("div");
           item.className = "item";
-          item.dataset.id = String(row[`${level}_id`]);
-          item.textContent = String(row[`${level}_name`]);
+          item.dataset.id = row.id;
+          item.dataset.label = row.label;
+          item.textContent = row.label;
           return item;
         })
       );

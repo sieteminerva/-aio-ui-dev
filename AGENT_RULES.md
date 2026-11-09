@@ -63,3 +63,27 @@ A design question costs ~200 tokens; a wrong implementation costs a whole rebuil
 
 Long transcripts are the single largest recurring cost. `plan.md` plus repository memory is
 enough context to restart; do not re-explore the tree to rebuild history.
+
+## 9. Session start and finish
+
+Merged from `.guidance/mandatory/AGENT_RULES.md`, which no longer exists — one rules file
+for the repo, this one.
+
+**Before starting:** read `.guidance/mandatory/` (they hold the standing principles), then
+`.guidance/project/STATUS.md` and `NEXT_TASKS.md`, then state the plan in 2–3 lines. Inspect
+existing code and conventions instead of re-deriving them.
+
+**During work:** focused changes; preserve unrelated user edits; avoid destructive
+operations; when architecture changes, write the decision down (`plan.md` §Decisions, or
+`.guidance/project/DECISIONS.md`).
+
+**Before finishing:** run the narrowest relevant validation (one test file while iterating,
+`npm run verify` per batch), record what changed and what is still open, and report the
+result honestly — including what was **not** proven.
+
+## 10. Language
+
+- User prompts may be Indonesian or English; conversation follows the user's language.
+- Every artifact stays **English**: source, identifiers, comments, JSDoc, documentation,
+  generated content, user-facing project copy.
+- Indonesian only when the user explicitly asks for it in that artifact.
