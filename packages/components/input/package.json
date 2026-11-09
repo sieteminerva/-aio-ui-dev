@@ -24,7 +24,8 @@
     "./controls": "./InputControls/InputControls.ts",
     "./controls.css": "./InputControls/inputControls.css",
     "./InputControls/InputControls": "./InputControls/InputControls.ts",
-    "./InputControls/InputControls.InputModule": "./InputControls/InputControls.InputModule.ts"
+    "./InputControls/InputControls.InputModule": "./InputControls/InputControls.InputModule.ts",
+    "./input.css": "./input.css"
   },
   "dependencies": {
     "@aio-ui/base": "*",

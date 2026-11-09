@@ -34,6 +34,7 @@ export const componentAssets = {
     "@aio-ui/form/Form.css": () => import("@aio-ui/form/Form.css?inline"),
     // Nested builders (dropdown, uploader, controls, toast) declare their own sheet and
     // reach it through this map — no component imports its own CSS.
+    "@aio-ui/input/input.css": () => import("@aio-ui/input/input.css?inline"),
     "@aio-ui/input/dropdown.css": () => import("@aio-ui/input/dropdown.css?inline"),
     "@aio-ui/input/file-uploader.css": () => import("@aio-ui/input/file-uploader.css?inline"),
     "@aio-ui/input/controls.css": () => import("@aio-ui/input/controls.css?inline"),

@@ -214,7 +214,7 @@ export interface iInputConfig extends iBuilderConfig<InputElementType> {
 export class InputBuilder extends Builder<InputElementType, iInputConfig> {
   readonly builderId: keyof iBuilderRegistry = "input";
   readonly name: keyof iBuilderRegistry = "input";
-  readonly stylesheet: string = "";
+  readonly stylesheet: string = "./input.css";
 
   #input: iBasicInputNode = {};
 
