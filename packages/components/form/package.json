@@ -6,37 +6,20 @@
   "exports": {
     ".": "./Form.ts",
     "./Form": "./Form.ts",
-    "./Input": "./Input.ts",
-    "./InputRegistry": "./InputRegistry.ts",
-    "./InputModuleTypes": "./InputModuleTypes.ts",
     "./FormModuleTypes": "./FormModuleTypes.ts",
     "./FormRegistry": "./FormRegistry.ts",
-    "./FormValues": "./FormValues.ts",
     "./FormLayout": "./FormLayout.ts",
-    "./FieldTypes": "./FieldTypes.ts",
-    "./Attribute": "./Attribute.ts",
-    "./CalculationTypes": "./CalculationTypes.ts",
     "./Input.FormAdapter": "./Input.FormAdapter.ts",
-    "./Popover.InputModule": "./Popover.InputModule.ts",
     "./Handlers/Multistep": "./Handlers/Multistep.ts",
     "./Handlers/Validation": "./Handlers/Validation.ts",
     "./Handlers/Calculation": "./Handlers/Calculation.ts",
     "./cascade-adapter": "./adapters/Cascade.ts",
-    "./Dropdown/Dropdown": "./Dropdown/Dropdown.ts",
-    "./Dropdown/Dropdown.InputModule": "./Dropdown/Dropdown.InputModule.ts",
-    "./FileUploader/FileUploader": "./FileUploader/FileUploader.ts",
-    "./FileUploader/FileUploader.InputModule": "./FileUploader/FileUploader.InputModule.ts",
-    "./InputControls/InputControls": "./InputControls/InputControls.ts",
-    "./InputControls/InputControls.InputModule": "./InputControls/InputControls.InputModule.ts",
     "./IdAddress/id-address-builder": "./IdAddress/id-address-builder.ts",
     "./IdAddress/id-address-adapter": "./IdAddress/id-address-adapter.ts",
     "./IdAddress/id-address-adapter.native": "./IdAddress/id-address-adapter.native.ts",
     "./IdAddress/id-address-adapter.base": "./IdAddress/id-address-adapter.base.ts",
     "./IdAddress/IdAddress.FormAdapter": "./IdAddress/IdAddress.FormAdapter.ts",
-    "./Form.css": "./Form.css",
-    "./Dropdown/Dropdown.css": "./Dropdown/Dropdown.css",
-    "./FileUploader/FileUploader.css": "./FileUploader/FileUploader.css",
-    "./InputControls/inputControls.css": "./InputControls/inputControls.css"
+    "./Form.css": "./Form.css"
   },
   "dependencies": {
     "@aio-ui/base": "*",
@@ -45,6 +28,7 @@
     "@aio-ui/message": "*",
     "@aio-ui/module-loader": "*",
     "@aio-ui/table": "*",
-    "@aio-ui/utilities": "*"
+    "@aio-ui/utilities": "*",
+    "@aio-ui/input": "*"
   }
 }

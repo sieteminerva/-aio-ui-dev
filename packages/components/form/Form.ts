@@ -10,7 +10,7 @@ import type { FormModulePhase, iFormAdapter, iFormModuleContext } from "./FormMo
 import { CORE_FORM_MODULES } from "./FormRegistry";
 import { ModuleLoader } from "@aio-ui/module-loader/ModuleLoader";
 import { applyRowColumns, applyRowSpan, childSpanOf, columnsOf } from "./FormLayout";
-import { collectFormValues } from "./FormValues";
+import { collectFormValues } from "@aio-ui/input/FormValues";
 import type { HttpService } from "@aio-ui/http-service";
 // 🎨 Gaya baseline field milik form: adaptor input juga mengimpornya untuk
 // pemakaian mandiri, tetapi form tetap memuatnya agar tampilan tidak bergantung

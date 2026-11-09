@@ -7,7 +7,7 @@ import type {
   iCalculationContext,
   iCalculationFormula,
   iCalculationLineItem,
-} from "../CalculationTypes";
+} from "@aio-ui/input/CalculationTypes";
 
 // Calculation vocabulary lives in a leaf file: the input layer (`config.calculator`)
 // must be able to name it without importing this handler.
@@ -17,7 +17,7 @@ export type {
   iCalculationContext,
   iCalculationFormula,
   iCalculationLineItem,
-} from "../CalculationTypes";
+} from "@aio-ui/input/CalculationTypes";
 
 export interface iCalculationStrategies {
   formula: Array<iCalculationFormula<any>>;

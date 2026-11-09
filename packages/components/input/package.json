@@ -1,0 +1,35 @@
+{
+  "name": "@aio-ui/input",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./Input.ts",
+    "./Input": "./Input.ts",
+    "./InputRegistry": "./InputRegistry.ts",
+    "./InputModuleTypes": "./InputModuleTypes.ts",
+    "./FieldTypes": "./FieldTypes.ts",
+    "./Attribute": "./Attribute.ts",
+    "./FormValues": "./FormValues.ts",
+    "./CalculationTypes": "./CalculationTypes.ts",
+    "./Popover.InputModule": "./Popover.InputModule.ts",
+    "./dropdown": "./Dropdown/Dropdown.ts",
+    "./dropdown.css": "./Dropdown/Dropdown.css",
+    "./Dropdown/Dropdown": "./Dropdown/Dropdown.ts",
+    "./Dropdown/Dropdown.InputModule": "./Dropdown/Dropdown.InputModule.ts",
+    "./file-uploader": "./FileUploader/FileUploader.ts",
+    "./file-uploader.css": "./FileUploader/FileUploader.css",
+    "./FileUploader/FileUploader": "./FileUploader/FileUploader.ts",
+    "./FileUploader/FileUploader.InputModule": "./FileUploader/FileUploader.InputModule.ts",
+    "./controls": "./InputControls/InputControls.ts",
+    "./controls.css": "./InputControls/inputControls.css",
+    "./InputControls/InputControls": "./InputControls/InputControls.ts",
+    "./InputControls/InputControls.InputModule": "./InputControls/InputControls.InputModule.ts"
+  },
+  "dependencies": {
+    "@aio-ui/base": "*",
+    "@aio-ui/core": "*",
+    "@aio-ui/module-loader": "*",
+    "@aio-ui/utilities": "*"
+  }
+}

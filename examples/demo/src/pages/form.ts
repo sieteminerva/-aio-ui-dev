@@ -2,7 +2,7 @@ import type { iPageContent } from "@aio-ui/app";
 
 import { demoNav, pageIntro } from "../nav";
 import { themeSwitcher } from "../theme-switcher";
-import type { iBasicInputNode } from "@aio-ui/form/Input";
+import type { iBasicInputNode } from "@aio-ui/input/Input";
 
 /**
  * Form page — a form schema, not a component catalogue entry.

@@ -1,8 +1,8 @@
 import type { iModuleDefinition } from "@aio-ui/module-loader/ModuleRegistry";
 import type { iFormModuleContext } from "./FormModuleTypes";
 import { FORM_MODULE_IDS } from "./FormModuleTypes";
-import { InputBuilder } from "./Input";
-import { inputFilesOf, mountControls, mountInputModules } from "./InputRegistry";
+import { InputBuilder } from "@aio-ui/input/Input";
+import { inputFilesOf, mountControls, mountInputModules } from "@aio-ui/input/InputRegistry";
 
 /**
  * Field rendering adapter.
