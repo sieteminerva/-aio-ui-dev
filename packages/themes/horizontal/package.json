@@ -1,14 +1,33 @@
 {
   "name": "@aio-ui/theme-horizontal",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/HorizontalTheme.ts",
-    "./HorizontalTheme": "./src/HorizontalTheme.ts",
-    "./HorizontalScrolling": "./src/HorizontalScrolling.ts"
+  "files": [
+    "dist",
+    "src"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.0.0"
   },
-  "dependencies": {
-    "@aio-ui/core": "*"
+  "exports": {
+    ".": {
+      "development": "./src/HorizontalTheme.ts",
+      "types": "./dist/HorizontalTheme.d.ts",
+      "default": "./dist/HorizontalTheme.js"
+    },
+    "./HorizontalTheme": {
+      "development": "./src/HorizontalTheme.ts",
+      "types": "./dist/HorizontalTheme.d.ts",
+      "default": "./dist/HorizontalTheme.js"
+    },
+    "./HorizontalScrolling": {
+      "development": "./src/HorizontalScrolling.ts",
+      "types": "./dist/HorizontalScrolling.d.ts",
+      "default": "./dist/HorizontalScrolling.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

@@ -1,40 +1,139 @@
 {
   "name": "@aio-ui/input",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css",
+    "Dropdown",
+    "FileUploader",
+    "InputControls"
+  ],
   "exports": {
-    ".": "./Input.ts",
-    "./Input": "./Input.ts",
-    "./InputRegistry": "./InputRegistry.ts",
-    "./InputModuleTypes": "./InputModuleTypes.ts",
-    "./FieldTypes": "./FieldTypes.ts",
-    "./Attribute": "./Attribute.ts",
-    "./FormValues": "./FormValues.ts",
-    "./CalculationTypes": "./CalculationTypes.ts",
-    "./Popover.InputModule": "./Popover.InputModule.ts",
-    "./dropdown": "./Dropdown/Dropdown.ts",
+    ".": {
+      "development": "./Input.ts",
+      "types": "./dist/Input.d.ts",
+      "default": "./dist/Input.js"
+    },
+    "./Input": {
+      "development": "./Input.ts",
+      "types": "./dist/Input.d.ts",
+      "default": "./dist/Input.js"
+    },
+    "./InputRegistry": {
+      "development": "./InputRegistry.ts",
+      "types": "./dist/InputRegistry.d.ts",
+      "default": "./dist/InputRegistry.js"
+    },
+    "./InputModuleTypes": {
+      "development": "./InputModuleTypes.ts",
+      "types": "./dist/InputModuleTypes.d.ts",
+      "default": "./dist/InputModuleTypes.js"
+    },
+    "./FieldTypes": {
+      "development": "./FieldTypes.ts",
+      "types": "./dist/FieldTypes.d.ts",
+      "default": "./dist/FieldTypes.js"
+    },
+    "./Attribute": {
+      "development": "./Attribute.ts",
+      "types": "./dist/Attribute.d.ts",
+      "default": "./dist/Attribute.js"
+    },
+    "./FormValues": {
+      "development": "./FormValues.ts",
+      "types": "./dist/FormValues.d.ts",
+      "default": "./dist/FormValues.js"
+    },
+    "./CalculationTypes": {
+      "development": "./CalculationTypes.ts",
+      "types": "./dist/CalculationTypes.d.ts",
+      "default": "./dist/CalculationTypes.js"
+    },
+    "./Popover.InputModule": {
+      "development": "./Popover.InputModule.ts",
+      "types": "./dist/Popover.InputModule.d.ts",
+      "default": "./dist/Popover.InputModule.js"
+    },
+    "./dropdown": {
+      "development": "./Dropdown/Dropdown.ts",
+      "types": "./dist/Dropdown/Dropdown.d.ts",
+      "default": "./dist/Dropdown/Dropdown.js"
+    },
     "./dropdown.css": "./Dropdown/Dropdown.css",
-    "./Dropdown/Dropdown": "./Dropdown/Dropdown.ts",
-    "./Dropdown/Dropdown.InputModule": "./Dropdown/Dropdown.InputModule.ts",
-    "./file-uploader": "./FileUploader/FileUploader.ts",
+    "./Dropdown/Dropdown": {
+      "development": "./Dropdown/Dropdown.ts",
+      "types": "./dist/Dropdown/Dropdown.d.ts",
+      "default": "./dist/Dropdown/Dropdown.js"
+    },
+    "./Dropdown/Dropdown.InputModule": {
+      "development": "./Dropdown/Dropdown.InputModule.ts",
+      "types": "./dist/Dropdown/Dropdown.InputModule.d.ts",
+      "default": "./dist/Dropdown/Dropdown.InputModule.js"
+    },
+    "./file-uploader": {
+      "development": "./FileUploader/FileUploader.ts",
+      "types": "./dist/FileUploader/FileUploader.d.ts",
+      "default": "./dist/FileUploader/FileUploader.js"
+    },
     "./file-uploader.css": "./FileUploader/FileUploader.css",
-    "./FileUploader/FileUploader": "./FileUploader/FileUploader.ts",
-    "./FileUploader/FileUploader.InputModule": "./FileUploader/FileUploader.InputModule.ts",
-    "./controls": "./InputControls/InputControls.ts",
+    "./FileUploader/FileUploader": {
+      "development": "./FileUploader/FileUploader.ts",
+      "types": "./dist/FileUploader/FileUploader.d.ts",
+      "default": "./dist/FileUploader/FileUploader.js"
+    },
+    "./FileUploader/FileUploader.InputModule": {
+      "development": "./FileUploader/FileUploader.InputModule.ts",
+      "types": "./dist/FileUploader/FileUploader.InputModule.d.ts",
+      "default": "./dist/FileUploader/FileUploader.InputModule.js"
+    },
+    "./controls": {
+      "development": "./InputControls/InputControls.ts",
+      "types": "./dist/InputControls/InputControls.d.ts",
+      "default": "./dist/InputControls/InputControls.js"
+    },
     "./controls.css": "./InputControls/inputControls.css",
-    "./InputControls/InputControls": "./InputControls/InputControls.ts",
-    "./InputControls/InputControls.InputModule": "./InputControls/InputControls.InputModule.ts",
-    "./dropdown/module": "./Dropdown/Dropdown.InputModule.ts",
-    "./file-uploader/module": "./FileUploader/FileUploader.InputModule.ts",
-    "./controls/module": "./InputControls/InputControls.InputModule.ts",
-    "./popover/module": "./Popover.InputModule.ts",
+    "./InputControls/InputControls": {
+      "development": "./InputControls/InputControls.ts",
+      "types": "./dist/InputControls/InputControls.d.ts",
+      "default": "./dist/InputControls/InputControls.js"
+    },
+    "./InputControls/InputControls.InputModule": {
+      "development": "./InputControls/InputControls.InputModule.ts",
+      "types": "./dist/InputControls/InputControls.InputModule.d.ts",
+      "default": "./dist/InputControls/InputControls.InputModule.js"
+    },
+    "./dropdown/module": {
+      "development": "./Dropdown/Dropdown.InputModule.ts",
+      "types": "./dist/Dropdown/Dropdown.InputModule.d.ts",
+      "default": "./dist/Dropdown/Dropdown.InputModule.js"
+    },
+    "./file-uploader/module": {
+      "development": "./FileUploader/FileUploader.InputModule.ts",
+      "types": "./dist/FileUploader/FileUploader.InputModule.d.ts",
+      "default": "./dist/FileUploader/FileUploader.InputModule.js"
+    },
+    "./controls/module": {
+      "development": "./InputControls/InputControls.InputModule.ts",
+      "types": "./dist/InputControls/InputControls.InputModule.d.ts",
+      "default": "./dist/InputControls/InputControls.InputModule.js"
+    },
+    "./popover/module": {
+      "development": "./Popover.InputModule.ts",
+      "types": "./dist/Popover.InputModule.d.ts",
+      "default": "./dist/Popover.InputModule.js"
+    },
     "./input.css": "./input.css"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@aio-ui/base": "*",
     "@aio-ui/core": "*",
     "@aio-ui/module-loader": "*",
     "@aio-ui/utilities": "*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

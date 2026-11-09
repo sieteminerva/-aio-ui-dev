@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/carousel",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./Carousel": {
+      "development": "./Carousel.ts",
+      "types": "./dist/Carousel.d.ts",
+      "default": "./dist/Carousel.js"
+    },
+    "./Carousel.css": "./Carousel.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

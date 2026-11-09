@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/tab",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./Tab": {
+      "development": "./Tab.ts",
+      "types": "./dist/Tab.d.ts",
+      "default": "./dist/Tab.js"
+    },
+    "./Tab.css": "./Tab.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

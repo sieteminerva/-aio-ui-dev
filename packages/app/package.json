@@ -1,15 +1,38 @@
 {
   "name": "@aio-ui/app",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./AioApp": "./src/AioApp.ts",
-    "./ports": "./src/ports.ts",
-    "./types": "./src/types.ts"
+  "files": [
+    "dist",
+    "src"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.0.0"
   },
-  "dependencies": {
-    "@aio-ui/core": "*"
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./AioApp": {
+      "development": "./src/AioApp.ts",
+      "types": "./dist/AioApp.d.ts",
+      "default": "./dist/AioApp.js"
+    },
+    "./ports": {
+      "development": "./src/ports.ts",
+      "types": "./dist/ports.d.ts",
+      "default": "./dist/ports.js"
+    },
+    "./types": {
+      "development": "./src/types.ts",
+      "types": "./dist/types.d.ts",
+      "default": "./dist/types.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

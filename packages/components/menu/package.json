@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/menu",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./Menu": {
+      "development": "./Menu.ts",
+      "types": "./dist/Menu.d.ts",
+      "default": "./dist/Menu.js"
+    },
+    "./Menu.css": "./Menu.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

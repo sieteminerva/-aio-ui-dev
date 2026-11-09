@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/modeswitcher",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./ModeSwitcher": {
+      "development": "./ModeSwitcher.ts",
+      "types": "./dist/ModeSwitcher.d.ts",
+      "default": "./dist/ModeSwitcher.js"
+    },
+    "./ModeSwitcher.css": "./ModeSwitcher.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

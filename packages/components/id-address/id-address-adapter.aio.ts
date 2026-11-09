@@ -1,6 +1,9 @@
 import { type IAddressAdapter } from "./id-address-adapter";
 
 /**
+ * // TODO search tidak jalan karena mungkin belum dikoneksikan pencariannya ke datashetnya
+ * // lalu coba kita ketik (melakukan pencarian). dataset yg tadinya ada sebagai option hilang 
+ * 
  * Adapter for `@aio-ui` markup.
  *
  * The picker has always been element-agnostic: an adapter drives whatever renders a

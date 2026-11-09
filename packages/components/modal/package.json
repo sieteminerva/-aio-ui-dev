@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/modal",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./Modal": {
+      "development": "./Modal.ts",
+      "types": "./dist/Modal.d.ts",
+      "default": "./dist/Modal.js"
+    },
+    "./Modal.css": "./Modal.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

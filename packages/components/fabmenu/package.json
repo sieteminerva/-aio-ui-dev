@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/fabmenu",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./FabMenu": {
+      "development": "./FabMenu.ts",
+      "types": "./dist/FabMenu.d.ts",
+      "default": "./dist/FabMenu.js"
+    },
+    "./FabMenu.css": "./FabMenu.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

@@ -1,14 +1,29 @@
 {
   "name": "@aio-ui/http-service",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
-  "exports": {
-    ".": "./HttpService.ts",
-    "./HttpService": "./HttpService.ts"
+  "files": [
+    "dist",
+    "*.ts"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.0.0",
+    "@aio-ui/utilities": "^0.0.0"
   },
-  "dependencies": {
-    "@aio-ui/core": "*",
-    "@aio-ui/utilities": "*"
+  "exports": {
+    ".": {
+      "development": "./HttpService.ts",
+      "types": "./dist/HttpService.d.ts",
+      "default": "./dist/HttpService.js"
+    },
+    "./HttpService": {
+      "development": "./HttpService.ts",
+      "types": "./dist/HttpService.d.ts",
+      "default": "./dist/HttpService.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

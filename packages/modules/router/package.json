@@ -1,14 +1,29 @@
 {
   "name": "@aio-ui/router",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
-  "exports": {
-    ".": "./HashRouter.ts",
-    "./HashRouter": "./HashRouter.ts"
+  "files": [
+    "dist",
+    "*.ts"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.0.0",
+    "@aio-ui/utilities": "^0.0.0"
   },
-  "dependencies": {
-    "@aio-ui/core": "*",
-    "@aio-ui/utilities": "*"
+  "exports": {
+    ".": {
+      "development": "./HashRouter.ts",
+      "types": "./dist/HashRouter.d.ts",
+      "default": "./dist/HashRouter.js"
+    },
+    "./HashRouter": {
+      "development": "./HashRouter.ts",
+      "types": "./dist/HashRouter.d.ts",
+      "default": "./dist/HashRouter.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/section",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./Section": {
+      "development": "./Section.ts",
+      "types": "./dist/Section.d.ts",
+      "default": "./dist/Section.js"
+    },
+    "./Section.css": "./Section.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/accordion",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./Accordion": {
+      "development": "./Accordion.ts",
+      "types": "./dist/Accordion.d.ts",
+      "default": "./dist/Accordion.js"
+    },
+    "./Accordion.css": "./Accordion.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

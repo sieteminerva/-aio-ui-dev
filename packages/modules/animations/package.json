@@ -1,14 +1,30 @@
 {
   "name": "@aio-ui/animations",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
-  "exports": {
-    ".": "./Animations.ts",
-    "./Animations": "./Animations.ts"
+  "files": [
+    "dist",
+    "*.ts"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.0.0",
+    "@aio-ui/utilities": "^0.0.0"
   },
-  "dependencies": {
-    "@aio-ui/core": "*",
-    "@aio-ui/utilities": "*"
+  "exports": {
+    ".": {
+      "development": "./Animations.ts",
+      "types": "./dist/Animations.d.ts",
+      "default": "./dist/Animations.js"
+    },
+    "./Animations": {
+      "development": "./Animations.ts",
+      "types": "./dist/Animations.d.ts",
+      "default": "./dist/Animations.js"
+    },
+    "./Animations.css": "./Animations.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

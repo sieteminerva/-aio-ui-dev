@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/footer",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./Footer": {
+      "development": "./Footer.ts",
+      "types": "./dist/Footer.d.ts",
+      "default": "./dist/Footer.js"
+    },
+    "./Footer.css": "./Footer.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

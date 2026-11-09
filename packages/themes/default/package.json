@@ -1,13 +1,28 @@
 {
   "name": "@aio-ui/theme-default",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
-  "exports": {
-    ".": "./src/DefaultTheme.ts",
-    "./DefaultTheme": "./src/DefaultTheme.ts"
+  "files": [
+    "dist",
+    "src"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.0.0"
   },
-  "dependencies": {
-    "@aio-ui/core": "*"
+  "exports": {
+    ".": {
+      "development": "./src/DefaultTheme.ts",
+      "types": "./dist/DefaultTheme.d.ts",
+      "default": "./dist/DefaultTheme.js"
+    },
+    "./DefaultTheme": {
+      "development": "./src/DefaultTheme.ts",
+      "types": "./dist/DefaultTheme.d.ts",
+      "default": "./dist/DefaultTheme.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

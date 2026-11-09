@@ -1,11 +1,29 @@
 {
   "name": "@aio-ui/base",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.0.0"
+  },
   "exports": {
-    ".": "./src/index.ts",
-    "./Base": "./src/Base.ts",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./Base": {
+      "development": "./src/Base.ts",
+      "types": "./dist/Base.d.ts",
+      "default": "./dist/Base.js"
+    },
     "./BaseAdapters/*": "./src/BaseAdapters/*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

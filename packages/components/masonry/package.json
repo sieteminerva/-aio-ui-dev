@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/masonry",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./Masonry": {
+      "development": "./Masonry.ts",
+      "types": "./dist/Masonry.d.ts",
+      "default": "./dist/Masonry.js"
+    },
+    "./Masonry.css": "./Masonry.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

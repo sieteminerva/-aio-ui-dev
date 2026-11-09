@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/pricingcard",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./PricingCard": {
+      "development": "./PricingCard.ts",
+      "types": "./dist/PricingCard.d.ts",
+      "default": "./dist/PricingCard.js"
+    },
+    "./PricingCard.css": "./PricingCard.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

@@ -1,6 +1,22 @@
 {
   "name": "@aio-ui/badge",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./Badge": {
+      "development": "./Badge.ts",
+      "types": "./dist/Badge.d.ts",
+      "default": "./dist/Badge.js"
+    },
+    "./Badge.css": "./Badge.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

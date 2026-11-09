@@ -1,6 +1,34 @@
 {
   "name": "@aio-ui/product",
   "version": "0.0.0",
-  "private": true,
-  "type": "module"
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css"
+  ],
+  "exports": {
+    "./ProductCard": {
+      "development": "./ProductCard.ts",
+      "types": "./dist/ProductCard.d.ts",
+      "default": "./dist/ProductCard.js"
+    },
+    "./ProductDetail": {
+      "development": "./ProductDetail.ts",
+      "types": "./dist/ProductDetail.d.ts",
+      "default": "./dist/ProductDetail.js"
+    },
+    "./ProductGrid": {
+      "development": "./ProductGrid.ts",
+      "types": "./dist/ProductGrid.d.ts",
+      "default": "./dist/ProductGrid.js"
+    },
+    "./ProductCard.css": "./ProductCard.css",
+    "./ProductDetail.css": "./ProductDetail.css",
+    "./ProductGrid.css": "./ProductGrid.css"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
 }

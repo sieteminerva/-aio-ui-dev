@@ -1,13 +1,28 @@
 {
   "name": "@aio-ui/module-loader",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
-  "exports": {
-    "./ModuleRegistry": "./ModuleRegistry.ts",
-    "./ModuleLoader": "./ModuleLoader.ts"
+  "files": [
+    "dist",
+    "*.ts"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.0.0"
   },
-  "dependencies": {
-    "@aio-ui/core": "*"
+  "exports": {
+    "./ModuleRegistry": {
+      "development": "./ModuleRegistry.ts",
+      "types": "./dist/ModuleRegistry.d.ts",
+      "default": "./dist/ModuleRegistry.js"
+    },
+    "./ModuleLoader": {
+      "development": "./ModuleLoader.ts",
+      "types": "./dist/ModuleLoader.d.ts",
+      "default": "./dist/ModuleLoader.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

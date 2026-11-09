@@ -22,7 +22,7 @@
     "verify": "npm run build:pkgs && npm run typecheck && npm run check:bounds && npm test && npm run build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "build:pkgs": "npm run build --workspaces --if-present"
+    "build:pkgs": "node scripts/build-pack.mjs --build"
   },
   "devDependencies": {
     "happy-dom": "^21.0.4",

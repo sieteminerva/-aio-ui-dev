@@ -1,18 +1,39 @@
 {
   "name": "@aio-ui/message",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css",
+    "adapters"
+  ],
   "exports": {
-    ".": "./Message.ts",
-    "./Message": "./Message.ts",
+    ".": {
+      "development": "./Message.ts",
+      "types": "./dist/Message.d.ts",
+      "default": "./dist/Message.js"
+    },
+    "./Message": {
+      "development": "./Message.ts",
+      "types": "./dist/Message.d.ts",
+      "default": "./dist/Message.js"
+    },
     "./Message.css": "./Message.css",
-    "./adapters/FormAdapter": "./adapters/FormAdapter.ts"
+    "./adapters/FormAdapter": {
+      "development": "./adapters/FormAdapter.ts",
+      "types": "./dist/adapters/FormAdapter.d.ts",
+      "default": "./dist/adapters/FormAdapter.js"
+    }
   },
-  "dependencies": {
+  "peerDependencies": {
     "@aio-ui/base": "*",
     "@aio-ui/core": "*",
     "@aio-ui/form": "*",
     "@aio-ui/module-loader": "*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }

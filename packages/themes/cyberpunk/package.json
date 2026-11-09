@@ -1,14 +1,29 @@
 {
   "name": "@aio-ui/theme-cyberpunk",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.0.0"
+  },
   "exports": {
-    ".": "./src/CyberpunkTheme.ts",
-    "./CyberpunkTheme": "./src/CyberpunkTheme.ts",
+    ".": {
+      "development": "./src/CyberpunkTheme.ts",
+      "types": "./dist/CyberpunkTheme.d.ts",
+      "default": "./dist/CyberpunkTheme.js"
+    },
+    "./CyberpunkTheme": {
+      "development": "./src/CyberpunkTheme.ts",
+      "types": "./dist/CyberpunkTheme.d.ts",
+      "default": "./dist/CyberpunkTheme.js"
+    },
     "./CyberpunkTheme.css": "./src/CyberpunkTheme.css"
   },
-  "dependencies": {
-    "@aio-ui/core": "*"
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
   }
 }
