@@ -253,6 +253,57 @@ if (process.argv.includes("--build")) buildInOrder();
  * JS keeps that relative specifier — without the copy, the built package would reference a
  * file that only exists in the source tree.
  */
+/**
+ * Rewrites relative specifiers in emitted JS so they name the file they mean.
+ *
+ * `tsc` copies a specifier verbatim, and the sources are written for a bundler
+ * (`moduleResolution: bundler`), so `export { X } from "./X"` is emitted as `"./X"` with no
+ * extension. A bundler resolves that; **Node and the browser do not** — Node fails with
+ * `ERR_MODULE_NOT_FOUND`, and an import map does no extension guessing at all, so every
+ * `@aio-ui/*` URL pointed at a barrel that imports another file would 404 in the browser.
+ * That is the whole build-free story, so the build has to fix it.
+ *
+ * Only the emitted JS is touched: sources stay bundler-friendly, and `.d.ts` keeps its
+ * extensionless specifiers (TypeScript resolves those itself).
+ */
+function emitRelativeExtensions(distRoot) {
+  if (!existsSync(distRoot)) return;
+
+  const SPECIFIER = /(from\s*|import\s*\(\s*)(["'])(\.\.?\/[^"']+)\2/g;
+  // A stylesheet import is a bundler instruction; a browser will reject `text/css` as a
+  // module. CSS ships as files and hosts link it (see `BASE_STYLES` + the plan's per-
+  // component `styles`), so the published JS must not import it.
+  const CSS_SIDE_EFFECT = /^\s*import\s+["'][^"']+\.css["'];?\s*$/gm;
+
+  const walk = (current) => {
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      const full = join(current, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!entry.name.endsWith(".js")) continue;
+
+      const before = readFileSync(full, "utf8");
+      const after = before.replace(CSS_SIDE_EFFECT, "").replace(SPECIFIER, (whole, lead, quote, target) => {
+        // Already extensioned (`.js`, `.json`, …) — leave it alone.
+        if (/\.[A-Za-z0-9]+$/.test(target)) return whole;
+        // The emitted file is always the `.js` next to the source: verify, then point at it.
+        const candidate = join(dirname(full), `${target}.js`);
+        if (existsSync(candidate)) return `${lead}${quote}${target}.js${quote}`;
+        // A folder import (`./Registry` for `Registry/index.ts`) has to name the file too:
+        // Node refuses directory imports, and a browser import map cannot infer `index.js`.
+        const folder = join(dirname(full), target, "index.js");
+        return existsSync(folder) ? `${lead}${quote}${target}/index.js${quote}` : whole;
+      });
+
+      if (after !== before) writeFileSync(full, after);
+    }
+  };
+
+  walk(distRoot);
+}
+
 function copyStylesheets(dir) {
   const walk = (current) => {
     for (const entry of readdirSync(current, { withFileTypes: true })) {
@@ -319,7 +370,9 @@ function buildInOrder() {
         shell: false,
       },
     );
-    return result.status === 0 ? null : (result.stdout || "") + (result.stderr || "");
+    if (result.status !== 0) return (result.stdout || "") + (result.stderr || "");
+    emitRelativeExtensions(join(entry.dir, "dist"));
+    return null;
   };
 
   const failures = new Map();

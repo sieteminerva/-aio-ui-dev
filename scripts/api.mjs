@@ -137,6 +137,55 @@ function brokenTargets(dir, manifest) {
   return broken;
 }
 
+/**
+ * Checks that emitted JS is loadable outside a bundler.
+ *
+ * Two rules, both learned the hard way:
+ *
+ * 1. a relative specifier must name the file (`.js`) — Node refuses extensionless ones and
+ *    a browser import map does no guessing at all, so a barrel that re-exports `./X` would
+ *    404 over HTTP;
+ * 2. no stylesheet may be imported from JS — a browser rejects `text/css` as a module. CSS
+ *    ships as files and the host links them.
+ *
+ * @returns One line per offending specifier.
+ */
+function distSpecifierProblems(dir, manifest) {
+  const dist = join(dir, "dist");
+  if (!existsSync(dist)) return [];
+
+  const problems = [];
+  const walk = (current) => {
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      const full = join(current, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!entry.name.endsWith(".js")) continue;
+
+      const text = readFileSync(full, "utf8");
+      // Comments are code-shaped but not code: `base` still carries a commented-out import,
+      // and failing on that would train people to ignore the gate.
+      const code = text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+      const where = full.slice(dir.length + 1).replace(/\\/g, "/");
+
+      for (const match of code.matchAll(/(?:from\s*|import\s*\(\s*)["'](\.{1,2}\/[^"']+)["']/g)) {
+        if (!/\.[A-Za-z0-9]+$/.test(match[1])) {
+          problems.push(`${manifest.name}/${where}: relative specifier without extension (${match[1]})`);
+        }
+      }
+
+      for (const match of code.matchAll(/^\s*import\s+["'][^"']+\.css["'];?\s*$/gm)) {
+        problems.push(`${manifest.name}/${where}: JS imports a stylesheet (${match[0].trim()})`);
+      }
+    }
+  };
+
+  walk(dist);
+  return problems;
+}
+
 const problems = [];
 const surface = {};
 
@@ -148,6 +197,10 @@ for (const dir of packageDirs().sort()) {
 
   for (const line of brokenTargets(dir, manifest)) {
     problems.push(`declared export is missing on disk: ${line}`);
+  }
+
+  for (const line of distSpecifierProblems(dir, manifest)) {
+    problems.push(line);
   }
 
   surface[name] = {

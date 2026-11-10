@@ -12,7 +12,10 @@ import { ThemeRenderer } from '@aio-ui/theme';
 
 import '@aio-ui/theme-cyberpunk/CyberpunkTheme.css';
 
+// Stylesheets are files, not module side effects: package JS never imports its own CSS
+// (a browser import map would reject text/css as a module), so the host links them.
 import '@aio-ui/styles/index.css';
+import '@aio-ui/animations/Animations.css';
 import './style.css';
 
 import { DEMO, manifestFor } from './manifest';

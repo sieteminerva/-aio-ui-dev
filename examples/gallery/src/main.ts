@@ -6,6 +6,9 @@ import { HashRouter } from '@aio-ui/router';
 import { HomepageContent } from './content/home';
 
 import '@aio-ui/styles/index.css';
+// Stylesheets are files, not module side effects: the package JS never imports its own CSS
+// (a browser import map would reject text/css as a module), so the host links them.
+import '@aio-ui/animations/Animations.css';
 import './style.css';
 
 import { EventEmitter } from '@aio-ui/event-emitter';

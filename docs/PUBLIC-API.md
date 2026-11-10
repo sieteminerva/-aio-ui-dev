@@ -143,6 +143,20 @@ are unreachable by construction, not by discipline.
 | Shared type contracts | `@aio-ui/form/FormMessages`, `@aio-ui/form/FormModuleTypes` | the form ↔ message type cycle, deliberately public |
 | CSS | `@aio-ui/form/Form.css` | shipped as files |
 
+### Emitted JS has to load without a bundler
+
+The gate also reads `dist/*.js`, because two things that a bundler forgives are fatal
+everywhere else:
+
+| Rule | Why |
+| --- | --- |
+| A relative specifier must name the file (`"./Badge.js"`, `"./Registry/index.js"`) | `tsc` copies specifiers verbatim, so a bundler-friendly `"./X"` was published as-is; Node fails with `ERR_MODULE_NOT_FOUND` / `ERR_UNSUPPORTED_DIR_IMPORT` and a browser import map does no extension guessing at all, so every barrel that re-exports would 404 over HTTP |
+| No stylesheet may be imported from JS | a browser rejects `text/css` as a module. CSS ships as files and the host links them (`BASE_STYLES`, the plan's per-component `styles`, the generated `<link>`s) |
+
+`scripts/build-pack.mjs` rewrites both after `tsc` runs, and `npm run check:api` fails if
+either comes back. This was not theoretical: before the rewrite, `import("@aio-ui/masonry")`
+failed under Node and every CDN URL pointed at a barrel that could not load.
+
 ## 6. Open decisions (need an answer before coding)
 
 1. **Root barrel for components**: `@aio-ui/article` exports `ArticleBuilder`, or keep
