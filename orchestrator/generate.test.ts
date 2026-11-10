@@ -18,7 +18,7 @@ import type { iWebPreset } from "./types.ts";
  * release URL the site will use once the first tag exists.
  */
 const HERE = dirname(fileURLToPath(import.meta.url));
-const RESULTS = join(HERE, "..", "results");
+const RESULTS = join(HERE, "..", ".draft", "results");
 
 const layout = JSON.parse(readFileSync(join(HERE, "layout.json"), "utf8")) as PackageLayout;
 const resolver = createCdnResolver({

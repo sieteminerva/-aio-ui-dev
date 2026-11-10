@@ -5,7 +5,7 @@
 > bawah sudah **tidak berlaku**: kontrak yang dipakai sekarang adalah `iPageEvents` di
 > `@aio-ui/core/events`, tanpa namespace, dengan payload yang membawa `route`.
 > Yang masih relevan dari dokumen ini adalah alur relay `resolve-or-reuse` dan peran
-> `DOMTreeMemory` — bukan nama event-nya. Lihat `docs/APP.md` § Events untuk daftar terbaru.
+> `DOMTreeMemory` — bukan nama event-nya. Lihat `docs/framework/APP.md` § Events untuk daftar terbaru.
 
 Dokumentasi ini menjelaskan eksperimen relay, attach/detach, dan swap route yang sekarang dipusatkan lewat `EventBus`.
 

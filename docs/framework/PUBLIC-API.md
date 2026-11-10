@@ -97,7 +97,7 @@ force a preset regeneration for every site. So: **0.1.x = add barrels + keep ali
 
 | Consumer                                          | What it reads                            | Action when target map lands                              |
 | ------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------- |
-| `plan()` catalogue (`.draft/preset/catalogue.ts`) | specifiers like `@aio-ui/form/Form`      | switch to root specifiers; keeps generated output shorter |
+| `plan()` catalogue (`orchestrator/catalogue.ts`) | specifiers like `@aio-ui/form/Form`      | switch to root specifiers; keeps generated output shorter |
 | `registry.assets.ts` (demo + gallery)             | specifier → loader                       | regenerate entries; Vite needs static strings either way  |
 | `.draft/results/**`                               | generated `app.js` / `dev/src/main.ts`   | regenerate (tests do it)                                  |
 | `prompt.content.md`                               | never names packages                     | no change                                                 |
@@ -107,7 +107,7 @@ force a preset regeneration for every site. So: **0.1.x = add barrels + keep ali
 
 ## 5. Enforcement
 
-`scripts/api.mjs --check` reads a single source of truth (`docs/api-map.json`:
+`scripts/api.mjs --check` reads a single source of truth (`docs/framework/api-map.json`:
 package → entries → kind) and fails when:
 
 - a package has no root barrel while its kind requires one,
@@ -194,7 +194,7 @@ all enforced rather than agreed:
 - A kit is _not_ a replacement for subpaths: `@aio-ui/modules` pulls every module, so
   generated sites keep importing `@aio-ui/router` etc. one by one.
 - `packages/kits` is registered in `npm workspaces`, `build-pack` (`GROUPS`), `bounds`
-  (`describe`/`categoryOf`/`allowed`), `version`, `release` and `.draft/preset/layout.mjs`.
+  (`describe`/`categoryOf`/`allowed`), `version`, `release` and `orchestrator/layout.mjs`.
 
 ### Root barrels
 
@@ -210,14 +210,14 @@ they were.
 
 ### Consumers switched
 
-`.draft/preset/catalogue.ts` now emits barrels for components
+`orchestrator/catalogue.ts` now emits barrels for components
 (`@aio-ui/masonry`, not `@aio-ui/masonry/Masonry`) and `@aio-ui/frameworks` for the
 base layer, with the three dependency roots (`core`, `base`, `app`) listed as well
 because the kit's own `export * from "@aio-ui/core"` is a bare specifier the browser
 must find in the import map. CSS and adapter subpaths are untouched: those are
 capabilities, not entries.
 
-Regenerate `.draft/preset/layout.json` after adding a barrel — a package without `.`
+Regenerate `orchestrator/layout.json` after adding a barrel — a package without `.`
 is marked `bare: false` and the CDN resolver refuses its root.
 
 ### Internal files are named after their duty

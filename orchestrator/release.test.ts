@@ -25,7 +25,7 @@ import { plan } from "./plan.ts";
 import { galleryScenario, storeScenario } from "./scenarios.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(HERE, "..", "..");
+const ROOT = resolve(HERE, "..");
 const WORKSPACE_VERSION = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).version as string;
 const RELEASE = join(ROOT, ".draft", "release", `v${WORKSPACE_VERSION}`);
 const available = existsSync(join(RELEASE, "registry.json"));

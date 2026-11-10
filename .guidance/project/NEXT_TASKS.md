@@ -8,7 +8,7 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 ## Framework (`packages/`, `examples/demo`)
 
 - [ ] Review `AioApp` entry/render output, then define and implement `isRoot` builder semantics
-      (default host wraps; `isRoot: true` replaces the host with the builder root). See `plan.md` §3.11.
+      (default host wraps; `isRoot: true` replaces the host with the builder root). See `plan-generator.md` §3.11.
 - [ ] Fix and validate the Masonry column distribution.
 - [ ] Audit remaining `TemplateRegistry` and page registration references.
 - [ ] Activate a `ModuleLoader` in a real Form instance and verify both paths in the browser.
@@ -35,7 +35,7 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 - [ ] Add language switcher after content structure is stable.
 - [ ] Make gallery the first generated profile example.
 
-## Generator (`.draft/preset/`, orchestrator)
+## Generator (`orchestrator/`)
 
 - [ ] GitHub release workflow: tag → `verify` → `release.mjs` → `publish-cdn.mjs` → upload assets.
 - [ ] Verify `npm i <tarball>` from a clean folder (bundler project) and a Node ESM import.

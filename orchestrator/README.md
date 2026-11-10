@@ -28,8 +28,8 @@ sibling orchestrator project) without rewriting it.
 ## Run
 
 ```bash
-npx vitest run .draft/preset        # tests (wired into the root vitest config)
-npx tsc -p .draft/preset/tsconfig.json   # isolated typecheck
+npx vitest run orchestrator        # tests (wired into the root vitest config)
+npx tsc -p orchestrator/tsconfig.json   # isolated typecheck
 node .draft/smoke/serve.mjs 5300    # serve the repo root for the release smoke test
 # then open http://localhost:5300/.draft/smoke/store/#checkout
 node scripts/publish-cdn.mjs --apply   # tarballs → cdn branch, move the version tag

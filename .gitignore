@@ -9,9 +9,8 @@ lerna-debug.log*
 
 node_modules
 .archives
-# Local workspace: the generator engine is tracked, its scratch output is not.
-.draft/*
-!.draft/preset/
+# Local scratch area. The generator engine lives in orchestrator/; .draft/ is throwaway.
+.draft/
 dist
 dist-ssr
 *.local

@@ -8,9 +8,9 @@ import { defineConfig } from "vitest/config";
  */
 export default defineConfig({
   test: {
-    // `.draft/` holds work that is not a package yet (the preset engine).
+    // `orchestrator/` holds the generator engine (not a package yet).
     // It is tested from day one so it can move later without re-proving itself.
-    include: ["packages/**/*.test.ts", ".draft/**/*.test.ts"],
+    include: ["packages/**/*.test.ts", "orchestrator/**/*.test.ts"],
     // Generated copies (extracted tarballs, smoke sites, release artefacts) may
     // contain the packages' own test files; they are not part of this suite.
     exclude: [

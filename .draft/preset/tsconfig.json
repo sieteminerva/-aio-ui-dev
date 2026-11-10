@@ -1,9 +1,0 @@
-{
-  "//": "Typecheck the draft in isolation: it is not part of packages/*.",
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "noEmit": true,
-    "types": ["node"]
-  },
-  "include": ["**/*.ts"]
-}

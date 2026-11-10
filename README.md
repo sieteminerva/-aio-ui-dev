@@ -39,7 +39,7 @@ npm run verify         # the full gate — run before claiming anything works
 ├── package.json            workspaces + the scripts above (private root)
 ├── tsconfig.base.json      compiler rules every package extends
 ├── tsconfig.json           workspace typecheck entry
-├── vitest.config.ts        tests in packages/** and .draft/**
+├── vitest.config.ts        tests in packages/** and orchestrator/**
 │
 ├── packages/               the framework — one publishable package per folder
 │   ├── base/               Builder core: create/prepare/initialize, adapters
@@ -71,11 +71,16 @@ npm run verify         # the full gate — run before claiming anything works
 │
 ├── templates/              scaffolds used by new-component
 │
-├── docs/                   documentation (see the index below)
+├── orchestrator/           generator engine (preset → site): plan, emit, runtime, generate
+│
+├── docs/                   documentation: framework/ + generator/ (see the index below)
 │
 └── .guidance/              how to work here — rules, plan, architecture guide
     ├── AGENT_RULES.md      hard rules: session start/finish, language, tracking (§9)
-    ├── plan.md             long-term: why — decisions + stages + gates + order
+    ├── plan.md             index: shared objective + final gate
+    ├── plan-framework.md   §1 framework long-term plan
+    ├── plan-gallery.md     §2 gallery long-term plan
+    ├── plan-generator.md   §3 generator long-term plan (incl. `isRoot` §3.11)
     ├── RAJUTAN.md          system guide: concept, infrastructure, contracts,
     │                       mechanism, outputs, status, roadmap, agent playbook
     ├── rules.md            house conventions (markup, CSS, tokens)
@@ -89,35 +94,36 @@ Work tracking is a pipeline, and **one item lives in exactly one file**:
 `plan.md` (why) → `NEXT_TASKS.md` (what next) → `STATUS.md` (what now).
 Done = delete the line; proof goes to the commit message or `DECISIONS.md`.
 
-Ignored, local-only working areas:
+Working areas — `orchestrator/` is tracked; `.draft/` and `.archives/` are local-only:
 
-| Folder       | Purpose                                                                                                            |
-| ------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `.draft/`    | not-yet-a-package work: `preset/` (generator engine), `results/` (generated sites), `release/` (release artefacts) |
-| `.archives/` | old implementations kept for reference (e.g. `wizard.ts`, the legacy address API)                                  |
+| Folder          | Purpose                                                                                       |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| `orchestrator/` | the generator engine (tracked): `plan` → `emit` → `runtime` → `generate`, tests, AI prompt    |
+| `.draft/`       | throwaway scratch: generated sites (`results/`), release artefacts (`release/`), smoke copies |
+| `.archives/`    | old implementations kept for reference (e.g. `wizard.ts`, the legacy address API)             |
 
 ## Where to look
 
-| I need…                                     | Read                                                                          |
-| ------------------------------------------- | ----------------------------------------------------------------------------- |
-| Product vision, market framing              | `docs/presentation0.md`                                                       |
-| How generated sites are produced (Rajutan)  | `.guidance/RAJUTAN.md`                                                        |
-| Why / long-term order                       | `.guidance/plan.md`                                                           |
-| What is next (queue)                        | `.guidance/project/NEXT_TASKS.md`                                             |
-| What is running right now                   | `.guidance/project/STATUS.md`                                                 |
-| Rules an agent must follow                  | `.guidance/AGENT_RULES.md`, `.guidance/mandatory/`                            |
-| Renderer internals                          | `docs/DOMRenderer.md`                                                         |
-| Component conventions / template / data     | `docs/COMPONENT-CONVENTIONS.md`, `COMPONENT-TEMPLATE.md`, `COMPONENT-DATA.md` |
-| Input field types & actions                 | `docs/FIELD-TYPES.md`, `docs/INPUT-ACTIONS.md`                                |
-| App shell (`AioApp`)                        | `docs/APP.md`, `docs/API.md`                                                  |
-| Dependency rules                            | `docs/BOUNDARIES.md` (+ enforced by `scripts/bounds.mjs`)                     |
-| Import path policy (root barrel vs subpath) | `docs/PUBLIC-API.md`                                                          |
-| Events bus                                  | `docs/eventbus.MD`                                                            |
-| Address picker                              | `docs/idAddress.MD`, `packages/components/id-address/README.MD`               |
-| Sheets CMS / REST API / deployment          | `docs/GoogleSheets CMS/`                                                      |
-| Apps Script orchestrator flow               | `docs/apps-script-integration.md`                                             |
-| Generator engine internals                  | `.draft/preset/README.md`                                                     |
-| The AI prompt that writes content           | `.draft/preset/prompt.content.md`                                             |
+| I need…                                     | Read                                                                                                                  |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Product vision, market framing              | `docs/generator/presentation0.md`                                                                                     |
+| How generated sites are produced (Rajutan)  | `.guidance/RAJUTAN.md`                                                                                                |
+| Why / long-term order                       | `.guidance/plan.md`                                                                                                   |
+| What is next (queue)                        | `.guidance/project/NEXT_TASKS.md`                                                                                     |
+| What is running right now                   | `.guidance/project/STATUS.md`                                                                                         |
+| Rules an agent must follow                  | `.guidance/AGENT_RULES.md`, `.guidance/mandatory/`                                                                    |
+| Renderer internals                          | `docs/framework/DOMRenderer.md`                                                                                       |
+| Component conventions / template / data     | `docs/framework/COMPONENT-CONVENTIONS.md`, `docs/framework/COMPONENT-TEMPLATE.md`, `docs/framework/COMPONENT-DATA.md` |
+| Input field types & actions                 | `docs/framework/FIELD-TYPES.md`, `docs/framework/INPUT-ACTIONS.md`                                                    |
+| App shell (`AioApp`)                        | `docs/framework/APP.md`, `docs/framework/API.md`                                                                      |
+| Dependency rules                            | `docs/framework/BOUNDARIES.md` (+ enforced by `scripts/bounds.mjs`)                                                   |
+| Import path policy (root barrel vs subpath) | `docs/framework/PUBLIC-API.md`                                                                                        |
+| Events bus                                  | `docs/framework/eventbus.MD`                                                                                          |
+| Address picker                              | `docs/framework/idAddress.MD`, `packages/components/id-address/README.MD`                                             |
+| Sheets CMS / REST API / deployment          | `docs/generator/GoogleSheets CMS/`                                                                                    |
+| Apps Script orchestrator flow               | `docs/generator/apps-script-integration.md`                                                                           |
+| Generator engine internals                  | `orchestrator/README.md`                                                                                              |
+| The AI prompt that writes content           | `orchestrator/prompt.content.md`                                                                                      |
 
 ## Conventions in one screen
 
@@ -135,7 +141,7 @@ Ignored, local-only working areas:
 
 ## Status snapshot
 
-Working: 37 packages build and are tested (428 tests, 100 of them the draft generator suite),
+Working: 37 packages build and are tested (428 tests, 100 of them the orchestrator generator suite),
 the form family (module registry,
 messages, animations, address adapters) runs, the generator produces real files
 (`.draft/results/`), versioning is fixed at `0.1.0`, and **tag `v0.1.0` is live** on

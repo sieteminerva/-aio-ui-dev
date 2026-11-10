@@ -278,7 +278,7 @@ ${emitted.table.map((row) => `- \`${row.specifier}\`${row.styles.length ? ` (+ $
 ## Regenerate
 
 \`\`\`bash
-node .draft/preset/layout.mjs --out .draft/preset/layout.json   # asset map
+node orchestrator/layout.mjs --out orchestrator/layout.json   # asset map
 # then run the generator against this preset.json
 \`\`\`
 `;

@@ -231,7 +231,7 @@ Moving to the deployed backend means deleting `endpoint` and setting `url`. No c
 changes — that is the whole point of routing mock data through the same port.
 
 `get()` resolves with the **whole envelope** (`{ success, message, data, meta }`, see
-`docs/API.md`), because consumers need `meta` for pagination. A legacy
+`docs/framework/API.md`), because consumers need `meta` for pagination. A legacy
 `{ status: "success" }` payload is still accepted.
 
 ## The mount-point rule

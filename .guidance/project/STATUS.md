@@ -22,5 +22,5 @@ Last updated: 2026-11-11
 
 - Generated-site hosting (GitHub Pages vs Cloudflare Pages) — affects deployment only, not the
   preset contract.
-- **`isRoot` semantics** (builder host vs replacement) — recorded in `plan.md` §3.11; blocked on a
+- **`isRoot` semantics** (builder host vs replacement) — recorded in `plan-generator.md` §3.11; blocked on a
   review of `AioApp`'s rewritten entry/render output before implementation.

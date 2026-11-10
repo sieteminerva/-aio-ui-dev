@@ -2,7 +2,7 @@
 /**
  * Boundary gate.
  *
- * Enforces `docs/BOUNDARIES.md` mechanically, so a violation fails the build instead
+ * Enforces `docs/framework/BOUNDARIES.md` mechanically, so a violation fails the build instead
  * of relying on review. Five checks:
  *
  *   1. package-to-package edges follow the dependency graph,

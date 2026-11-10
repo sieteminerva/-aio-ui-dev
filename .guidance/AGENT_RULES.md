@@ -39,7 +39,7 @@ Every single tool turn re-sends the entire prompt history. Minimize round-trips:
 ## 6. Architecture & proof standards
 
 - **Modules own capabilities; components only render.** If wiring feels wrong, fix the seam, not the abstraction.
-- **Stylesheets:** Never `import "./X.css"` in a builder — load via `@aio-ui/core/Stylesheets` (see `docs/COMPONENT-CONVENTIONS.md`).
+- **Stylesheets:** Never `import "./X.css"` in a builder — load via `@aio-ui/core/Stylesheets` (see `docs/framework/COMPONENT-CONVENTIONS.md`).
 - **Framework-agnostic components:** Publish via `config.emit?.(…)`; never import the app.
 - **Objective proof:** Prove changes at the highest affected level (unit test, CLI test, or build gate). For CSS geometry claims, measure `getBoundingClientRect` / `getComputedStyle` and report exact numbers.
 
@@ -63,7 +63,7 @@ One item lives in **exactly one** file. Never duplicate, never append history.
 
 | File                              | Holds                                                   | Shape                                                                  |
 | --------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `.guidance/plan.md`               | **why** — objective, decisions, stages, long-term order | per-project sections: `## Project: framework \| gallery \| generator`  |
+| `.guidance/plan*.md`              | **why** — objective, decisions, stages, long-term order | `plan.md` index (§0/§4) + `plan-{framework,gallery,generator}.md`      |
 | `.guidance/project/NEXT_TASKS.md` | **what next** — one queue shared by all projects        | `## Framework` / `## Gallery` / `## Generator` lanes, top line = first |
 | `.guidance/project/STATUS.md`     | **what now** — at most **3** active items               | overwritten every session, ≤ 80 lines                                  |
 

@@ -9,7 +9,7 @@
  *   1. a barrel may not use `export *` — the wildcard silently publishes whatever the
  *      implementation file happens to export today (selectors, normalisers, element
  *      types), and it hides collisions instead of reporting them;
- *   2. the names each barrel publishes must match `docs/api-map.json`, so *adding* to
+ *   2. the names each barrel publishes must match `docs/framework/api-map.json`, so *adding* to
  *      the public surface becomes a visible diff someone has to approve, not a side
  *      effect of a refactor.
  *
@@ -19,7 +19,7 @@
  * Usage:
  *   node scripts/api.mjs            # report the surface
  *   node scripts/api.mjs --check    # fail when the map is stale or a barrel is wild
- *   node scripts/api.mjs --write    # regenerate docs/api-map.json
+ *   node scripts/api.mjs --write    # regenerate docs/framework/api-map.json
  */
 
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
@@ -27,7 +27,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const MAP_PATH = join(ROOT, "docs", "api-map.json");
+const MAP_PATH = join(ROOT, "docs", "framework", "api-map.json");
 const GROUPS = ["packages", "packages/components", "packages/modules", "packages/themes", "packages/kits"];
 
 const CHECK = process.argv.includes("--check");
@@ -241,12 +241,12 @@ function serialise(data) {
 if (WRITE) {
   const sorted = Object.fromEntries(Object.entries(surface).sort(([a], [b]) => a.localeCompare(b)));
   writeFileSync(MAP_PATH, serialise({ packages: sorted }));
-  console.log(`[api] wrote ${Object.keys(sorted).length} package surface(s) to docs/api-map.json`);
+  console.log(`[api] wrote ${Object.keys(sorted).length} package surface(s) to docs/framework/api-map.json`);
 }
 
 if (CHECK) {
   if (!existsSync(MAP_PATH)) {
-    problems.push("docs/api-map.json is missing — run `node scripts/api.mjs --write`");
+    problems.push("docs/framework/api-map.json is missing — run `node scripts/api.mjs --write`");
   } else {
     const expected = JSON.parse(readFileSync(MAP_PATH, "utf8")).packages ?? {};
     const sorted = Object.fromEntries(Object.entries(surface).sort(([a], [b]) => a.localeCompare(b)));
@@ -254,7 +254,7 @@ if (CHECK) {
     for (const [name, shape] of Object.entries(sorted)) {
       const recorded = expected[name];
       if (!recorded) {
-        problems.push(`${name}: not in docs/api-map.json (new public surface, needs approval)`);
+        problems.push(`${name}: not in docs/framework/api-map.json (new public surface, needs approval)`);
         continue;
       }
       const before = { values: recorded.values ?? [], types: recorded.types ?? [], reexports: recorded.reexports ?? [] };
@@ -268,7 +268,7 @@ if (CHECK) {
     }
 
     for (const name of Object.keys(expected)) {
-      if (!sorted[name]) problems.push(`${name}: in docs/api-map.json but no longer built`);
+      if (!sorted[name]) problems.push(`${name}: in docs/framework/api-map.json but no longer built`);
     }
   }
 }
@@ -289,4 +289,5 @@ if (problems.length && CHECK) {
 }
 
 if (!CHECK) console.log(`✓ ${Object.keys(surface).length} curated surface(s)`);
-else if (!problems.length) console.log(`✓ ${Object.keys(surface).length} curated surface(s) match docs/api-map.json`);
+else if (!problems.length)
+  console.log(`✓ ${Object.keys(surface).length} curated surface(s) match docs/framework/api-map.json`);

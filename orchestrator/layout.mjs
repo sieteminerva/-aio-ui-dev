@@ -8,8 +8,8 @@
  * hand per deployment.
  *
  * Usage:
- *   node .draft/preset/layout.mjs            # print JSON to stdout
- *   node .draft/preset/layout.mjs --out f.json
+ *   node orchestrator/layout.mjs            # print JSON to stdout
+ *   node orchestrator/layout.mjs --out f.json
  *
  * Output shape (`PackageLayout` in `emit.ts`):
  *   { "@aio-ui/form": { "dir": "packages/components/form", "entry": "dist/Form.js" } }
