@@ -1,0 +1,35 @@
+{
+  "name": "@aio-ui/table",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css",
+    "adapters"
+  ],
+  "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./Table.css": "./Table.css",
+    "./adapters/FormAdapter": {
+      "development": "./adapters/FormAdapter.ts",
+      "types": "./dist/adapters/FormAdapter.d.ts",
+      "default": "./dist/adapters/FormAdapter.js"
+    }
+  },
+  "peerDependencies": {
+    "@aio-ui/base": "^0.1.0",
+    "@aio-ui/core": "^0.1.0",
+    "@aio-ui/form": "^0.1.0",
+    "@aio-ui/module-loader": "^0.1.0",
+    "@aio-ui/utilities": "^0.1.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
+}

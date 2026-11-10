@@ -1,0 +1,37 @@
+/* Theme Switch Toggle Layout styles */
+.mode-switcher {
+  & .toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.65rem;
+    border: 1px solid var(--border-soft);
+    border-radius: 999px;
+    background: var(--surface-strong);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-weight: 700;
+  }
+  & .track {
+    width: 2.5rem;
+    height: 1.3rem;
+    border-radius: 999px;
+    background: var(--surface-muted);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border-soft);
+  }
+  & .thumb {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 999px;
+    background: var(--accent);
+    transform: translateX(0.15rem);
+    transition: transform 180ms ease;
+  }
+
+  & .toggle.is-dark .thumb {
+    transform: translateX(1.2rem);
+  }
+}

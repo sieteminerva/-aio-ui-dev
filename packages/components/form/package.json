@@ -1,0 +1,77 @@
+{
+  "name": "@aio-ui/form",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts",
+    "*.css",
+    "adapters"
+  ],
+  "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./Form.css": "./Form.css",
+    "./FormLayout": {
+      "development": "./FormLayout.ts",
+      "types": "./dist/FormLayout.d.ts",
+      "default": "./dist/FormLayout.js"
+    },
+    "./FormMessages": {
+      "development": "./FormMessages.ts",
+      "types": "./dist/FormMessages.d.ts",
+      "default": "./dist/FormMessages.js"
+    },
+    "./FormModuleTypes": {
+      "development": "./FormModuleTypes.ts",
+      "types": "./dist/FormModuleTypes.d.ts",
+      "default": "./dist/FormModuleTypes.js"
+    },
+    "./FormRegistry": {
+      "development": "./FormRegistry.ts",
+      "types": "./dist/FormRegistry.d.ts",
+      "default": "./dist/FormRegistry.js"
+    },
+    "./Input.FormAdapter": {
+      "development": "./Input.FormAdapter.ts",
+      "types": "./dist/Input.FormAdapter.d.ts",
+      "default": "./dist/Input.FormAdapter.js"
+    },
+    "./calculation-adapter": {
+      "development": "./adapters/Calculation.ts",
+      "types": "./dist/adapters/Calculation.d.ts",
+      "default": "./dist/adapters/Calculation.js"
+    },
+    "./cascade-adapter": {
+      "development": "./adapters/Cascade.ts",
+      "types": "./dist/adapters/Cascade.d.ts",
+      "default": "./dist/adapters/Cascade.js"
+    },
+    "./multistep-adapter": {
+      "development": "./adapters/Multistep.ts",
+      "types": "./dist/adapters/Multistep.d.ts",
+      "default": "./dist/adapters/Multistep.js"
+    },
+    "./validation-adapter": {
+      "development": "./adapters/Validation.ts",
+      "types": "./dist/adapters/Validation.d.ts",
+      "default": "./dist/adapters/Validation.js"
+    }
+  },
+  "peerDependencies": {
+    "@aio-ui/base": "^0.1.0",
+    "@aio-ui/core": "^0.1.0",
+    "@aio-ui/http-service": "^0.1.0",
+    "@aio-ui/message": "^0.1.0",
+    "@aio-ui/module-loader": "^0.1.0",
+    "@aio-ui/utilities": "^0.1.0",
+    "@aio-ui/input": "^0.1.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
+}

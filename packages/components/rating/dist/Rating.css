@@ -1,0 +1,36 @@
+/* 🪐 Vektor Bintang (Star SVG Asset Managed inside CSS) */
+.star-icon {
+  display: inline-block;
+  width: 24px; /* 🟢 TINGGAL GANTI DISINI UNTUK PERBESAR UKURAN BINTANG! */
+  height: 24px;
+  background-repeat: no-repeat;
+  background-size: contain;
+  transition: transform 0.2s ease;
+}
+.star-icon:hover {
+  transform: scale(1.2);
+}
+
+/* 🌟 Bintang Terisi Penuh (Menggunakan URL Data-URI SVG Star Murni) */
+.star-icon.star-full {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 24 24' fill='%23ffcc00'><path d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/></svg>");
+}
+
+/* 🌗 Bintang Setengah (Gunakan warna fill oranye dengan kliping/masking) */
+.star-icon.star-half {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 24 24'><defs><linearGradient id='grad'><stop offset='50%25' stop-color='%23ffcc00'/><stop offset='50%25' stop-color='%23e0e0e0'/></linearGradient></defs><path fill='url(%23grad)' d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/></svg>");
+}
+
+/* 🫙 Bintang Kosong (Warna Abu-Abu Netral) */
+.star-icon.star-empty {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://w3.org' viewBox='0 0 24 24' fill='%23e0e0e0'><path d='M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z'/></svg>");
+}
+
+/* ====================================================
+   🎨 TIPS WARNAI ULANG SECARA LIVE DARI TEMA LUAR
+   Karena SVG berada di CSS background, ganti warnanya secepat kilat 
+   murni memanfaatkan kekuatan filter hue-rotate / brightness CSS!
+   ==================================================== */
+.theme-cyberpunk .star-icon.star-full {
+  filter: drop-shadow(0 0 4px #ff007f) brightness(1.2) hue-rotate(120deg); /* Bermetamorfosis jadi neon pink otomatis! */
+}

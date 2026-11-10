@@ -1,0 +1,23 @@
+{
+  "name": "@aio-ui/module-loader",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "*.ts"
+  ],
+  "peerDependencies": {
+    "@aio-ui/core": "^0.1.0"
+  },
+  "exports": {
+    ".": {
+      "development": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
+}

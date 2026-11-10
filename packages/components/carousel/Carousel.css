@@ -1,0 +1,237 @@
+/* ==========================================================================
+   🎢 CAROUSEL SYSTEM — Layout & Animation
+   ========================================================================== */
+
+/* ── Viewport Mask (outermost container) ── */
+.carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  box-sizing: border-box;
+  /* background-color: red; */
+  min-height: 400px;
+  padding: 0;
+}
+
+/* ── Track (sliding rail) ── */
+.carousel .track {
+  position: relative;
+  box-sizing: border-box;
+  will-change: transform;
+  overflow: hidden;
+  /* display, width, height, flex-direction are set by JS per animation mode */
+}
+
+/* ── Slide (individual item) ── */
+.carousel .track .slide {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  /* position, width, height, flex-basis are set by JS per animation mode */
+}
+
+/* ── Slide Inner Wrapper (handles clipping and border radius) ── */
+.carousel .track .slide .slide-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-image, 8px);
+  overflow: hidden;
+}
+
+/* ── Media ── */
+.carousel .track .slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ==========================================================================
+   FADE MODE — slide-level opacity transition
+   ========================================================================== */
+.carousel.anim-fade .track {
+  display: grid;
+  width: 100%;
+  height: 100%;
+}
+
+.carousel.anim-fade .track .slide {
+  grid-area: 1 / 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.6s ease-in-out,
+    visibility 0.6s ease-in-out;
+}
+
+.carousel.anim-fade .track .slide.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ==========================================================================
+   ORIENTATION PADDING
+   ========================================================================== */
+.carousel.orient-horizontal .track .slide {
+  padding: 0 10px;
+}
+
+.carousel.orient-vertical .track .slide {
+  padding: 10px 0;
+}
+
+/* Fade mode should not add slide padding (absolute positioned) */
+.carousel.anim-fade .track .slide {
+  padding: 0;
+}
+
+/* ==========================================================================
+   CAPTION OVERLAY
+   ========================================================================== */
+.carousel .caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.85), transparent);
+  color: #ffffff;
+  padding: 2.5rem 1.5rem 2rem;
+  text-align: center;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.carousel .caption h3.title {
+  color: rgb(255, 236, 69);
+  margin: 0;
+  margin-bottom: 8px;
+  font-size: 1.6rem;
+}
+
+.carousel .caption p.desc {
+  color: rgb(190, 190, 190);
+  margin: 0;
+}
+
+/* ==========================================================================
+   CONTROL BUTTONS (prev / next)
+   ========================================================================== */
+.carousel .control {
+  position: absolute;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #ffffff;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition:
+    background 0.3s ease,
+    transform 0.2s;
+}
+.carousel .control:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+}
+
+/* Horizontal controls */
+.carousel.orient-horizontal .control {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.carousel.orient-horizontal .control.prev {
+  left: 1rem;
+}
+.carousel.orient-horizontal .control.next {
+  right: 1rem;
+}
+.carousel.orient-horizontal .control:hover {
+  transform: translateY(-50%) scale(1.05);
+}
+
+/* Vertical controls */
+.carousel.orient-vertical .control {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.carousel.orient-vertical .control.prev {
+  top: 1rem;
+}
+.carousel.orient-vertical .control.next {
+  bottom: 1rem;
+}
+.carousel.orient-vertical .control:hover {
+  transform: translateX(-50%) scale(1.05);
+}
+
+/* ==========================================================================
+   DOT NAVIGATION
+   ========================================================================== */
+.carousel .navigations {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+}
+.carousel .navigations.horizontal-dots {
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: row;
+  gap: 0.5rem;
+}
+.carousel .navigations.vertical-dots {
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.carousel .navigations .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    transform 0.3s ease;
+}
+.carousel .navigations .dot.active {
+  background: #ffffff;
+  transform: scale(1.2);
+}
+
+/* ==========================================================================
+   AUTO-CONTROLS (Hover to show)
+   ========================================================================== */
+.carousel.auto-controls .control,
+.carousel.auto-controls .navigations {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    background 0.3s ease,
+    transform 0.2s,
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.carousel.auto-controls.hovering .control,
+.carousel.auto-controls.hovering .navigations {
+  opacity: 1;
+  visibility: visible;
+}

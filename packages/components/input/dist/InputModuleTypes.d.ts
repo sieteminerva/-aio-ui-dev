@@ -1,0 +1,102 @@
+/**
+ * Input module contract — ids and types only.
+ *
+ * Kept in a leaf file on purpose: a module definition needs its own id, and importing
+ * that id from `InputRegistry.ts` (which imports the definitions) would close a cycle and
+ * leave `INPUT_MODULE_IDS` undefined while the definitions are being built. The Form family
+ * solves the same problem the same way (`FormModuleTypes.ts`).
+ */
+import type { iModuleDefinition } from "@aio-ui/module-loader";
+import type { iBuilderConfig } from "@aio-ui/core/interface";
+import type { iBasicInputNode } from "./Input";
+/** Stable ids for input sub-modules. */
+export declare const INPUT_MODULE_IDS: {
+    readonly dropdown: "dropdown";
+    readonly file: "file";
+    readonly controls: "controls";
+    readonly popover: "popover";
+};
+/** Union of every input sub-module id. */
+export type InputModuleId = (typeof INPUT_MODULE_IDS)[keyof typeof INPUT_MODULE_IDS];
+/** What a module receives when it is loaded: the host builder's own configuration. */
+export interface iInputModuleContext {
+    /** Builder-level config of the hosting `InputBuilder` (`themeId`, `namespace`, `emit`). */
+    builderConfig: iBuilderConfig<any>;
+}
+/**
+ * Description of an action set to build.
+ *
+ * Actions may be declared as an array or as `{ [type]: definition }`; whoever resolves
+ * them normalises the shape, so a module only ever sees the array.
+ */
+export interface iInputActionsSpec {
+    actions: Array<Record<string, any> & {
+        type: string;
+    }>;
+    position?: "left" | "right";
+    /** Field the set belongs to; absent when the scope is a group. */
+    input?: iBasicInputNode | null;
+}
+/**
+ * Optional hooks an input sub-module may implement.
+ *
+ * Every hook is optional and every hook is a no-op when the module is not registered, so
+ * removing a module from the preset degrades the field instead of breaking it.
+ */
+export interface iInputAdapter {
+    /**
+     * Renders the control for a field type this module owns.
+     *
+     * @param field - Resolved field payload.
+     * @param host - Host configuration.
+     * @returns The control, or `null` when this module does not handle the type.
+     */
+    renderControl?: (field: iBasicInputNode, host: iInputModuleContext) => HTMLElement | null;
+    /**
+     * Adds markup or behaviour around a control that already exists.
+     *
+     * @param wrapper - The `.field` element.
+     * @param control - The rendered control.
+     * @param field - Resolved field payload.
+     * @param host - Host configuration.
+     */
+    decorate?: (wrapper: HTMLElement, control: HTMLElement, field: iBasicInputNode, host: iInputModuleContext) => void;
+    /**
+     * Attaches to every input inside a subtree, including raw HTML fields that never went
+     * through `InputBuilder.prepare()`.
+     *
+     * @param root - Subtree to scan. Must be idempotent.
+     */
+    mount?: (root: Document | HTMLElement) => void;
+    /**
+     * Builds a button set for a scope — a field wrapper or a whole `<fieldset>` group.
+     *
+     * @param scope - Element the set acts on.
+     * @param spec - `{ actions, position?, input? }`, with actions already normalised.
+     * @returns The controls node, or `null` when the module declines.
+     */
+    renderActions?: (scope: HTMLElement, spec: iInputActionsSpec) => HTMLElement | null;
+    /**
+     * The files currently selected inside a form, keyed by input name.
+     *
+     * Raw `File` objects only: what to do with them (parse, upload, preview) belongs to the
+     * caller. A capability that only exists when this module is registered.
+     *
+     * @param formId - Id of the form that owns the file inputs.
+     */
+    getFiles?: (formId: string) => Record<string, File[]>;
+}
+/** Erased definition type for the preset arrays, where module results differ per id. */
+export type InputModuleDefinition = iModuleDefinition<iInputModuleContext, iInputAdapter>;
+/** One entry of a preset: a definition to load, or an adapter that is already live. */
+export type InputModuleItem = InputModuleDefinition | iInputAdapter;
+/**
+ * What a caller may hand the input layer as its adapter set.
+ *
+ * @summary Either definitions (the registry loads and owns their lifecycle), live
+ * adapters, or a mix — which is what a parent component produces when its manifest
+ * resolved some entries and it kept others as definitions. Definitions are always
+ * loaded; adapters are used as-is and never re-loaded.
+ */
+export type InputModulePreset = InputModuleItem[];
+//# sourceMappingURL=InputModuleTypes.d.ts.map

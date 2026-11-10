@@ -1,0 +1,1 @@
+{"version":3,"file":"Carousel.kit.d.ts","sourceRoot":"","sources":["../Carousel.kit.ts"],"names":[],"mappings":"AAAA;;;;;;;GAOG;AAEH,eAAO,MAAM,eAAe,kOAYlB,CAAC;AAEX,KAAK,gBAAgB,GAAG,CAAC,OAAO,eAAe,CAAC,CAAC,MAAM,CAAC,CAAC;AAEzD,MAAM,MAAM,oBAAoB,GAAG;KAChC,CAAC,IAAI,gBAAgB,GAAG,GAAG;CAC7B,CAAC;AAEF,eAAO,MAAM,cAAc,EAAE,oBAY5B,CAAA;AAED,eAAO,MAAM,eAAe,EAAE,oBAY7B,CAAA"}

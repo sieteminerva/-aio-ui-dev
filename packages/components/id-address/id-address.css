@@ -1,0 +1,30 @@
+/**
+ * IdAddress — state styling only.
+ *
+ * The picker does not render fields: it decorates the `[data-level]` controls a page
+ * already provides (a `<select>`, an `<input>`), so its own sheet must not restyle them.
+ * What belongs here is what the picker itself adds — the `loading` and `error` states the
+ * adapters write onto those controls — using theme tokens with plain fallbacks, so the
+ * package looks right even when installed without `@aio-ui/form` or `@aio-ui/input`.
+ */
+
+[data-level].loading {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+[data-level].error {
+  border-color: var(--app-error-color, #c0392b);
+  outline-color: var(--app-error-color, #c0392b);
+}
+
+/* A dropdown wrapper the native adapter drives (visible box + hidden value). */
+.dropdown[data-level].loading,
+.dropdown:has([data-level].loading) {
+  cursor: progress;
+}
+
+.dropdown[data-level].error,
+.dropdown:has([data-level].error) {
+  border-color: var(--app-error-color, #c0392b);
+}

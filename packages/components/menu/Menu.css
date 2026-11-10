@@ -1,0 +1,144 @@
+/* ==========================================================================
+   4. NAVIGATION SPECIFICATION (.nav Framework)
+   ========================================================================== */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.95rem 1.2rem;
+
+  background: var(--surface-bg);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-soft);
+  box-shadow: var(--shadow-soft);
+  border-radius: 0 0 var(--radius-component) var(--radius-component);
+  transition: all 300ms ease-in;
+}
+
+.nav .brand a {
+  color: var(--text-heading);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.nav .navigations {
+  display: flex;
+  gap: 0.85rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  transition:
+    display 0.3s allow-discrete,
+    opacity 0.3s,
+    transform 0.3s;
+}
+
+.nav .navigations a,
+.nav .actions a {
+  display: block;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-weight: 600;
+  height: 100%;
+  width: 100%;
+}
+
+.nav .navigations a i,
+.nav .actions a i {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.nav .actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.nav .actions .item {
+  border-radius: var(--radius-component);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  color: var(--text-main);
+}
+
+.nav .actions .item:hover {
+  background-color: var(--surface-muted);
+  transform: translateY(-1px) !important;
+  box-shadow: var(--shadow-soft);
+  transition: all 1ms ease;
+}
+
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-heading);
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: flex;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+  }
+
+  .nav .actions {
+    width: -webkit-fill-available;
+  }
+
+  .nav .brand {
+    width: 100%;
+    text-align: center;
+    align-items: center;
+  }
+
+  .nav .navigations {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 1rem;
+    opacity: 0;
+  }
+
+  .nav .navigations.open {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @starting-style {
+    .navigations.open {
+      opacity: 0;
+      transform: translateY(-100px);
+    }
+  }
+}
+
+aside.sidebar .nav.vertical,
+aside.sidebar nav.vertical {
+  display: flex;
+  flex-direction: column !important;
+  height: 100%;
+  & .navigations {
+    flex-direction: column !important;
+    padding-top: clamp(3.5rem, 6.5vw, 5.5rem);
+  }
+}

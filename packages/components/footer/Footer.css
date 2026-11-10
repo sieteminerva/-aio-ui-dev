@@ -1,0 +1,97 @@
+/* ==========================================================================
+   FOOTER — two rows
+   row 1: dynamic columns (any count, auto-fitted)
+   row 2: copyright line
+   ========================================================================== */
+
+.footer {
+  display: grid;
+  gap: var(--app-gap);
+  margin-top: var(--app-margin-layout);
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  background: var(--app-surface-background-color);
+  color: var(--app-text-color);
+  border: 1px solid var(--app-border-color);
+  border-radius: var(--app-component-border-radius);
+}
+
+/* ROW 1 — the column grid. `auto-fit` keeps the column count dynamic: 1 to n columns
+   share the row and wrap to a new line only when a column would go under ~14rem. */
+.footer > .row:not(.bottom) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  align-items: start;
+  gap: var(--app-gap);
+}
+
+.footer .column {
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.footer .header {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--app-text-heading-color);
+}
+
+.footer .desc {
+  margin: 0;
+  font-size: 0.925rem;
+  line-height: 1.6;
+  color: var(--app-text-accent-color);
+}
+
+.footer .unstyled-list {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.925rem;
+}
+
+.footer .unstyled-list .item a {
+  display: inline-block;
+  color: var(--app-text-accent-color);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.footer .unstyled-list .item a:hover,
+.footer .unstyled-list .item a:focus-visible {
+  color: var(--app-primary-color);
+  transform: translateX(2px);
+}
+
+/* ROW 2 — copyright: separated by a hairline, never part of the column grid. */
+.footer > .row.bottom {
+  display: flex;
+  justify-content: center;
+  padding-top: 1rem;
+  border-top: 1px solid var(--app-border-color);
+  font-size: 0.85rem;
+  color: var(--app-text-accent-color);
+}
+
+.footer > .row.bottom p {
+  margin: 0;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer .unstyled-list .item a {
+    transition: none;
+  }
+
+  .footer .unstyled-list .item a:hover {
+    transform: none;
+  }
+}

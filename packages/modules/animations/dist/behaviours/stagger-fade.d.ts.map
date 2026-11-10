@@ -1,0 +1,1 @@
+{"version":3,"file":"stagger-fade.d.ts","sourceRoot":"","sources":["../../behaviours/stagger-fade.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,kBAAkB,EAAE,MAAM,SAAS,CAAC;AAElD,MAAM,WAAW,kBAAkB;IACjC,8EAA8E;IAC9E,KAAK,EAAE,MAAM,CAAC;IACd,gEAAgE;IAChE,QAAQ,EAAE,MAAM,CAAC;CAClB;AA8GD,gEAAgE;AAChE,eAAO,MAAM,oBAAoB,EAAE,kBAAkB,CAAC,kBAAkB,CAOvE,CAAC"}

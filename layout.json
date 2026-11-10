@@ -1,0 +1,382 @@
+{
+  "@aio-ui/app": {
+    "dir": "packages/app",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./ports": "dist/ports.js",
+      "./types": "dist/types.js"
+    }
+  },
+  "@aio-ui/base": {
+    "dir": "packages/base",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./BaseAdapters/*": "src/BaseAdapters/*"
+    }
+  },
+  "@aio-ui/core": {
+    "dir": "packages/core",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./interface": "dist/interface.js",
+      "./node": "dist/types/node.js",
+      "./builder": "dist/types/builder.js",
+      "./registry": "dist/types/registry.js",
+      "./events": "dist/types/events.js",
+      "./content": "dist/types/content.js",
+      "./page": "dist/types/page.js",
+      "./renderer": "dist/types/renderer.js",
+      "./api": "dist/types/api.js"
+    }
+  },
+  "@aio-ui/styles": {
+    "dir": "packages/styles",
+    "stylesRoot": "src",
+    "bare": false,
+    "subpaths": {
+      ".": "src/index.css",
+      "./index.css": "src/index.css",
+      "./variables.css": "src/variables.css",
+      "./typography.css": "src/typography.css",
+      "./components.css": "src/components.css",
+      "./layout.css": "src/layout.css",
+      "./icon.css": "src/icon.css"
+    }
+  },
+  "@aio-ui/utilities": {
+    "dir": "packages/utilities",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Metadata": "dist/Metadata.js",
+      "./SelectorToTree": "dist/SelectorToTree.js",
+      "./AttributeUtils": "dist/AttributeUtils.js",
+      "./DomUtils": "dist/DomUtils.js",
+      "./color.utils": "dist/color.utils.js",
+      "./helper": "dist/helper.js",
+      "./parseTableFile": "dist/parseTableFile.js"
+    }
+  },
+  "@aio-ui/accordion": {
+    "dir": "packages/components/accordion",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Accordion.css": "Accordion.css"
+    }
+  },
+  "@aio-ui/article": {
+    "dir": "packages/components/article",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Article.css": "Article.css"
+    }
+  },
+  "@aio-ui/badge": {
+    "dir": "packages/components/badge",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Badge.css": "Badge.css"
+    }
+  },
+  "@aio-ui/carousel": {
+    "dir": "packages/components/carousel",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Carousel.css": "Carousel.css"
+    }
+  },
+  "@aio-ui/fabmenu": {
+    "dir": "packages/components/fabmenu",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./FabMenu.css": "FabMenu.css"
+    }
+  },
+  "@aio-ui/footer": {
+    "dir": "packages/components/footer",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Footer.css": "Footer.css"
+    }
+  },
+  "@aio-ui/form": {
+    "dir": "packages/components/form",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Form.css": "Form.css",
+      "./FormLayout": "dist/FormLayout.js",
+      "./FormMessages": "dist/FormMessages.js",
+      "./FormModuleTypes": "dist/FormModuleTypes.js",
+      "./FormRegistry": "dist/FormRegistry.js",
+      "./Input.FormAdapter": "dist/Input.FormAdapter.js",
+      "./calculation-adapter": "dist/adapters/Calculation.js",
+      "./cascade-adapter": "dist/adapters/Cascade.js",
+      "./multistep-adapter": "dist/adapters/Multistep.js",
+      "./validation-adapter": "dist/adapters/Validation.js"
+    }
+  },
+  "@aio-ui/id-address": {
+    "dir": "packages/components/id-address",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./adapter": "dist/id-address-adapter.js",
+      "./adapter.native": "dist/id-address-adapter.native.js",
+      "./adapter.base": "dist/id-address-adapter.base.js",
+      "./adapter.aio": "dist/id-address-adapter.aio.js",
+      "./form": "dist/IdAddress.FormAdapter.js",
+      "./id-address.css": "id-address.css"
+    }
+  },
+  "@aio-ui/input": {
+    "dir": "packages/components/input",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./InputRegistry": "dist/InputRegistry.js",
+      "./InputModuleTypes": "dist/InputModuleTypes.js",
+      "./FieldTypes": "dist/FieldTypes.js",
+      "./Attribute": "dist/Attribute.js",
+      "./FormValues": "dist/FormValues.js",
+      "./CalculationTypes": "dist/CalculationTypes.js",
+      "./dropdown": "dist/Dropdown/Dropdown.js",
+      "./dropdown.css": "Dropdown/Dropdown.css",
+      "./file-uploader": "dist/FileUploader/FileUploader.js",
+      "./file-uploader.css": "FileUploader/FileUploader.css",
+      "./controls": "dist/InputControls/InputControls.js",
+      "./controls.css": "InputControls/inputControls.css",
+      "./dropdown/module": "dist/Dropdown/Dropdown.InputModule.js",
+      "./file-uploader/module": "dist/FileUploader/FileUploader.InputModule.js",
+      "./controls/module": "dist/InputControls/InputControls.InputModule.js",
+      "./popover/module": "dist/Popover.InputModule.js",
+      "./input.css": "input.css"
+    }
+  },
+  "@aio-ui/masonry": {
+    "dir": "packages/components/masonry",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Masonry.css": "Masonry.css"
+    }
+  },
+  "@aio-ui/menu": {
+    "dir": "packages/components/menu",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Menu.css": "Menu.css"
+    }
+  },
+  "@aio-ui/message": {
+    "dir": "packages/components/message",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Message.css": "Message.css",
+      "./adapters/FormAdapter": "dist/adapters/FormAdapter.js"
+    }
+  },
+  "@aio-ui/modal": {
+    "dir": "packages/components/modal",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Modal.css": "Modal.css"
+    }
+  },
+  "@aio-ui/modeswitcher": {
+    "dir": "packages/components/modeswitcher",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./ModeSwitcher.css": "ModeSwitcher.css"
+    }
+  },
+  "@aio-ui/pricingcard": {
+    "dir": "packages/components/pricingcard",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./PricingCard.css": "PricingCard.css"
+    }
+  },
+  "@aio-ui/product": {
+    "dir": "packages/components/product",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./ProductCard.css": "ProductCard.css",
+      "./ProductDetail.css": "ProductDetail.css",
+      "./ProductGrid.css": "ProductGrid.css"
+    }
+  },
+  "@aio-ui/rating": {
+    "dir": "packages/components/rating",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Rating.css": "Rating.css"
+    }
+  },
+  "@aio-ui/section": {
+    "dir": "packages/components/section",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Section.css": "Section.css"
+    }
+  },
+  "@aio-ui/tab": {
+    "dir": "packages/components/tab",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Tab.css": "Tab.css"
+    }
+  },
+  "@aio-ui/table": {
+    "dir": "packages/components/table",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Table.css": "Table.css",
+      "./adapters/FormAdapter": "dist/adapters/FormAdapter.js"
+    }
+  },
+  "@aio-ui/animations": {
+    "dir": "packages/modules/animations",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Animations.css": "Animations.css",
+      "./behaviours": "dist/behaviours/registry.js",
+      "./behaviours/*": "dist/behaviours/*.js",
+      "./canvas/*": "dist/canvas/*.js"
+    }
+  },
+  "@aio-ui/event-emitter": {
+    "dir": "packages/modules/event-emitter",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  },
+  "@aio-ui/http-service": {
+    "dir": "packages/modules/http-service",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  },
+  "@aio-ui/module-loader": {
+    "dir": "packages/modules/module-loader",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  },
+  "@aio-ui/router": {
+    "dir": "packages/modules/router",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  },
+  "@aio-ui/theme": {
+    "dir": "packages/modules/theme",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  },
+  "@aio-ui/theme-cyberpunk": {
+    "dir": "packages/themes/cyberpunk",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./CyberpunkTheme.css": "src/CyberpunkTheme.css"
+    }
+  },
+  "@aio-ui/theme-default": {
+    "dir": "packages/themes/default",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  },
+  "@aio-ui/theme-horizontal": {
+    "dir": "packages/themes/horizontal",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  },
+  "@aio-ui/frameworks": {
+    "dir": "packages/kits/frameworks",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  },
+  "@aio-ui/modules": {
+    "dir": "packages/kits/modules",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  },
+  "@aio-ui/themes": {
+    "dir": "packages/kits/themes",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js"
+    }
+  }
+}

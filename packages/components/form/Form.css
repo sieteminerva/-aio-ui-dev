@@ -1,0 +1,668 @@
+/* ==========================================================================
+   Form chrome — layout and lifecycle only.
+
+   Field styling (wrapper, label, control, toggle shell) moved to
+   @aio-ui/input/input.css: a field must look the same outside a form, and the
+   form must not be a prerequisite for it. What is left here is form-only:
+   rows, fieldsets, action sets, multistep, inline variants, cascade visibility.
+   ========================================================================== */
+
+/* 4. Native Fieldset & Structural Legends */
+.form > fieldset {
+  display: grid;
+  gap: 1em;
+  margin-bottom: 1em;
+  padding: 1.2em 1.5em 1.5em 1.5em;
+  border: 1px solid var(--input-primary-color);
+  border-radius: var(--input-border-radius);
+  /* background-color: var(--primary-background-color); */
+  & legend {
+    padding: 0 0.5em;
+    color: var(--input-label-color);
+    font-size: calc(var(--input-font-size) * 0.8);
+    font-weight: 700;
+  }
+  & .field:last-child {
+    margin-bottom: 1em;
+  }
+  & .field {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   7b. Row Layout (inline field groups)
+   --------------------------------------------------------------------------
+   A row is a layout container, not a fieldset: fields (and nested rows) in a
+   grid of `--items` columns. Children wrap by themselves once the declared
+   columns are used up, and each child's width comes from `--span` (set by
+   FormLayout from `config.wide`: 50 = half, "auto" = full row).
+
+   The hook is `[data-column]`, written by `applyRowColumns` — no extra class,
+   and it keeps the single-field inline variant (`.field.group[data-display]`)
+   untouched. Child selectors carry the full `.field.group` prefix because the
+   base field block (`.native.form .field`, `.field:is(.group) .field`) sets
+   `display: block; width: 100%` and would win otherwise.
+   ========================================================================== */
+.field.group[data-column] {
+  display: grid;
+  grid-template-columns: repeat(var(--items, 2), minmax(0, 1fr));
+  gap: 0.25em 1em;
+  align-items: start;
+  width: 100%;
+  margin-bottom: 1em;
+
+  /* A child is a grid cell, not a block: no full width, no bottom margin. */
+  & > .field,
+  & > .field.group[data-column],
+  & > .form-group {
+    display: block;
+    width: auto;
+    min-width: 0;
+    margin-bottom: 0;
+    grid-column: span var(--span, 1);
+  }
+
+  /* Row heading and note read across the whole row. */
+  & > .title,
+  & > .desc {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  & > .title {
+    font-weight: 600;
+  }
+
+  /* A nested fieldset keeps its legend readable when it fills a cell. */
+  & > .form-group {
+    border: none;
+    padding: 0;
+    margin: 0;
+    min-inline-size: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .field.group[data-column] {
+    grid-template-columns: 1fr;
+
+    & > .field,
+    & > .field.group[data-column],
+    & > .form-group {
+      grid-column: auto;
+    }
+  }
+}
+
+/* Cascade in `hidden` mode: the element exists (so a chained picker can inject into it)
+   but must not take space. `[hidden]` alone only sets visibility in this stylesheet. */
+[data-cascade-hidden] {
+  display: none !important;
+}
+
+/* An action set (`Edit/Save/Add/Delete`…) is owned by `@aio-ui/input`: the layout that
+   glues a field to its buttons lives in `inputControls.css`, together with the buttons.
+   It used to be duplicated here, and the copies had already drifted apart. */
+
+/* ============ 
+   INLINE STYLE
+   ============ */
+
+.form:is(.inline) {
+  & > fieldset:is(.inline-style) {
+    --input-label-size: var(--input-font-size);
+    /* --input-min-height: 1.7lh; */
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: var(--input-font-size);
+    line-height: 1.6;
+    color: var(--input-text-color);
+    width: 100%;
+    /* margin: 40px auto; */
+    justify-self: center;
+    padding: 20px;
+    /* display: grid; */
+    border-radius: var(--input-border-radius);
+    & .label {
+      display: inline;
+      font-weight: normal;
+      color: var(--input-label-color);
+      margin-right: 6px;
+      font-size: var(--input-label-size);
+      word-break: balance;
+      &[animation="typewriter"] {
+        display: inline;
+        margin-bottom: 0;
+        margin-right: 0.5em;
+      }
+    }
+    & .field {
+      display: inline;
+      position: relative;
+      margin-bottom: 0;
+      margin-right: 8px;
+      width: auto;
+      vertical-align: middle;
+      line-height: calc(var(--input-line-height) * 1.4);
+      align-content: center;
+      height: max-content;
+
+      /* 📖 PARAGRAF: label typewriter mengalir inline — kalimat:
+       "teks judul [kontrol]" — .field tetap block sebagai jangkar
+       reservasi tinggi (dikunci engine typewriter saat animasi mulai),
+       sehingga field di bawahnya tidak ikut bergeser saat mengetik. */
+      & input:not([type="checkbox"]),
+      & select {
+        display: inline-block;
+        width: auto;
+        min-width: min(60%, 320px);
+      }
+
+      /* 2. Tata Letak Wrapper dan Label */
+      &:has(.switch.control) > label,
+      & label {
+        display: inline;
+        font-weight: normal;
+        color: var(--input-label-color);
+        margin-right: 6px;
+        font-size: var(--input-label-size);
+        word-break: balance;
+      }
+      & select:has(option[value=""]:checked),
+      & input:not([type="radio"], [type="file"], [type="checkbox"])::placeholder,
+      & textarea::placeholder {
+        color: var(--input-placeholder-color);
+      }
+
+      & input:not([type="radio"], [type="file"], [type="checkbox"]),
+      & select,
+      & textarea {
+        cursor: pointer;
+        border-radius: unset;
+        appearance: unset;
+        width: auto;
+        min-width: min-content;
+        min-height: unset;
+        font-family: inherit;
+        outline: none;
+        background-color: transparent;
+        /* height: calc(var(--input-min-height) * 1.3); */
+        max-height: max-content;
+        display: inline-block;
+        field-sizing: content;
+        font-size: var(--input-font-size);
+        font-weight: 400;
+        padding: 0 0.25em;
+        transition: all 0.3s ease;
+        vertical-align: middle;
+        position: relative;
+        bottom: 3.5px;
+
+        border-color: transparent;
+        border-bottom-color: transparent;
+        /* margin: 0 4px; */
+      }
+
+      & input:not([type="radio"], [type="file"], [type="checkbox"]):hover,
+      & select:not(.input-popover > select):hover,
+      & textarea:not(.input-popover > textarea):hover {
+        outline: none;
+        background: none;
+        border-color: transparent;
+        border-bottom-style: dashed;
+        border-bottom-color: var(--input-primary-color);
+      }
+
+      & input:not([type="radio"], [type="file"], [type="checkbox"]):is(:focus, :active),
+      & select:not(.input-popover > select):is(:focus, :active, :focus-within),
+      & textarea:not(.input-popover > textarea):is(:focus, :active) {
+        background: transparent;
+        border-color: transparent;
+        border-bottom-style: dashed;
+        border-bottom-color: var(--input-primary-color);
+      }
+
+      & input:is(:-webkit-autofill, :autofill) {
+        border-color: transparent;
+        border-bottom-style: dashed;
+        border-bottom-color: var(--input-primary-color);
+        transition: background-color 9999s ease-in-out 0s;
+        -webkit-text-fill-color: var(--input-text-color) !important;
+        width: auto;
+        min-width: fit-content !important;
+      }
+
+      /* 5. Aturan Khusus Masing-Masing Elemen */
+      & select {
+        cursor: pointer;
+        appearance: base-select;
+        min-width: max-content;
+        max-height: 1lh;
+        position: relative;
+        &:is([data-level]) {
+          overflow: inherit;
+        }
+        &:is([data-level].loading) {
+          margin-right: 1em;
+          overflow: inherit;
+        }
+        /* 5.1.1 Penggabungan Efek Fokus Bersama */
+        &:not(.loading)::picker-icon {
+          display: none;
+        }
+        &:is([data-level].loading)::picker-icon {
+          position: absolute;
+          right: -18px !important;
+          bottom: 21%;
+          /* display: none; */
+        }
+        &:open::picker(select) {
+          opacity: 1;
+          /* Timing buka eksplisit & deterministik (satu sumber: var popup) */
+          transition: all var(--popup-duration, 150ms) var(--popup-easing, ease) var(--dropdown-transition-delay, 30ms);
+          transform: translateY(-50%) translateX(-25%) scaleY(1) scaleX(1);
+          box-shadow: 0 2px 3px 0 var(--input-primary-color);
+          /* DETACHED popup: melayang bebas (bukan menempel di tepi input)
+             → butuh border-top penuh. Plain menang atas rule ATTACHED §5.2
+             karena specificity lebih tinggi — tanpa !important */
+          border-top: 1px solid var(--input-primary-color);
+        }
+        &:is(:open, :active, :focus, :focus-visible, .error) {
+          border: 1px solid transparent;
+          background: none;
+          outline: none;
+          width: fit-content;
+        }
+
+        & option {
+          transition: all 100ms;
+          &:hover {
+            color: color-mix(in srgb, grey 30%, var(--input-text-color) 35%);
+            background-color: color-mix(in srgb, var(--input-primary-color) 10%, var(--input-accent-color) 5%);
+          }
+        }
+
+        & option:checked,
+        &::part(selectedcontent) {
+          color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
+          background-color: color-mix(in srgb, var(--input-primary-color) 80%, rgb(245, 244, 244, 0.8));
+        }
+      }
+
+      &:has(select:open) {
+        & select,
+        & select:is(:hover, :active) {
+          border-bottom-left-radius: unset;
+          border-bottom-right-radius: unset;
+        }
+      }
+
+      /* 6. Fitur Customizable Dropdown (Picker) */
+      & ::picker(select) {
+        max-width: fit-content;
+        min-width: min-content;
+      }
+
+      & textarea {
+        min-height: unset;
+        resize: both;
+        vertical-align: middle;
+      }
+
+      & input[type="file"] {
+        min-height: unset;
+        width: 100%;
+        max-width: 100%;
+        display: block;
+      }
+    }
+  }
+}
+
+.form:is(.inline) {
+  & fieldset:is(.inline-style) .field {
+    display: inline;
+    min-height: var(--input-line-height);
+    & > .input-popover {
+      position-area: bottom span-right;
+      margin: unset;
+      inset: unset;
+      appearance: base-select;
+      top: anchor(bottom);
+      opacity: 0;
+      max-width: 500px;
+
+      border: 1px solid var(--input-primary-color);
+      border-radius: var(--input-border-radius);
+      transition-delay: var(--dropdown-transition-delay, 30ms);
+      background-color: var(--input-popover-background-color);
+      backdrop-filter: blur(12px);
+      color: inherit;
+
+      transform-origin: top;
+      transform: translateY(0) translateX(0) scaleY(0%) scaleX(99.7%);
+      transition: all 150ms ease;
+      transition-behavior: allow-discrete;
+
+      box-shadow: 0 14px 20px rgba(136, 135, 81, 0.356);
+      display: block;
+      padding: 0.75em 0.5em 0.5em 0.5em;
+      overflow-x: hidden;
+
+      &:popover-open {
+        z-index: 10;
+        opacity: 1;
+        transition-delay: var(--dropdown-transition-delay, 30ms);
+        transform: translateY(-80%) translateX(0) scaleY(1) scaleX(1);
+        scrollbar-width: thin;
+        box-shadow: 0 2px 3px 0 var(--input-primary-color);
+        background-color: var(--input-background-color);
+      }
+
+      & textarea {
+        min-height: var(--input-min-height);
+        padding: 0.25em;
+        line-height: 2rem;
+        font-size: 1.8rem;
+        font-weight: 100;
+
+        field-sizing: content;
+        resize: vertical;
+
+        height: auto;
+        width: 100%;
+        max-height: 5lh;
+        vertical-align: middle;
+
+        color: var(--input-text-color);
+        border: 1px solid var(--input-border-color);
+        border-radius: var(--input-border-radius);
+        background-color: var(--input-popover-background-color);
+      }
+
+      & textarea:is(:hover, :focus, :active, :focus-within) {
+        font-weight: 100;
+        border: 1px solid var(--input-border-color);
+        color: var(--input-accent-color);
+      }
+
+      & textarea::placeholder {
+        font-weight: 100;
+        color: var(--input-accent-color);
+      }
+
+      & .info {
+        display: inline-block;
+        position: relative;
+        margin-top: 0.5em;
+        padding: 0 0.25em;
+        font-size: 70%;
+        font-style: italic;
+        /* max-width: 300px; */
+        line-height: 1.2rem;
+        width: 100%;
+      }
+    }
+  }
+}
+
+@starting-style {
+  .form {
+    &:is(.inline),
+    & fieldset:is(.inline-style) {
+      & .field select:open::picker(select) {
+        display: block;
+        opacity: 0;
+        transform: translateY(calc(var(--popup-distance, 4px) * -1)) translateX(-25%) scaleY(0%) scaleX(99.7%);
+        transition-delay: var(--dropdown-transition-delay, 30ms);
+
+        & > .input-popover {
+          &:popover-open {
+            display: block;
+            opacity: 0;
+            transform: translateY(0) translateX(0) scaleY(0%) scaleX(99.7%);
+          }
+        }
+      }
+    }
+  }
+}
+
+.form:is(.multistep) {
+  --input-border-radius: 0.2em;
+  display: flex;
+  flex-direction: column;
+  min-height: var(--form-min-height, 400px);
+  /* border: 1px solid var(--input-border-color); */
+
+  & fieldset {
+    border-radius: unset;
+    transition: all 200ms ease-in-out;
+    animation: scaleUpSlideLeft 0.4s ease-out forwards;
+    min-height: 400px;
+    display: none;
+  }
+  & fieldset.active {
+    padding: 2em 1.5em 2em 1.5em;
+    margin-bottom: 0;
+    margin-right: 0;
+    margin-left: 0;
+    margin-inline: unset;
+    display: block;
+    border: 1px solid var(--input-border-color);
+    border-bottom: none;
+    border-top-left-radius: calc(var(--input-border-radius) * 2);
+    border-top-right-radius: calc(var(--input-border-radius) * 2);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    /* Navigasi menempel di dasar langkah apa pun tinggi isinya */
+  }
+  & .buttons.set {
+    width: 100%;
+    position: relative;
+    padding: 1.5em;
+    border: 1px solid var(--input-border-color);
+    border-top: none;
+    border-bottom-left-radius: calc(var(--input-border-radius) * 2);
+    border-bottom-right-radius: calc(var(--input-border-radius) * 2);
+  }
+
+  & fieldset[animate="next"] {
+    animation: scaleUpSlideLeft 0.4s ease-out forwards;
+  }
+
+  & fieldset[animate="back"] {
+    animation: scaleUpSlideRight 0.4s ease-out forwards;
+  }
+
+  /* Set navigasi (level form) ikut beranimasi — attribute paritas dengan
+     fieldset langkah terkait (data-index + animate dipasang engine multistep) */
+  & > .buttons.set[animate="next"] {
+    animation: scaleUpSlideLeft 0.4s ease-out forwards;
+  }
+
+  & > .buttons.set[animate="back"] {
+    animation: scaleUpSlideRight 0.4s ease-out forwards;
+  }
+}
+
+.form {
+  /* Layout, not a token: it used to ride along inside the input token block. */
+  margin: 0 auto;
+
+  /* Form-level loading spinner. `Form.ts` puts `.loading` on the form element while it
+     submits, and that is form chrome: `input.css` no longer names `.form`, so the rule
+     lives here instead of being inherited from the field layer. Same look as the field
+     spinner (spinner mask, 0.8 × `--input-icon-size`, pinned right). */
+  &.loading:has(input:not([type="checkbox"])) {
+    position: relative;
+
+    &::after {
+      content: "";
+      mask-image: var(--spinner-content);
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      mask-mode: alpha;
+      background-color: var(--input-primary-color);
+      width: calc(var(--input-icon-size) * 0.8);
+      height: calc(var(--input-icon-size) * 0.8);
+      display: block;
+      position: absolute;
+      right: 21px;
+      bottom: calc(var(--input-icon-size) - 0.83em);
+      z-index: 7;
+    }
+  }
+
+  /* Grid Container Button */
+  & .buttons.set {
+    display: flex;
+    justify-self: center;
+    gap: 0.5em;
+    margin-top: auto;
+    padding: 2em 0.5em 1em 0.5em;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    &:has(> :first-child:is(button.next)) {
+      justify-content: flex-end;
+    }
+  }
+  & button:is(.next, .back, .submit) {
+    text-transform: capitalize;
+    display: inline-flex;
+    position: relative;
+    overflow: hidden;
+    justify-self: center;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    font-size: var(--input-font-size);
+    line-height: var(--input-line-height);
+    width: 200px;
+    color: var(--input-text-color);
+    background: transparent;
+    border: 1px solid var(--input-primary-color);
+    border-radius: calc(var(--input-border-radius) * 2);
+    padding: 3px 1em;
+    min-width: 120px;
+    height: max-content;
+    cursor: pointer;
+    text-align: center;
+    vertical-align: middle;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition:
+      background 0.2s ease,
+      transform 0.1s ease;
+
+    & > i.icon {
+      position: absolute;
+      z-index: 1;
+      padding: 5px;
+      width: 17%;
+      height: 20px;
+    }
+
+    &::after {
+      content: "";
+      display: block;
+      position: absolute;
+      width: 17%;
+      height: 100%;
+      top: 0;
+      right: 0;
+      background-color: color-mix(in srgb, var(--input-primary-color) 10%, var(--input-accent-color) 5%);
+      /* border-left: 1px solid var(--input-primary-color); */
+      /* mix-blend-mode: color-burn; */
+    }
+
+    &:is(.back)::after,
+    &:is(.back) i.icon {
+      left: 0;
+    }
+
+    &:is(.next, .submit)::after,
+    &:is(.next, .submit) i.icon {
+      right: 0;
+    }
+
+    &:is(.back) {
+      padding-left: 2em;
+    }
+
+    &:is(.next, .submit) {
+      padding-right: 2em;
+    }
+
+    /* 8. Cascade Gate — tombol next terkunci oleh kondisi kaskade yang belum terpenuhi */
+    &:is(.next):disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      filter: grayscale(0.35);
+    }
+
+    &:is(.back, .next, .submit):hover {
+      background-color: color-mix(in srgb, var(--input-primary-color) 10%, var(--input-accent-color) 5%);
+      color: color-mix(in srgb, grey 30%, var(--input-text-color) 35%);
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  & .link {
+    &:is(.download) {
+      display: inline-block;
+      font-size: calc(var(--input-font-size) / 1.42);
+      text-decoration: none;
+      color: var(--input-text-color);
+      vertical-align: middle;
+      width: max-content;
+      & > i.icon {
+        top: 0;
+        right: 0;
+        width: 24px;
+        height: 24px;
+        margin-left: 5px;
+      }
+    }
+    &:is(.download):hover {
+      color: color-mix(in srgb, grey 30%, var(--input-text-color) 35%);
+    }
+  }
+}
+
+@keyframes scaleUpSlideLeft {
+  0% {
+    opacity: 0;
+    transform: scale(0.98) translateX(150px); /* Mulai dari agak kanan & mengecil */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateX(0); /* Normal di tengah */
+  }
+}
+
+/* Keyframes untuk Back */
+@keyframes scaleUpSlideRight {
+  0% {
+    opacity: 0;
+    transform: scale(0.98) translateX(-150px); /* Mulai dari agak kiri & mengecil */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateX(0); /* Normal di tengah */
+  }
+}
+
+@keyframes fadeInTag {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

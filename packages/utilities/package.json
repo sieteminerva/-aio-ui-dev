@@ -1,0 +1,55 @@
+{
+  "name": "@aio-ui/utilities",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./Metadata": {
+      "development": "./src/Metadata.ts",
+      "types": "./dist/Metadata.d.ts",
+      "default": "./dist/Metadata.js"
+    },
+    "./SelectorToTree": {
+      "development": "./src/SelectorToTree.ts",
+      "types": "./dist/SelectorToTree.d.ts",
+      "default": "./dist/SelectorToTree.js"
+    },
+    "./AttributeUtils": {
+      "development": "./src/AttributeUtils.ts",
+      "types": "./dist/AttributeUtils.d.ts",
+      "default": "./dist/AttributeUtils.js"
+    },
+    "./DomUtils": {
+      "development": "./src/DomUtils.ts",
+      "types": "./dist/DomUtils.d.ts",
+      "default": "./dist/DomUtils.js"
+    },
+    "./color.utils": {
+      "development": "./src/color.utils.ts",
+      "types": "./dist/color.utils.d.ts",
+      "default": "./dist/color.utils.js"
+    },
+    "./helper": {
+      "development": "./src/helper.ts",
+      "types": "./dist/helper.d.ts",
+      "default": "./dist/helper.js"
+    },
+    "./parseTableFile": {
+      "development": "./src/parseTableFile.ts",
+      "types": "./dist/parseTableFile.d.ts",
+      "default": "./dist/parseTableFile.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
+}

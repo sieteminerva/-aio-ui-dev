@@ -1,0 +1,88 @@
+/* Pricing Table Styling */
+
+.card.pricing {
+  text-align: center;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1.3em;
+  background-color: transparent;
+}
+
+.card.pricing:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 48px rgba(91, 63, 134, 0.2);
+}
+
+.card.pricing:not(.is-featured) {
+  border: 2px solid var(--border-soft);
+}
+
+.card.pricing.is-featured {
+  border: 2px solid var(--accent);
+  background: linear-gradient(to bottom, var(--surface-strong), var(--shadow-soft));
+  transform: scale(1.05);
+}
+
+.card.pricing.is-featured:hover {
+  transform: scale(1.05) translateY(-5px);
+}
+
+.card.pricing .header {
+  padding-bottom: 0rem;
+}
+
+.card.pricing .header .eyebrow {
+  font-size: 1.1rem;
+  color: var(--accent);
+  border: none;
+  margin-bottom: 0;
+  letter-spacing: 0.05em;
+}
+
+.card.pricing .divider {
+  border: 0;
+  height: 1px;
+  background: var(--border-soft);
+  margin: 1rem 0;
+}
+
+.card.pricing .body {
+  text-align: center;
+}
+
+.card.pricing .features {
+  margin: 1.5rem 0;
+  list-style: none;
+  padding: 0;
+}
+
+.card.pricing .features li {
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.card.pricing .features li::before {
+  content: "";
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.card.pricing .actions {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+.card.pricing .actions .button {
+  width: 100%;
+}
+
+@media (min-width: 900px) {
+  .column:has(.card.pricing) {
+    padding: 0.4em;
+  }
+}

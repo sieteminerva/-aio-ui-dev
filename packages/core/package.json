@@ -1,0 +1,65 @@
+{
+  "name": "@aio-ui/core",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./interface": {
+      "development": "./src/interface.ts",
+      "types": "./dist/interface.d.ts",
+      "default": "./dist/interface.js"
+    },
+    "./node": {
+      "development": "./src/types/node.ts",
+      "types": "./dist/types/node.d.ts",
+      "default": "./dist/types/node.js"
+    },
+    "./builder": {
+      "development": "./src/types/builder.ts",
+      "types": "./dist/types/builder.d.ts",
+      "default": "./dist/types/builder.js"
+    },
+    "./registry": {
+      "development": "./src/types/registry.ts",
+      "types": "./dist/types/registry.d.ts",
+      "default": "./dist/types/registry.js"
+    },
+    "./events": {
+      "development": "./src/types/events.ts",
+      "types": "./dist/types/events.d.ts",
+      "default": "./dist/types/events.js"
+    },
+    "./content": {
+      "development": "./src/types/content.ts",
+      "types": "./dist/types/content.d.ts",
+      "default": "./dist/types/content.js"
+    },
+    "./page": {
+      "development": "./src/types/page.ts",
+      "types": "./dist/types/page.d.ts",
+      "default": "./dist/types/page.js"
+    },
+    "./renderer": {
+      "development": "./src/types/renderer.ts",
+      "types": "./dist/types/renderer.d.ts",
+      "default": "./dist/types/renderer.js"
+    },
+    "./api": {
+      "development": "./src/types/api.ts",
+      "types": "./dist/types/api.d.ts",
+      "default": "./dist/types/api.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "npm run build"
+  }
+}
