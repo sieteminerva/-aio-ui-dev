@@ -58,8 +58,8 @@ export const galleryScenario = {
                   attrs: { animation: "fade-in" },
                   content: "Setiap anyaman membawa nama pengrajinnya.",
                 },
-                masonry: { builder: "masonry", content: [] },
-                carousel: { builder: "carousel", content: [] },
+                "div#masonry": { builder: "masonry", content: [] },
+                "div#carousel": { builder: "carousel", content: [] },
               },
             },
             "section#about": {

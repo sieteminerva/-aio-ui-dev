@@ -35,7 +35,7 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Generator (`.draft/preset/`, orchestrator)
 
-- [ ] GitHub release workflow: tag → `verify` → `release.mjs` → upload assets.
+- [ ] GitHub release workflow: tag → `verify` → `release.mjs` → `publish-cdn.mjs` → upload assets.
 - [ ] Verify `npm i <tarball>` from a clean folder (bundler project) and a Node ESM import.
 - [ ] Feed `parsePreset()`/`parseAiContent()` issues back to the model verbatim (retry loop).
 - [ ] Regenerate `layout.json` inside the release workflow so the map cannot describe a moved package.
@@ -43,7 +43,6 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 ## Examples — manual model references (official release gate)
 
 - [ ] `profile` reference: home, services, contact, portfolio.
-- [ ] `store` reference: catalog, product, cart, checkout (extends `.archives/wizard.ts`).
 - [ ] `blog` reference: home, post list, post, about.
 - [ ] Document each reference's boundaries: capabilities it proves and avoids.
 

@@ -72,6 +72,15 @@ describe("parsePreset — shape", () => {
     });
     expect(issues.map((issue) => issue.code)).toContain("DUPLICATE_ROUTE");
   });
+
+  it("rejects a builder word used as the host key", () => {
+    const { issues } = parsePreset({
+      ...galleryPreset,
+      pages: [{ id: "home", route: "/", content: { masonry: { builder: "masonry", content: [] } } }],
+    });
+    expect(issues.map((issue) => issue.code)).toContain("INVALID_SHAPE");
+    expect(issues.map((issue) => issue.detail).join(" ")).toMatch(/repeats the builder name/);
+  });
 });
 
 describe("parsePreset — closed vocabulary", () => {
@@ -111,7 +120,7 @@ describe("parsePreset — closed vocabulary", () => {
           id: "home",
           route: "/",
           content: {
-            form: {
+            "div#form": {
               builder: "form",
               content: { config: { id: "f" }, schema: [{ type: "search", id: "q", label: "Cari" }] },
             },
@@ -145,7 +154,7 @@ describe("parsePreset — closed vocabulary", () => {
   it("rejects a form node with no schema and no field array", () => {
     const { issues } = parsePreset({
       ...galleryPreset,
-      pages: [{ id: "home", route: "/", content: { form: { builder: "form", content: "hi" } } }],
+      pages: [{ id: "home", route: "/", content: { "div#form": { builder: "form", content: "hi" } } }],
     });
     expect(issues[0].code).toBe("FORM_SHAPE");
   });

@@ -30,6 +30,7 @@ npm run verify         # the full gate — run before claiming anything works
 | Version report / check                       | `npm run version:report` · `npm run version:check`        |
 | Bump all packages                            | `node scripts/version.mjs --apply --version 0.1.1`        |
 | Release artefacts (local, dry-run first)     | `node scripts/release.mjs --version 0.1.1`                |
+| Publish CDN tree + move the version tag      | `node scripts/publish-cdn.mjs --apply`                    |
 
 ## Repository structure
 
@@ -134,15 +135,14 @@ Ignored, local-only working areas:
 
 ## Status snapshot
 
-Working: 37 packages build and are tested (427 tests, 98 of them the draft generator suite),
+Working: 37 packages build and are tested (428 tests, 100 of them the draft generator suite),
 the form family (module registry,
 messages, animations, address adapters) runs, the generator produces real files
-(`.draft/results/`), versioning is fixed at `0.1.0`, the release folder is regenerated at 37
-packages with verified checksums, and both generated sites load from that release layout with a
-clean console.
+(`.draft/results/`), versioning is fixed at `0.1.0`, and **tag `v0.1.0` is live** on
+`sieteminerva/-aio-ui-dev`: jsDelivr serves every import-map URL from the `cdn` branch, and both
+generated sites paint from that tag with a clean console.
 
-Open: publishing the `v0.1.0` pre-release tag to `sieteminerva/-aio-ui-dev` (assets are ready in
-`.draft/release/v0.1.0`), and the hosting choice (GitHub Pages vs Cloudflare Pages). The
-**official** release waits until all four webapp models exist as manual references — `gallery`
-does, `profile` / `store` / `blog` do not. Details live in `.guidance/RAJUTAN.md` §9 and
-`.guidance/plan.md` §3.10.
+Open: the **official** release waits until all four webapp models exist as manual references —
+`gallery` does, `store` / `profile` / `blog` do not. Generated-site hosting (GitHub Pages vs
+Cloudflare Pages) is still open; it does not change the preset contract. Details live in
+`.guidance/RAJUTAN.md` §9 and `.guidance/plan.md` §3.10.

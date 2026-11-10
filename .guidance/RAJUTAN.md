@@ -48,7 +48,7 @@ The AI never names a package, and generated sites never need a build step.
 | Template spreadsheet | one master file, duplicated per site                       | schemas managed by `TableBuilderService`                   |
 | Gemini               | `gemini-2.5-flash`, `temperature 0.2`, JSON output         | prompt: `.draft/preset/prompt.content.md`                  |
 | Drive                | temporary custody of the duplicate                         | ownership transferred to the client, then detached         |
-| GitHub               | one repo per site from a template; releases hold artefacts | framework releases: `sieteminerva/-aio-ui-dev`               |
+| GitHub               | one repo per site from a template; releases hold artefacts | framework releases: `sieteminerva/-aio-ui-dev`             |
 | Hosting              | GitHub Pages atau Cloudflare Pages (belum diputuskan)      | build-free: lima file statis per situs                     |
 | Actions (opsional)   | build dari `dev/` untuk klien yang meminta source          | bukan jalur kritis; tidak dipakai oleh generator           |
 | CDN                  | jsDelivr `gh` paths or the release folder                  | assets immutable per tag                                   |
@@ -208,8 +208,12 @@ node scripts/version.mjs --apply --version 0.1.1
 node scripts/release.mjs --version 0.1.1             # dry run
 node scripts/release.mjs --version 0.1.1 --apply     # artefacts in .draft/release
 node .draft/preset/layout.mjs --out .draft/preset/layout.json
-npx vitest run .draft/preset       # generator suite (98 tests)
+npx vitest run .draft/preset       # generator suite (100 tests, 1 opt-in skipped)
 npx tsc -p .draft/preset/tsconfig.json
+node scripts/publish-cdn.mjs --apply   # tarballs → cdn branch; moves the version tag
+SMOKE_BASE=https://cdn.jsdelivr.net/gh/<owner>/<repo>@v<version>/ \
+  npx vitest run .draft/preset/release.test.ts   # writes .draft/cdn-smoke/
+node .draft/smoke/serve.mjs 5300   # then open /.draft/cdn-smoke/store/#checkout
 cd .draft/results/gallery-static_v1/dev && npx vite --port 5199
 ```
 
@@ -223,44 +227,45 @@ cd .draft/results/gallery-static_v1/dev && npx vite --port 5199
   Inquirer CLI.
 - 37 packages build (`dist` + `.d.ts` + CSS), `dist` exported conditionally.
 - Form family: module registry, messages config, animations contract, address adapters.
-- Generator: parse → assemble → plan → emit → runtime → **physical files**, with 98 tests.
-- Semver fixed at `0.1.0`; peers rewritten; version check wired into `verify`.
-- Release artefacts regenerated: **37 tarballs** + `registry.json` + `layout.json` + `checksums.txt`
-  (37/37 checksums verified; the three kits are included).
-- Build-free proven from the **release layout**, not just `dev/`: both generated sites load
-  `@aio-ui/*` through the import map with a clean console (form = 1 fieldset + 3 fields;
-  gallery masonry = 4 children, carousel = 1).
+- Generator: parse → assemble → plan → emit → runtime → **physical files**, with 100 tests
+  (99 run, 1 opt-in CDN smoke).
+- Semver fixed at `0.1.0`; peers checked by `version:check` inside `verify`.
+- **Tag `v0.1.0` published** on `sieteminerva/-aio-ui-dev` (pre-release) with 40 assets. The tag
+  points at the orphan `cdn` branch: `scripts/publish-cdn.mjs` unpacks the 37 tarballs there, so
+  jsDelivr serves every import-map URL while `main` stays source-only.
+- **Real-CDN smoke passed**: both generated sites load `@aio-ui/*` from jsDelivr with a clean
+  console (store form = 1 fieldset + 3 fields; gallery masonry = 4, carousel = 1, hosts
+  `div#masonry`/`div#carousel`).
 - Build-free is the primary delivery: five static files per site, framework served from the
   pinned CDN tag; `dev/` stays as the opt-in source hand-over.
 
 **Known gaps**
 
-1. **The tag is not published yet** — the generated import map points at
-   `cdn.jsdelivr.net/gh/…@v0.1.0`; the local smoke test rewrites the base to the release folder.
-2. **Node ESM clean install** is untested. Emitted JS now names `.js` explicitly and drops CSS
+1. **Node ESM clean install** is untested. Emitted JS now names `.js` explicitly and drops CSS
    side-effect imports, so the old extensionless limitation is gone; a clean `npm i` is still
    the proof.
-3. **`npm i <tarball>` from a clean folder** not yet proven in this environment; verify
-   with a bundler project when the first tag exists.
-4. **`layout.json` freshness** is manual until the release workflow regenerates it; the current
+2. **`npm i <tarball>` from a clean folder** not yet proven in this environment; verify
+   with a bundler project now that the tag exists.
+3. **`layout.json` freshness** is manual until the release workflow regenerates it; the current
    folder is fresh at 37 packages.
+4. **Official release** still waits for four manual model references (§3.5).
 
 ## 10. Roadmap
 
-| Stage               | Deliverable                                                                                 | Gate                           |
-| ------------------- | ------------------------------------------------------------------------------------------- | ------------------------------ |
-| A. Contract freeze  | preset + AI + derivation tables                                                             | ✅ done                        |
-| B. Preset engine    | plan / parse / ai / emit / runtime / generate                                               | ✅ done (draft)                |
-| C. Generator wiring | orchestrator returns `data.preset`; wizard renders `preset.pages`                           | demo renders a preset page     |
-| D. Delivery         | semver ✅, release artefacts ✅ (37, verified), **release workflow**, CDN import-map target | one tag installable two ways   |
-| E. Hardening        | docs sync, builder mount fix, IdAddress payload naming, multistep messages                  | `verify` green                 |
-| F. Optional         | per-feature packages if a consumer needs one behaviour alone                                | install without `@aio-ui/form` |
+| Stage               | Deliverable                                                                | Gate                            |
+| ------------------- | -------------------------------------------------------------------------- | ------------------------------- |
+| A. Contract freeze  | preset + AI + derivation tables                                            | ✅ done                         |
+| B. Preset engine    | plan / parse / ai / emit / runtime / generate                              | ✅ done (draft)                 |
+| C. Generator wiring | orchestrator returns `data.preset`; wizard renders `preset.pages`          | demo renders a preset page      |
+| D. Delivery         | semver ✅, artefacts ✅, tag ✅ (cdn branch), **release workflow**         | one tag installable two ways ✅ |
+| E. Hardening        | docs sync, builder mount fix, IdAddress payload naming, multistep messages | `verify` green                  |
+| F. Optional         | per-feature packages if a consumer needs one behaviour alone               | install without `@aio-ui/form`  |
 
 Next three tasks, in order:
 
-1. Push tag `v0.1.0` (pre-release) and upload `.draft/release/v0.1.0` as its assets.
-2. Re-run the build-free smoke test from the real CDN tag (the local run is already green).
-3. Build the missing manual model references (profile, store, blog) — the official release gate.
+1. Build the `store` manual reference (catalog, product, cart, checkout) — the first missing model.
+2. Build `profile` and `blog` references, then document each model's boundaries.
+3. Automate the release: tag → `verify` → `release.mjs` → `publish-cdn.mjs` → upload assets.
 
 > **Release policy.** Test tags are allowed after `npm run verify` and may be regenerated.
 > An **official** release happens only when all four models (§3.5) exist as manual, browser-

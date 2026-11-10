@@ -28,8 +28,8 @@ export const galleryPreset: iWebPreset = {
               attrs: { animation: "typewriter", "animation-chain": "true" },
               content: "Kriya Nusantara",
             },
-            masonry: { builder: "masonry", content: [] },
-            carousel: { builder: "carousel", content: [] },
+            "div#masonry": { builder: "masonry", content: [] },
+            "div#carousel": { builder: "carousel", content: [] },
           },
         },
         "section#about": {
@@ -59,7 +59,7 @@ export const storePreset: iWebPreset = {
       id: "catalog",
       route: "/produk",
       content: {
-        grid: {
+        "section.catalog": {
           content: {
             "div#catalog-grid": { builder: "product-card-grid", content: [] },
           },
@@ -70,7 +70,7 @@ export const storePreset: iWebPreset = {
       id: "checkout",
       route: "/checkout",
       content: {
-        form: {
+        "div#checkout-form": {
           builder: "form",
           content: {
             config: {

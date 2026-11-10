@@ -86,14 +86,13 @@ Decided direction: **GitHub as the only origin**, two doors from one build.
   `version:check` runs inside `verify`. Undo with `git restore packages package.json`.
 - 1.2.2 **Release pipeline.** ✅ local half: `scripts/release.mjs` writes 37 tarballs +
   `registry.json` + `layout.json` + `checksums.txt` into `.draft/release/v<ver>/`
-  (dry-run by default). The `v0.1.0` folder is regenerated at 37 packages and verified by
-  `.draft/preset/release.test.ts` (counts, subpaths, checksums). ⏳ GitHub Actions on tag still
-  to write; it uploads that folder.
-- 1.2.3 **Import-map build target** for the generator: an ESM build whose CSS imports are
-  stripped, so a page can be served with an import map plus `<link rel="stylesheet">` from the
-  asset map. The build half landed 2026-11-11: emitted JS names `.js` and drops CSS side-effect
-  imports, and the release layout carries each package's real `exports` subpaths. What remains is
-  the published tag.
+  (dry-run by default), verified by `.draft/preset/release.test.ts`. ✅ **Published:** tag
+  `v0.1.0` on `sieteminerva/-aio-ui-dev` points at the orphan `cdn` branch built by
+  `scripts/publish-cdn.mjs` (it unpacks the tarballs so jsDelivr serves the import map); 40
+  release assets uploaded. ⏳ GitHub Actions on tag still to write.
+- 1.2.3 **Import-map build target.** ✅ Delivered 2026-11-11: emitted JS names `.js`, drops CSS
+  side-effect imports, the layout carries real `exports` subpaths (CSS prefers `dist/`), and the
+  tag resolves on jsDelivr. Real-CDN smoke is green for both generated sites.
 - 1.2.4 **Host asset maps generated, not hand-written.** One entry per manifest `path` today;
   `ComponentRegistry.loadModule` only warns when missing, so a typo silently falls back to the
   built-in preset. Derive loaders from `import.meta.glob` or generate a virtual module.
@@ -119,10 +118,11 @@ Decided direction: **GitHub as the only origin**, two doors from one build.
 
 ### 1.4 Order here
 
-1. **Test tag** (1.2.2) — `v0.1.0` sebagai pre-release: `verify` → `release.mjs` → upload, untuk
-   membuktikan import map build-free di tag nyata. Artefak boleh diregenerasi bebas.
+1. **Test tag** ✅ (1.2.2) — `v0.1.0` published (tag on the `cdn` branch) dan CDN import map
+   terbukti di browser. Berikutnya: otomatiskan langkah yang sama di GitHub Actions.
    **Official release** menunggu empat referensi model manual (§3.5, §3.10).
-2. **Docs batch** (1.1.1) — field types, dead code, `Form.css`, empty `ARCHITECTURE.MD`.
+2. **Model references** — `store`, `profile`, `blog` (§3.5); the official-release gate.
+3. **Docs batch** (1.1.1) — field types, dead code, `Form.css`, empty `ARCHITECTURE.MD`.
 
 ## 2. Project: gallery — `examples/gallery` (profile model)
 
@@ -294,7 +294,7 @@ table), `plan.ts` (`plan`/`assetsOf` → modules, bindings, moduleRefs, assets),
 (`{ links, importMap, table, bindings, moduleRefs }` + `createCdnResolver` + prefix map), `runtime.ts`
 (`index.html` + `app.js`, build-free), `layout.mjs` → `layout.json` (37 packages) and
 `prompt.content.md` (whose builder list a test keeps in lockstep with the catalogue).
-98 draft tests; whole suite 427/46. `.draft/results/` now holds two generated sites
+100 draft tests (99 run + 1 opt-in CDN smoke); whole suite 428/46 (+1 skipped). `.draft/results/` now holds two generated sites
 (`gallery-static_v1`, `store-dynamic_v1`), each with `preset.json`, `index.html`, `app.js`,
 `server/adapter.json` and `FLOW.md`. The `dev/` copies run in a browser; on 2026-11-11 the
 emitted runtime gained a mount pass (`onCreated` → `build`) and module refs now carry their
@@ -371,21 +371,28 @@ work (stage D) is what makes it possible. The former item 1 (mount builders) lan
 
 #### Release validation (2026-11-11)
 
-Building the 37-package folder exposed three defects unit tests could not see; all fixed:
+Building the 37-package folder exposed five defects unit tests could not see; all fixed:
 
 1. The emitted import map had no `"imports"` wrapper, so browsers ignored it entirely.
 2. Subpath URLs were derived from the specifier instead of the package's `exports`
    (`dropdown/module` pointed at a file that does not exist).
 3. The build's extension pass treated a dotted basename (`Input.FormAdapter`) as already
    extensioned, so no `.js` was added and the browser 404'd.
+4. A builder word used as the node key (`masonry`, `carousel`) produced custom elements
+   (`<masonry>`). The key must be a real tag; `parsePreset()` now rejects that shape and the AI
+   prompt states the rule.
+5. A CSS export (`animations/Animations.css`) pointed at a root source file that is not packed;
+   subpath mapping now prefers `dist/` for CSS.
 
 The guard is `.draft/preset/release.test.ts`: registry counts, every subpath/tarball/checksum,
-every import-map URL on disk, and every reachable bare import has an exact key. The local smoke
-(`.draft/smoke/serve.mjs`) serves the release layout, and both sites paint with a clean console.
+every import-map URL on disk, and every reachable bare import has an exact key. `.draft/smoke/serve.mjs`
+plus `SMOKE_BASE=<cdn>` runs the same sites against the real tag; both paint with a clean console,
+styles included. `vitest` excludes the generated trees (`cdn-tree`, `cdn-smoke`, `smoke`).
 
 ## 4. Verification gate (all projects)
 
 `npm run verify` = `build:pkgs` (37 packages, dependency-ordered, `dist` + `.d.ts` + copied
-CSS) → typecheck → `check:bounds` → `test` → examples build. Current: **427 tests / 46 files**,
+CSS) → typecheck → `check:bounds` → `test` → examples build. Current: **428 tests / 46 files**
+(+1 opt-in CDN smoke skipped),
 boundaries clean, both builds green. Browser claims are measured (`getBoundingClientRect`,
 `getComputedStyle`, DOM counts), not eyeballed.

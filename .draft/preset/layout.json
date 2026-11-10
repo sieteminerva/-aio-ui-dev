@@ -69,7 +69,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Accordion.css": "Accordion.css"
+      "./Accordion.css": "dist/Accordion.css"
     }
   },
   "@aio-ui/article": {
@@ -78,7 +78,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Article.css": "Article.css"
+      "./Article.css": "dist/Article.css"
     }
   },
   "@aio-ui/badge": {
@@ -87,7 +87,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Badge.css": "Badge.css"
+      "./Badge.css": "dist/Badge.css"
     }
   },
   "@aio-ui/carousel": {
@@ -96,7 +96,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Carousel.css": "Carousel.css"
+      "./Carousel.css": "dist/Carousel.css"
     }
   },
   "@aio-ui/fabmenu": {
@@ -105,7 +105,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./FabMenu.css": "FabMenu.css"
+      "./FabMenu.css": "dist/FabMenu.css"
     }
   },
   "@aio-ui/footer": {
@@ -114,7 +114,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Footer.css": "Footer.css"
+      "./Footer.css": "dist/Footer.css"
     }
   },
   "@aio-ui/form": {
@@ -123,7 +123,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Form.css": "Form.css",
+      "./Form.css": "dist/Form.css",
       "./FormLayout": "dist/FormLayout.js",
       "./FormMessages": "dist/FormMessages.js",
       "./FormModuleTypes": "dist/FormModuleTypes.js",
@@ -146,7 +146,7 @@
       "./adapter.base": "dist/id-address-adapter.base.js",
       "./adapter.aio": "dist/id-address-adapter.aio.js",
       "./form": "dist/IdAddress.FormAdapter.js",
-      "./id-address.css": "id-address.css"
+      "./id-address.css": "dist/id-address.css"
     }
   },
   "@aio-ui/input": {
@@ -162,16 +162,16 @@
       "./FormValues": "dist/FormValues.js",
       "./CalculationTypes": "dist/CalculationTypes.js",
       "./dropdown": "dist/Dropdown/Dropdown.js",
-      "./dropdown.css": "Dropdown/Dropdown.css",
+      "./dropdown.css": "dist/Dropdown/Dropdown.css",
       "./file-uploader": "dist/FileUploader/FileUploader.js",
-      "./file-uploader.css": "FileUploader/FileUploader.css",
+      "./file-uploader.css": "dist/FileUploader/FileUploader.css",
       "./controls": "dist/InputControls/InputControls.js",
-      "./controls.css": "InputControls/inputControls.css",
+      "./controls.css": "dist/InputControls/inputControls.css",
       "./dropdown/module": "dist/Dropdown/Dropdown.InputModule.js",
       "./file-uploader/module": "dist/FileUploader/FileUploader.InputModule.js",
       "./controls/module": "dist/InputControls/InputControls.InputModule.js",
       "./popover/module": "dist/Popover.InputModule.js",
-      "./input.css": "input.css"
+      "./input.css": "dist/input.css"
     }
   },
   "@aio-ui/masonry": {
@@ -180,7 +180,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Masonry.css": "Masonry.css"
+      "./Masonry.css": "dist/Masonry.css"
     }
   },
   "@aio-ui/menu": {
@@ -189,7 +189,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Menu.css": "Menu.css"
+      "./Menu.css": "dist/Menu.css"
     }
   },
   "@aio-ui/message": {
@@ -198,7 +198,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Message.css": "Message.css",
+      "./Message.css": "dist/Message.css",
       "./adapters/FormAdapter": "dist/adapters/FormAdapter.js"
     }
   },
@@ -208,7 +208,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Modal.css": "Modal.css"
+      "./Modal.css": "dist/Modal.css"
     }
   },
   "@aio-ui/modeswitcher": {
@@ -217,7 +217,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./ModeSwitcher.css": "ModeSwitcher.css"
+      "./ModeSwitcher.css": "dist/ModeSwitcher.css"
     }
   },
   "@aio-ui/pricingcard": {
@@ -226,7 +226,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./PricingCard.css": "PricingCard.css"
+      "./PricingCard.css": "dist/PricingCard.css"
     }
   },
   "@aio-ui/product": {
@@ -235,9 +235,9 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./ProductCard.css": "ProductCard.css",
-      "./ProductDetail.css": "ProductDetail.css",
-      "./ProductGrid.css": "ProductGrid.css"
+      "./ProductCard.css": "dist/ProductCard.css",
+      "./ProductDetail.css": "dist/ProductDetail.css",
+      "./ProductGrid.css": "dist/ProductGrid.css"
     }
   },
   "@aio-ui/rating": {
@@ -246,7 +246,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Rating.css": "Rating.css"
+      "./Rating.css": "dist/Rating.css"
     }
   },
   "@aio-ui/section": {
@@ -255,7 +255,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Section.css": "Section.css"
+      "./Section.css": "dist/Section.css"
     }
   },
   "@aio-ui/tab": {
@@ -264,7 +264,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Tab.css": "Tab.css"
+      "./Tab.css": "dist/Tab.css"
     }
   },
   "@aio-ui/table": {
@@ -273,7 +273,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Table.css": "Table.css",
+      "./Table.css": "dist/Table.css",
       "./adapters/FormAdapter": "dist/adapters/FormAdapter.js"
     }
   },
@@ -283,7 +283,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./Animations.css": "Animations.css",
+      "./Animations.css": "dist/Animations.css",
       "./behaviours": "dist/behaviours/registry.js",
       "./behaviours/*": "dist/behaviours/*.js",
       "./canvas/*": "dist/canvas/*.js"
@@ -335,7 +335,7 @@
     "stylesRoot": "dist",
     "subpaths": {
       ".": "dist/index.js",
-      "./CyberpunkTheme.css": "src/CyberpunkTheme.css"
+      "./CyberpunkTheme.css": "dist/src/CyberpunkTheme.css"
     }
   },
   "@aio-ui/theme-default": {

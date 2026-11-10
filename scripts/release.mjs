@@ -114,14 +114,22 @@ function fileOf(value) {
 }
 
 /** `./Form` → `dist/Form.js`; `./Form.css` → `dist/Form.css`; `.` → root entry. */
-function subpathsOf(manifest) {
+function subpathsOf(manifest, dir) {
   const map = {};
   const exportsMap = manifest.exports ?? {};
 
   for (const [key, value] of Object.entries(exportsMap)) {
     const file = fileOf(value);
     if (!file) continue;
-    map[key === "." ? "." : key] = file.replace(/^\.\//, "");
+    let target = file.replace(/^\.\//, "");
+    // CSS always ships under `dist/` (the build copies sheets there); a source
+    // file at the package root is not part of the tarball.
+    if (target.endsWith(".css") && existsSync(join(dir, "dist", target))) {
+      target = `dist/${target}`;
+    } else if (!existsSync(join(dir, target)) && existsSync(join(dir, "dist", target))) {
+      target = `dist/${target}`;
+    }
+    map[key === "." ? "." : key] = target;
   }
   return map;
 }
@@ -167,7 +175,7 @@ for (const entry of packages) {
   const sha256 = createHash("sha256").update(readFileSync(tarballPath)).digest("hex");
   checksums.push(`${sha256}  ${packed.filename}`);
 
-  const subpaths = subpathsOf(entry.manifest);
+  const subpaths = subpathsOf(entry.manifest, entry.dir);
   registry.packages[name] = {
     dir,
     subpaths,

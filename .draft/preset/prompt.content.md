@@ -83,6 +83,15 @@ Content is a tree. Two node shapes are allowed, and they may be mixed.
 A node may have: `content` (string, node, or array of nodes), `attrs`
 (string→string), `builder` + `content`, `id`, `className`.
 
+**The key is always a real HTML tag** (`div`, `section`, `main`, `ul`, …), never
+the builder word. A builder node is a host: the renderer creates that element and
+mounts the component inside it. `"masonry": { "builder": "masonry" }` produces a
+`<masonry>` custom element with no styles; write `"div#masonry"` instead.
+
+```json
+{ "div#masonry": { "builder": "masonry", "content": [] } }
+```
+
 ### ALLOWED BUILDERS
 
 Use a `builder` only from this list. Any other word is rejected by validation.
@@ -124,7 +133,7 @@ A form is a builder node with `{ config, schema }`:
 
 ```json
 {
-  "form": {
+  "div#contact-form": {
     "builder": "form",
     "content": {
       "config": { "id": "contact", "multistep": false },
@@ -156,7 +165,7 @@ A form is a builder node with `{ config, schema }`:
 ### DATA BINDING
 
 If INPUT has `data[]`, reference only those ids, e.g.
-`{ "product-card-grid": { "builder": "product-card-grid", "content": [] } }`
+`{ "div#product-grid": { "builder": "product-card-grid", "content": [] } }`
 and let the runtime fill it from the sheet named `products`. If the list is
 empty, write static content instead of referencing data.
 
@@ -180,10 +189,11 @@ Routes may be fewer, never more; the model recipe is the maximum.
 
 1. Is it valid JSON with `contentSchema: 1` and `pages`?
 2. Does every `builder` appear in ALLOWED BUILDERS?
-3. Does every form `type` appear in FORM RULES?
-4. Are all routes unique and starting with `/`?
-5. Did you avoid package names, CSS, `<script>`, and inline JS?
-6. Is every sentence free of placeholders?
+3. Is every builder node's key a real HTML tag (never the builder word)?
+4. Does every form `type` appear in FORM RULES?
+5. Are all routes unique and starting with `/`?
+6. Did you avoid package names, CSS, `<script>`, and inline JS?
+7. Is every sentence free of placeholders?
 
 If a check fails, fix it before answering.
 

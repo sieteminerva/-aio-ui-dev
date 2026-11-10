@@ -307,7 +307,7 @@ function inspectContent(content: unknown, where: string, inspector: ContentInspe
     // Generated content must therefore use `div#id` + `builder`, never a
     // component name as the key.
     if (isRecord(value) || Array.isArray(value)) {
-      const hint = selectorKeyIssue(key);
+      const hint = selectorKeyIssue(key, value);
       if (hint) inspector.report("INVALID_SHAPE", hint, `${where}.${key}`);
     }
 
@@ -316,17 +316,31 @@ function inspectContent(content: unknown, where: string, inspector: ContentInspe
 }
 
 /**
- * Detects a selector key the renderer cannot turn into a tag name.
+ * Detects a selector key the renderer cannot turn into a usable tag name.
  *
- * @param key - Object key from a content node (`section#hero`, `.page`, `product-card-grid`).
+ * A builder node is a **host**: the renderer creates the key's element and the
+ * builder's output is mounted inside. Using the builder word as the key makes a
+ * custom element (`<masonry>`, `<carousel>`) that no stylesheet targets.
+ *
+ * @param key - Object key from a content node (`section#hero`, `.page`, `masonry`).
+ * @param value - The node the key points at, so the builder name can be compared.
  * @returns A human explanation when invalid, otherwise null.
  */
-function selectorKeyIssue(key: string): string | null {
+function selectorKeyIssue(key: string, value?: unknown): string | null {
   const last = key.split(">").pop() ?? key;
   const clean = last.replace(/\[[^\]]*\]/g, "");
   const base = clean.split(/[#.]/)[0];
+  if (!base) return null;
 
-  if (!base || !base.includes("-")) return null;
+  const builder = isRecord(value) && typeof value.builder === "string" ? value.builder : null;
+  if (builder && base === builder) {
+    return (
+      `Key "${key}" repeats the builder name: the renderer would create a <${base}> element. ` +
+      `Use a real tag as the key, e.g. "div#${base}", keeping "builder": "${base}".`
+    );
+  }
+
+  if (!base.includes("-")) return null;
 
   return (
     `Key "${key}" looks like a component name: the renderer would use "${base.replace(/-/g, " ")}" as the tag. ` +

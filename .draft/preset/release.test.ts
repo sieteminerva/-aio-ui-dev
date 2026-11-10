@@ -177,4 +177,27 @@ describe.skipIf(!available)("release artefacts", () => {
     expect(existsSync(join(out, "gallery", "index.html"))).toBe(true);
     expect(existsSync(join(out, "store", "app.js"))).toBe(true);
   });
+
+  // The real gate: assets come from the published tag, not the repo mirror.
+  // Run with SMOKE_BASE=https://cdn.jsdelivr.net/gh/<owner>/<repo>@v<version>/.
+  const cdnBase = process.env.SMOKE_BASE;
+  it.skipIf(!cdnBase)("writes a copy that loads from the tagged CDN", () => {
+    const resolver = createCdnResolver({ base: cdnBase!, layout });
+    const out = join(ROOT, ".draft", "cdn-smoke");
+
+    for (const [label, preset] of [
+      ["gallery", galleryScenario.preset],
+      ["store", storeScenario.preset],
+    ] as const) {
+      rmSync(join(out, label), { recursive: true, force: true });
+      const generated = generateSite({ preset, resolver });
+      for (const [file, content] of Object.entries(generated.files)) {
+        const target = join(out, label, file);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, content, "utf8");
+      }
+    }
+
+    expect(existsSync(join(out, "store", "index.html"))).toBe(true);
+  });
 });

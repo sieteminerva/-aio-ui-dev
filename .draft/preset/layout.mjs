@@ -17,7 +17,7 @@
  * `entry` is read from the package's own `exports["."].default`, so it always
  * matches what that package actually publishes.
  */
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const ROOT = process.cwd();
@@ -80,7 +80,16 @@ function readPackage(dir) {
   const subpaths = {};
   for (const [key, value] of Object.entries(exportsMap)) {
     const file = fileOf(value);
-    if (typeof file === "string") subpaths[key] = file.replace(/^\.\//, "");
+    if (typeof file !== "string") continue;
+    let target = file.replace(/^\.\//, "");
+    // CSS always ships under `dist/`; a root sheet is a source file, not the
+    // published one.
+    if (target.endsWith(".css") && existsSync(join(dir, "dist", target))) {
+      target = `dist/${target}`;
+    } else if (!existsSync(join(dir, target)) && existsSync(join(dir, "dist", target))) {
+      target = `dist/${target}`;
+    }
+    subpaths[key] = target;
   }
 
   // Prefer the root export; scaffolded components only declare a named one

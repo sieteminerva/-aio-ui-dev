@@ -23,7 +23,7 @@ sibling orchestrator project) without rewriting it.
 | `prompt.content.md` | Gemini prompt; its builder list is locked to the catalogue by a test                                     |
 | `fixtures.ts`       | two hand-written presets used by plan/emit tests                                                         |
 | `release.test.ts`   | checks the release folder: 37 packages, subpaths, checksums, closed import map; writes `.draft/smoke/`   |
-| `*.test.ts`         | 98 tests across plan, parse, ai, emit, runtime, generate, prompt, release                                |
+| `*.test.ts`         | 100 tests across plan, parse, ai, emit, runtime, generate, prompt, release (1 opt-in)                    |
 
 ## Run
 
@@ -32,6 +32,7 @@ npx vitest run .draft/preset        # tests (wired into the root vitest config)
 npx tsc -p .draft/preset/tsconfig.json   # isolated typecheck
 node .draft/smoke/serve.mjs 5300    # serve the repo root for the release smoke test
 # then open http://localhost:5300/.draft/smoke/store/#checkout
+node scripts/publish-cdn.mjs --apply   # tarballs → cdn branch, move the version tag
 ```
 
 ## Rules encoded here
@@ -57,6 +58,9 @@ node .draft/smoke/serve.mjs 5300    # serve the repo root for the release smoke 
    import nothing from `node:*`, never call `fetch`, and never read the filesystem: they take
    data and return a file map. Only tests may use `node:fs`. This is what lets the orchestrator
    bundle the engine itself (§3.10 in `plan.md`).
+8. **A builder node's key is a real tag.** The renderer creates that element and mounts the
+   component inside it; `"masonry": { "builder": "masonry" }` yields a `<masonry>` custom
+   element. Write `"div#masonry"`. `parsePreset()` rejects the builder-as-key shape.
 
 ## Physical output
 
@@ -127,17 +131,23 @@ Probed on both `dev/` copies: `#checkout-form` = form + 1 fieldset + 3 fields; g
 
 ## Release smoke (2026-11-11)
 
-`release.test.ts` checks the artefacts themselves. Building them found three defects that only a
+`release.test.ts` checks the artefacts themselves. Building them found five defects that only a
 real browser could expose:
 
 1. the import map was serialised **without** its `"imports"` wrapper, so browsers ignored it;
 2. subpath URLs were guessed from the specifier instead of read from the package's `exports`;
-3. the extension pass treated `Input.FormAdapter` as already extensioned, so no `.js` was added.
+3. the extension pass treated `Input.FormAdapter` as already extensioned, so no `.js` was added;
+4. a builder word used as the node key (`masonry`, `carousel`) produced custom elements:
+   the key must be a real tag (`div#masonry`), now enforced by `parsePreset()` and the prompt;
+5. a CSS export pointed at a root source file that is not packed — subpaths now prefer `dist/`.
 
-All three are fixed and guarded mechanically: every URL in the map must exist on disk, and every
-bare import reachable from a mapped module must have an exact key. `serve.mjs` serves the repo
-root so `http://localhost:5300/packages/...` is real; both sites paint from the **release layout**
-with a clean console.
+All five are fixed and guarded mechanically: every URL in the map must exist on disk, and every
+bare import reachable from a mapped module must have an exact key.
+
+**Published:** tag `v0.1.0` on `sieteminerva/-aio-ui-dev` points at the orphan `cdn` branch built
+by `scripts/publish-cdn.mjs`; jsDelivr serves the import map. `SMOKE_BASE=<cdn>` writes
+`.draft/cdn-smoke/`, and both sites paint from the real tag with a clean console (store form =
+1 fieldset + 3 fields; gallery masonry = 4, carousel = 1, hosts `div#masonry`/`div#carousel`).
 
 ## The AI contract in one line
 
@@ -147,9 +157,8 @@ facts the orchestrator owns, and `assemblePreset()` merges the two halves.
 
 ## Next (not here yet)
 
-- **Browser smoke test**: `runtime.ts` output is asserted structurally but has
-  not been served from a real CDN tag yet. Needs stage D (release + `registry.json`).
 - **Retry loop**: feed `parsePreset()`/`parseAiContent()` issues back to the
   model verbatim (the prompt's SELF-CHECK is the human-readable half).
+- **`npm i <tarball>` + Node ESM**: verify a clean install with the published tag.
 - **`layout.json` freshness**: regenerate in the release workflow (or assert it
   matches the workspace) so the map cannot describe a package that moved.
