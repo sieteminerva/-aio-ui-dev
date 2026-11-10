@@ -75,6 +75,9 @@ Conventions that must not drift:
 - **Tokens at `:root`**, themes put `--app-*` on `body[data-theme]`.
 - **Boundaries are mechanical**: `npm run check:bounds` fails on an undeclared edge.
 - **Messages are data**: `iFormConfig.messages` (`category` → `slot` → `code`).
+- **Builder node = host; `isRoot` = proposed replacement.** Default: the key is a real tag and the
+  builder output mounts inside it. Proposed (unverified): `isRoot: true` lets the builder output
+  become the element. See `plan.md` §3.11 before changing the renderer or `AioApp`.
 
 ## 5. Contracts
 

@@ -389,6 +389,50 @@ every import-map URL on disk, and every reachable bare import has an exact key. 
 plus `SMOKE_BASE=<cdn>` runs the same sites against the real tag; both paint with a clean console,
 styles included. `vitest` excludes the generated trees (`cdn-tree`, `cdn-smoke`, `smoke`).
 
+### 3.11 Open design — builder node host vs `isRoot` replacement (2026-11-11)
+
+A builder node currently renders as a **host**: the node key becomes the element and the builder
+output is mounted inside it.
+
+```
+"div#masonry": { "builder": "masonry" }   →   <div id="masonry"><section class="masonry">…</section></div>
+```
+
+That is the default and it works. The proposed extension is `isRoot: true`: the host is replaced
+by the builder output, so the component owns its element directly.
+
+```
+"div#masonry": { "builder": "masonry", "isRoot": true }   →   <section class="masonry">…</section>
+```
+
+**Not implemented, and not yet verified.** `AioApp`'s entry/render path was rewritten and its
+output has not been reviewed against this idea, so the semantics must be pinned before code.
+
+What exists today:
+
+- `DOMRenderer.contentEvaluator()` returns early for a node with `builder`; the host element comes
+  from `nodeFactory()` using the key's tag.
+- `DOMRenderer.attachMetadata()` reads `isRoot` only to name the builder template relation; it does
+  not change the DOM.
+- `AioApp.blockToNode()` emits `isRoot: true` for page blocks — a different use of the same flag.
+- The generated `mount()` pass ignores `isRoot` and always appends into the host.
+
+Decisions to make before implementation:
+
+1. **Where the swap happens** — renderer (`nodeFactory` needs a pre-built element), `AioApp`
+   (transform the node before render), or the generator (`mount()` replaces `el`).
+2. **What carries over** — `id`, `class`, `attrs`, `data-*` and child nodes on the key: do they
+   move onto the builder root, or are they illegal when `isRoot` is set?
+3. **Metadata and lifecycle** — `attachMetadata`/`setMetadata` records, `onCreated`/`onDestroy`,
+   hydration gate and the event-emitter bridge all assume the host element is the record owner.
+   A swap must re-point them, not orphan them.
+4. **Page blocks vs content nodes** — `AioApp` already uses `isRoot` for blocks; the flag needs one
+   meaning, or two distinct names.
+
+Gates: DOM/wrapper counts for `isRoot` true and false on both generated sites, metadata tree still
+walks (no orphan records), `onDestroy` still runs, no duplicate stylesheet, and a browser probe of
+`gallery` + `store` with both shapes.
+
 ## 4. Verification gate (all projects)
 
 `npm run verify` = `build:pkgs` (37 packages, dependency-ordered, `dist` + `.d.ts` + copied

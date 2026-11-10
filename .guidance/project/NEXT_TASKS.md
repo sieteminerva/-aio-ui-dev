@@ -7,6 +7,8 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Framework (`packages/`, `examples/demo`)
 
+- [ ] Review `AioApp` entry/render output, then define and implement `isRoot` builder semantics
+      (default host wraps; `isRoot: true` replaces the host with the builder root). See `plan.md` §3.11.
 - [ ] Fix and validate the Masonry column distribution.
 - [ ] Audit remaining `TemplateRegistry` and page registration references.
 - [ ] Activate a `ModuleLoader` in a real Form instance and verify both paths in the browser.
