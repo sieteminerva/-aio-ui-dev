@@ -2,7 +2,7 @@
   "version": "0.1.0",
   "repository": "sieteminerva/-aio-ui-dev",
   "base": "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.0/",
-  "generatedAt": "2026-11-10T19:59:47.478Z",
+  "generatedAt": "2026-11-10T21:07:41.613Z",
   "packages": {
     "@aio-ui/app": {
       "dir": "packages/app",
