@@ -22,7 +22,7 @@ const RESULTS = join(HERE, "..", "results");
 
 const layout = JSON.parse(readFileSync(join(HERE, "layout.json"), "utf8")) as PackageLayout;
 const resolver = createCdnResolver({
-  base: "https://cdn.jsdelivr.net/gh/sieteminerva/rajutan@v0.1.3/",
+  base: "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.3/",
   layout,
 });
 
@@ -118,12 +118,20 @@ describe("generated site — dynamic", () => {
     const app = generated.files["app.js"];
     expect(app).toContain('import { HttpService } from "@aio-ui/http-service";');
     expect(app).toContain("registerModule(HttpService");
-    expect(app).toContain('{ id: "multistep", path: "@aio-ui/form/multistep-adapter" }');
+    expect(app).toContain('{ id: "multistep", path: "@aio-ui/form/multistep-adapter", export: "multistepFormAdapter" }');
+  });
+
+  it("mounts every builder node in both served and dev files", () => {
+    for (const file of ["app.js", "dev/src/main.ts"]) {
+      const source = generated.files[file];
+      expect(source).toContain("mount(page.content)");
+      expect(source).toContain("owner.onCreated");
+    }
   });
 
   it("pins every asset URL to the engine release", () => {
     const html = generated.files["index.html"];
-    expect(html).toContain("cdn.jsdelivr.net/gh/sieteminerva/rajutan@v0.1.3/");
+    expect(html).toContain("cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.3/");
   });
 });
 

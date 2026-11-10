@@ -1,89 +1,73 @@
 # Agent Rules
 
-Working agreement for every agent in this repository. Optimise for **maximal result at
-minimal token cost** — the two are not in tension if the work is done in the right order.
+Working agreement for every agent in this repository. Optimise for **maximal result at minimal token cost** — execute in parallel batches and keep context small.
 
 ## 1. Ask before building
 
-A design question costs ~200 tokens; a wrong implementation costs a whole rebuild
-(both `Table.css` and the lazy-stylesheet rounds were rebuilds).
+A design question costs ~200 tokens; a wrong implementation costs a rebuild.
 
-- When a request has more than one reasonable shape, answer with the recommended shape
-  first (a short table or a 5-line sketch) and get a go-ahead.
+- When a request has more than one reasonable shape, reply with a short table or 5-line sketch first and wait for go-ahead.
 - Never start a refactor while a design decision is still open.
 
-## 2. Read once, edit once
+## 2. Batch reads & edits (Zero sequential loops)
 
-- Read the file **once** with a wide line range instead of many small reads or greps.
-- Plan every edit for a file, then apply them in a single `multi_replace_string_in_file`.
-- Never re-read a file you just wrote to "confirm"; the edit tool already reported where
-  it landed.
-- Search with `grep -n … | head`, not by dumping files.
+Every single tool turn re-sends the entire prompt history. Minimize round-trips:
 
-## 3. Verify once per batch
+- **Use semantic_search or symbol search first** to locate definitions; never crawl directories with `list_dir`
+- **Parallel reads only:** Batch all initial `read_file` and `grep_search` calls into **one single parallel turn**. Never fetch files one by one.
+- **Read wide once:** Read a file once with a wide line range instead of multiple narrow reads.
+- **Single edit pass:** Plan all changes for a file and apply them in one `multi_replace_string_in_file` call. Never re-read a file after editing to confirm.
+- **Bounded search:** Always pipe searches (`grep -n … | head -n 30`). Never dump entire files.
 
-- One `npm run verify` at the end of a batch, not after every edit.
-- Run a single test file only while iterating on that file.
-- Never re-verify what a previous gate already proved.
+## 3. Keep tool & terminal output tiny
 
-## 4. Keep tool output small
+- **CLI over browser tools:** Run Playwright via terminal (`npx playwright test <file> --reporter=line`) instead of interactive browser tools, which inject ~10 KB DOM snapshots per turn. Use browser tools only for explicit visual/geometry claims.
+- **Minimal stdout:** Use `git --no-pager`, `| head`, or `| tail`. Never read lockfiles (`*-lock.*`), `dist/`, or generated artifacts.
 
-- Browser tools return a full DOM snapshot (~10 KB) on **every** call, so: one
-  `run_playwright_code` with a single `evaluate` that returns a few scalars, instead of
-  `read_page`/`click_element`/screenshot chains. Screenshot only for a visual question.
-- Print line numbers, not file contents. `git --no-pager`, `| head`, `| tail`.
-- No `cat` of generated artifacts or lockfiles.
+## 4. Verify once per batch
+
+- Run the narrowest single test file while iterating; run `npm run verify` **once** at the end of a batch.
+- Never re-run a gate that already passed without code changes.
 
 ## 5. Write only what was asked
 
-- No new documentation unless requested. When a doc already exists, extend it in 3–5 lines.
-- Changelog rows in `plan.md`: **finding → fix → evidence**, 2–3 sentences. Not a
-  paragraph per file.
-- Commit messages: a summary line plus 3–6 bullets. No essays.
-- No code blocks in chat; make the edit and describe it in one sentence.
+- No new docs unless requested; extend existing docs in 3–5 lines max.
+- Changelog lives in the commit message, not in a file: **finding → fix → evidence**.
+- Commit messages: 1 summary line + 3–6 bullets.
+- **Chat replies:** No code blocks in chat after making edits; summarize what changed in 1–2 sentences.
 
-## 6. Respect the architecture already there
+## 6. Architecture & proof standards
 
-- A capability lives in a **module**; a component only renders. If the wiring feels wrong,
-  the seam is missing, not the abstraction.
-- Never `import "./X.css"` in a builder — sheets load through `@aio-ui/core/Stylesheets`
-  (see `docs/COMPONENT-CONVENTIONS.md`).
-- Components stay framework-agnostic: publish through `config.emit?.(…)`, never import the
-  app.
+- **Modules own capabilities; components only render.** If wiring feels wrong, fix the seam, not the abstraction.
+- **Stylesheets:** Never `import "./X.css"` in a builder — load via `@aio-ui/core/Stylesheets` (see `docs/COMPONENT-CONVENTIONS.md`).
+- **Framework-agnostic components:** Publish via `config.emit?.(…)`; never import the app.
+- **Objective proof:** Prove changes at the highest affected level (unit test, CLI test, or build gate). For CSS geometry claims, measure `getBoundingClientRect` / `getComputedStyle` and report exact numbers.
 
-## 7. Prove it where it runs
+## 7. Session lifecycle & hard context cap (60k limit)
 
-- A change is done when it is proven at the highest level it affects: unit test for a rule,
-  browser for a visual or lifecycle claim, gate for the whole tree.
-- Measure geometry for CSS claims (`getBoundingClientRect`, `getComputedStyle`) — "looks
-  right" is not evidence.
-- State the numbers in the report (counts, positions, payload keys), not adjectives.
+Long transcripts and VS Code auto-compaction trigger massive cache-miss penalties.
 
-## 8. Start a new session per phase
+- **Single-file startup:** Read **only** `.guidance/project/STATUS.md` (≤ 80 lines) to start. Do **not** crawl `.guidance/mandatory/` or `plan.md` unless specifically relevant to the active task.
+- **State plan briefly:** After the single parallel read turn, state your plan in 2–3 lines and execute.
+- **Hard stop at ~15 turns or ~60k tokens:** Before auto-compaction triggers, stop work, update `STATUS.md` with current state + next steps, and tell the user to open a **New Chat**.
+- **During & finish:** Preserve unrelated user edits; record architectural decisions in `.guidance/project/DECISIONS.md`; report honestly what was proven and what remains unproven.
 
-Long transcripts are the single largest recurring cost. `plan.md` plus repository memory is
-enough context to restart; do not re-explore the tree to rebuild history.
+## 8. Language
 
-## 9. Session start and finish
+- Conversation matches the user's language (Indonesian or English).
+- All repo artifacts stay **English** (source, identifiers, comments, JSDoc, docs, copy) unless explicitly requested otherwise.
 
-Merged from `.guidance/mandatory/AGENT_RULES.md`, which no longer exists — one rules file
-for the repo, this one.
+## 9. Work tracking: plan → queue → status
 
-**Before starting:** read `.guidance/mandatory/` (they hold the standing principles), then
-`.guidance/project/STATUS.md` and `NEXT_TASKS.md`, then state the plan in 2–3 lines. Inspect
-existing code and conventions instead of re-deriving them.
+One item lives in **exactly one** file. Never duplicate, never append history.
 
-**During work:** focused changes; preserve unrelated user edits; avoid destructive
-operations; when architecture changes, write the decision down (`plan.md` §Decisions, or
-`.guidance/project/DECISIONS.md`).
+| File                              | Holds                                                   | Shape                                                                  |
+| --------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `.guidance/plan.md`               | **why** — objective, decisions, stages, long-term order | per-project sections: `## Project: framework \| gallery \| generator`  |
+| `.guidance/project/NEXT_TASKS.md` | **what next** — one queue shared by all projects        | `## Framework` / `## Gallery` / `## Generator` lanes, top line = first |
+| `.guidance/project/STATUS.md`     | **what now** — at most **3** active items               | overwritten every session, ≤ 80 lines                                  |
 
-**Before finishing:** run the narrowest relevant validation (one test file while iterating,
-`npm run verify` per batch), record what changed and what is still open, and report the
-result honestly — including what was **not** proven.
-
-## 10. Language
-
-- User prompts may be Indonesian or English; conversation follows the user's language.
-- Every artifact stays **English**: source, identifiers, comments, JSDoc, documentation,
-  generated content, user-facing project copy.
-- Indonesian only when the user explicitly asks for it in that artifact.
+- **Promote:** plan item → queue line when it is the next thing; queue line → `STATUS.md` when work starts.
+- **Done = delete the line.** Evidence goes to the commit message (`finding → fix → evidence`) or `DECISIONS.md`; there is no "Completed" section.
+- **Blocked:** stays in `STATUS.md` only while the blocker fits in one line, then returns to the queue.
+- **Edit one file per state change.** Touch all three only when all three states really changed.

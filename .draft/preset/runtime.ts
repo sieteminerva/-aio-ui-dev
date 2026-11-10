@@ -59,7 +59,9 @@ export function emitRuntime(input: RuntimeInput): RuntimeFiles {
   const description = preset.site.seo?.description || preset.site.tagline || "";
 
   const links = site.links.map((href) => `<link rel="stylesheet" href="${escapeAttribute(href)}">`).join("\n  ");
-  const importMap = JSON.stringify(site.importMap.imports, null, 2);
+  // Import maps require the `imports` wrapper; a bare specifier object is
+  // ignored by the browser, which then fails the first bare import.
+  const importMap = JSON.stringify(site.importMap, null, 2);
 
   const html = `<!doctype html>
 <html lang="${escapeAttribute(preset.site.locale)}" data-theme="${escapeAttribute(preset.theme)}">
@@ -102,7 +104,7 @@ function emitApp(preset: iWebPreset, plan: PresetPlan, site: EmittedSite): strin
     .join(",\n");
 
   const formModules = plan.moduleRefs
-    .map((ref) => `{ id: "${ref.id}", path: "${ref.specifier}" }`)
+    .map((ref) => `{ id: "${ref.id}", path: "${ref.specifier}"${ref.export ? `, export: "${ref.export}"` : ""} }`)
     .join(", ");
 
   const registrations = plan.bindings
@@ -148,6 +150,28 @@ const registry = new ComponentRegistry(assets);
 ${registrations}
 
 const pages = Object.fromEntries(PRESET.pages.map((page) => [page.id, page.content]));
+
+/**
+ * A node carrying a builder name is a host element: the renderer builds the
+ * wrapper and stops, so the component itself must be mounted here. This is the
+ * same bridge every example page writes by hand: onCreated(el, _render, build).
+ */
+function mount(owner) {
+  if (Array.isArray(owner)) { owner.forEach(mount); return; }
+  if (!owner || typeof owner !== "object") return;
+  if (typeof owner.builder === "string") {
+    const name = owner.builder;
+    const host = owner.onCreated;
+    owner.onCreated = (el, render, build) => {
+      if (typeof host === "function") host(el, render, build);
+      const child = build(name, owner);
+      if (child && child !== el && !el.contains(child)) el.appendChild(child);
+    };
+    return;
+  }
+  for (const value of Object.values(owner)) mount(value);
+}
+PRESET.pages.forEach((page) => mount(page.content));
 
 const app = new AioApp({
   container: document.querySelector("#app"),

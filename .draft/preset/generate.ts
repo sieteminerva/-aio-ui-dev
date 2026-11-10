@@ -112,7 +112,7 @@ function buildDevProject(preset: iWebPreset, planned: PresetPlan): Record<string
   if (has("animations")) imports.push(`import { AnimationsService } from "@aio-ui/animations";`);
 
   const formModules = planned.moduleRefs
-    .map((ref) => `{ id: "${ref.id}", path: "${ref.specifier}" }`)
+    .map((ref) => `{ id: "${ref.id}", path: "${ref.specifier}"${ref.export ? `, export: "${ref.export}"` : ""} }`)
     .join(", ");
 
   const registrations = planned.bindings
@@ -166,6 +166,25 @@ const registry = new ComponentRegistry(assets as any);
 ${registrations}
 
 const pages = Object.fromEntries(PRESET.pages.map((page) => [page.id, page.content]));
+
+// A builder node is a host element: the renderer stops there, so the component
+// is mounted with the same bridge every example page uses.
+function mount(owner: any): void {
+  if (Array.isArray(owner)) { owner.forEach(mount); return; }
+  if (!owner || typeof owner !== "object") return;
+  if (typeof owner.builder === "string") {
+    const name = owner.builder;
+    const host = owner.onCreated;
+    owner.onCreated = (el: HTMLElement, render: any, build: any) => {
+      if (typeof host === "function") host(el, render, build);
+      const child = build(name, owner);
+      if (child && child !== el && !el.contains(child)) el.appendChild(child);
+    };
+    return;
+  }
+  for (const value of Object.values(owner)) mount(value);
+}
+PRESET.pages.forEach((page) => mount(page.content));
 
 const app = new AioApp({
   container: document.querySelector("#app") as HTMLElement,

@@ -24,6 +24,15 @@ export interface AssetResolver {
    * closure of a component does not have to be listed one subpath at a time.
    */
   prefixes?(): Record<string, string>;
+  /**
+   * Exact bare subpath entries from each package's `exports` map.
+   *
+   * Needed because a bare subpath such as `@aio-ui/utilities/AttributeUtils` has
+   * no extension: a prefix alone would produce a URL that 404s. Exact keys also
+   * carry the real file when a subpath does not mirror its name
+   * (`input/dropdown/module` → `dist/Dropdown/Dropdown.InputModule.js`).
+   */
+  exact?(): Record<string, string>;
 }
 
 export interface EmittedModule {
@@ -45,6 +54,8 @@ export interface EmittedModuleRef {
   id: string;
   specifier: string;
   url: string;
+  /** Named export the registry must pick; see `PresetModuleRef.export`. */
+  export?: string;
 }
 
 export interface EmittedSite {
@@ -106,7 +117,7 @@ export function emitPlan(input: PresetPlan, resolver: AssetResolver): EmittedSit
     // Prefixes ride along so a component's own imports resolve in the browser.
     importMap: {
       imports: Object.fromEntries(
-        Object.entries({ ...(resolver.prefixes?.() ?? {}), ...imports }).sort(([a], [b]) =>
+        Object.entries({ ...(resolver.prefixes?.() ?? {}), ...(resolver.exact?.() ?? {}), ...imports }).sort(([a], [b]) =>
           a.localeCompare(b),
         ),
       ),
@@ -134,7 +145,7 @@ export function emitPlan(input: PresetPlan, resolver: AssetResolver): EmittedSit
           if (!missing.includes(ref.specifier)) missing.push(ref.specifier);
           return null;
         }
-        return { id: ref.id, specifier: ref.specifier, url };
+        return { id: ref.id, specifier: ref.specifier, url, ...(ref.export ? { export: ref.export } : {}) };
       })
       .filter((ref): ref is EmittedModuleRef => ref !== null),
     missing,
@@ -156,6 +167,13 @@ export interface PackageLayoutEntry {
   stylesRoot?: string;
   /** `false` when the package has no root export (named subpaths only). */
   bare?: boolean;
+  /**
+   * The package's own `exports` map, flattened: `"./Form" → "dist/Form.js"`.
+   * Subpath specifiers are **not** derivable from their name (`dropdown/module`
+   * ships as `dist/Dropdown/Dropdown.InputModule.js`), so the resolver reads this
+   * map first and only falls back to the `dist/` mirror rule.
+   */
+  subpaths?: Record<string, string>;
 }
 
 /** `{ "@aio-ui/form": { dir: "packages/components/form", entry: "dist/Form.js" } }` */
@@ -169,8 +187,11 @@ export interface CdnResolverOptions {
 
 /**
  * Builds a resolver for a flat CDN layout (`jsDelivr gh`, GitHub Pages, a
- * release folder). Subpath specifiers are assumed to mirror `dist/`:
- * `@aio-ui/input/dropdown/module` → `<dir>/dist/dropdown/module.js`.
+ * release folder).
+ *
+ * Subpaths follow the package's own `exports` map (`layout[pkg].subpaths`), so
+ * `@aio-ui/input/dropdown/module` lands on `dist/Dropdown/Dropdown.InputModule.js`.
+ * A layout without `subpaths` falls back to the `dist/<subpath>.js` mirror rule.
  *
  * @param options - CDN base plus the package → directory map.
  * @returns Resolver for `emitPlan()`.
@@ -189,16 +210,30 @@ export function createCdnResolver(options: CdnResolverOptions): AssetResolver {
     module(specifier) {
       const { pkg, subpath } = split(specifier);
       const entry = options.layout[pkg];
-      if (!entry || !entry.entry) return null;
+      if (!entry) return null;
+
+      // Exact export wins: a package may place a subpath anywhere.
+      const mapped = entry.subpaths?.[subpath ? `./${subpath}` : "."];
+      if (mapped && mapped.endsWith(".js")) return `${base}${entry.dir}/${mapped}`;
+
       // A package with named-only exports has no valid bare specifier.
-      if (!subpath && entry.bare === false) return null;
-      return subpath ? `${base}${entry.dir}/dist/${subpath}.js` : `${base}${entry.dir}/${entry.entry}`;
+      if (!subpath) {
+        if (!entry.entry || entry.bare === false) return null;
+        return `${base}${entry.dir}/${entry.entry}`;
+      }
+
+      // Fallback for a layout without an exports map: dist mirrors the name.
+      return `${base}${entry.dir}/dist/${subpath}.js`;
     },
 
     style(specifier) {
       const { pkg, subpath } = split(specifier);
       const entry = options.layout[pkg];
       if (!entry || !subpath.endsWith(".css")) return null;
+
+      const mapped = entry.subpaths?.[`./${subpath}`];
+      if (mapped && mapped.endsWith(".css")) return `${base}${entry.dir}/${mapped}`;
+
       // Published packages keep their sheets next to the compiled JS; a
       // CSS-only package publishes them from `src`.
       const root = entry.stylesRoot ?? "dist";
@@ -211,6 +246,22 @@ export function createCdnResolver(options: CdnResolverOptions): AssetResolver {
         // Only JS packages need a module prefix; import maps ignore unused keys.
         if (!entry.entry) continue;
         map[`${pkg}/`] = `${base}${entry.dir}/dist/`;
+      }
+      return map;
+    },
+
+    exact() {
+      const map: Record<string, string> = {};
+      for (const [pkg, entry] of Object.entries(options.layout)) {
+        // Every root is mapped: a loaded component may import a package the
+        // preset itself never names (form → module-loader, for example).
+        if (entry.entry && entry.bare !== false) map[pkg] = `${base}${entry.dir}/${entry.entry}`;
+
+        // A prefix cannot add `.js`, so each concrete subpath needs its own key.
+        for (const [key, file] of Object.entries(entry.subpaths ?? {})) {
+          if (key === "." || key.includes("*") || !file.endsWith(".js")) continue;
+          map[`${pkg}/${key.replace(/^\.\//, "")}`] = `${base}${entry.dir}/${file}`;
+        }
       }
       return map;
     },

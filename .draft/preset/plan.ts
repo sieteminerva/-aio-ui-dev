@@ -51,8 +51,8 @@ export function plan(preset: iWebPreset): PresetPlan {
   const components = new Set<string>();
   /** word → binding; a word registered twice keeps the first (catalogue is stable). */
   const bindings = new Map<string, PresetBinding>();
-  /** id → specifier for sub-modules handed to their owner. */
-  const moduleRefs = new Map<string, string>();
+  /** id → module + its named export for sub-modules handed to their owner. */
+  const moduleRefs = new Map<string, { specifier: string; export?: string }>();
   /** specifier → style specifiers, so two pages needing the same package merge. */
   const assets = new Map<string, Set<string>>();
 
@@ -74,7 +74,7 @@ export function plan(preset: iWebPreset): PresetPlan {
     if (word && owner && !bindings.has(word)) {
       bindings.set(word, { word, specifier: owner, styles: [...entry.styles].sort() });
     }
-    if (entry.id && owner) moduleRefs.set(entry.id, owner);
+    if (entry.id && owner) moduleRefs.set(entry.id, { specifier: owner, export: entry.export });
   };
 
   const addCapability = (key: keyof typeof CAPABILITY_CATALOGUE): void => {
@@ -179,7 +179,7 @@ export function plan(preset: iWebPreset): PresetPlan {
     components: [...components].sort(),
     bindings: [...bindings.values()].sort((a, b) => a.word.localeCompare(b.word)),
     moduleRefs: [...moduleRefs.entries()]
-      .map(([id, specifier]) => ({ id, specifier }))
+      .map(([id, ref]) => ({ id, specifier: ref.specifier, ...(ref.export ? { export: ref.export } : {}) }))
       .sort((a, b) => a.id.localeCompare(b.id)),
     assets: assetList,
     issues,

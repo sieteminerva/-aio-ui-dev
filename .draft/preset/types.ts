@@ -137,6 +137,11 @@ export interface PresetModuleRef {
   id: string;
   /** Module specifier to load. */
   specifier: string;
+  /**
+   * Named export the registry must pick (`multistepFormAdapter`, …). Without it a
+   * module file that also exports its class resolves to the class, not the definition.
+   */
+  export?: string;
 }
 
 /** What `plan()` derives from a preset. */

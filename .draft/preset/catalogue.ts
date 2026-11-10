@@ -27,6 +27,12 @@ export interface CatalogueEntry {
    * Omitted for components, which the registry names by builder word.
    */
   id?: string;
+  /**
+   * Named export that carries the module definition. Required whenever a file
+   * exports both a class and its `iModuleDefinition`: the registry's fallback
+   * (first function in the namespace) would otherwise pick the class.
+   */
+  export?: string;
 }
 
 /**
@@ -105,19 +111,19 @@ export const UNIMPLEMENTED_BUILDERS = new Set(["color-theme", "editor", "form-ed
 
 /** Form adapters, keyed by the config flag that turns them on. */
 export const FORM_ADAPTER_CATALOGUE: Record<string, CatalogueEntry> = {
-  validation: { capability: "validation", modules: ["@aio-ui/form/validation-adapter"], styles: [], id: "validation" },
-  cascade: { capability: "cascade", modules: ["@aio-ui/form/cascade-adapter"], styles: [], id: "cascade" },
-  multistep: { capability: "multistep", modules: ["@aio-ui/form/multistep-adapter"], styles: [], id: "multistep" },
-  calculation: { capability: "calculation", modules: ["@aio-ui/form/calculation-adapter"], styles: [], id: "calculation" },
-  input: { capability: "input-adapter", modules: ["@aio-ui/form/Input.FormAdapter"], styles: [], id: "input" },
+  validation: { capability: "validation", modules: ["@aio-ui/form/validation-adapter"], styles: [], id: "validation", export: "validationFormAdapter" },
+  cascade: { capability: "cascade", modules: ["@aio-ui/form/cascade-adapter"], styles: [], id: "cascade", export: "cascadeFormAdapter" },
+  multistep: { capability: "multistep", modules: ["@aio-ui/form/multistep-adapter"], styles: [], id: "multistep", export: "multistepFormAdapter" },
+  calculation: { capability: "calculation", modules: ["@aio-ui/form/calculation-adapter"], styles: [], id: "calculation", export: "calculationFormAdapter" },
+  input: { capability: "input-adapter", modules: ["@aio-ui/form/Input.FormAdapter"], styles: [], id: "input", export: "inputFormAdapter" },
 };
 
 /** Input-side modules, keyed by the field type or config that needs them. */
 export const INPUT_MODULE_CATALOGUE: Record<string, CatalogueEntry> = {
-  dropdown: { capability: "dropdown", modules: ["@aio-ui/input/dropdown/module"], styles: ["@aio-ui/input/dropdown.css"], id: "dropdown" },
-  file: { capability: "file-uploader", modules: ["@aio-ui/input/file-uploader/module"], styles: ["@aio-ui/input/file-uploader.css"], id: "file" },
-  controls: { capability: "controls", modules: ["@aio-ui/input/controls/module"], styles: ["@aio-ui/input/controls.css"], id: "controls" },
-  popover: { capability: "popover", modules: ["@aio-ui/input/popover/module"], styles: [], id: "popover" },
+  dropdown: { capability: "dropdown", modules: ["@aio-ui/input/dropdown/module"], styles: ["@aio-ui/input/dropdown.css"], id: "dropdown", export: "dropdownInputModule" },
+  file: { capability: "file-uploader", modules: ["@aio-ui/input/file-uploader/module"], styles: ["@aio-ui/input/file-uploader.css"], id: "file", export: "fileUploaderInputModule" },
+  controls: { capability: "controls", modules: ["@aio-ui/input/controls/module"], styles: ["@aio-ui/input/controls.css"], id: "controls", export: "inputControlsInputModule" },
+  popover: { capability: "popover", modules: ["@aio-ui/input/popover/module"], styles: [], id: "popover", export: "popoverInputModule" },
 };
 
 /** Packages that belong to a capability rather than to a builder word. */
@@ -126,9 +132,9 @@ export const CAPABILITY_CATALOGUE: Record<string, CatalogueEntry> = {
   http: { capability: "http-service", modules: ["@aio-ui/http-service"], styles: [] },
   events: { capability: "event-emitter", modules: ["@aio-ui/event-emitter"], styles: [] },
   animations: { capability: "animations", modules: ["@aio-ui/animations"], styles: ["@aio-ui/animations/Animations.css"] },
-  "id-address": { capability: "id-address", modules: ["@aio-ui/id-address/form"], styles: ["@aio-ui/id-address/id-address.css"], id: "idAddress" },
-  "form-message": { capability: "message-adapter", modules: ["@aio-ui/message/adapters/FormAdapter"], styles: [], id: "message" },
-  "form-table": { capability: "table-adapter", modules: ["@aio-ui/table/adapters/FormAdapter"], styles: [], id: "table" },
+  "id-address": { capability: "id-address", modules: ["@aio-ui/id-address/form"], styles: ["@aio-ui/id-address/id-address.css"], id: "idAddress", export: "idAddressFormAdapter" },
+  "form-message": { capability: "message-adapter", modules: ["@aio-ui/message/adapters/FormAdapter"], styles: [], id: "message", export: "messageFormAdapter" },
+  "form-table": { capability: "table-adapter", modules: ["@aio-ui/table/adapters/FormAdapter"], styles: [], id: "table", export: "tableFormAdapter" },
 };
 
 /**

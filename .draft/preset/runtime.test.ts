@@ -25,6 +25,8 @@ describe("emitRuntime — index.html", () => {
 
   it("inlines the import map", () => {
     expect(html).toContain('<script type="importmap">');
+    // The `imports` wrapper is mandatory; without it browsers ignore the map.
+    expect(html).toContain('"imports": {');
     expect(html).toContain('"@aio-ui/frameworks"');
   });
 
@@ -63,12 +65,19 @@ describe("emitRuntime — app.js", () => {
     const { "app.js": app } = build(storePreset);
 
     expect(app).toContain('registry.register("form"');
-    expect(app).toContain('{ id: "validation", path: "@aio-ui/form/validation-adapter" }');
-    expect(app).toContain('{ id: "dropdown", path: "@aio-ui/input/dropdown/module" }');
+    expect(app).toContain('{ id: "validation", path: "@aio-ui/form/validation-adapter", export: "validationFormAdapter" }');
+    expect(app).toContain('{ id: "dropdown", path: "@aio-ui/input/dropdown/module", export: "dropdownInputModule" }');
 
     // Field-level modules are not page components.
     expect(app).not.toContain('registry.register("dropdown"');
     expect(app).not.toContain('registry.register("input"');
+  });
+
+  it("mounts builder nodes instead of leaving empty host elements", () => {
+    const { "app.js": app } = build(storePreset);
+    expect(app).toContain("function mount(owner)");
+    expect(app).toContain("PRESET.pages.forEach((page) => mount(page.content));");
+    expect(app).toContain("const child = build(name, owner);");
   });
 
   it("registers HttpService with the preset's endpoint", () => {

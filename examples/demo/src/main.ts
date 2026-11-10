@@ -1,14 +1,6 @@
-import { ComponentRegistry } from '@aio-ui/core';
-import type { iComponentModuleRef } from '@aio-ui/core';
-import { DOMRenderer } from '@aio-ui/core';
-import { AioApp, AppStorage } from '@aio-ui/app';
-import { AnimationsService } from '@aio-ui/animations';
-import { EventEmitter } from '@aio-ui/event-emitter';
-import { HttpService } from '@aio-ui/http-service';
-import { HashRouter } from '@aio-ui/router';
-import { DefaultTheme } from '@aio-ui/theme-default';
-import { CyberpunkTheme } from '@aio-ui/theme-cyberpunk';
-import { ThemeRenderer } from '@aio-ui/theme';
+import { DOMRenderer, ComponentRegistry, type iComponentModuleRef, AioApp, AppStorage } from '@aio-ui/frameworks';
+import { AnimationsService, EventEmitter, HttpService, HashRouter, ThemeRenderer } from '@aio-ui/modules';
+import { DefaultTheme, CyberpunkTheme, } from '@aio-ui/themes';
 
 import '@aio-ui/theme-cyberpunk/CyberpunkTheme.css';
 

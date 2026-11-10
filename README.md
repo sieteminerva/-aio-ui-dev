@@ -5,7 +5,7 @@ orchestrator that turns a business profile into a generated website). One reposi
 two roles, one source of truth.
 
 - **Version:** `0.1.0` — fixed versioning across all packages.
-- **Gate:** `npm run verify` (build 33 packages → typecheck → boundaries → version check →
+- **Gate:** `npm run verify` (build 37 packages → typecheck → boundaries → version check →
   tests → example builds).
 - **Distribution:** GitHub releases only. No npm registry.
 
@@ -20,16 +20,16 @@ npm run dev:demo       # examples/demo
 npm run verify         # the full gate — run before claiming anything works
 ```
 
-| Task                                         | Command                                            |
-| -------------------------------------------- | -------------------------------------------------- |
-| Build every package (`dist` + `.d.ts` + CSS) | `npm run build:pkgs`                               |
-| Typecheck the workspace                      | `npm run typecheck`                                |
-| Dependency-edge check                        | `npm run check:bounds`                             |
+| Task                                         | Command                                                   |
+| -------------------------------------------- | --------------------------------------------------------- |
+| Build every package (`dist` + `.d.ts` + CSS) | `npm run build:pkgs`                                      |
+| Typecheck the workspace                      | `npm run typecheck`                                       |
+| Dependency-edge check                        | `npm run check:bounds`                                    |
 | Public-surface check                         | `npm run check:api` (snapshot: `scripts/api.mjs --write`) |
-| Tests                                        | `npm test` (`vitest run`)                          |
-| Version report / check                       | `npm run version:report` · `npm run version:check` |
-| Bump all packages                            | `node scripts/version.mjs --apply --version 0.1.1` |
-| Release artefacts (local, dry-run first)     | `node scripts/release.mjs --version 0.1.1`         |
+| Tests                                        | `npm test` (`vitest run`)                                 |
+| Version report / check                       | `npm run version:report` · `npm run version:check`        |
+| Bump all packages                            | `node scripts/version.mjs --apply --version 0.1.1`        |
+| Release artefacts (local, dry-run first)     | `node scripts/release.mjs --version 0.1.1`                |
 
 ## Repository structure
 
@@ -73,14 +73,20 @@ npm run verify         # the full gate — run before claiming anything works
 ├── docs/                   documentation (see the index below)
 │
 └── .guidance/              how to work here — rules, plan, architecture guide
-    ├── AGENT_RULES.md      hard rules: session start/finish, language, changelog
-    ├── plan.md             open work only (decisions + stages + gates)
+    ├── AGENT_RULES.md      hard rules: session start/finish, language, tracking (§9)
+    ├── plan.md             long-term: why — decisions + stages + gates + order
     ├── RAJUTAN.md          system guide: concept, infrastructure, contracts,
     │                       mechanism, outputs, status, roadmap, agent playbook
     ├── rules.md            house conventions (markup, CSS, tokens)
     ├── mandatory/          architecture, coding principles, design, docs, style
-    └── project/            project-level decisions, status, next tasks
+    └── project/            per-project decisions + the two moving lists
+        ├── NEXT_TASKS.md   queue: one lane per project, top line = next
+        └── STATUS.md       now: max 3 active items, overwritten each session
 ```
+
+Work tracking is a pipeline, and **one item lives in exactly one file**:
+`plan.md` (why) → `NEXT_TASKS.md` (what next) → `STATUS.md` (what now).
+Done = delete the line; proof goes to the commit message or `DECISIONS.md`.
 
 Ignored, local-only working areas:
 
@@ -95,7 +101,9 @@ Ignored, local-only working areas:
 | ------------------------------------------- | ----------------------------------------------------------------------------- |
 | Product vision, market framing              | `docs/presentation0.md`                                                       |
 | How generated sites are produced (Rajutan)  | `.guidance/RAJUTAN.md`                                                        |
-| Open work / what is next                    | `.guidance/plan.md`                                                           |
+| Why / long-term order                       | `.guidance/plan.md`                                                           |
+| What is next (queue)                        | `.guidance/project/NEXT_TASKS.md`                                             |
+| What is running right now                   | `.guidance/project/STATUS.md`                                                 |
 | Rules an agent must follow                  | `.guidance/AGENT_RULES.md`, `.guidance/mandatory/`                            |
 | Renderer internals                          | `docs/DOMRenderer.md`                                                         |
 | Component conventions / template / data     | `docs/COMPONENT-CONVENTIONS.md`, `COMPONENT-TEMPLATE.md`, `COMPONENT-DATA.md` |
@@ -126,11 +134,15 @@ Ignored, local-only working areas:
 
 ## Status snapshot
 
-Working: 34 packages build and are tested (413 tests), the form family (module registry,
+Working: 37 packages build and are tested (427 tests, 98 of them the draft generator suite),
+the form family (module registry,
 messages, animations, address adapters) runs, the generator produces real files
-(`.draft/results/`), versioning is fixed at `0.1.0`, and release artefacts can be produced
-locally.
+(`.draft/results/`), versioning is fixed at `0.1.0`, the release folder is regenerated at 37
+packages with verified checksums, and both generated sites load from that release layout with a
+clean console.
 
-Open: the dynamic store page's form does not render yet; the GitHub release workflow and
-the first browser smoke test against a real tag are still missing. Details and the honest
-list live in `.guidance/RAJUTAN.md` §9 and `.guidance/plan.md`.
+Open: publishing the `v0.1.0` pre-release tag to `sieteminerva/-aio-ui-dev` (assets are ready in
+`.draft/release/v0.1.0`), and the hosting choice (GitHub Pages vs Cloudflare Pages). The
+**official** release waits until all four webapp models exist as manual references — `gallery`
+does, `profile` / `store` / `blog` do not. Details live in `.guidance/RAJUTAN.md` §9 and
+`.guidance/plan.md` §3.10.

@@ -18,17 +18,20 @@ sibling orchestrator project) without rewriting it.
 | `runtime.ts`        | `emitRuntime()` → `index.html` + `app.js` (build-free, import map, registrations)                        |
 | `generate.ts`       | `generateSite()` → the five-file website                                                                 |
 | `scenarios.ts`      | two end-to-end flows built from the AI contract (`gallery-static`, `store-dynamic`)                      |
-| `layout.mjs`        | scans the workspace → `layout.json` (`dir`, `entry`, `stylesRoot`, `bare`)                               |
-| `layout.json`       | generated: 34 packages (incl. CSS-only `@aio-ui/styles`)                                                 |
+| `layout.mjs`        | scans the workspace → `layout.json` (`dir`, `entry`, `stylesRoot`, `bare`, `subpaths`)                   |
+| `layout.json`       | generated: 37 packages (incl. CSS-only `@aio-ui/styles` and the 3 kits)                                  |
 | `prompt.content.md` | Gemini prompt; its builder list is locked to the catalogue by a test                                     |
 | `fixtures.ts`       | two hand-written presets used by plan/emit tests                                                         |
-| `*.test.ts`         | 83 tests across plan, parse, ai, emit, runtime, generate, prompt                                         |
+| `release.test.ts`   | checks the release folder: 37 packages, subpaths, checksums, closed import map; writes `.draft/smoke/`   |
+| `*.test.ts`         | 98 tests across plan, parse, ai, emit, runtime, generate, prompt, release                                |
 
 ## Run
 
 ```bash
 npx vitest run .draft/preset        # tests (wired into the root vitest config)
 npx tsc -p .draft/preset/tsconfig.json   # isolated typecheck
+node .draft/smoke/serve.mjs 5300    # serve the repo root for the release smoke test
+# then open http://localhost:5300/.draft/smoke/store/#checkout
 ```
 
 ## Rules encoded here
@@ -50,6 +53,10 @@ npx tsc -p .draft/preset/tsconfig.json   # isolated typecheck
    is what makes a component's _own_ imports resolve in the browser; listing only
    the app's imports leaves the closure broken. `@aio-ui/utilities` has no bare
    export, so it is never a base asset.
+7. **The engine stays portable to Apps Script.** `plan/emit/runtime/generate/parse/ai`
+   import nothing from `node:*`, never call `fetch`, and never read the filesystem: they take
+   data and return a file map. Only tests may use `node:fs`. This is what lets the orchestrator
+   bundle the engine itself (§3.10 in `plan.md`).
 
 ## Physical output
 
@@ -82,9 +89,9 @@ folder, and a running Vite holds a lock on `dev/` (EBUSY on Windows).
 
 - A static gallery preset loads **no** `form`, `input` or `message` package
   (the size drop the plan asks for is already visible in the asset list).
-- A store preset pulls `router` + `http-service`, all four form adapters it
-  declares, `dropdown`/`file-uploader`/`popover`/`controls`, the table bridge
-  and `id-address` — and nothing else.
+- A store preset pulls `router` + `http-service`, the four form adapters its config asks for
+  (`multistep`, `cascade`, `calculation`, `validation`), the input adapter, `dropdown` +
+  `file-uploader`, the message bridge and `id-address` — and nothing else.
 - `editor`, `color-theme`, `form-editor` (declared in the AST, unimplemented)
   are reported as issues by both `plan()` and `parsePreset()`.
 - `parsePreset()` rejects: wrong `presetSchema`, unknown model/theme, page
@@ -103,8 +110,34 @@ folder, and a running Vite holds a lock on `dev/` (EBUSY on Windows).
   bindings. A gallery preset's `app.js` contains no `form` registration and no
   `HttpService` import; a store preset registers the form with its sub-modules
   and never registers `dropdown`/`input` as page components.
-- `layout.mjs` finds all 33 packages, including the scaffolded components whose
-  `package.json` has no `""."` export.
+- `layout.mjs` finds all 37 packages, including the scaffolded components whose
+  `package.json` has no `"."` export.
+
+## Mount pass (landed 2026-11-11)
+
+Generated sites register components **and** mount them. `runtime.ts` and `generate.ts` inject a
+`mount()` pass over `preset.pages`: a node carrying `builder` gets an `onCreated` hook that calls
+`build(name, node)` and appends the result — the same bridge every `examples/*` page writes by
+hand. Module refs also carry their named export (`multistepFormAdapter`,
+`dropdownInputModule`, …), because a module file that exports both a class and its definition
+otherwise resolves to the class.
+
+Probed on both `dev/` copies: `#checkout-form` = form + 1 fieldset + 3 fields; gallery masonry
+(4 children) + carousel (1); console clean.
+
+## Release smoke (2026-11-11)
+
+`release.test.ts` checks the artefacts themselves. Building them found three defects that only a
+real browser could expose:
+
+1. the import map was serialised **without** its `"imports"` wrapper, so browsers ignored it;
+2. subpath URLs were guessed from the specifier instead of read from the package's `exports`;
+3. the extension pass treated `Input.FormAdapter` as already extensioned, so no `.js` was added.
+
+All three are fixed and guarded mechanically: every URL in the map must exist on disk, and every
+bare import reachable from a mapped module must have an exact key. `serve.mjs` serves the repo
+root so `http://localhost:5300/packages/...` is real; both sites paint from the **release layout**
+with a clean console.
 
 ## The AI contract in one line
 

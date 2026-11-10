@@ -5,7 +5,7 @@
 > data ownership to the client (Google Sheets). This document is the working guide for
 > anyone — human or agent — picking the project up.
 
-Last updated: 2026-11-10 · Framework version: `0.1.0` (fixed versioning)
+Last updated: 2026-11-11 · Framework version: `0.1.0` (fixed versioning)
 
 ---
 
@@ -40,15 +40,19 @@ The AI never names a package, and generated sites never need a build step.
 
 ## 3. Infrastructure
 
-| Piece                | Detail                                                     | Notes                                                        |
-| -------------------- | ---------------------------------------------------------- | ------------------------------------------------------------ |
-| Orchestrator script  | Apps Script project (standalone)                           | holds the wizard API, Gemini key, service account for GitHub |
-| Template spreadsheet | one master file, duplicated per site                       | schemas managed by `TableBuilderService`                     |
-| Gemini               | `gemini-2.5-flash`, `temperature 0.2`, JSON output         | prompt: `.draft/preset/prompt.content.md`                    |
-| Drive                | temporary custody of the duplicate                         | ownership transferred to the client, then detached           |
-| GitHub               | one repo per site from a template; releases hold artefacts | `POST /repos/{template}/generate`                            |
-| CDN                  | jsDelivr `gh` paths or the release folder                  | assets immutable per tag                                     |
-| Client CMS           | the client's own spreadsheet `/exec`                       | data reads come from here, not from us                       |
+| Piece                | Detail                                                     | Notes                                                      |
+| -------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
+| Wizard               | frontend terpisah (tanpa user management)                  | Google Identity Services → spec + ID token ke orchestrator |
+| Orchestrator         | Apps Script project (standalone)                           | Gemini key, service account GitHub, engine di-bundle       |
+| Engine               | `.draft/preset/*` → bundle GAS                             | pure: tanpa `fs`/`path`/`fetch`; data in → file map out    |
+| Template spreadsheet | one master file, duplicated per site                       | schemas managed by `TableBuilderService`                   |
+| Gemini               | `gemini-2.5-flash`, `temperature 0.2`, JSON output         | prompt: `.draft/preset/prompt.content.md`                  |
+| Drive                | temporary custody of the duplicate                         | ownership transferred to the client, then detached         |
+| GitHub               | one repo per site from a template; releases hold artefacts | framework releases: `sieteminerva/-aio-ui-dev`               |
+| Hosting              | GitHub Pages atau Cloudflare Pages (belum diputuskan)      | build-free: lima file statis per situs                     |
+| Actions (opsional)   | build dari `dev/` untuk klien yang meminta source          | bukan jalur kritis; tidak dipakai oleh generator           |
+| CDN                  | jsDelivr `gh` paths or the release folder                  | assets immutable per tag                                   |
+| Client CMS           | the client's own spreadsheet `/exec`                       | data reads come from here, not from us                     |
 
 ## 4. Framework map
 
@@ -121,7 +125,7 @@ Content → capability table (`.draft/preset/catalogue.ts`):
 | `multistep` / `cascading` / `calculation`                 | the matching form adapter                                                                        |
 
 `plan()` returns `capabilities`, `baseStyles`, `modules`, `components`, `bindings`
-(`word → specifier`), `moduleRefs` (`id → specifier`) and `assets`.
+(`word → specifier`), `moduleRefs` (`id → specifier + named export`) and `assets`.
 
 ### 5.4 Runtime — `emit` + `runtime`
 
@@ -144,22 +148,19 @@ OAuth instead of public sheets, query cache).
 
 ## 6. Mechanism (end to end)
 
-```
-wizard (form) ─▶ Apps Script orchestrator ─▶ Gemini ─▶ iAiSiteContent
-                                        │
-                                        ▼
-                     parseAiContent → assemblePreset → preset.json
-                                        │
-                    ┌───────────────────┴────────────────────┐
-                    ▼                                        ▼
-        plan → emit → generate                      duplicate Sheets template
-        ├ index.html + app.js (build-free)          + inject content
-        ├ server/adapter.json (sheets + cache)      + deploy /exec + transfer owner
-        ├ dev/ (Vite project, local editing)
-        └ FLOW.md
-                    │
-                    ▼
-        commit to a new GitHub repo → static host → site live
+```mermaid
+flowchart TD
+    W["Wizard — frontend terpisah<br/>Google Identity Services"] -->|"spec + ID token"| O["Orchestrator — Apps Script<br/>Sheets sebagai DB<br/>engine di-bundle"]
+    O --> AI["Gemini → iAiSiteContent v1"]
+    AI --> AS["parseAiContent → assemblePreset<br/>preset.json"]
+    AS --> DER["plan → emit → generate<br/>(pure engine)"]
+    DER --> FILES["5 file statis<br/>preset.json · index.html · app.js<br/>server/adapter.json · FLOW.md"]
+    AS --> SHEET["Sheet per situs<br/>deploy /exec · transfer ownership"]
+    FILES --> REPO["GitHub API — repo baru"]
+    REPO --> LIVE["Pages / Cloudflare Pages"]
+    SHEET --> LIVE
+    LIVE --> USER["Pengunjung"]
+    FILES -.->|"opsional: klien minta source"| DEV["dev/ + GitHub Action build"]
 ```
 
 Generated-site flow:
@@ -167,6 +168,8 @@ Generated-site flow:
 - **Static model** (no `data[]`): `index.html` + `app.js` are the whole website.
 - **Dynamic model** (`data[]`): same files plus `server/adapter.json`; `HttpService`
   points at the client's `/exec`.
+- **Source on request**: `dev/` is generated for every site but handed over only when the
+  client asks; an optional GitHub Action can build it. The critical path never needs a build.
 - **Cache layers** (mirrors `docs/GoogleSheets CMS/Technical-Detail - Caching.jpg`):
   browser `localStorage` → Apps Script `CacheService` (6 h) → immutable CDN per tag.
 
@@ -186,7 +189,7 @@ dev/                 Vite copy: index.html, vite.config.ts, src/main.ts
 ### 7.2 Per release (`.draft/release/v<version>/`)
 
 ```
-aio-ui-<name>-<version>.tgz   × 34
+aio-ui-<name>-<version>.tgz   × 37
 registry.json                version, base URL, per-package subpaths + tarball + integrity
 layout.json                  dir / entry / stylesRoot / bare per package
 checksums.txt                sha256 per tarball
@@ -205,7 +208,7 @@ node scripts/version.mjs --apply --version 0.1.1
 node scripts/release.mjs --version 0.1.1             # dry run
 node scripts/release.mjs --version 0.1.1 --apply     # artefacts in .draft/release
 node .draft/preset/layout.mjs --out .draft/preset/layout.json
-npx vitest run .draft/preset       # generator suite (84 tests)
+npx vitest run .draft/preset       # generator suite (98 tests)
 npx tsc -p .draft/preset/tsconfig.json
 cd .draft/results/gallery-static_v1/dev && npx vite --port 5199
 ```
@@ -218,42 +221,51 @@ cd .draft/results/gallery-static_v1/dev && npx vite --port 5199
   Its `monorepo_plan.md` / `monorepo_task.md` were removed because every phase landed;
   the generator idea from that plan is now this document's preset engine, not an
   Inquirer CLI.
-- 34 packages build (`dist` + `.d.ts` + CSS), `dist` exported conditionally.
+- 37 packages build (`dist` + `.d.ts` + CSS), `dist` exported conditionally.
 - Form family: module registry, messages config, animations contract, address adapters.
-- Generator: parse → assemble → plan → emit → runtime → **physical files**, with 84 tests.
+- Generator: parse → assemble → plan → emit → runtime → **physical files**, with 98 tests.
 - Semver fixed at `0.1.0`; peers rewritten; version check wired into `verify`.
-- Release artefacts produced locally (34 tarballs + registry + layout + checksums).
-- Generated **gallery** site verified in a browser via its `dev/` copy (no CSS warnings).
+- Release artefacts regenerated: **37 tarballs** + `registry.json` + `layout.json` + `checksums.txt`
+  (37/37 checksums verified; the three kits are included).
+- Build-free proven from the **release layout**, not just `dev/`: both generated sites load
+  `@aio-ui/*` through the import map with a clean console (form = 1 fieldset + 3 fields;
+  gallery masonry = 4 children, carousel = 1).
+- Build-free is the primary delivery: five static files per site, framework served from the
+  pinned CDN tag; `dev/` stays as the opt-in source hand-over.
 
 **Known gaps**
 
-1. **Store form does not render yet.** `div#checkout-form` stays empty; the payload
-   handed to `FormBuilder.prepare()` is still `{ config, schema }` rather than the
-   expected shape. Next concrete bug to fix.
-2. **Build-free files cannot be opened until a tag exists** — their import map points at
-   `cdn.jsdelivr.net/gh/…@v0.1.0`. `dev/` is the local workaround.
-3. **Node ESM**: emitted JS keeps extensionless relative imports, so a Node install test
-   fails; the artefacts target bundlers/browsers. (Documented limit, not a bug.)
-4. **`npm i <tarball>` from a clean folder** not yet proven in this environment; verify
+1. **The tag is not published yet** — the generated import map points at
+   `cdn.jsdelivr.net/gh/…@v0.1.0`; the local smoke test rewrites the base to the release folder.
+2. **Node ESM clean install** is untested. Emitted JS now names `.js` explicitly and drops CSS
+   side-effect imports, so the old extensionless limitation is gone; a clean `npm i` is still
+   the proof.
+3. **`npm i <tarball>` from a clean folder** not yet proven in this environment; verify
    with a bundler project when the first tag exists.
-5. **`layout.json` freshness** is manual until the release workflow regenerates it.
+4. **`layout.json` freshness** is manual until the release workflow regenerates it; the current
+   folder is fresh at 37 packages.
 
 ## 10. Roadmap
 
-| Stage               | Deliverable                                                                  | Gate                           |
-| ------------------- | ---------------------------------------------------------------------------- | ------------------------------ |
-| A. Contract freeze  | preset + AI + derivation tables                                              | ✅ done                        |
-| B. Preset engine    | plan / parse / ai / emit / runtime / generate                                | ✅ done (draft)                |
-| C. Generator wiring | orchestrator returns `data.preset`; wizard renders `preset.pages`            | demo renders a preset page     |
-| D. Delivery         | semver ✅, release artefacts ✅, **release workflow**, CDN import-map target | one tag installable two ways   |
-| E. Hardening        | docs sync, store form bug, IdAddress payload naming, multistep messages      | `verify` green                 |
-| F. Optional         | per-feature packages if a consumer needs one behaviour alone                 | install without `@aio-ui/form` |
+| Stage               | Deliverable                                                                                 | Gate                           |
+| ------------------- | ------------------------------------------------------------------------------------------- | ------------------------------ |
+| A. Contract freeze  | preset + AI + derivation tables                                                             | ✅ done                        |
+| B. Preset engine    | plan / parse / ai / emit / runtime / generate                                               | ✅ done (draft)                |
+| C. Generator wiring | orchestrator returns `data.preset`; wizard renders `preset.pages`                           | demo renders a preset page     |
+| D. Delivery         | semver ✅, release artefacts ✅ (37, verified), **release workflow**, CDN import-map target | one tag installable two ways   |
+| E. Hardening        | docs sync, builder mount fix, IdAddress payload naming, multistep messages                  | `verify` green                 |
+| F. Optional         | per-feature packages if a consumer needs one behaviour alone                                | install without `@aio-ui/form` |
 
 Next three tasks, in order:
 
-1. Fix the store form payload (`.draft/preset/generate.ts` → `Form.prepare` contract).
-2. GitHub release workflow: tag → `verify` → release.mjs → upload assets.
-3. Point the generated build-free files at the real tag and smoke-test in a browser.
+1. Push tag `v0.1.0` (pre-release) and upload `.draft/release/v0.1.0` as its assets.
+2. Re-run the build-free smoke test from the real CDN tag (the local run is already green).
+3. Build the missing manual model references (profile, store, blog) — the official release gate.
+
+> **Release policy.** Test tags are allowed after `npm run verify` and may be regenerated.
+> An **official** release happens only when all four models (§3.5) exist as manual, browser-
+> verified references with their boundaries documented — so the contract is proven before it is
+> promised.
 
 ## 11. How to work on this (for agents)
 

@@ -286,8 +286,10 @@ function emitRelativeExtensions(distRoot) {
 
       const before = readFileSync(full, "utf8");
       const after = before.replace(CSS_SIDE_EFFECT, "").replace(SPECIFIER, (whole, lead, quote, target) => {
-        // Already extensioned (`.js`, `.json`, …) — leave it alone.
-        if (/\.[A-Za-z0-9]+$/.test(target)) return whole;
+        // Already a real file extension — leave it alone. A dotted basename
+        // (`Input.FormAdapter`) is NOT an extension; testing for "a dot" here
+        // silently skipped every module whose name contains a period.
+        if (/\.(?:[cm]?js|json|css)$/i.test(target)) return whole;
         // The emitted file is always the `.js` next to the source: verify, then point at it.
         const candidate = join(dirname(full), `${target}.js`);
         if (existsSync(candidate)) return `${lead}${quote}${target}.js${quote}`;

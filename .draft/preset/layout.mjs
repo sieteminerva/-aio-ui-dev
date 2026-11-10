@@ -76,6 +76,13 @@ function readPackage(dir) {
 
   const exportsMap = manifest.exports ?? {};
 
+  /** The package's own export map, flattened: `"./Form" → "dist/Form.js"`. */
+  const subpaths = {};
+  for (const [key, value] of Object.entries(exportsMap)) {
+    const file = fileOf(value);
+    if (typeof file === "string") subpaths[key] = file.replace(/^\.\//, "");
+  }
+
   // Prefer the root export; scaffolded components only declare a named one
   // (`"./Accordion"`), so fall back to the first `.js` entry in the map.
   let entry = fileOf(exportsMap["."]);
@@ -91,7 +98,7 @@ function readPackage(dir) {
   // CSS-only package (`@aio-ui/styles`): publish its sheets, no module entry.
   if (!entry || !entry.endsWith(".js")) {
     const hasCss = Object.keys(exportsMap).some((key) => key.endsWith(".css"));
-    return hasCss ? { name, dir: relDir, stylesRoot: "src" } : null;
+    return hasCss ? { name, dir: relDir, stylesRoot: "src", subpaths } : null;
   }
 
   return {
@@ -102,6 +109,7 @@ function readPackage(dir) {
     // A package may publish only named subpaths (`@aio-ui/accordion/Accordion`).
     // The fallback entry above is then a subpath file, not a valid bare import.
     bare: Boolean(exportsMap["."]),
+    subpaths,
   };
 }
 
@@ -114,6 +122,7 @@ for (const dir of candidates()) {
       ...(info.entry ? { entry: info.entry } : {}),
       ...(info.stylesRoot ? { stylesRoot: info.stylesRoot } : {}),
       ...(info.bare === false ? { bare: false } : {}),
+      ...(info.subpaths ? { subpaths: info.subpaths } : {}),
     };
 }
 

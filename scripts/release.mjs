@@ -26,7 +26,14 @@ import { join, relative } from "node:path";
 
 const ROOT = process.cwd();
 const SCOPE = "@aio-ui/";
-const SECTIONS = ["packages/components", "packages/modules", "packages/themes", "packages/kits", "packages/utilities", "packages/styles"];
+const SECTIONS = [
+  "packages/components",
+  "packages/modules",
+  "packages/themes",
+  "packages/kits",
+  "packages/utilities",
+  "packages/styles",
+];
 
 const args = process.argv.slice(2);
 const flag = (name) => args.includes(name);
@@ -37,7 +44,7 @@ const valueOf = (name) => {
 
 const version = valueOf("--version");
 const apply = flag("--apply");
-const repository = process.env.GITHUB_REPOSITORY || "sieteminerva/rajutan";
+const repository = process.env.GITHUB_REPOSITORY || "sieteminerva/-aio-ui-dev";
 const outDir = version ? join(ROOT, ".draft", "release", `v${version}`) : null;
 
 if (!version || !/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(version)) {
@@ -169,14 +176,18 @@ for (const entry of packages) {
     size: packed.size,
   };
 
-  // Layout mirrors the generator's resolver: entry = "." file, styles live in
-  // `dist` for TS packages and `src` for the CSS-only package.
-  const rootEntry = subpaths["."] ?? Object.values(subpaths).find((file) => file.endsWith(".js"));
+  // Layout mirrors the generator's resolver: `entry` is a JS root only, every
+  // subpath keeps its real file, and styles live in `dist` for TS packages but
+  // `src` for the CSS-only package.
+  const rootEntry = subpaths["."]?.endsWith(".js")
+    ? subpaths["."]
+    : Object.values(subpaths).find((file) => file.endsWith(".js"));
   layout[name] = {
     dir,
     ...(rootEntry ? { entry: rootEntry } : {}),
     stylesRoot: rootEntry ? "dist" : "src",
-    ...(exportMap["."] ? {} : { bare: false }),
+    ...(rootEntry && subpaths["."] ? {} : { bare: false }),
+    subpaths,
   };
 }
 
