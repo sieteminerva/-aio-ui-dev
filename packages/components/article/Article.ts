@@ -35,16 +35,26 @@ export type ArticleElementType =
   | "@article>detail>body"
   ;
 
-export interface iArticleSlotSpec {
-  slot: string;
-  view?: "list" | "card";
+export interface iArticleViewSpec {
+  view: string;
+  display?: "list" | "card";
   count?: number;
   props?: Record<string, unknown>;
 }
 
 export interface iArticleConfig extends iBuilderConfig<ArticleElementType> {
-  navigate: (slug: any, themeId: string) => void;
-  slots?: iArticleSlotSpec[];
+  /**
+   * Navigation **intent** only. The builder never touches the URL: the host (or the
+   * shell's router) decides what a slug means, which is what keeps a deep link, a modal
+   * preview and an iframe on the same component.
+   */
+  navigate?: (slug: string) => void;
+  /** Which parts this composition renders. Order is the render order. */
+  views?: iArticleViewSpec[];
+  /** Record to open in the detail view on the first paint — a deep link, not state. */
+  initialSlug?: string;
+  /** Force the first paint to a view. Defaults to the list, unless `initialSlug` is set. */
+  initialView?: "list" | "detail";
   view?: "list" | "card";
   position?: "left" | "right";
   recommendation?: number | boolean;
@@ -68,7 +78,7 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
 
   // State internal modul
   private currentRawServerResponse: any = null;
-  private slotSpecs: iArticleSlotSpec[] = [];
+  private viewSpecs: iArticleViewSpec[] = [];
   /** Simpan list view saat detail aktif, agar bisa dikembalikan via tombol back. */
   private listElement: HTMLElement | null = null;
   /** Records by id (`slug`/`uid`), so cards only carry a key. */
@@ -110,7 +120,9 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
       themeId: "default",
       selectors: defaultSelectors,
       namespace: null,
-      slots: [],
+      views: [],
+      initialSlug: "",
+      initialView: "list",
       view: "card",
       position: "right",
       recommendation: 5,
@@ -120,10 +132,12 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
     };
 
     this.config = this.resolveConfig(defaultConfig, config);
-    this.slotSpecs = this.config.slots?.length ? this.config.slots : [
-      { slot: "controls" },
-      { slot: "list", view: "card" },
-      { slot: "aside", count: this.config.items ?? 5 },
+    const declaredViews = this.config.views ?? [];
+
+    this.viewSpecs = declaredViews.length ? declaredViews : [
+      { view: "controls" },
+      { view: "list", display: "card" },
+      { view: "aside", count: this.config.items ?? 5 },
     ];
   }
 
@@ -148,21 +162,22 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
       this.records.set(id, article);
     });
 
-    const slotFor = (role: string): boolean => this.slotSpecs.length === 0 || this.slotSpecs.some((s) => s.slot === role);
+    const viewFor = (role: string): boolean =>
+      this.viewSpecs.length === 0 || this.viewSpecs.some((s) => s.view === role);
 
     // ── 1. CONTROLS (back + pagination HATEOAS) ───────────────────────────
-    if (slotFor("controls")) {
+    if (viewFor("controls")) {
       const controls = this.render("@article>controls", this.currentRawServerResponse) as HTMLElement | undefined;
       if (controls) {
-        controls.dataset.slot = "controls";
+        controls.dataset.view = "controls";
         const back = this.render("@article>controls>back", { label: "Kembali" }) as HTMLElement | undefined;
         if (back) {
-          back.dataset.slot = "back-navigation";
+          back.dataset.view = "back";
           controls.appendChild(back);
         }
         const pagination = this.render("@article>controls>pagination", this.currentRawServerResponse) as HTMLElement | undefined;
         if (pagination) {
-          pagination.dataset.slot = "pagination";
+          pagination.dataset.view = "pagination";
           controls.appendChild(pagination);
         }
         container.appendChild(controls);
@@ -170,10 +185,10 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
     }
 
     // ── 2. LIST — grid kartu artikel dari data[] ──────────────────────────
-    if (slotFor("list")) {
+    if (viewFor("list")) {
       const grid = this.render("@article>list", this.currentRawServerResponse) as HTMLElement | undefined;
       if (grid) {
-        grid.dataset.slot = "list";
+        grid.dataset.view = "list";
         grid.dataset.display = this.config.view || "card";
 
         records.forEach((article: any) => {
@@ -190,9 +205,18 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
     if (this.config.recommendation && Array.isArray(this.currentRawServerResponse?.data)) {
       const aside = this.render("@article>aside", this.currentRawServerResponse) as HTMLElement | undefined;
       if (aside) {
-        aside.dataset.slot = "aside";
+        aside.dataset.view = "aside";
         container.appendChild(aside);
       }
+    }
+
+    // ── 4. FIRST VIEW — a deep link is a config, not internal state ───────
+    // `#article/<slug>` re-renders the whole route, so the record has to be openable by
+    // slug on the first paint. Navigating here would loop back into the host; the host
+    // already knows its own URL.
+    if (this.config.initialView === "detail" && this.config.initialSlug) {
+      const record = this.records.get(String(this.config.initialSlug));
+      if (record) this.showDetail(container, record, { navigate: false });
     }
 
     return container;
@@ -219,7 +243,7 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
     }
 
     // B. Klik tombol kembali → tampilkan kembali list view
-    if (target.closest('[data-slot="back-navigation"], button.back')) {
+    if (target.closest('[data-view="back"], button.back')) {
       this.showList(container);
       return;
     }
@@ -237,13 +261,23 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
   };
 
   /** Tampilkan view detail untuk satu artikel (menggantikan list atau detail aktif). */
-  private showDetail(container: HTMLElement, article: any = null): void {
+  /**
+   * Show the detail view for one record.
+   *
+   * @param container - The composition root that hosts the views.
+   * @param article - Record to show.
+   * @param options - `navigate: false` when the host already knows this record (first
+   *   paint of a deep link): announcing a navigation there would send the host back to
+   *   the URL it just rendered from.
+   */
+  private showDetail(container: HTMLElement, article: any = null, options: { navigate?: boolean } = {}): void {
     if (!article) return;
+    const announce = options.navigate !== false;
 
     const currentDetail = container.querySelector("article.detail") as HTMLElement | null;
 
     if (!currentDetail) {
-      const grid = container.querySelector('[data-slot="list"]') as HTMLElement | null;
+      const grid = container.querySelector('[data-view="list"]') as HTMLElement | null;
       if (!grid) return;
       // Simpan list view agar bisa dikembalikan persis apa adanya.
       this.listElement = grid;
@@ -251,28 +285,24 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
 
     const detail = this.render("@article>detail", article) as HTMLElement;
     if (!detail) return;
-    detail.dataset.slot = "detail";
+    detail.dataset.view = "detail";
 
-    // Perbarui URL hash secara pasif memakai format kanonik router:
-    // #route/slug?theme=... (tanpa trigger render ulang)
-    if (article.slug) {
-      history.pushState({ slug: article.slug }, "", this.buildSlugHash(article.slug));
+    // Navigasi melalui config.navigate atau emit: shell yang mengeksekusi routing,
+    // bukan builder yang menyentuh URL.
+    if (article.slug && announce) {
+      if (typeof this.config.navigate === "function") {
+        this.config.navigate(article.slug);
+      }
+      this.config.emit?.("elementChanged", {
+        builder: this.builderId,
+        type: "@article>detail",
+        element: detail,
+        data: { slug: article.slug, article },
+      } as any);
     }
 
     if (currentDetail) currentDetail.replaceWith(detail); // detail → detail
     else this.listElement!.replaceWith(detail);           // list → detail
-  }
-
-  /**
-   * Bangun hash slug dengan format kanonik HashRouter:
-   * #route/slug?theme=... — agar parseUrlHash() membacanya sebagai
-   * fragment (bukan merusak query, seperti saat append mentah).
-   */
-  private buildSlugHash(slug: string): string {
-    const raw = location.hash.replace(/^#/, "");
-    const [pathPart, queryPart] = raw.split("?");
-    const base = pathPart.split("/")[0] || "blog";
-    return `#${base}/${encodeURIComponent(slug)}${queryPart ? `?${queryPart}` : ""}`;
   }
 
   /** Kembalikan ke list view. */
@@ -281,13 +311,15 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
     const detail = container.querySelector("article.detail");
     if (detail) detail.replaceWith(this.listElement);
 
-    // Bersihkan suffix slug dari hash: #blog/slug?theme=... → #blog?theme=...
-    const raw = location.hash.replace(/^#/, "");
-    if (raw.includes("/")) {
-      const [pathPart, queryPart] = raw.split("?");
-      const base = pathPart.split("/")[0];
-      history.pushState({}, "", `#${base}${queryPart ? `?${queryPart}` : ""}`);
+    if (typeof this.config.navigate === "function") {
+      this.config.navigate("");
     }
+    this.config.emit?.("elementChanged", {
+      builder: this.builderId,
+      type: "@article>list",
+      element: this.listElement,
+      data: { back: true },
+    } as any);
 
     this.listElement = null;
   }
