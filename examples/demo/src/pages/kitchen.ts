@@ -1,17 +1,20 @@
 import type { iNodeContent } from "@aio-ui/core/interface";
 
-import { DEMO } from "../manifest";
+import { DEMO, DEMO_TIERS, TIER_COST, TIER_LABELS } from "../manifest";
 import type { iDemoEntry } from "../manifest";
-import { demoNav, pageIntro } from "../nav";
+import { demoNav, pageIntro, tierNav } from "../nav";
 import { themeSwitcher } from "../theme-switcher";
 
 /**
  * Kitchen-sink page, generated from the demo table.
  *
- * Each component gets its own `section#<name>` and its own mount call, and a failure is
- * caught **per section**: one broken builder shows a red status line instead of blanking
- * the page. That is the whole point of this example — it measures component health, not
- * visual taste.
+ * The table is grouped by teaching tier (basic → intermediate → advanced), so the page
+ * reads as a ramp: what a payload alone can build, then what needs config, then what owns
+ * state. `category` stays on each card as classification — it is not the order.
+ *
+ * Each component gets its own card and its own mount call, and a failure is caught
+ * **per card**: one broken builder shows a red status line instead of blanking the page.
+ * That is still the point of this example — it measures component health, not taste.
  */
 function mount(host: HTMLElement, entry: iDemoEntry, build: any): void {
   try {
@@ -36,40 +39,76 @@ function mount(host: HTMLElement, entry: iDemoEntry, build: any): void {
   }
 }
 
-/** One section per table row, in table order. */
-export function kitchenContent(): iNodeContent {
-  const sections = DEMO.map((entry) => ({
-    [`section#${entry.name}`]: {
+/** One card: the component's own section id, its labels, and the mount host. */
+function cardContentOf(entry: iDemoEntry) {
+  return {
+    "p.eyebrow": { content: `${entry.category} · ${entry.tier}` },
+    "h3": { content: entry.name },
+    "p.meta": {
+      content: `${entry.kind}${entry.note ? ` · ${entry.note}` : ""}`,
+    },
+    ".mount": {
+      // The host is empty on purpose: the component is mounted into it, and the route
+      // names the component in the preload plan — a node never carries a list.
+      onCreated: (element: HTMLElement, _render: any, build: any) => mount(element, entry, build),
+    },
+    ...(entry.kind === "modal"
+      ? {
+        "button.open": {
+          content: "open modal",
+          onCreated: (element: HTMLElement) =>
+            element.addEventListener("click", () => (globalThis as any).__demoModal?.open?.()),
+        },
+      }
+      : {}),
+  };
+}
+
+/** Tier group: eyebrow, title, one "what it costs" line, then the cards in table order. */
+function tierSectionOf(tier: (typeof DEMO_TIERS)[number]) {
+  const rows = DEMO.filter((entry) => entry.tier === tier);
+
+  return {
+    [`section.tier#tier-${tier}`]: {
+      attrs: { "data-tier": tier },
       content: {
-        "h2": { content: entry.name },
-        "p.meta": {
-          content: `${entry.category} · ${entry.kind}${entry.note ? ` · ${entry.note}` : ""}`,
+        "header.tier-head": {
+          content: {
+            "p.eyebrow": { content: `${tier} tier` },
+            "h2": { content: `${TIER_LABELS[tier]} · ${rows.length} komponen` },
+            "p.cost": { content: TIER_COST[tier] },
+          },
         },
-        ".mount": {
-          // The host is empty on purpose: the component is mounted into it, and the route
-          // names the component in the preload plan — a node never carries a list.
-          onCreated: (element: HTMLElement, _render: any, build: any) => mount(element, entry, build),
+        ".tier-grid": {
+          content: Object.fromEntries(
+            rows.map((entry) => [`section#${entry.name}`, { content: cardContentOf(entry) }]),
+          ),
         },
-        ...(entry.kind === "modal"
-          ? {
-            "button.open": {
-              content: "open modal",
-              onCreated: (element: HTMLElement) =>
-                element.addEventListener("click", () => (globalThis as any).__demoModal?.open?.()),
-            },
-          }
-          : {}),
       },
     },
-  }));
+  };
+}
 
+/**
+ * Grouped by tier, in tier order. `id-address` has no card of its own on purpose: it only
+ * exists as a form field adapter, so it is demonstrated on `#form`.
+ */
+export function kitchenContent(): iNodeContent {
   return {
     ".page": {
       content: {
         ...demoNav,
-        ...pageIntro("Elements", `${DEMO.length} komponen elemen · satu builder, satu node`),
+        ...pageIntro(
+          "Elements",
+          `${DEMO.length} komponen elemen · ${DEMO_TIERS.length} tingkat · satu builder, satu node`,
+        ),
         ...themeSwitcher,
-        "main.kitchen": { content: sections },
+        "main.kitchen": {
+          content: {
+            ...tierNav,
+            ...Object.assign({}, ...DEMO_TIERS.map((tier) => tierSectionOf(tier))),
+          },
+        },
       },
     },
   } as unknown as iNodeContent;

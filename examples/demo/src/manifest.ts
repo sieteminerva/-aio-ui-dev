@@ -1,6 +1,30 @@
 import type { iComponentManifest } from "@aio-ui/core";
 
 /**
+ * Teaching tiers.
+ *
+ * `category` says what a component *is* (layout / navigation / content / chrome);
+ * `tier` says what it *costs* to use. The page groups by tier so the difficulty ramp is
+ * visible, while the card keeps the category as classification.
+ */
+export const DEMO_TIERS = ["basic", "intermediate", "advanced"] as const;
+
+export type DemoTier = (typeof DEMO_TIERS)[number];
+
+export const TIER_LABELS: Record<DemoTier, string> = {
+  basic: "Basic",
+  intermediate: "Intermediate",
+  advanced: "Advanced",
+};
+
+/** One line per tier: the thing you must learn before the component works. */
+export const TIER_COST: Record<DemoTier, string> = {
+  basic: "payload saja — satu builder, satu elemen, tanpa config",
+  intermediate: "butuh config atau handle kontrol (buka/tutup, state aktif)",
+  advanced: "state, event, atau sub-modul yang hidup di dalam komponen",
+};
+
+/**
  * The demo table.
  *
  * One entry per component: where it loads from, what it needs, and how it is mounted.
@@ -18,6 +42,8 @@ export interface iDemoEntry {
   /** Stylesheet specifier; omitted when the component ships no CSS. */
   stylesheet?: string;
   category: "layout" | "navigation" | "content" | "chrome";
+  /** How much wiring the component asks for; the page groups sections by this. */
+  tier: DemoTier;
   kind: "element" | "modal";
   /** Payload handed to `build(name, payload)`. */
   payload: any;
@@ -37,6 +63,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/badge",
     stylesheet: "@aio-ui/badge/Badge.css",
     category: "content",
+    tier: "basic",
     kind: "element",
     payload: {
       content: [
@@ -52,6 +79,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/accordion",
     stylesheet: "@aio-ui/accordion/Accordion.css",
     category: "content",
+    tier: "basic",
     kind: "element",
     // Shape from `.archives/travel-trip/content.ts:308` — items are `title` + `description`.
     payload: {
@@ -66,6 +94,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/carousel",
     stylesheet: "@aio-ui/carousel/Carousel.css",
     category: "content",
+    tier: "advanced",
     kind: "element",
     // Shape from `content.ts:37` — slides are `title` + `description` + `image`.
     payload: {
@@ -86,6 +115,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/tab",
     stylesheet: "@aio-ui/tab/Tab.css",
     category: "layout",
+    tier: "advanced",
     kind: "element",
     payload: {
       content: {
@@ -99,6 +129,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/section",
     stylesheet: "@aio-ui/section/Section.css",
     category: "layout",
+    tier: "basic",
     kind: "element",
     // Shape from `.archives/travel-trip/content.ts:296` — one row, content is an array of
     // columns, and each column has its own `content` array of blocks.
@@ -131,6 +162,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/footer",
     stylesheet: "@aio-ui/footer/Footer.css",
     category: "layout",
+    tier: "basic",
     kind: "element",
     // Row 1 = `content.columns` (any count), row 2 = copyright. Columns are free-form:
     // the first carries title + description, the second only actions.
@@ -181,6 +213,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/fabmenu",
     stylesheet: "@aio-ui/fabmenu/FabMenu.css",
     category: "navigation",
+    tier: "intermediate",
     kind: "element",
     // `FabMenu.prepare` reads `content.actions` and `content.title` — no wrapper.
     payload: {
@@ -193,6 +226,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/modeswitcher",
     stylesheet: "@aio-ui/modeswitcher/ModeSwitcher.css",
     category: "chrome",
+    tier: "intermediate",
     kind: "element",
     payload: {},
   },
@@ -201,6 +235,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/pricingcard",
     stylesheet: "@aio-ui/pricingcard/PricingCard.css",
     category: "content",
+    tier: "basic",
     kind: "element",
     // Shape from `content.ts:531` — an **array** of cards: `header`, `body[]`, `price`.
     payload: [
@@ -233,6 +268,7 @@ export const DEMO: iDemoEntry[] = [
     path: "@aio-ui/modal",
     stylesheet: "@aio-ui/modal/Modal.css",
     category: "chrome",
+    tier: "intermediate",
     kind: "modal",
     // `destroyOnClose: true` makes a modal single-use; a mounted demo wants reuse.
     payload: "Isi modal dari payload demo.",
