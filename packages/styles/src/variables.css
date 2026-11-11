@@ -145,6 +145,14 @@
   --app-shadow-soft: 0 16px 40px -10px rgba(0, 0, 0, 0.55);
   --app-shadow-elevated: 0 24px 50px -8px rgba(0, 0, 0, 0.75);
 
+  --app-status-error: #ff5a7c;
+  --app-status-error-soft: #ffa9bd;
+  --app-status-error-surface: rgba(255, 17, 77, 0.12);
+  --app-status-error-fill: rgba(255, 90, 124, 0.42);
+  --app-status-success: rgba(21, 179, 60, 0.55);
+  --app-status-warning: rgba(236, 186, 20, 0.62);
+  --app-status-info: rgba(33, 133, 208, 0.72);
+
   /* ---- variable input/form ---- */
   --input-primary-color: var(--app-primary-color);
   --input-accent-color: var(--app-accent-color);
