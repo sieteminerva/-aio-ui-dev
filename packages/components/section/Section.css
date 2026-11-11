@@ -4,13 +4,41 @@
    The grid decides the column count, so the same payload reads well at any width.
    ========================================================================== */
 
+/* Component token layer — declared once, so an app or a theme overrides a section
+   by redeclaring any `--section-*` on an ancestor. Every value derives from an
+   `--app-*` token with the light-mode default as fallback. */
+:root,
+[data-theme] {
+  /* Layout */
+  --section-gap: var(--app-gap, clamp(1rem, 2.5vw, 2rem));
+  --section-image-radius: var(--app-image-border-radius, 1.25rem);
+  --section-shadow: var(--app-shadow-soft, 0 12px 35px -8px rgba(92, 60, 20, 0.08));
+
+  /* Type */
+  --section-eyebrow-size: var(--app-font-size-xs, 0.75rem);
+  --section-title-size: var(--app-font-size-2xl, 1.65rem);
+  --section-title-size-compact: var(--app-font-size-xl, 1.35rem);
+  --section-text-size: var(--app-font-size-base, 1rem);
+  --section-cta-size: var(--app-font-size-sm, 0.85rem);
+
+  /* Colour. `--section-accent-color` is a foreground/border token on purpose;
+     the CTA fill gets its own name so a palette can move one without the other. */
+  --section-accent-color: var(--app-primary-color, #925408);
+  --section-cta-background: var(--app-primary-color, #925408);
+  --section-cta-hover-background: var(--app-primary-hover, #754103);
+  --section-cta-text-color: var(--app-text-on-primary, #ffffff);
+  --section-cta-focus-ring: var(--app-border-focus, #925408);
+  --section-title-color: var(--app-text-heading-color, #1a140e);
+  --section-text-color: var(--app-text-accent-color, #6e5f51);
+}
+
 .section {
   display: grid;
   /* `auto-fit` + a 18rem floor: 3 columns on a wide page, 2 in the middle,
      1 under ~40rem without any breakpoint-specific rules. */
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   align-items: center;
-  gap: var(--app-gap);
+  gap: var(--section-gap);
   width: 100%;
 }
 
@@ -33,33 +61,33 @@
   height: auto;
   aspect-ratio: 16 / 10;
   object-fit: cover;
-  border-radius: var(--app-image-border-radius);
-  box-shadow: var(--app-shadow-soft);
+  border-radius: var(--section-image-radius);
+  box-shadow: var(--section-shadow);
 }
 
 /* ── Text ──────────────────────────────────────────────────────────────── */
 .section-eyebrow {
-  font-size: var(--app-font-size-xs);
+  font-size: var(--section-eyebrow-size);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--app-primary-color);
+  color: var(--section-accent-color);
 }
 
 .section-title {
   margin: 0;
-  font-size: var(--app-font-size-2xl);
+  font-size: var(--section-title-size);
   line-height: 1.2;
-  color: var(--app-text-heading-color);
+  color: var(--section-title-color);
   text-wrap: balance;
 }
 
 .section-desc {
   margin: 0;
   max-width: 60ch;
-  font-size: var(--app-font-size-base);
+  font-size: var(--section-text-size);
   line-height: 1.7;
-  color: var(--app-text-accent-color);
+  color: var(--section-text-color);
 }
 
 /* ── Actions ───────────────────────────────────────────────────────────── */
@@ -78,15 +106,15 @@
   justify-content: center;
   gap: 0.5rem;
   padding: 0.7rem 1.5rem;
-  font-size: var(--app-font-size-sm);
+  font-size: var(--section-cta-size);
   font-weight: 600;
   line-height: 1.4;
-  border: 1px solid var(--app-primary-color);
+  border: 1px solid var(--section-accent-color);
   border-radius: 9999px;
   text-decoration: none;
   cursor: pointer;
-  color: var(--app-text-on-primary);
-  background: var(--app-primary-color);
+  color: var(--section-cta-text-color);
+  background: var(--section-cta-background);
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -95,28 +123,28 @@
 
 .section-cta:hover,
 .section-cta:focus-visible {
-  background: var(--app-primary-hover);
-  border-color: var(--app-primary-hover);
+  background: var(--section-cta-hover-background);
+  border-color: var(--section-cta-hover-background);
   transform: translateY(-1px);
 }
 
 .section-cta:focus-visible {
-  outline: 2px solid var(--app-border-focus);
+  outline: 2px solid var(--section-cta-focus-ring);
   outline-offset: 2px;
 }
 
 /* A second CTA reads as secondary: outline until hover, then it fills in. */
 .section-cta + .section-cta {
-  color: var(--app-primary-color);
+  color: var(--section-accent-color);
   background: transparent;
-  border-color: var(--app-primary-color);
+  border-color: var(--section-accent-color);
 }
 
 .section-cta + .section-cta:hover,
 .section-cta + .section-cta:focus-visible {
-  color: var(--app-text-on-primary);
-  background: var(--app-primary-color);
-  border-color: var(--app-primary-color);
+  color: var(--section-cta-text-color);
+  background: var(--section-cta-background);
+  border-color: var(--section-accent-color);
 }
 
 /* ── Small viewport: one column, image full row ────────────────────────── */
@@ -132,7 +160,7 @@
   }
 
   .section-title {
-    font-size: var(--app-font-size-xl);
+    font-size: var(--section-title-size-compact);
   }
 }
 
