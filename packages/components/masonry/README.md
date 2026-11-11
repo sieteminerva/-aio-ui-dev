@@ -262,3 +262,37 @@ When managing multi-view setups or deleting container spaces dynamically within 
 ---
 
 This documentation outlines everything your team needs to implement the gallery securely and cleanly. Is there any additional platform setup (such as Webpack, Vite, or a specific CSS library template connection) that you would like to include in this guide before sharing it with your team?
+
+---
+
+## Tokens
+
+Declared once on `:root, [data-theme]` in `Masonry.css`. Each derives from an app token with a
+literal fallback, so a theme retunes the app token and this sheet follows; redeclare a
+`--masonry-*` token on an ancestor to retheme the grid alone.
+
+| Token                                         | Derives from                    | Used for                                 |
+| --------------------------------------------- | ------------------------------- | ---------------------------------------- |
+| `--masonry-card-radius`                       | `--app-image-border-radius`     | Card corner radius                       |
+| `--masonry-radius`                            | `--app-component-border-radius` | Filter bar, slider, lightbox image       |
+| `--masonry-shadow`                            | `--app-shadow-soft`             | Filter slider shadow                     |
+| `--masonry-card-hover-shadow`                 | _(private)_                     | Card lift on hover                       |
+| `--masonry-accent`                            | `--app-accent-strong`           | Filter bar hairline, slider, “more” fill |
+| `--masonry-accent-text`                       | `--app-text-on-accent`          | “more” label on the accent fill          |
+| `--masonry-border-color`                      | `--app-border-color`            | “more” hairline                          |
+| `--masonry-text-color`                        | `--app-text-color`              | Filter button label                      |
+| `--masonry-text-accent`                       | `--app-text-accent-color`       | Filter button label on hover             |
+| `--masonry-filter-active-color`               | `--app-surface-muted`           | Active filter label                      |
+| `--masonry-more-hover-color`                  | `--app-accent-color`            | “more” label on hover                    |
+| `--masonry-spinner`                           | `--app-spinner-content`         | Loading spinner                          |
+| `--masonry-lightbox-backdrop`                 | _(private)_                     | Lightbox backdrop                        |
+| `--masonry-lightbox-control-background`       | _(private)_                     | Lightbox prev/next/close fill            |
+| `--masonry-lightbox-control-hover-background` | _(private)_                     | Same control, hover                      |
+| `--masonry-lightbox-control-color`            | _(private)_                     | Lightbox control glyph                   |
+
+`--masonry-columns` is **not** part of the layer: the builder writes it from `config.column`
+(`Masonry.ts`), and the two media queries clamp it. Setting it from CSS works but is overwritten
+whenever the builder re-renders. Older drafts of this document called it `--init-columns`.
+
+`--masonry-more-hover-color` used to be `var(--app-accent-accent)`, a token no sheet declares; the
+declaration was invalid at computed-value time, so the label simply inherited the body colour.

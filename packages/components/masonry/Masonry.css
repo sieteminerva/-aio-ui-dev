@@ -1,4 +1,34 @@
 /* Masonry Grid Styling */
+
+/* Component token layer — declared once so an app or a theme overrides masonry
+   by redeclaring `--masonry-*` on an ancestor. `--masonry-columns` is NOT here:
+   the builder writes it from `config.column` and the media queries clamp it. */
+:root,
+[data-theme] {
+  /* Shape */
+  --masonry-card-radius: var(--app-image-border-radius, 1.25rem);
+  --masonry-radius: var(--app-component-border-radius, 1rem);
+  --masonry-shadow: var(--app-shadow-soft, 0 12px 35px -8px rgba(92, 60, 20, 0.08));
+  /* Card hover lift — no app counterpart, private to the grid. */
+  --masonry-card-hover-shadow: 0 24px 48px rgba(91, 63, 134, 0.2);
+
+  /* Filter bar + “load more” */
+  --masonry-accent: var(--app-accent-strong, #d9822b);
+  --masonry-accent-text: var(--app-text-on-accent, #1a140e);
+  --masonry-border-color: var(--app-border-color, rgba(168, 137, 102, 0.28));
+  --masonry-text-color: var(--app-text-color, #2c251e);
+  --masonry-text-accent: var(--app-text-accent-color, #6e5f51);
+  --masonry-filter-active-color: var(--app-surface-muted, rgba(244, 238, 226, 0.7));
+  --masonry-more-hover-color: var(--app-accent-color, #b47828);
+
+  /* Spinner + lightbox */
+  --masonry-spinner: var(--app-spinner-content, none);
+  --masonry-lightbox-backdrop: rgba(10, 10, 20, 0.95);
+  --masonry-lightbox-control-background: rgba(255, 255, 255, 0.1);
+  --masonry-lightbox-control-hover-background: rgba(255, 255, 255, 0.3);
+  --masonry-lightbox-control-color: #ffffff;
+}
+
 section:is(.masonry),
 .masonry {
   & > .grid {
@@ -19,14 +49,14 @@ section:is(.masonry),
       margin-bottom: 1.5rem;
       cursor: pointer;
       transition: transform 0.3s ease;
-      border-radius: var(--app-image-border-radius);
+      border-radius: var(--masonry-card-radius);
       overflow: hidden;
       transform: translate3d(0, 0, 0);
       backface-visibility: hidden;
 
       &:hover {
         transform: scale(1.02);
-        box-shadow: 0 24px 48px rgba(91, 63, 134, 0.2);
+        box-shadow: var(--masonry-card-hover-shadow);
       }
       & img {
         width: 100%;
@@ -49,18 +79,18 @@ section:is(.masonry),
     display: block;
     margin: 2rem auto;
     padding: 0.75rem 2rem;
-    background: var(--app-accent-strong);
-    color: var(--app-text-on-accent);
-    border: 2px solid var(--app-border-color);
-    border-radius: calc(var(--app-component-border-radius, 8px) * 4);
+    background: var(--masonry-accent);
+    color: var(--masonry-accent-text);
+    border: 2px solid var(--masonry-border-color);
+    border-radius: calc(var(--masonry-radius) * 4);
     cursor: pointer;
     font-size: 1rem;
     font-weight: bold;
     transition: background 0.3s ease;
     &:hover {
       background: none;
-      color: var(--app-accent-accent);
-      border: 2px solid var(--app-border-color);
+      color: var(--masonry-more-hover-color);
+      border: 2px solid var(--masonry-border-color);
     }
   }
 
@@ -69,7 +99,7 @@ section:is(.masonry),
     margin: 1.5rem auto;
     width: 40px;
     height: 40px;
-    background-image: var(--app-spinner-content);
+    background-image: var(--masonry-spinner);
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
@@ -102,8 +132,8 @@ section:is(.masonry),
     justify-content: center;
     align-items: center;
     padding: 5px;
-    border: 2px solid var(--app-accent-strong);
-    border-radius: calc(var(--app-component-border-radius) * 2);
+    border: 2px solid var(--masonry-accent);
+    border-radius: calc(var(--masonry-radius) * 2);
     justify-self: center;
     z-index: 1;
 
@@ -112,9 +142,9 @@ section:is(.masonry),
       position: absolute;
       top: 0;
       left: 0;
-      background: var(--app-accent-strong);
-      border-radius: var(--app-component-border-radius);
-      box-shadow: var(--app-shadow-soft);
+      background: var(--masonry-accent);
+      border-radius: var(--masonry-radius);
+      box-shadow: var(--masonry-shadow);
       transition:
         transform 0.35s cubic-bezier(0.25, 1, 0.5, 1),
         width 0.35s cubic-bezier(0.25, 1, 0.5, 1),
@@ -129,8 +159,8 @@ section:is(.masonry),
       position: relative;
       padding: 0.5rem 1.25rem;
       margin-bottom: 0;
-      color: var(--app-text-color);
-      border-radius: var(--app-component-border-radius);
+      color: var(--masonry-text-color);
+      border-radius: var(--masonry-radius);
       cursor: pointer;
       font-size: 0.9rem;
 
@@ -140,13 +170,13 @@ section:is(.masonry),
       outline: none;
 
       &:hover {
-        color: var(--app-text-accent-color);
+        color: var(--masonry-text-accent);
       }
 
       &.active {
         background: none;
         box-shadow: none;
-        color: var(--app-surface-muted);
+        color: var(--masonry-filter-active-color);
         font-weight: 600;
       }
     }
@@ -158,7 +188,7 @@ section:is(.masonry),
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(10, 10, 20, 0.95);
+    background: var(--masonry-lightbox-backdrop);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -177,7 +207,7 @@ section:is(.masonry),
       max-width: 90vw;
       max-height: 90vh;
       object-fit: contain;
-      border-radius: var(--app-component-border-radius);
+      border-radius: var(--masonry-radius);
     }
 
     & .close,
@@ -187,8 +217,8 @@ section:is(.masonry),
       position: absolute;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
+      background: var(--masonry-lightbox-control-background);
+      color: var(--masonry-lightbox-control-color);
       border: none;
       border-radius: 50%;
       width: 3rem;
@@ -197,7 +227,7 @@ section:is(.masonry),
       cursor: pointer;
       transition: background 0.3s ease;
       &:hover {
-        background: rgba(255, 255, 255, 0.3);
+        background: var(--masonry-lightbox-control-hover-background);
       }
       & i.icon {
         position: relative !important;
