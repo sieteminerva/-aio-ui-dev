@@ -129,5 +129,11 @@ ctx ~<n>k / 200k · turn <n> · batch: <name> · CP <n> · gate: <green|red|not 
 
 - `<n>k` is an **estimate** — no agent can read its own token counter. State it as `~`, and say
   so once if the user asks for precision.
+- **Ground truth is the user's log line**, not the estimate:
+  `tokens: model=… prompt=<n> completion=<n> cache: hit=<n> miss=<n> rate=<n>%`. It lives in the
+  VS Code output channel, not on disk — the agent cannot read it, so at a threshold
+  (60k/80k/100k) the agent **asks the user for the current `prompt=` value** instead of guessing.
+- An estimate may be >15% off in either direction. Never report it without `~`, and never let a
+  threshold decision rest on it alone — confirm before signalling compaction.
 - Turns to the next threshold: 60k = wrap the batch, 80k = commit + signal compaction, 100k = stop.
 - Never pad the footer with prose; one line, same position, every time.
