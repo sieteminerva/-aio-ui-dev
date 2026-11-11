@@ -125,6 +125,40 @@ export function injectLazyCss(rawCss: string, specifier: string): void {
 }
 
 /**
+ * Replaces the text of an already injected sheet — the dev-only hot path.
+ *
+ * @param rawCss - New stylesheet text.
+ * @param specifier - Specifier the text belongs to; the same one the sheet was injected under.
+ * @returns Nothing.
+ *
+ * @summary Injection stays lazy by default: {@link injectLazyCss} never touches an
+ * existing sheet, so editing a file changes nothing on screen until something asks again.
+ * A stylesheet watcher (Vite's HMR, a file watcher) needs the opposite: keep the element,
+ * swap its text, and skip the reload. That is why this is a **separate, opt-in function**
+ * instead of a flag on the injector — no production path can reach it by accident, and a
+ * sheet that has not arrived yet simply falls back to the normal lazy injection.
+ *
+ * ```ts
+ * import.meta.hot?.on("vite:afterUpdate", async ({ updates }) => {
+ *   for (const file of updates) replaceLazyCss(await textOf(file), specifierOf(file));
+ * });
+ * ```
+ */
+export function replaceLazyCss(rawCss: string, specifier: string): void {
+  if (!rawCss || typeof document === "undefined") return;
+
+  const tag = document.getElementById(styleTagId(specifier)) as HTMLStyleElement | null;
+  // Nothing to replace: behave exactly like the lazy path, so a caller can use this for
+  // both "first paint" and "hot update" without checking first.
+  if (!tag) {
+    injectLazyCss(rawCss, specifier);
+    return;
+  }
+
+  tag.textContent = rawCss;
+}
+
+/**
  * Makes sure one component's stylesheet is present.
  *
  * @param specifier - The component's declared `stylesheet` (`"./Table.css"`).
