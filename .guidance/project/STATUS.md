@@ -9,7 +9,7 @@ Last updated: 2026-11-11
 
 | #   | Task                           | Project  | State       | Gate                                                                        |
 | --- | ------------------------------ | -------- | ----------- | --------------------------------------------------------------------------- |
-| 1   | Build `store` manual reference | Examples | in progress | catalog, product, cart, checkout render in a browser with a real data shape |
+| 1   | Page-level components (P9b)    | Framework | in progress | generator emits `iPageDefinition`s; owner: single session (§11)            |
 | 2   | Build `profile` reference      | Examples | not started | home, services, contact, portfolio render; boundaries documented            |
 | 3   | Build `blog` reference         | Examples | not started | home, post list, post, about render; boundaries documented                  |
 

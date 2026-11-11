@@ -101,3 +101,20 @@ NEXT    → <one action> | blocks: <none|item>
   `/memories/session/<task>.md` → read `.guidance/project/STATUS.md`. Then state the plan.
 - **Prefix:** the same 4-line `STEP 0` block sits at the top of **all 6** `AGENTS.md` files
   (root router + 5 bands). Edit all six or none — a band opened standalone must still carry it.
+## 11. One owner per session
+
+A second writer is the largest source of lost work: the tree changes under you, docs go stale,
+and a commit drags in someone else's half-finished batch.
+
+- **One session owns the task until it is done.** Refactors finish in the owning session; the
+  next session starts from `git log`, never from a half-finished tree.
+- **Override is allowed, blind override is not.** Before touching files another agent edited,
+  prove it is idle: `git status --short` twice a few minutes apart, or compare `mtime`. Still
+  changing → stop and ask the user. Once proven idle, override freely — no merge archaeology.
+- **Claim the tree** at the first edit: one line in `STATUS.md` `Active` naming the task.
+  Clear it at handoff.
+- **Commit per gate, before compaction.** Compaction is lossy by design; an uncommitted batch
+  cannot be recovered from memory files alone.
+- **Budget:** ≤ 60k tokens / ~15 turns per batch (§7). At ~80k: finish the edit, run the gate,
+  write the CP, commit, then ask the user to compact. **The agent signals; the user presses the
+  button** — an agent cannot trigger compaction itself.

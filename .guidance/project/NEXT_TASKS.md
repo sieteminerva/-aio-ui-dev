@@ -44,6 +44,8 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Examples — manual model references (official release gate)
 
+- [ ] `store` reference: catalog, product, cart, checkout with a real data shape _(paused;
+      `product` now composes grid + detail itself — re-check before resuming)_.
 - [ ] `profile` reference: home, services, contact, portfolio.
 - [ ] `blog` reference: home, post list, post, about.
 - [ ] Document each reference's boundaries: capabilities it proves and avoids.
