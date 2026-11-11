@@ -259,7 +259,8 @@
         &:open::picker(select) {
           opacity: 1;
           /* Timing buka eksplisit & deterministik (satu sumber: var popup) */
-          transition: all var(--input-popup-duration, 150ms) var(--input-popup-easing, ease) var(--input-dropdown-transition-delay, 30ms);
+          transition: all var(--input-popup-duration, 150ms) var(--input-popup-easing, ease)
+            var(--input-dropdown-transition-delay, 30ms);
           transform: translateY(-50%) translateX(-25%) scaleY(1) scaleX(1);
           box-shadow: 0 2px 3px 0 var(--input-primary-color);
           /* DETACHED popup: melayang bebas (bukan menempel di tepi input)

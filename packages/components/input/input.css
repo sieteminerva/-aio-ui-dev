@@ -58,6 +58,8 @@
   --input-error-color: var(--app-status-error, #ff114d);
   --input-error-text-color: var(--app-status-error-soft, #ff93ae);
   --input-error-background-color: var(--app-status-error-surface, #fff6f6);
+  /* text/icons placed on a filled control (primary button, filesize chip) */
+  --input-text-on-primary: var(--app-text-on-primary, #fff);
 }
 
 input:focus-visible,

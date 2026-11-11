@@ -1,5 +1,7 @@
 :root,
 [data-theme] {
+  /* solid: used for text, icons and borders; the *-fill pair stays available
+     for a background wash */
   --input-file-allowed-color: var(--app-status-success, rgba(21, 179, 60, 0.658));
   --input-file-unallowed-color: var(--app-status-error-fill, rgba(220, 20, 60, 0.486));
   --input-file-warning-color: var(--app-status-warning, rgba(236, 186, 20, 0.753));
@@ -275,7 +277,7 @@
       position: absolute;
       bottom: 0;
       background-color: var(--input-primary-color);
-      color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
+      color: var(--input-text-on-primary);
       padding: 1px 2px;
       font-size: 0.7rem;
       font-weight: 700;

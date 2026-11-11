@@ -230,7 +230,7 @@ table.table,
             &.edit-btn {
               &:is(.active, :hover) {
                 color: var(--table-text-color-light);
-                background: var(--app-status-info);
+                background: var(--app-status-info-fill);
                 border-color: var(--app-status-info);
               }
             }
@@ -238,7 +238,7 @@ table.table,
             &.remove-btn {
               &:hover {
                 color: var(--table-text-color-light);
-                border-color: var(--app-status-error-fill);
+                border-color: var(--app-status-error);
                 background: var(--app-status-error-fill);
               }
             }
@@ -247,7 +247,7 @@ table.table,
               &:hover {
                 color: var(--table-text-color-light);
                 border-color: var(--app-status-success);
-                background: var(--app-status-success);
+                background: var(--app-status-success-fill);
               }
             }
           }
@@ -359,7 +359,7 @@ table.table,
 
         &:hover {
           border: 1px solid var(--app-status-success);
-          background-color: var(--app-status-success);
+          background-color: var(--app-status-success-fill);
           color: var(--table-text-color-light);
         }
       }
