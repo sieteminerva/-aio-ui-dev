@@ -2,15 +2,13 @@
 
 /* Component layer: declared once per document, each token deriving from an
    app token. `[data-theme]` is included because a theme puts `--app-*` on the
-   shell element and a custom property is substituted where it is declared.
-   Note: `--app-text-muted` is read by nothing else and declared by no sheet, so
-   the label has always inherited its colour. The `inherit` fallback keeps that
-   rendering intact; reported as an open question, not silently retinted. */
+   shell element and a custom property is substituted where it is declared. */
 :root,
 [data-theme] {
   --mode-switcher-border-color: var(--app-border-color, rgba(168, 137, 102, 0.28));
   --mode-switcher-background: var(--app-surface-strong, #ffffff);
-  --mode-switcher-text-color: var(--app-text-muted, inherit);
+  /* used to read --app-text-muted, which no sheet declares (#inherit) */
+  --mode-switcher-text-color: var(--app-text-accent-color, #6e5f51);
   --mode-switcher-track-background: var(--app-surface-muted, rgba(244, 238, 226, 0.7));
   --mode-switcher-accent-color: var(--app-accent-color, #b47828);
 }

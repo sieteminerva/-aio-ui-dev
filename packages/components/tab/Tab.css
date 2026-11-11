@@ -9,7 +9,10 @@
   --tab-accent-color: var(--app-accent-color, #b47828);
   --tab-label-color: var(--app-text-accent-color, #6e5f51);
   --tab-text-color: var(--app-text-color, #2c251e);
-  --tab-active-foreground: var(--app-surface-background-color, rgba(255, 255, 255, 0.82));
+  --tab-title-color: var(--app-text-heading-color, #1a140e);
+  /* the active button sits on an accent gradient: foreground comes from the
+     WCAG-picked on-accent token, never from a background token */
+  --tab-active-foreground: var(--app-text-on-accent, #1a140e);
   --tab-spinner: var(--app-spinner-content, none);
   /* component-private washes: no app token carries these alphas */
   --tab-hover-wash: rgba(255, 255, 255, 0.06);
@@ -128,7 +131,7 @@
       /* 🟢 FASE NYALA AKTIF: Menyatu intim dengan warna aksen andalan */
       &.active {
         background: linear-gradient(135deg, var(--tab-accent-color), var(--tab-accent-strong));
-        color: white; /* Memaksa kontras teks hitam premium di atas warna terang */
+        color: var(--tab-active-foreground);
         box-shadow: var(--tab-active-shadow);
 
         & .btn-label {
@@ -172,7 +175,7 @@
           font-size: 1.85rem;
           font-weight: 700;
           margin: 0.25rem 0 0.75rem 0;
-          color: #fff;
+          color: var(--tab-title-color);
           letter-spacing: -0.02em;
         }
         & .desc {

@@ -36,7 +36,9 @@
   --input-background-color: color-mix(in srgb, var(--input-accent-color) 30%, #fff 100%);
   --input-background-color-hover: color-mix(in srgb, var(--input-accent-color) 50%, #fff 15%);
   --input-picker-background: color-mix(in srgb, var(--input-background-color) 100%, #fff 90%);
-  --input-popover-background-color: var(--input-picker-color);
+  /* a popover floats above the page, so it takes the solid surface, not the
+     field tint. It used to read --input-picker-color, which nothing declares. */
+  --input-popover-background-color: var(--app-surface-strong, #ffffff);
 
   /* sizing */
   --input-font-size: 1.1rem;
@@ -71,9 +73,8 @@
 
    Selectors mirror the app sheet exactly (`:root` only, never `[data-theme]`):
    inside a themed shell the light formula is still the effective one, and this
-   pass must not change that. Known gap, reported separately: the light
-   `--input-popover-background-color` reads `--input-picker-color`, which no
-   sheet declares, so light mode has always resolved it to nothing.
+   pass must not change that. `--input-popover-background-color` is not repeated
+   here — it already derives from `--app-surface-strong`, which flips by itself.
    -------------------------------------------------------------------------- */
 @media (prefers-color-scheme: dark) {
   :root:not([data-mode="light"]) {
@@ -83,7 +84,6 @@
     --input-placeholder-color: rgba(191, 174, 160, 0.5);
     --input-background-color: transparent;
     --input-picker-background: var(--app-surface-strong, #231b14);
-    --input-popover-background-color: var(--app-surface-strong, #231b14);
   }
 }
 
@@ -94,7 +94,6 @@
   --input-placeholder-color: rgba(191, 174, 160, 0.5);
   --input-background-color: transparent;
   --input-picker-background: var(--app-surface-strong, #231b14);
-  --input-popover-background-color: var(--app-surface-strong, #231b14);
 }
 
 input:focus-visible,

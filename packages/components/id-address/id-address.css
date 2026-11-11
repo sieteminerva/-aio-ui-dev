@@ -14,8 +14,8 @@
 }
 
 [data-level].error {
-  border-color: var(--app-error-color, #c0392b);
-  outline-color: var(--app-error-color, #c0392b);
+  border-color: var(--app-status-error, #c0392b);
+  outline-color: var(--app-status-error, #c0392b);
 }
 
 /* A dropdown wrapper the native adapter drives (visible box + hidden value). */
@@ -26,5 +26,5 @@
 
 .dropdown[data-level].error,
 .dropdown:has([data-level].error) {
-  border-color: var(--app-error-color, #c0392b);
+  border-color: var(--app-status-error, #c0392b);
 }
