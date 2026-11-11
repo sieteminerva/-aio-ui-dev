@@ -74,7 +74,8 @@ describe("AioApp — Page Definition (P6)", () => {
     }
 
     const productPageDef: iPageDefinition = {
-      word: "product",
+      route: "product",
+      builder: "product",
       routes: [
         { path: "", view: "grid" },
         { path: ":uid", view: "detail" },
@@ -127,7 +128,8 @@ describe("AioApp — Page Definition (P6)", () => {
     }
 
     const productPageDef: iPageDefinition = {
-      word: "product",
+      route: "product",
+      builder: "product",
       routes: [
         { path: "", view: "grid" },
         { path: ":uid", view: "detail" },
@@ -167,13 +169,14 @@ describe("AioApp — Page Definition (P6)", () => {
       .registerModule(router)
       .registerModule(FakeRenderer)
       // A generated page: the tree lives in source.pages, the definition owns the route.
-      .registerPage({ word: "home", requires: ["carousel"] });
+      .registerPage({ route: "home", requires: ["carousel"] });
 
     await app.render();
 
-    // Preload comes from word + requires, not from the content walk.
-    expect(registry.loaded[0]).toEqual(expect.arrayContaining(["home", "carousel"]));
-    // The mounted node is the declared one, not a bare builder host for the word.
+    // Preload comes from `requires`, not from the content walk — and a page id that is not a
+    // component (no `builder` declared) never enters the plan.
+    expect(registry.loaded[0]).toEqual(["carousel"]);
+    // The mounted node is the declared one, not a bare builder host for the route.
     expect(registry.built[0]).toEqual({ name: "masonry", data: content["div#masonry"] });
   });
 });

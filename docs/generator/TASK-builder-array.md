@@ -24,7 +24,7 @@ Scope: `orchestrator/**` and `docs/generator/**` only. The Framework band (`pack
 ## Tasks
 
 > **Superseded by P9b:** the generated entry no longer declares a route plan. It declares
-> `const pageDefinitions: iPageDefinition[] = [{ word, requires }]` and calls
+> `const pageDefinitions: iPageDefinition[] = [{ route, requires }]` and calls
 > `app.registerPage(definition)`; `iComponentRoute` is no longer emitted. The rule is
 > unchanged — a node that _is_ component X sets `builder: "X"`, and a page lists what it
 > mounts in `requires`.

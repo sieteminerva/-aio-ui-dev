@@ -33,9 +33,10 @@ navigate, build, events, signal }` — no `history`, no `fetch`, no DOM outside 
 | P9a ✅     | Generator emits the plan                       | `componentRoutes: iComponentRoute[]` + `registerModule(registry, componentRoutes)`; 3 tests                                                                             |
 | **P9b** ✅ | Generator emits page definitions               | entry declares `pageDefinitions: iPageDefinition[]` + `app.registerPage(definition)`; `requires` replaces `iComponentRoute`; content still from `source.pages`; 3 tests |
 
-P9b landed without a new field: `iPageDefinition.word` is the route key, `requires` carries
-the preload plan, and `#createPage` now prefers declared content over the definition's root
-builder word — so a generated page keeps its tree and still gets a definition-owned route.
+P9b landed without a new field: `iPageDefinition` names its own route (`route`) and, when the
+page is a single component, the builder it renders (`builder`); `requires` carries the
+preload plan. `#createPage` prefers declared content over `builder`, so a generated page keeps
+its tree and still gets a definition-owned route.
 `iComponentRoute` remains public for hand-written entries (`examples/demo`), it is simply no
 longer emitted by the generator.
 

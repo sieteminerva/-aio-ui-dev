@@ -48,7 +48,7 @@ const NON_COMPONENT_WORDS = new Set(["input", "dropdown", "input-controls"]);
  * sub-module words (`input`, `dropdown`, …) left out: the registry builds those through a
  * parent's manifest, never from their own page entry.
  */
-function pageRequires(preset: iWebPreset): Array<{ word: string; requires: string[] }> {
+function pageRequires(preset: iWebPreset): Array<{ route: string; requires: string[] }> {
   const walk = (node: unknown, found: Set<string>): void => {
     if (Array.isArray(node)) {
       node.forEach((child) => walk(child, found));
@@ -65,7 +65,7 @@ function pageRequires(preset: iWebPreset): Array<{ word: string; requires: strin
   return preset.pages.map((page) => {
     const found = new Set<string>();
     walk(page.content, found);
-    return { word: page.id, requires: [...found].sort() };
+    return { route: page.id, requires: [...found].sort() };
   });
 }
 

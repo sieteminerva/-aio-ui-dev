@@ -340,10 +340,15 @@ export interface iPagePort {
  */
 export interface iPageDefinition {
   /**
-   * Registry word of the root builder, e.g. `"product"`. It is also the route key, so a
-   * generated page whose tree lives in `source.pages` uses its page id here.
+   * Route this definition owns, e.g. `"product"`. Normalised like `iAppSource.pages` keys,
+   * so `"Product"` and `"#product"` land on the same entry.
    */
-  word: string;
+  route: string;
+  /**
+   * Registry word of the root builder, e.g. `"product"`. Omit it when the page tree comes
+   * from `iAppSource.pages`; then nothing is built from the definition itself.
+   */
+  builder?: string;
   /** Sub-routes mapped to views. */
   routes?: iPageRouteSpec[];
   /** Slots declared by the root builder. */

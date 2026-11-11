@@ -373,11 +373,14 @@ export class AioApp implements iApp {
 
     if (typeof routeOrDefinition === "object" && routeOrDefinition !== null) {
       const def = routeOrDefinition as iPageDefinition;
-      const baseRoute = normalizeRoute(def.word);
+      const baseRoute = normalizeRoute(def.route);
       this.#pageDefinitions.set(baseRoute, def);
 
-      // Preload plan derived directly from `requires` and `word`
-      const requiredComponents = [...new Set([def.word, ...(def.requires ?? [])])];
+      // Preload plan derived from the root builder and `requires`. A definition without a
+      // `builder` owns a route only, so its page id is not a component worth loading.
+      const requiredComponents = [...new Set([def.builder, ...(def.requires ?? [])])].filter(
+        (name): name is string => typeof name === "string" && name !== ""
+      );
       const merged = this.#componentRoutes.get(baseRoute) ?? [];
       this.#componentRoutes.set(baseRoute, [...new Set([...merged, ...requiredComponents])]);
 
@@ -761,10 +764,10 @@ export class AioApp implements iApp {
 
     // Content wins, the definition only owns the route contract. A generated site declares
     // one definition per page (for `requires`, `routes`, `data`) while the page tree still
-    // comes from `source.pages`; only a definition without content falls back to its root
-    // builder word, which is what a pure page-level component needs.
+    // comes from `source.pages`; only a definition with a `builder` and no content falls back
+    // to that builder, which is what a pure page-level component needs.
     const declared =
-      this.#pages.get(route) ?? (pageDef ? { [pageDef.word]: { builder: pageDef.word } } : null);
+      this.#pages.get(route) ?? (pageDef?.builder ? { [pageDef.builder]: { builder: pageDef.builder } } : null);
     const context: iPageContext = {
       route,
       page: declared,

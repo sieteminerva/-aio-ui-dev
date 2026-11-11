@@ -112,8 +112,8 @@ describe("emitRuntime — page definitions", () => {
     const plan = /const pageDefinitions: iPageDefinition\[\] = (\[[\s\S]*?\n\]);/.exec(app);
 
     expect(plan).not.toBeNull();
-    const definitions = JSON.parse(plan![1]) as Array<{ word: string; requires: string[] }>;
-    expect(definitions.map((entry) => entry.word)).toEqual(galleryPreset.pages.map((page) => page.id));
+    const definitions = JSON.parse(plan![1]) as Array<{ route: string; requires: string[] }>;
+    expect(definitions.map((entry) => entry.route)).toEqual(galleryPreset.pages.map((page) => page.id));
     definitions.forEach((entry) => {
       expect(entry.requires).toEqual([...new Set(entry.requires)].sort());
       expect(entry.requires).toContain("masonry");
