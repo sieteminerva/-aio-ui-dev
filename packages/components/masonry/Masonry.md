@@ -173,7 +173,7 @@ Ensure your global or modular CSS structure implements the following nested CSS 
     margin: 1.5rem auto;
     width: 40px;
     height: 40px;
-    background-image: var(--spinner-content); /_ Injected from global application root variables _/
+    background-image: var(--app-spinner-content); /_ Injected from global application root variables _/
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;

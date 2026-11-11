@@ -36,7 +36,7 @@
   background: var(--page-bg);
   box-shadow: var(--shadow-soft);
 
-  scrollbar-color: var(--primary-light-color) transparent;
+  scrollbar-color: var(--app-border-color, #e0e1e2) transparent;
   scrollbar-width: thin;
 }
 

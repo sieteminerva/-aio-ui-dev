@@ -835,7 +835,7 @@ export class FileUploader {
 
       const filename = document.createElement("div");
       filename.classList.add("filename");
-      filename.style.color = "var(--unallowed-color)";
+      filename.style.color = "var(--input-file-unallowed-color)";
       filename.textContent = messageText;
 
       const info = document.createElement("div");
@@ -857,7 +857,7 @@ export class FileUploader {
 
       const filename = document.createElement("div");
       filename.classList.add("filename");
-      filename.style.color = "var(--unallowed-color)";
+      filename.style.color = "var(--input-file-unallowed-color)";
 
       filename.insertAdjacentHTML("afterbegin", `<i class="icon file"></i> ${messageText}`);
 

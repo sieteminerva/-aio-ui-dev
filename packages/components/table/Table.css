@@ -230,24 +230,24 @@ table.table,
             &.edit-btn {
               &:is(.active, :hover) {
                 color: var(--table-text-color-light);
-                background: var(--editing-color);
-                border-color: var(--editing-color);
+                background: var(--app-status-info);
+                border-color: var(--app-status-info);
               }
             }
 
             &.remove-btn {
               &:hover {
                 color: var(--table-text-color-light);
-                border-color: var(--unallowed-color);
-                background: var(--unallowed-color);
+                border-color: var(--app-status-error-fill);
+                background: var(--app-status-error-fill);
               }
             }
 
             &.add-btn {
               &:hover {
                 color: var(--table-text-color-light);
-                border-color: var(--allowed-color);
-                background: var(--allowed-color);
+                border-color: var(--app-status-success);
+                background: var(--app-status-success);
               }
             }
           }
@@ -358,8 +358,8 @@ table.table,
         justify-content: center;
 
         &:hover {
-          border: 1px solid var(--allowed-color);
-          background-color: var(--allowed-color);
+          border: 1px solid var(--app-status-success);
+          background-color: var(--app-status-success);
           color: var(--table-text-color-light);
         }
       }

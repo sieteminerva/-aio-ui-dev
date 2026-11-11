@@ -1,8 +1,8 @@
-:root {
-  --allowed-color: rgba(21, 179, 60, 0.658);
-  --unallowed-color: rgba(220, 20, 60, 0.486);
-  --warning-color: rgba(236, 186, 20, 0.753);
-  --editing-color: rgba(33, 133, 208, 0.854);
+:root,
+[data-theme] {
+  --input-file-allowed-color: var(--app-status-success, rgba(21, 179, 60, 0.658));
+  --input-file-unallowed-color: var(--app-status-error-fill, rgba(220, 20, 60, 0.486));
+  --input-file-warning-color: var(--app-status-warning, rgba(236, 186, 20, 0.753));
 }
 
 .file {
@@ -12,33 +12,33 @@
   }
 
   & .allowed i {
-    color: var(--allowed-color);
+    color: var(--input-file-allowed-color);
   }
 
   & .message.allowed {
-    color: var(--allowed-color);
+    color: var(--input-file-allowed-color);
   }
 
   & .label.allowed {
     color: var(--input-text-color);
-    background-color: var(--allowed-color);
+    background-color: var(--input-file-allowed-color);
   }
 
   & .unallowed i {
-    color: var(--unallowed-color);
+    color: var(--input-file-unallowed-color);
   }
 
   & .message.unallowed {
-    color: var(--unallowed-color);
+    color: var(--input-file-unallowed-color);
   }
 
   & .label.unallowed {
     color: var(--input-text-color);
-    background-color: var(--unallowed-color);
+    background-color: var(--input-file-unallowed-color);
   }
 
   & .warning i {
-    color: var(--warning-color);
+    color: var(--input-file-warning-color);
   }
 
   & .item {
@@ -51,11 +51,11 @@
       background: color-mix(in srgb, var(--input-primary-color) 100%, black 50%);
     }
     &:has(.unallowed) .filesize {
-      background-color: var(--unallowed-color) !important;
+      background-color: var(--input-file-unallowed-color) !important;
     }
 
     &:has(.warning) .label.filesize {
-      background-color: var(--warning-color) !important;
+      background-color: var(--input-file-warning-color) !important;
     }
 
     & .thumbnail.image {
@@ -68,8 +68,8 @@
       border-radius: 5px;
       overflow: hidden;
       &.unallowed {
-        border-color: var(--unallowed-color);
-        background: var(--unallowed-color);
+        border-color: var(--input-file-unallowed-color);
+        background: var(--input-file-unallowed-color);
       }
       img {
         display: block;
@@ -86,7 +86,7 @@
         position: relative;
         object-fit: cover;
         margin-top: 1px;
-        color: var(--unallowed-color);
+        color: var(--input-file-unallowed-color);
       }
 
       &:has(> i) {
@@ -97,11 +97,11 @@
       }
 
       &:has(.unallowed) .thumbnail.image {
-        border-color: var(--unallowed-color);
+        border-color: var(--input-file-unallowed-color);
       }
 
       &:has(.warning) .thumbnail.image {
-        border-color: var(--warning-color);
+        border-color: var(--input-file-warning-color);
       }
     }
   }
@@ -117,7 +117,7 @@
   width: 16px;
   height: 16px;
   margin: 4px;
-  color: var(--unallowed-color);
+  color: var(--input-file-unallowed-color);
 }
 
 /* ================= State ================= */
@@ -166,7 +166,7 @@
     }
 
     &:last-child:hover .close i {
-      background: var(--unallowed-color);
+      background: var(--input-file-unallowed-color);
     }
 
     & .content {
@@ -187,7 +187,7 @@
         font-weight: 600;
         font-style: italic;
         &.warning {
-          color: var(--warning-color);
+          color: var(--input-file-warning-color);
         }
       }
     }
@@ -206,7 +206,7 @@
       color: var(--input-text-color-light);
       &.warning {
         color: var(--input-text-color);
-        background-color: var(--warning-color);
+        background-color: var(--input-file-warning-color);
       }
     }
 
@@ -225,7 +225,7 @@
       overflow: hidden;
       &:hover {
         transform: scale(0.95);
-        border: 1px solid var(--unallowed-color);
+        border: 1px solid var(--input-file-unallowed-color);
       }
       &:active {
         transform: scale(0.98);
@@ -294,7 +294,7 @@
       top: 0;
       right: 0;
       transition: 100ms;
-      background-color: var(--unallowed-color);
+      background-color: var(--input-file-unallowed-color);
       visibility: hidden;
       cursor: pointer;
       padding: 0 1px;
