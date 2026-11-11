@@ -14,7 +14,7 @@
     flex-direction: column;
     & .menu:not(.pagination) {
       flex-direction: row;
-      border-bottom: 2px solid var(--accent-strong);
+      border-bottom: 2px solid var(--app-accent-strong);
     }
   }
 
@@ -23,7 +23,7 @@
     flex-direction: column;
     & .menu:not(.pagination) {
       flex-direction: row;
-      border-top: 2px solid var(--accent-strong);
+      border-top: 2px solid var(--app-accent-strong);
       order: 2; /* Turun ke lantai bawah secara visual */
     }
     & .body {
@@ -36,7 +36,7 @@
     flex-direction: row;
     & .menu:not(.pagination) {
       flex-direction: column;
-      border-right: 2px solid var(--accent-strong);
+      border-right: 2px solid var(--app-accent-strong);
       width: 250px;
       flex-shrink: 0;
     }
@@ -48,13 +48,13 @@
   /* POSISI KANAN (RIGHT) */
   &.position-right {
     flex-direction: row-reverse;
-    & .menu.menu:not(.pagination) {
+    & > .menu:not(.pagination) {
       flex-direction: column;
-      border-left: 2px solid var(--accent-strong);
+      border-left: 2px solid var(--app-accent-strong);
       width: 250px;
       flex-shrink: 0;
     }
-    & .body {
+    & > .body {
       flex: 1;
     }
   }
@@ -70,7 +70,7 @@
     /* 🟢 RE-ANCHOR: Mencari kelas .button ksatria, bukan .tab-btn purba! */
     & .button {
       display: flex;
-      flex-direction: column;
+      /* flex-direction: column; */
       justify-content: center;
       text-align: center;
       align-items: center;
@@ -81,7 +81,7 @@
       background: transparent;
       border: 1px solid transparent;
       border-radius: 4px; /* Sudut lengkung modern minimalis */
-      color: var(--accent-strong);
+      color: var(--app-accent-strong);
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       text-align: center;
@@ -92,7 +92,7 @@
         font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
-        color: var(--text-muted);
+        color: var(--app-text-accent-color);
         transition: color 0.3s ease;
       }
 
@@ -109,15 +109,15 @@
 
       /* 🟢 FASE NYALA AKTIF: Menyatu intim dengan warna aksen andalan */
       &.active {
-        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        background: linear-gradient(135deg, var(--app-accent-color), var(--app-accent-strong));
         color: white; /* Memaksa kontras teks hitam premium di atas warna terang */
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 
         & .btn-label {
-          color: var(--surface-bg);
+          color: var(--app-surface-background-color);
         }
         & .btn-title {
-          color: var(--surface-bg);
+          color: var(--app-surface-background-color);
         }
       }
     }
@@ -145,7 +145,7 @@
           font-size: 0.8rem;
           font-weight: 600;
           letter-spacing: 0.08em;
-          color: var(--accent-strong);
+          color: var(--app-accent-strong);
           text-transform: uppercase;
           display: inline-block;
           margin-bottom: 0.25rem;
@@ -160,7 +160,7 @@
         & .desc {
           font-size: 1rem;
           line-height: 1.65;
-          color: var(--text-main);
+          color: var(--app-text-color);
           max-width: 720px; /* Batas nyaman mata membaca artikel */
         }
       }
@@ -172,7 +172,7 @@
     padding: 1rem 0;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: var(--app-text-accent-color);
     width: 100%;
   }
 
@@ -184,7 +184,7 @@
     transform: translate(-50%, -50%);
     width: 32px;
     height: 32px;
-    background-image: var(--spinner-content);
+    background-image: var(--app-spinner-content);
     background-size: contain;
     background-repeat: no-repeat;
     z-index: 10;
