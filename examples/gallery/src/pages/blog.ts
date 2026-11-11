@@ -25,10 +25,9 @@ export class BlogPage implements iPageController {
       ".page": {
         content: {
           ...navigationMenu,
+          // No `builder`: this node is not the article, it hosts it. The route's plan
+          // (`componentRoutes` in the entry) is what preloads the component.
           "main#blog": {
-            // `builder` is reserved: the array form declares what this node mounts
-            // without turning the array into a DOM attribute.
-            builder: ["article"],
             onCreated: (el: HTMLElement, _render: any, build: any) => {
               el.mount(build("article", article));
             },

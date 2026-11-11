@@ -34,8 +34,9 @@ export class GalleryPage implements iPageController {
       ".page": {
         content: {
           ...navigationMenu,
+          // No `builder`: this node is not masonry, it hosts it. The route's plan
+          // (`componentRoutes` in the entry) is what preloads the component.
           "main#gallery": {
-            builder: ["masonry"],
             onCreated: (el: HTMLElement, _render: any, build: any) => {
               el.mount(build("masonry", payload));
             },

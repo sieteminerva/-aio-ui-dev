@@ -1,6 +1,7 @@
 import { ComponentRegistry } from '@aio-ui/core';
 import { DOMRenderer } from '@aio-ui/core';
 import { AioApp, AppStorage } from '@aio-ui/app';
+import type { iComponentRoute } from '@aio-ui/app';
 import { AnimationsService } from '@aio-ui/animations';
 import { HashRouter } from '@aio-ui/router';
 import { HomepageContent } from './content/home';
@@ -49,6 +50,20 @@ const pages = {
   about: AboutContent,
   form: BuildPageContent,
 };
+
+/**
+ * What each route mounts, declared once beside the registry.
+ *
+ * A node's `builder` means "this node is that component", never "this node mounts
+ * these". The three pages below host their component at runtime (`onCreated` builds
+ * it), so they name it here and the app preloads it before the render pass. `form`
+ * brings its own table sub-module, so the route does not repeat it.
+ */
+const componentRoutes: iComponentRoute[] = [
+  { route: 'gallery', components: ['masonry'] },
+  { route: 'blog', components: ['article'] },
+  { route: 'form', components: ['form'] },
+];
 
 /**
  * Endpoint mock: setiap tabel dilayani sebagai file JSON statis yang benar-benar
@@ -116,8 +131,9 @@ async function start(container: HTMLElement) {
     theme: 'default',
     source: { pages },
   })
-    // instance yang sudah dirakit (manifest komponen hidup di sini, bukan di app)
-    .registerModule(components)
+    // instance yang sudah dirakit (manifest komponen hidup di sini, bukan di app),
+    // sekaligus rencana komponen per rute
+    .registerModule(components, componentRoutes)
     // kelas tanpa config: routes, theme dan onRouteChanged disuntik dari context
     .registerModule(HashRouter)
     // renderer wajib: app tidak membawa renderer bawaan

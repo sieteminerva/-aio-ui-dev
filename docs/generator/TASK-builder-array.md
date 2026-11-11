@@ -58,17 +58,17 @@ Scope: `orchestrator/**` and `docs/generator/**` only. The Framework band (`pack
       `isRoot: true` in generated content until the renderer owns the swap. Current
       decision to respect when it lands: `onCreated` wins and keeps the host.
 
-## Also affected, not this batch
+## Done in the Gallery band (2026-11-11)
 
-`examples/gallery` (Gallery band) still declares `builder: [names]`, so its preload is now
-blind. Same migration, same rules:
+`examples/gallery` no longer declares `builder: [names]`; its preload plan lives in the entry:
 
-- `examples/gallery/src/pages/blog.ts:31` — `builder: ["article"]`
-- `examples/gallery/src/pages/gallery.ts:38` — `builder: ["masonry"]`
-- `examples/gallery/src/content/wizard.ts:522` — `builder: ["form"]`
+- `examples/gallery/src/main.ts` — `const componentRoutes: iComponentRoute[]` with
+  `gallery → ["masonry"]`, `blog → ["article"]`, `form → ["form"]`, handed to
+  `registerModule(components, componentRoutes)`.
+- `examples/gallery/src/pages/blog.ts`, `pages/gallery.ts`, `content/wizard.ts` — the host
+  nodes drop `builder` entirely: they are not the component, they mount it in `onCreated`.
 
-Each becomes a single name (or no `builder`) plus a `{ route, components }` plan in that
-band's entry file.
+Remaining work in this file is generator-side only.
 
 ## Out of scope here
 

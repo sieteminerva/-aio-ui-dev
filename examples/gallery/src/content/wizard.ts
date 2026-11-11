@@ -516,10 +516,9 @@ export const BuildPageContent: iNodeContent =
               "p.description": {
                 content: "Jawab beberapa pertanyaan lalu kami merajutnya menjadi website yang hidup — data, kode, dan hak miliknya langsung jadi milik Anda."
               },
+              // The wizard mounts its form at runtime, so this node carries no
+              // `builder`; the `form` route's plan in the entry preloads it.
               "#wizard": {
-                // The wizard mounts its form at runtime. `builder` is reserved, so the
-                // array form lists what this node creates without rendering anything.
-                builder: ["form"],
                 onCreated: (el: HTMLElement, _renderFn: any, builderFn: any) => {
                   mountWizard(el, builderFn);
                 }
