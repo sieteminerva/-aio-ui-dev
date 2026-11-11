@@ -2,11 +2,40 @@
    PRODUCT DETAIL — media + body, one record
    ========================================================================== */
 
+/* Component token layer — `--product-detail-*`, never `--product-*`: the package
+   ships three sheets (detail / grid / card) and each owns its own prefix. */
+:root,
+[data-theme] {
+  /* Layout */
+  --product-detail-gap: var(--app-gap, clamp(1rem, 2.5vw, 2rem));
+  --product-detail-media-radius: var(--app-image-border-radius, 1.25rem);
+  --product-detail-media-surface: radial-gradient(
+    circle at 50% 30%,
+    var(--app-surface-strong, #ffffff) 0%,
+    var(--app-surface-muted, rgba(244, 238, 226, 0.7)) 70%
+  );
+
+  /* Type */
+  --product-detail-eyebrow-size: var(--app-font-size-xs, 0.75rem);
+  --product-detail-title-size: var(--app-font-size-2xl, 1.65rem);
+  --product-detail-price-size: var(--app-font-size-xl, 1.35rem);
+  --product-detail-text-size: var(--app-font-size-base, 1rem);
+  --product-detail-action-size: var(--app-font-size-sm, 0.85rem);
+
+  /* Colour */
+  --product-detail-accent-color: var(--app-primary-color, #925408);
+  --product-detail-border-color: var(--app-border-color, rgba(168, 137, 102, 0.28));
+  --product-detail-focus-ring: var(--app-border-focus, #925408);
+  --product-detail-swatch-ring: var(--app-accent-subtle, rgba(180, 120, 40, 0.12));
+  --product-detail-title-color: var(--app-text-heading-color, #1a140e);
+  --product-detail-text-color: var(--app-text-accent-color, #6e5f51);
+}
+
 .product-detail {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
   align-items: start;
-  gap: var(--app-gap);
+  gap: var(--product-detail-gap);
   width: 100%;
 }
 
@@ -16,9 +45,9 @@
   place-items: center;
   position: relative;
   overflow: hidden;
-  border-radius: var(--app-image-border-radius);
-  background: radial-gradient(circle at 50% 30%, var(--app-surface-strong) 0%, var(--app-surface-muted) 70%);
-  border: 1px solid var(--app-border-color);
+  border-radius: var(--product-detail-media-radius);
+  background: var(--product-detail-media-surface);
+  border: 1px solid var(--product-detail-border-color);
 }
 
 .product-detail-image {
@@ -39,33 +68,33 @@
 }
 
 .product-detail-eyebrow {
-  font-size: var(--app-font-size-xs);
+  font-size: var(--product-detail-eyebrow-size);
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--app-primary-color);
+  color: var(--product-detail-accent-color);
 }
 
 .product-detail-title {
   margin: 0;
-  font-size: var(--app-font-size-2xl);
+  font-size: var(--product-detail-title-size);
   line-height: 1.2;
-  color: var(--app-text-heading-color);
+  color: var(--product-detail-title-color);
   text-wrap: balance;
 }
 
 .product-detail-desc {
   margin: 0;
   max-width: 60ch;
-  font-size: var(--app-font-size-base);
+  font-size: var(--product-detail-text-size);
   line-height: 1.7;
-  color: var(--app-text-accent-color);
+  color: var(--product-detail-text-color);
 }
 
 .product-detail-price {
-  font-size: var(--app-font-size-xl);
+  font-size: var(--product-detail-price-size);
   font-weight: 800;
-  color: var(--app-text-heading-color);
+  color: var(--product-detail-title-color);
 }
 
 /* ── Colour swatches ───────────────────────────────────────────────────── */
@@ -81,7 +110,7 @@
   height: 2rem;
   padding: 0;
   border-radius: 50%;
-  border: 2px solid var(--app-border-color);
+  border: 2px solid var(--product-detail-border-color);
   cursor: pointer;
   transition:
     transform 150ms ease,
@@ -93,12 +122,12 @@
 }
 
 .product-detail-color.active {
-  border-color: var(--app-primary-color);
-  box-shadow: 0 0 0 2px var(--app-accent-subtle);
+  border-color: var(--product-detail-accent-color);
+  box-shadow: 0 0 0 2px var(--product-detail-swatch-ring);
 }
 
 .product-detail-color:focus-visible {
-  outline: 2px solid var(--app-border-focus);
+  outline: 2px solid var(--product-detail-focus-ring);
   outline-offset: 2px;
 }
 
@@ -114,17 +143,17 @@
 .product-detail-back {
   padding: 0.55rem 1rem;
   font: inherit;
-  font-size: var(--app-font-size-sm);
-  color: var(--app-text-accent-color);
+  font-size: var(--product-detail-action-size);
+  color: var(--product-detail-text-color);
   background: transparent;
-  border: 1px solid var(--app-border-color);
+  border: 1px solid var(--product-detail-border-color);
   border-radius: 9999px;
   cursor: pointer;
 }
 
 .product-detail-back:hover {
-  color: var(--app-text-heading-color);
-  border-color: var(--app-primary-color);
+  color: var(--product-detail-title-color);
+  border-color: var(--product-detail-accent-color);
 }
 
 @media (prefers-reduced-motion: reduce) {
