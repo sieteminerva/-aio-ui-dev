@@ -478,7 +478,7 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
     const start = this.displayedCount;
     const end = Math.min(start + this.config.maxDisplayed, filtered.length);
 
-    this._syncColumnCount(filtered.length);
+    this._syncColumnCount();
 
     if (start >= end) return;
 
@@ -526,16 +526,22 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
     }
   }
 
-  private _syncColumnCount(itemCount: number): void {
+  /**
+   * Pins the column count to the configuration, never to how many items a filter
+   * happened to leave behind.
+   *
+   * A card is one column wide, so its size must not change when the visitor filters:
+   * clamping the count to the item total (`min(configured, itemCount)`) made a single
+   * match stretch across the whole grid, and two matches each half of it — the same
+   * card, three different sizes, depending only on how many siblings it had.
+   * The responsive clamps live in `Masonry.css`, which is where viewport width belongs.
+   */
+  private _syncColumnCount(): void {
     const grid = this.load("@masonry") as HTMLElement | null;
     if (!grid) return;
 
     const configuredColumns = Math.max(1, Number(this.config.column) || 1);
-    const availableColumns = itemCount > 0
-      ? Math.min(configuredColumns, itemCount)
-      : configuredColumns;
-
-    grid.style.setProperty("--masonry-columns", String(availableColumns));
+    grid.style.setProperty("--masonry-columns", String(configuredColumns));
   }
 
   private _killPaginationControls(): void {
@@ -675,11 +681,7 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
     this.currentPage = 1;
     this.selectedCategory = category;
 
-    const filteredCount = this.#items.filter(item => {
-      if (item instanceof HTMLElement) return false;
-      return category === null || item.category === category;
-    }).length;
-    this._syncColumnCount(filteredCount);
+    this._syncColumnCount();
 
     // Sinkronisasi ulang navigasi modal
     this.modal.updateNavigation();

@@ -8,7 +8,10 @@ section:is(.masonry),
     column-gap: 1.5rem;
     padding: 1rem 0;
     & > .item {
-      display: inline-block;
+      /* `block`, not `inline-block`: an inline-level box is not fragmented between
+         columns, so every card piled up in column 1 and the remaining columns stayed
+         empty whenever the filter left fewer items than columns. */
+      display: block;
       width: 100%;
       height: fit-content;
       align-self: start;
