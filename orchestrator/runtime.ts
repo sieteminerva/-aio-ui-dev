@@ -35,20 +35,20 @@ export interface RuntimeInput {
 const NON_COMPONENT_WORDS = new Set(["input", "dropdown", "input-controls"]);
 
 /**
- * Component words each route mounts, so the generated app can preload them.
+ * Component words each page mounts, so the generated app can preload them.
  *
- * This is the generator's half of the preload contract: the app receives
- * `registerModule(registry, [{ route, components }])` and preloads that plan instead of
- * guessing from node payloads. A node's `builder` names the component the node *is* — it
- * is not a dependency list, and a component mounted from an `onCreated` hook is invisible
- * to a content walk. Declaring the plan per route is what keeps such a page from rendering
- * before its components loaded.
+ * This is the generator's half of the preload contract: it emits one `iPageDefinition` per
+ * route and the app derives the preload plan from `word` + `requires` instead of guessing
+ * from node payloads. A node's `builder` names the component the node *is* — it is not a
+ * dependency list, and a component mounted from an `onCreated` hook is invisible to a
+ * content walk. Declaring the requirements per page is what keeps such a page from
+ * rendering before its components loaded.
  *
  * Words come from the preset itself (`builder` on a node), deduplicated and sorted, with
  * sub-module words (`input`, `dropdown`, …) left out: the registry builds those through a
- * parent's manifest, never from their own route entry.
+ * parent's manifest, never from their own page entry.
  */
-function routePlan(preset: iWebPreset): Array<{ route: string; components: string[] }> {
+function pageRequires(preset: iWebPreset): Array<{ word: string; requires: string[] }> {
   const walk = (node: unknown, found: Set<string>): void => {
     if (Array.isArray(node)) {
       node.forEach((child) => walk(child, found));
@@ -65,7 +65,7 @@ function routePlan(preset: iWebPreset): Array<{ route: string; components: strin
   return preset.pages.map((page) => {
     const found = new Set<string>();
     walk(page.content, found);
-    return { route: page.id, components: [...found].sort() };
+    return { word: page.id, requires: [...found].sort() };
   });
 }
 
@@ -126,7 +126,7 @@ function emitApp(preset: iWebPreset, plan: PresetPlan, site: EmittedSite): strin
 
   const imports = [
     `import { ComponentRegistry, DOMRenderer, AioApp } from "@aio-ui/frameworks";`,
-    `import type { iComponentRoute } from "@aio-ui/frameworks";`,
+    `import type { iPageDefinition } from "@aio-ui/frameworks";`,
     `import { HashRouter } from "@aio-ui/router";`,
   ];
   if (has("http-service")) imports.push(`import { HttpService } from "@aio-ui/http-service";`);
@@ -188,11 +188,12 @@ ${registrations}
 const pages = Object.fromEntries(PRESET.pages.map((page) => [page.id, page.content]));
 
 /**
- * What each route mounts, declared once. A node's "builder" names the component the
- * node IS — it is not a dependency list, and a component mounted from an onCreated
- * hook is invisible to a content walk.
+ * One page definition per route. A node's "builder" names the component the node IS —
+ * it is not a dependency list, and a component mounted from an onCreated hook is
+ * invisible to a content walk, so each page declares what it needs in "requires".
+ * The page tree itself stays in source.pages; the definition owns the route contract.
  */
-const componentRoutes: iComponentRoute[] = ${JSON.stringify(routePlan(preset), null, 2)};
+const pageDefinitions: iPageDefinition[] = ${JSON.stringify(pageRequires(preset), null, 2)};
 
 /**
  * A node carrying a builder name is a host element: the renderer builds the
@@ -221,8 +222,12 @@ const app = new AioApp({
   defaultRoute: PRESET.pages[0]?.id,
   theme: PRESET.theme,
   source: { pages },
-})
-  .registerModule(registry, componentRoutes)
+});
+
+pageDefinitions.forEach((definition) => app.registerPage(definition));
+
+app
+  .registerModule(registry)
   .registerModule(HashRouter)
   .registerModule(DOMRenderer)${httpModule}${animationsModule};
 

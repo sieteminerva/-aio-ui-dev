@@ -93,34 +93,37 @@ describe("emitRuntime — app.js", () => {
   });
 });
 
-describe("emitRuntime — preload plan", () => {
-  it("declares what each route mounts and hands it to the registry slot", () => {
+describe("emitRuntime — page definitions", () => {
+  it("declares one page definition per route and hands it to registerPage", () => {
     const { "app.js": app } = build(storePreset);
 
-    expect(app).toContain('import type { iComponentRoute } from "@aio-ui/frameworks";');
-    expect(app).toContain("const componentRoutes: iComponentRoute[] = [");
-    // The plan is what makes preload independent of the renderer seeing every builder.
-    expect(app).toContain(".registerModule(registry, componentRoutes)");
-    expect(app).not.toContain(".registerModule(registry)\n");
+    expect(app).toContain('import type { iPageDefinition } from "@aio-ui/frameworks";');
+    expect(app).toContain("const pageDefinitions: iPageDefinition[] = [");
+    // The definition owns the route contract; the content still comes from source.pages.
+    expect(app).toContain("pageDefinitions.forEach((definition) => app.registerPage(definition));");
+    expect(app).toContain(".registerModule(registry)");
+    // Route objects are gone: `requires` is the preload source now.
+    expect(app).not.toContain("iComponentRoute");
+    expect(app).not.toContain("componentRoutes");
   });
 
   it("lists the words a route actually uses, deduplicated and sorted", () => {
     const { "app.js": app } = build(galleryPreset);
-    const plan = /const componentRoutes: iComponentRoute\[\] = (\[[\s\S]*?\n\]);/.exec(app);
+    const plan = /const pageDefinitions: iPageDefinition\[\] = (\[[\s\S]*?\n\]);/.exec(app);
 
     expect(plan).not.toBeNull();
-    const routes = JSON.parse(plan![1]) as Array<{ route: string; components: string[] }>;
-    expect(routes.map((entry) => entry.route)).toEqual(galleryPreset.pages.map((page) => page.id));
-    routes.forEach((entry) => {
-      expect(entry.components).toEqual([...new Set(entry.components)].sort());
-      expect(entry.components).toContain("masonry");
+    const definitions = JSON.parse(plan![1]) as Array<{ word: string; requires: string[] }>;
+    expect(definitions.map((entry) => entry.word)).toEqual(galleryPreset.pages.map((page) => page.id));
+    definitions.forEach((entry) => {
+      expect(entry.requires).toEqual([...new Set(entry.requires)].sort());
+      expect(entry.requires).toContain("masonry");
     });
   });
 
-  it("keeps field-level modules out of the route plan", () => {
+  it("keeps field-level modules out of the page requirements", () => {
     const { "app.js": app } = build(storePreset);
-    const plan = /const componentRoutes: iComponentRoute\[\] = (\[[\s\S]*?\n\]);/.exec(app);
-    const words = (JSON.parse(plan![1]) as Array<{ components: string[] }>).flatMap((entry) => entry.components);
+    const plan = /const pageDefinitions: iPageDefinition\[\] = (\[[\s\S]*?\n\]);/.exec(app);
+    const words = (JSON.parse(plan![1]) as Array<{ requires: string[] }>).flatMap((entry) => entry.requires);
 
     expect(words).toContain("form");
     expect(words).not.toContain("input");

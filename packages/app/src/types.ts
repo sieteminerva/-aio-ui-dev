@@ -339,7 +339,10 @@ export interface iPagePort {
  * Declarative definition of a page-level component.
  */
 export interface iPageDefinition {
-  /** Registry word of the root builder, e.g. `"product"`. */
+  /**
+   * Registry word of the root builder, e.g. `"product"`. It is also the route key, so a
+   * generated page whose tree lives in `source.pages` uses its page id here.
+   */
   word: string;
   /** Sub-routes mapped to views. */
   routes?: iPageRouteSpec[];

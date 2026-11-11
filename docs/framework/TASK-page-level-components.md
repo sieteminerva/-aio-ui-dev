@@ -3,7 +3,7 @@
 Compact checklist. The long analysis was context weight, not knowledge: what matters is
 below, and the evidence lives in the code it refers to.
 
-Status: **in progress** — P0–P8 done and test-backed (2026-11-11); P9b is the only step left.
+Status: **done** — P0–P9b landed and test-backed (2026-11-11).
 
 ## Contract (agreed)
 
@@ -19,22 +19,25 @@ navigate, build, events, signal }` — no `history`, no `fetch`, no DOM outside 
 
 ## Steps
 
-| Step    | Goal                                           | Acceptance                                                                                                                                            |
-| ------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| P0 ✅   | Green the tree                                 | `iComponentRoute` defined in `app/src/types.ts`; `#record` dropped                                                                                    |
-| P1 ✅   | A manifest names its own export                | registry test: one module, two words, two `export`s → two different classes                                                                           |
-| P2 ✅   | `product` is a real builder word               | registering it typechecks without `as any`                                                                                                            |
-| P3 ✅   | Explicit slot door in `base`                   | `host(slot)` / `project(slot, node)` / `detach(slot)`; test proves project → weld → restore without a `#active` caller; `attach()` implemented on top |
-| P4 ✅   | Dev warning: >1 builder, no `export`           | already in `loadModule()` (DEV only)                                                                                                                  |
-| P5 ✅   | `scope` = the slot a module fills              | documented on `iComponentModuleRef`; no behaviour change                                                                                              |
-| P6 ✅   | `iPageDefinition` + `registerPage(definition)` | definition with sub-routes renders both; preload plan from `requires`; `data` → `ctx.data`; component has no `history`                                |
-| P7 ✅   | Article follows the contract                   | no URL access; `views`; `data-view`; `initialSlug`/`initialView`; 4 tests                                                                             |
-| P8 ✅   | Product follows the contract                   | one word `product`; sub-parts via `manifest.modules`; declarative config (`view`, `slots`, `onAddToCart`); `onOpen`/`onBack` dropped                  |
-| P9a ✅  | Generator emits the plan                       | `componentRoutes: iComponentRoute[]` + `registerModule(registry, componentRoutes)`; 3 tests                                                           |
-| **P9b** | Generator emits page definitions               | blocked on P6                                                                                                                                         |
+| Step       | Goal                                           | Acceptance                                                                                                                                                              |
+| ---------- | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| P0 ✅      | Green the tree                                 | `iComponentRoute` defined in `app/src/types.ts`; `#record` dropped                                                                                                      |
+| P1 ✅      | A manifest names its own export                | registry test: one module, two words, two `export`s → two different classes                                                                                             |
+| P2 ✅      | `product` is a real builder word               | registering it typechecks without `as any`                                                                                                                              |
+| P3 ✅      | Explicit slot door in `base`                   | `host(slot)` / `project(slot, node)` / `detach(slot)`; test proves project → weld → restore without a `#active` caller; `attach()` implemented on top                   |
+| P4 ✅      | Dev warning: >1 builder, no `export`           | already in `loadModule()` (DEV only)                                                                                                                                    |
+| P5 ✅      | `scope` = the slot a module fills              | documented on `iComponentModuleRef`; no behaviour change                                                                                                                |
+| P6 ✅      | `iPageDefinition` + `registerPage(definition)` | definition with sub-routes renders both; preload plan from `requires`; `data` → `ctx.data`; component has no `history`                                                  |
+| P7 ✅      | Article follows the contract                   | no URL access; `views`; `data-view`; `initialSlug`/`initialView`; 4 tests                                                                                               |
+| P8 ✅      | Product follows the contract                   | one word `product`; sub-parts via `manifest.modules`; declarative config (`view`, `slots`, `onAddToCart`); `onOpen`/`onBack` dropped                                    |
+| P9a ✅     | Generator emits the plan                       | `componentRoutes: iComponentRoute[]` + `registerModule(registry, componentRoutes)`; 3 tests                                                                             |
+| **P9b** ✅ | Generator emits page definitions               | entry declares `pageDefinitions: iPageDefinition[]` + `app.registerPage(definition)`; `requires` replaces `iComponentRoute`; content still from `source.pages`; 3 tests |
 
-P9b is now unblocked (P6 landed): the generator emits `iPageDefinition`s instead of route
-objects. Evidence per step lives in the files named in the acceptance column, not here.
+P9b landed without a new field: `iPageDefinition.word` is the route key, `requires` carries
+the preload plan, and `#createPage` now prefers declared content over the definition's root
+builder word — so a generated page keeps its tree and still gets a definition-owned route.
+`iComponentRoute` remains public for hand-written entries (`examples/demo`), it is simply no
+longer emitted by the generator.
 
 ## Why (short)
 

@@ -39,8 +39,8 @@ class FakeRouter {
   navigate(route: string): void {
     this.navTarget = route;
   }
-  updateValidRoutes(): void {}
-  destroy(): void {}
+  updateValidRoutes(): void { }
+  destroy(): void { }
 }
 
 class FakeRenderer {
@@ -146,5 +146,34 @@ describe("AioApp — Page Definition (P6)", () => {
     await app.render();
 
     expect(paramSeen).toEqual({ uid: "item-abc" });
+  });
+
+  it("renders the declared page content and keeps the definition for preload", async () => {
+    const registry = new FakeRegistry();
+    const router = new FakeRouter();
+    router.current = { route: "home", theme: null, fragment: "" };
+    const container = document.createElement("div");
+
+    const content = { "div#masonry": { builder: "masonry", content: [] } };
+
+    const app = new AioApp({
+      container,
+      defaultRoute: "home",
+      source: { pages: { home: content } },
+    });
+
+    app
+      .registerModule(registry)
+      .registerModule(router)
+      .registerModule(FakeRenderer)
+      // A generated page: the tree lives in source.pages, the definition owns the route.
+      .registerPage({ word: "home", requires: ["carousel"] });
+
+    await app.render();
+
+    // Preload comes from word + requires, not from the content walk.
+    expect(registry.loaded[0]).toEqual(expect.arrayContaining(["home", "carousel"]));
+    // The mounted node is the declared one, not a bare builder host for the word.
+    expect(registry.built[0]).toEqual({ name: "masonry", data: content["div#masonry"] });
   });
 });

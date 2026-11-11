@@ -759,7 +759,12 @@ export class AioApp implements iApp {
       }
     }
 
-    const declared = pageDef ? { [pageDef.word]: { builder: pageDef.word } } : (this.#pages.get(route) ?? null);
+    // Content wins, the definition only owns the route contract. A generated site declares
+    // one definition per page (for `requires`, `routes`, `data`) while the page tree still
+    // comes from `source.pages`; only a definition without content falls back to its root
+    // builder word, which is what a pure page-level component needs.
+    const declared =
+      this.#pages.get(route) ?? (pageDef ? { [pageDef.word]: { builder: pageDef.word } } : null);
     const context: iPageContext = {
       route,
       page: declared,
@@ -804,7 +809,7 @@ export class AioApp implements iApp {
         data: {},
         navigate: (r: string, f?: string) => app.navigate(r, f),
         build: (name: string, data: any) => app.#registry!.build(name as any, data),
-        events: app.#events ?? { emit: () => {}, on: () => {} },
+        events: app.#events ?? { emit: () => { }, on: () => { } },
         signal,
       };
 
