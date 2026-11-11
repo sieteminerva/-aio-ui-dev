@@ -3,7 +3,7 @@ import type { iPageContent, iPageController, iPageContext } from "@aio-ui/app";
 import { entryForFragment } from "../docs";
 import type { iDemoEntry } from "../manifest";
 import { themeSwitcher } from "../theme-switcher";
-import { apiPanel, mountInto, mountSidebars, previewPanel, usagePanel } from "./docs-panels";
+import { apiPanel, mountInto, mountSidebar, previewPanel, usagePanel } from "./docs-panels";
 
 type BuildFn = (name: string, data?: any) => HTMLElement;
 
@@ -82,7 +82,7 @@ function kitchenContent(entry: iDemoEntry): iPageContent {
           content: {
             ".docs-aside": {
               onCreated: (element: HTMLElement, _render: any, build: any) =>
-                mountSidebars(element, build, entry.name),
+                mountSidebar(element, build, entry.name),
             },
             ".docs-main": {
               onCreated: (element: HTMLElement, _render: any, build: any) => mountMain(element, entry, build),

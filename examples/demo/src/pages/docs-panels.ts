@@ -118,34 +118,39 @@ export function apiPanel(entry: iDemoEntry): HTMLElement {
 }
 
 /**
- * One sidebar `menu` per tier.
+ * The one sidebar.
  *
- * `splitMenuContent` treats the first navigation as the brand, so the brand *is* the tier
- * heading — that is why a tier is one menu and not a label plus a list. The brand click is
- * swallowed in `onNavigate`; every other link is a real `#kitchen/<name>` route.
+ * One `menu` with `type: "sidebar"` — the loop belongs inside the list
+ * (`aside > .navigations > .item`), not around the aside: three menus would nest three
+ * `<aside class="sidebar">` and repeat `id="primary-navigations"` three times.
+ *
+ * `splitMenuContent` treats the first navigation as the brand, so the brand is the sidebar
+ * title. Tier labels are plain items marked `.group`: they are headings inside the list, so
+ * they are not a second component, and `onNavigate` swallows their click.
  */
-export function mountSidebars(host: HTMLElement, build: BuildFn, activeName: string): void {
-  for (const group of tierGroups()) {
-    const brandRoute = `kitchen/${group.tier}`;
+export function mountSidebar(host: HTMLElement, build: BuildFn, activeName: string): void {
+  const navigations: Record<string, string>[] = [{ label: "Components", href: "#kitchen" }];
 
-    const menu = build("menu", {
-      content: {
-        navigations: [
-          { label: group.label, href: `#${brandRoute}` },
-          ...group.rows.map((row) => ({
-            label: row.name,
-            href: entryHash(row.name),
-            ...(row.name === activeName ? { className: "is-active" } : {}),
-          })),
-        ],
-      },
+  for (const group of tierGroups()) {
+    navigations.push({ label: group.label, href: "#kitchen", className: "group" });
+    for (const row of group.rows) {
+      navigations.push({
+        label: row.name,
+        href: entryHash(row.name),
+        className: `tier-${group.tier}${row.name === activeName ? " is-active" : ""}`,
+      });
+    }
+  }
+
+  mountInto(
+    host,
+    build("menu", {
+      content: { navigations },
       config: {
         type: "sidebar",
-        // `menu` asks the host first; the tier label is a heading, not a destination.
-        onNavigate: (href?: string) => href === brandRoute,
+        // `#kitchen` is the brand and the tier headings, not a destination to jump to.
+        onNavigate: (href?: string) => href === "kitchen",
       },
-    });
-
-    mountInto(host, menu);
-  }
+    }),
+  );
 }
