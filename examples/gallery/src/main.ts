@@ -1,5 +1,6 @@
 import { ComponentRegistry } from '@aio-ui/core';
 import { DOMRenderer } from '@aio-ui/core';
+import { isStyleInjected, replaceLazyCss } from '@aio-ui/core';
 import { AioApp, AppStorage } from '@aio-ui/app';
 import type { iComponentRoute } from '@aio-ui/app';
 import { AnimationsService } from '@aio-ui/animations';
@@ -22,6 +23,17 @@ import { BuildPageContent } from './content/wizard';
 import { BlogPage } from './pages/blog';
 import { GalleryPage } from './pages/gallery';
 import { componentAssets } from './registry.assets';
+
+/**
+ * Dev-only: an edited component stylesheet arrives as text, not as a reload.
+ *
+ * `examples/vite.lazy-css.mjs` keeps Vite from invalidating the `?inline` module and
+ * sends this event instead. A sheet that is not in the document yet is skipped on
+ * purpose — injecting it here would add a second <style> next to the lazy path.
+ */
+import.meta.hot?.on('lazy-css', (payload: { specifier: string; css: string }) => {
+  if (isStyleInjected(payload.specifier)) replaceLazyCss(payload.css, payload.specifier);
+});
 
 // 🔐 Daftarkan Service Worker supaya id_token disimpan di variabel SW.
 // BASE_URL mengikuti base vite ("/rajutan/") agar cocok dengan scope GitHub Pages.

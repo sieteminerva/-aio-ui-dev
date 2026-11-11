@@ -1,4 +1,12 @@
-import { DOMRenderer, ComponentRegistry, type iComponentModuleRef, AioApp, AppStorage } from '@aio-ui/frameworks';
+import {
+  DOMRenderer,
+  ComponentRegistry,
+  AioApp,
+  AppStorage,
+  isStyleInjected,
+  replaceLazyCss,
+  type iComponentModuleRef,
+} from '@aio-ui/frameworks';
 import { AnimationsService, EventEmitter, HttpService, HashRouter, ThemeRenderer } from '@aio-ui/modules';
 import { DefaultTheme, CyberpunkTheme, } from '@aio-ui/themes';
 
@@ -18,6 +26,17 @@ import { ProductPage } from './pages/product';
 import { componentAssets } from './registry.assets';
 import { productModules } from '@aio-ui/product';
 import type { iComponentRoute } from '@aio-ui/frameworks';
+
+/**
+ * Dev-only: an edited component stylesheet arrives as text, not as a reload.
+ *
+ * `examples/vite.lazy-css.mjs` keeps Vite from invalidating the `?inline` module and
+ * sends this event instead. A sheet that is not in the document yet is skipped on
+ * purpose — injecting it here would add a second <style> next to the lazy path.
+ */
+import.meta.hot?.on('lazy-css', (payload: { specifier: string; css: string }) => {
+  if (isStyleInjected(payload.specifier)) replaceLazyCss(payload.css, payload.specifier);
+});
 
 /**
  * Demo application.
