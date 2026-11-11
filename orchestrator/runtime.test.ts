@@ -92,3 +92,39 @@ describe("emitRuntime — app.js", () => {
     expect(app).toContain("await app.render();");
   });
 });
+
+describe("emitRuntime — preload plan", () => {
+  it("declares what each route mounts and hands it to the registry slot", () => {
+    const { "app.js": app } = build(storePreset);
+
+    expect(app).toContain('import type { iComponentRoute } from "@aio-ui/frameworks";');
+    expect(app).toContain("const componentRoutes: iComponentRoute[] = [");
+    // The plan is what makes preload independent of the renderer seeing every builder.
+    expect(app).toContain(".registerModule(registry, componentRoutes)");
+    expect(app).not.toContain(".registerModule(registry)\n");
+  });
+
+  it("lists the words a route actually uses, deduplicated and sorted", () => {
+    const { "app.js": app } = build(galleryPreset);
+    const plan = /const componentRoutes: iComponentRoute\[\] = (\[[\s\S]*?\n\]);/.exec(app);
+
+    expect(plan).not.toBeNull();
+    const routes = JSON.parse(plan![1]) as Array<{ route: string; components: string[] }>;
+    expect(routes.map((entry) => entry.route)).toEqual(galleryPreset.pages.map((page) => page.id));
+    routes.forEach((entry) => {
+      expect(entry.components).toEqual([...new Set(entry.components)].sort());
+      expect(entry.components).toContain("masonry");
+    });
+  });
+
+  it("keeps field-level modules out of the route plan", () => {
+    const { "app.js": app } = build(storePreset);
+    const plan = /const componentRoutes: iComponentRoute\[\] = (\[[\s\S]*?\n\]);/.exec(app);
+    const words = (JSON.parse(plan![1]) as Array<{ components: string[] }>).flatMap((entry) => entry.components);
+
+    expect(words).toContain("form");
+    expect(words).not.toContain("input");
+    expect(words).not.toContain("dropdown");
+    expect(words).not.toContain("input-controls");
+  });
+});

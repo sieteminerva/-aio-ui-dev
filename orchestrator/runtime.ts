@@ -34,6 +34,41 @@ export interface RuntimeInput {
  */
 const NON_COMPONENT_WORDS = new Set(["input", "dropdown", "input-controls"]);
 
+/**
+ * Component words each route mounts, so the generated app can preload them.
+ *
+ * This is the generator's half of the preload contract: the app receives
+ * `registerModule(registry, [{ route, components }])` and preloads that plan instead of
+ * guessing from node payloads. A node's `builder` names the component the node *is* — it
+ * is not a dependency list, and a component mounted from an `onCreated` hook is invisible
+ * to a content walk. Declaring the plan per route is what keeps such a page from rendering
+ * before its components loaded.
+ *
+ * Words come from the preset itself (`builder` on a node), deduplicated and sorted, with
+ * sub-module words (`input`, `dropdown`, …) left out: the registry builds those through a
+ * parent's manifest, never from their own route entry.
+ */
+function routePlan(preset: iWebPreset): Array<{ route: string; components: string[] }> {
+  const walk = (node: unknown, found: Set<string>): void => {
+    if (Array.isArray(node)) {
+      node.forEach((child) => walk(child, found));
+      return;
+    }
+    if (!node || typeof node !== "object") return;
+    const record = node as Record<string, unknown>;
+    if (typeof record.builder === "string" && !NON_COMPONENT_WORDS.has(record.builder)) {
+      found.add(record.builder);
+    }
+    Object.values(record).forEach((child) => walk(child, found));
+  };
+
+  return preset.pages.map((page) => {
+    const found = new Set<string>();
+    walk(page.content, found);
+    return { route: page.id, components: [...found].sort() };
+  });
+}
+
 function escapeAttribute(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -91,6 +126,7 @@ function emitApp(preset: iWebPreset, plan: PresetPlan, site: EmittedSite): strin
 
   const imports = [
     `import { ComponentRegistry, DOMRenderer, AioApp } from "@aio-ui/frameworks";`,
+    `import type { iComponentRoute } from "@aio-ui/frameworks";`,
     `import { HashRouter } from "@aio-ui/router";`,
   ];
   if (has("http-service")) imports.push(`import { HttpService } from "@aio-ui/http-service";`);
@@ -152,6 +188,13 @@ ${registrations}
 const pages = Object.fromEntries(PRESET.pages.map((page) => [page.id, page.content]));
 
 /**
+ * What each route mounts, declared once. A node's "builder" names the component the
+ * node IS — it is not a dependency list, and a component mounted from an onCreated
+ * hook is invisible to a content walk.
+ */
+const componentRoutes: iComponentRoute[] = ${JSON.stringify(routePlan(preset), null, 2)};
+
+/**
  * A node carrying a builder name is a host element: the renderer builds the
  * wrapper and stops, so the component itself must be mounted here. This is the
  * same bridge every example page writes by hand: onCreated(el, _render, build).
@@ -179,7 +222,7 @@ const app = new AioApp({
   theme: PRESET.theme,
   source: { pages },
 })
-  .registerModule(registry)
+  .registerModule(registry, componentRoutes)
   .registerModule(HashRouter)
   .registerModule(DOMRenderer)${httpModule}${animationsModule};
 
