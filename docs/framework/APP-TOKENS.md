@@ -65,8 +65,9 @@ readable.
 | `--app-text-on-accent`  | `--app-accent-color`  | `#1a140e` | `#1a140e` | on `#b47828`: ink 4.9:1, white 3.7:1 |
 
 Consumers: `section` (`.section-cta`), `input` (`InputControls` buttons and the filesize chip,
-via `--input-text-on-primary`), `masonry` (load-more button). Both brand fills are light in dark
-mode, so the foreground flips there.
+via `--input-text-on-primary`), `masonry` (load-more button), `tab` (the active button, via
+`--tab-active-foreground`). Both brand fills are light in dark mode, so the foreground flips
+there.
 
 ## Rest of the contract
 
@@ -103,8 +104,12 @@ never sees them. Same rule for any future non-framework token: it lives in the g
 
 ## Known gaps (packages lane, not the generator)
 
-- `variables.css` still declares component tokens (`--input-*`, `--table-*`) under the dark
-  blocks. They belong in each component's own sheet; until they move, a theme change that
-  expects only `--app-*` will look half-applied in dark mode.
 - `FileUploader.css` still mixes literal `rgb(245, 244, 244)` into `color-mix()`, so those tints
   do not follow a re-themed surface.
+- Not every package has a component layer yet. Done: `input`, `article`, `message`, `table`,
+  `form`, `badge`, `accordion`, `footer`, `mode-switcher`, `tab`. Still reading raw `--app-*`:
+  `masonry`, `section`, `product/ProductDetail`, `product/ProductGrid`, `id-address`. `Menu.css`
+  reads a private vocabulary no package declares and has no layer at all.
+- Two packages used to read app names that did not exist (`--app-text-muted` in `mode-switcher`,
+  `--app-error-color` in `id-address`). Both now point at real tokens; the old names relied on a
+  literal fallback, so they silently ignored every theme.
