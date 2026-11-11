@@ -48,9 +48,27 @@ with `.is-active` (the menu builder ships no active state of its own).
 6. **`.docs` between 769px and 900px** shows the aside full-width and stacked above the
    content (the split collapses at 900px, the sidebar stops being a fixed column under
    769px). Acceptable for a demo, wrong for a docs site.
+7. **`#form` reaches its theme after mount, so its shell animates into it.** On a hidden
+   or throttled tab, `#form?theme=cyberpunk` keeps the light `.nav` (`rgba(255,255,255,.82)`)
+   although every token on that element already resolves to cyberpunk. Not a theming bug:
+   `.nav` carries `transition: all .3s`, and `getAnimations()` shows ten `CSSTransition`s
+   frozen at `currentTime: 0` while `document.visibilityState === "hidden"`. The other three
+   routes have the theme in place at first paint, so nothing is left to animate. On a
+   visible tab it settles in 300ms and the only residue is one short light flash of the top
+   nav on that route. Fixing it means applying the theme before first paint (app lane), not
+   editing CSS.
 
 ## Layout facts (measured on the dev server, 1280×900)
 
+- **Re-checked 2026-11-12** across `#kitchen`, `#kitchen/<name>`, `#product`, `#article`,
+  `#form` × `?theme=default|cyberpunk`: zero console errors, no horizontal overflow
+  (`scrollWidth` 1267 in a 1280 viewport), one `.is-active` top link per route, and no
+  clipped text inside `.preview-frame` or `.docs-main` (leaf elements measured with
+  `overflow: hidden`; none exceeded its client box). `.is-stage` is applied to exactly the
+  two `stage: true` rows (fab-menu, modal, 254px); carousel 541px, tab 434px and badge 224px
+  size themselves.
+- 24 `<style>` elements per route, no duplicate sheet blocks — the dev CSS hot-swap does
+  not inject a second copy of a lazy sheet.
 - `.docs` = `minmax(180px,220px)` + `minmax(0,1fr)` → aside 220, main 936. No overlap
   (aside right 258 < main left 290), no horizontal overflow.
 - Sidebar list is **954px** tall in an **851px** client box → `.docs-aside .nav` is
