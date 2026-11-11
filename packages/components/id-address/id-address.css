@@ -8,14 +8,21 @@
  * package looks right even when installed without `@aio-ui/form` or `@aio-ui/input`.
  */
 
+/* Component token layer — one token, but it keeps the override contract: an app can
+   redeclare `--id-address-error-color` on any ancestor instead of touching this file. */
+:root,
+[data-theme] {
+  --id-address-error-color: var(--app-status-error, #c0392b);
+}
+
 [data-level].loading {
   cursor: progress;
   opacity: 0.7;
 }
 
 [data-level].error {
-  border-color: var(--app-status-error, #c0392b);
-  outline-color: var(--app-status-error, #c0392b);
+  border-color: var(--id-address-error-color);
+  outline-color: var(--id-address-error-color);
 }
 
 /* A dropdown wrapper the native adapter drives (visible box + hidden value). */
@@ -26,5 +33,5 @@
 
 .dropdown[data-level].error,
 .dropdown:has([data-level].error) {
-  border-color: var(--app-status-error, #c0392b);
+  border-color: var(--id-address-error-color);
 }
