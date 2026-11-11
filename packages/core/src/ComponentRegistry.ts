@@ -55,6 +55,16 @@ export interface iComponentManifest {
   path: string;
   /** Stylesheet specifier. Derived from `path` when omitted and `path` is a file. */
   stylesheet?: string;
+  /**
+   * Named export holding *this* component's builder.
+   *
+   * A package that ships several builders (`@aio-ui/product` has card, grid and detail)
+   * cannot be registered twice by pointing both words at the same `path`: without a name
+   * the loader takes `default`, then the first exported function — so both words would
+   * resolve to the same class. Naming the export is the only honest way to say which one
+   * this registration means.
+   */
+  export?: string;
   /** Default configuration, merged beneath the node's own config. */
   config?: any;
   /** Payload handed to the builder. When omitted, the node content is used. */
@@ -81,13 +91,15 @@ export interface iComponentModuleRef {
    */
   export?: string;
   /**
-   * Which layer inside the component this module belongs to.
+   * Which slot or role inside the component this module fills.
    *
    * @summary Free-form on purpose — the registry does not care, the component does.
+   * In a page-level or composite component, `scope` names the slot or role this module
+   * targets (e.g. `form` → `"adapter"`, `product` → `"grid"` / `"detail"`).
    * A component that nests another builder (`form` → `input`) uses it to route a
    * resolved module to the right preset instead of dumping everything into one bag:
    * `"input"` modules become the field-level adapter set, `"form"` (or omitted) the
-   * component's own. The module `id` stays authoritative; `scope` documents intent.
+   * component's own. The module `id` stays authoritative; `scope` documents intent and slot mapping.
    */
   scope?: string;
   stylesheet?: string;
@@ -163,8 +175,9 @@ function isPlainRecord(value: unknown): value is Record<string, any> {
  *
  * Two shapes are recognised:
  *
- * - node trees: a `builder` field — a name, or an array of names for a node that
- *   creates those components itself (for example inside an `onCreated` hook);
+ * - node trees: a `builder` field naming **one** component — the node the renderer
+ *   builds. A route that mounts several components declares them on the registry
+ *   (`iComponentRoute` in `@aio-ui/app`), not on a node;
  * - page blocks: a `type` field paired with a table binding (`{ type: "masonry",
  *   source: "portfolio" }`). The `source` requirement keeps input descriptors out,
  *   because they also carry a `type` (`{ type: "text" }`) that is not a component.
@@ -193,11 +206,9 @@ export function collectComponentNames(source: unknown): string[] {
 
     const record = value as Record<string, any>;
     const declared = record.builder;
-    // `builder` is a reserved key the renderer never turns into an element, so a
-    // node can list several components it needs with `builder: ["form", "table"]`.
-    const declaredNames = typeof declared === "string"
-      ? [declared]
-      : Array.isArray(declared) ? declared.filter((entry): entry is string => typeof entry === "string") : [];
+    // `builder` names one component. Anything else is ignored, not guessed: a node is
+    // one component, and a route's component list belongs to the registry plan.
+    const declaredNames = typeof declared === "string" ? [declared] : [];
     const type = typeof record.type === "string" && "source" in record ? record.type : undefined;
     const names = type ? [...declaredNames, type] : declaredNames;
 
@@ -379,6 +390,21 @@ export class ComponentRegistry {
     }
 
     // Ekstrak nilai yang diminta: export bernama, default, fungsi pertama, atau namespace.
+    if (DEV && jsModule && !exportName) {
+      const candidates = Object.entries(jsModule).filter(([k, v]) => {
+        if (k === "default") return false;
+        return typeof v === "function" || (v && typeof (v as any).create === "function");
+      });
+      if (candidates.length > 1) {
+        console.warn(
+          `[ComponentRegistry] module "${script}" exports ${candidates.length} candidates ` +
+          `(${candidates.map(([k]) => `"${k}"`).join(", ")}), but no "export" was declared in the manifest ` +
+          `for component "${String(componentName)}". The loader fell back to the first candidate. ` +
+          `Declare 'export: "<name>"' in the manifest to remove ambiguity.`
+        );
+      }
+    }
+
     const builderClass = !jsModule
       ? null
       : exportName
@@ -503,7 +529,7 @@ export class ComponentRegistry {
         this._loading.add(String(name));
         const manifest = fn((matchedData || {}) as iBuilderRegistry[typeof name]);
         if (manifest?.path || manifest?.stylesheet) {
-          const loadedClass = await this.loadModule(manifest.path, manifest.stylesheet, name as string);
+          const loadedClass = await this.loadModule(manifest.path, manifest.stylesheet, name as string, manifest.export);
           if (loadedClass) this._resolvedCache.set(name as string, loadedClass);
         }
         await this.loadModules(name as string, manifest);

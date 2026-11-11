@@ -20,6 +20,7 @@ export {
   injectLazyCss,
   isStyleInjected,
   normalizeStylesheetPath,
+  replaceLazyCss,
   styleTagId,
   useStylesheetAssets,
 } from "./Stylesheets";

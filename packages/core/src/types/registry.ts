@@ -58,6 +58,8 @@ export interface iBuilderRegistry {
   tab: any;
   input: iBasicInputNode;
   "product-card": iBasicNode;
+  /** The composed catalog: grid ⇄ detail, owned by `ProductBuilder`. */
+  product: iBasicNode | iBuilderContent[];
   "product-card-grid": any;
   "product-detail": any;
   "input-controls": Array<iBasicInputNode>;

@@ -280,8 +280,8 @@ export class DOMRenderer<
       return `${tag}${idPart}${classPart}`;
     })();
 
-    // `builder` may be a name or an array of names (a node that creates several
-    // components itself). Only a single named builder can be a template root.
+    // `builder` names the one component this node is, so it can be a template root.
+    // A route that needs several components declares them on the registry, not here.
     const builderName = typeof val?.builder === "string" ? val.builder : null;
     const isBuilderRoot = !!builderName && !!val?.isRoot;
     const effectiveGlobalKey = globalKey;
