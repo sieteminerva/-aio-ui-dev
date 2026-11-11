@@ -16,6 +16,8 @@ import { formContent, formManifest } from './pages/form';
 import { kitchenContent } from './pages/kitchen';
 import { ProductPage } from './pages/product';
 import { componentAssets } from './registry.assets';
+import { productModules } from '@aio-ui/product';
+import type { iComponentRoute } from '@aio-ui/frameworks';
 
 /**
  * Demo application.
@@ -43,14 +45,31 @@ const pages = {
   form: formContent(),
 };
 
+/**
+ * What each route mounts, declared once beside the registry.
+ *
+ * A node's `builder` means "this node is that component"; it is not a dependency list,
+ * so the route states everything it mounts here. `fab-menu` is host chrome (the theme
+ * switcher) and is mounted on every route, hence the repetition.
+ */
+const componentRoutes: iComponentRoute[] = [
+  { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'fab-menu'] },
+  { route: 'product', components: ['product', 'fab-menu'] },
+  { route: 'article', components: ['article', 'fab-menu'] },
+  { route: 'form', components: ['form', 'fab-menu'] },
+];
+
 const themeStorage = globalThis.localStorage;
 
 /** Page components split `{ config, schema }` instead of treating the whole node as payload. */
-function pageComponent(path: string, stylesheet?: string, modules?: iComponentModuleRef[]) {
+function pageComponent(path: string, stylesheet?: string, modules?: iComponentModuleRef[], exportName?: string) {
   return (data: any) => ({
     path,
     stylesheet,
     modules,
+    // A package that ships several builders has to say which one this word means;
+    // without it the loader would take the first exported function for every word.
+    export: exportName,
     config: data?.config,
     schema: data?.schema !== undefined ? data.schema : data?.content !== undefined ? data.content : data,
   });
@@ -64,17 +83,17 @@ async function start(container: HTMLElement) {
     components.register(entry.name as any, manifestFor(entry));
   }
 
-  // Page components are registered explicitly: they take config + schema, and `product`
-  // is composed from two modules rather than being one builder.
+  // Page components are registered explicitly: they take config + schema. `product` is
+  // one word for the whole package — `ProductBuilder` owns grid ⇄ detail as sub-modules,
+  // so the host never registers (or wires) those two separately.
   components
-    .register('product-grid' as any, pageComponent('@aio-ui/product', '@aio-ui/product/ProductGrid.css'))
-    .register('product-detail' as any, pageComponent('@aio-ui/product', '@aio-ui/product/ProductDetail.css'))
-    .register('article' as any, pageComponent('@aio-ui/article', '@aio-ui/article/Article.css'))
+    .register('product', pageComponent('@aio-ui/product', undefined, productModules(), 'ProductBuilder'))
+    .register('article', pageComponent('@aio-ui/article', '@aio-ui/article/Article.css', undefined, 'ArticleBuilder'))
     // The form's adapter stack is declared here, not inside the page: the registry resolves
     // it, `Form.provideModules()` partitions it, and the page only supplies a schema.
-    .register('form' as any, pageComponent('@aio-ui/form', '@aio-ui/form/Form.css', formManifest()))
+    .register('form', pageComponent('@aio-ui/form', '@aio-ui/form/Form.css', formManifest()))
     // The theme switcher is a fab menu with per-item handlers, so it needs config too.
-    .register('fab-menu' as any, pageComponent('@aio-ui/fabmenu', '@aio-ui/fabmenu/FabMenu.css'));
+    .register('fab-menu', pageComponent('@aio-ui/fabmenu', '@aio-ui/fabmenu/FabMenu.css'));
 
   const app = new AioApp({
     container,
@@ -83,7 +102,7 @@ async function start(container: HTMLElement) {
     debug: true,
     source: { pages },
   })
-    .registerModule(components)
+    .registerModule(components, componentRoutes)
     .registerModule(HashRouter)
     .registerModule(DOMRenderer)
     .registerModule(AppStorage, { driver: themeStorage })

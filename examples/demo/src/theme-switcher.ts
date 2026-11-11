@@ -41,7 +41,6 @@ export function currentTheme(): string {
  */
 export const themeSwitcher = {
   ".theme-switcher": {
-    builder: ["fab-menu"],
     onCreated: (el: HTMLElement, _render: any, build: any) => {
       const active = currentTheme();
 

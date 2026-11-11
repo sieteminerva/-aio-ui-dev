@@ -156,26 +156,26 @@ export const DEMO: iDemoEntry[] = [
     },
     note: "row 1 = content.columns[] (dynamic), row 2 = copyright",
   },
-  {
-    name: "menu",
-    path: "@aio-ui/menu",
-    stylesheet: "@aio-ui/menu/Menu.css",
-    category: "navigation",
-    kind: "element",
-    // Flat list: first entry is the brand, an entry with `className: "button"` is the
-    // action, the rest are navigation links. The hamburger is rendered by the builder.
-    payload: {
-      content: {
-        navigations: [
-          { href: "#kitchen", label: "@aio demo" },
-          { href: "#product", label: "Product", title: "Product" },
-          { href: "#article", label: "Article", title: "Article" },
-          { href: "#form", label: "Pesan", className: "button" },
-        ],
-        actions: [],
-      },
-    },
-  },
+  // {
+  //   name: "menu",
+  //   path: "@aio-ui/menu",
+  //   stylesheet: "@aio-ui/menu/Menu.css",
+  //   category: "navigation",
+  //   kind: "element",
+  //   // Flat list: first entry is the brand, an entry with `className: "button"` is the
+  //   // action, the rest are navigation links. The hamburger is rendered by the builder.
+  //   payload: {
+  //     content: {
+  //       navigations: [
+  //         { href: "#kitchen", label: "@aio demo" },
+  //         { href: "#product", label: "Product", title: "Product" },
+  //         { href: "#article", label: "Article", title: "Article" },
+  //         { href: "#form", label: "Pesan", className: "button" },
+  //       ],
+  //       actions: [],
+  //     },
+  //   },
+  // },
   {
     name: "fab-menu",
     path: "@aio-ui/fabmenu",

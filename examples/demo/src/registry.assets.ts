@@ -19,7 +19,6 @@ export const componentAssets = {
     "@aio-ui/modeswitcher": () => import("@aio-ui/modeswitcher"),
     "@aio-ui/pricingcard": () => import("@aio-ui/pricingcard"),
     "@aio-ui/product": () => import("@aio-ui/product"),
-    "@aio-ui/product": () => import("@aio-ui/product"),
     "@aio-ui/section": () => import("@aio-ui/section"),
     "@aio-ui/tab": () => import("@aio-ui/tab"),
     "@aio-ui/table": () => import("@aio-ui/table"),

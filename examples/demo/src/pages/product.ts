@@ -4,15 +4,12 @@ import { demoNav, pageIntro } from "../nav";
 import { themeSwitcher } from "../theme-switcher";
 
 /**
- * Product page — a page component made of three modules.
+ * Product page — filters + one composition.
  *
- *   filter block  → narrows the list (data comes from the same array)
- *   list          → `product-grid`, one `product-card` per record
- *   detail        → `product-detail`, one record, with back + add-to-cart
- *
- * The page owns composition and navigation between the modules; each module owns only
- * its own node. That is the same division `ArticleBuilder` uses internally, just at the
- * page level, so a card never has to know where its detail lives.
+ * The page owns what only a page can know: where the data came from, how the catalog is
+ * narrowed, and what "add to cart" means. Everything else belongs to `product`:
+ * `ProductBuilder` composes the grid and the detail view from its own sub-modules, so this
+ * file never names either builder and never swaps them itself.
  */
 
 type BuildFn = (name: string, data?: any) => HTMLElement;
@@ -39,55 +36,31 @@ function mountCatalog(host: HTMLElement, products: iProductRecord[], build: Buil
   status.className = "catalog-status";
   status.setAttribute("role", "status");
 
-  const listHost = document.createElement("div");
-  listHost.className = "catalog-list";
-
-  const detailHost = document.createElement("div");
-  detailHost.className = "catalog-detail";
-  detailHost.hidden = true;
+  const catalogHost = document.createElement("div");
+  catalogHost.className = "catalog-body";
 
   const announce = (message: string): void => {
     status.textContent = message;
   };
 
-  const closeDetail = (): void => {
-    detailHost.hidden = true;
-    detailHost.replaceChildren();
-    listHost.hidden = false;
-    announce("");
-  };
+  const listOf = (): iProductRecord[] =>
+    activeCategory === "all" ? products : products.filter((product) => product.category === activeCategory);
 
-  const openDetail = (product: iProductRecord): void => {
-    detailHost.hidden = false;
-    detailHost.replaceChildren();
-    listHost.hidden = true;
+  const render = (): void => {
+    catalogHost.replaceChildren();
 
-    const detail = build("product-detail", {
-      schema: product,
+    // One node, one registration: the list ⇄ detail composition happens inside it, driven
+    // by the sub-modules `productModules()` declares on the registration.
+    const catalog = build("product", {
+      content: { items: listOf() },
       config: {
-        onBack: closeDetail,
-        onAddToCart: ({ product: item, color }: { product: iProductRecord; color?: { name?: string } }) => {
-          announce(`Ditambahkan: ${item.title ?? item.name}${color?.name ? ` (${color.name})` : ""}`);
+        onAddToCart: ({ product, color }: { product: iProductRecord; color?: { name?: string } }) => {
+          announce(`Ditambahkan: ${product.title ?? product.name}${color?.name ? ` (${color.name})` : ""}`);
         },
       },
     });
 
-    detailHost.appendChild(detail);
-    detailHost.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const renderList = (): void => {
-    const list = activeCategory === "all"
-      ? products
-      : products.filter((product) => product.category === activeCategory);
-
-    listHost.replaceChildren();
-    listHost.appendChild(
-      build("product-grid", {
-        content: { data: list },
-        config: { onOpen: openDetail },
-      }),
-    );
+    catalogHost.appendChild(catalog);
   };
 
   categories.forEach((category) => {
@@ -106,15 +79,15 @@ function mountCatalog(host: HTMLElement, products: iProductRecord[], build: Buil
         node.classList.toggle("active", isActive);
         node.setAttribute("aria-pressed", String(isActive));
       });
-      closeDetail();
-      renderList();
+      announce("");
+      render();
     });
 
     filters.appendChild(chip);
   });
 
-  host.append(filters, status, detailHost, listHost);
-  renderList();
+  host.append(filters, status, catalogHost);
+  render();
 }
 
 export class ProductPage implements iPageController {
@@ -130,13 +103,12 @@ export class ProductPage implements iPageController {
       ".page": {
         content: {
           ...demoNav,
-          ...pageIntro("Product", `${products.length} item · list + filter + detail, komposisi di level halaman`),
+          ...pageIntro("Product", `${products.length} item · list + filter, komposisi di dalam komponen`),
           ...themeSwitcher,
           "main.product-page": {
             content: {
               ".catalog": {
-                // Declarations: both modules are built by this node's handler.
-                builder: ["product-grid", "product-detail"],
+                // The route names `product` in the preload plan; this node only builds it.
                 onCreated: (el: HTMLElement, _render: any, build: BuildFn) => {
                   mountCatalog(el, products, build);
                 },

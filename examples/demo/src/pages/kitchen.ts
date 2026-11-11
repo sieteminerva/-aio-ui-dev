@@ -46,10 +46,8 @@ export function kitchenContent(): iNodeContent {
           content: `${entry.category} · ${entry.kind}${entry.note ? ` · ${entry.note}` : ""}`,
         },
         ".mount": {
-          // Declaration, not decoration: a node carrying `builder` has its content
-          // consumed by the builder, so the declaration lives on this empty host — not
-          // on the section, which must keep its heading.
-          builder: [entry.name],
+          // The host is empty on purpose: the component is mounted into it, and the route
+          // names the component in the preload plan — a node never carries a list.
           onCreated: (element: HTMLElement, _render: any, build: any) => mount(element, entry, build),
         },
         ...(entry.kind === "modal"

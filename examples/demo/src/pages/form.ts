@@ -436,7 +436,6 @@ export function formContent(): iPageContent {
         "main.form-page": {
           content: {
             ".form-host": {
-              builder: ["form"],
               onCreated: (el: HTMLElement, _render: any, build: any) => {
                 const form = build("form", { schema, config: formConfig });
                 el.mount(form);
@@ -465,7 +464,6 @@ export function formContent(): iPageContent {
             },
             // Multistep form: three groups become three steps.
             ".form-host.multistep": {
-              builder: ["form"],
               onCreated: (el: HTMLElement, _render: any, build: any) => {
                 const form = build("form", { schema: multiStepSchema, config: { id: "demo-multistep", multistep: true } });
                 el.mount(form);
