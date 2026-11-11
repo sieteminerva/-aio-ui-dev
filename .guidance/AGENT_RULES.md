@@ -71,3 +71,33 @@ One item lives in **exactly one** file. Never duplicate, never append history.
 - **Done = delete the line.** Evidence goes to the commit message (`finding → fix → evidence`) or `DECISIONS.md`; there is no "Completed" section.
 - **Blocked:** stays in `STATUS.md` only while the blocker fits in one line, then returns to the queue.
 - **Edit one file per state change.** Touch all three only when all three states really changed.
+
+## 10. Checkpoint protocol (CP-3)
+
+Context loss (compaction, new chat, second agent) is the default failure mode. Every action
+category ends with **exactly three lines**, each line a **pointer** — never prose:
+
+```
+CP <n> <YYYY-MM-DD HH:mm> <band>
+CHANGED → <path>:<line|symbol> (<test or command>)
+PROVED  → <command> → <measured result>
+NEXT    → <one action> | blocks: <none|item>
+```
+
+| Trigger (category done) | Sink                                                     |
+| ----------------------- | -------------------------------------------------------- |
+| probe / read batch      | `/memories/session/<task>.md` — overwrite the CP block   |
+| edit batch              | same file + the task doc's `Status:` line                |
+| `verify` / test gate    | git commit of the batch + the `Gate` cell in `STATUS.md` |
+| handoff / pre-compact   | same file `Done / Remaining / NEXT` + `STATUS.md`        |
+
+- **Never add a fourth line.** If it matters and does not fit, it belongs in a file — write
+  the pointer instead.
+- **Keep only the last 3 CPs** in the memory file (overwrite, do not append); older history
+  lives in commits.
+- **Commits are the only lossless trail.** A batch that passed a gate must be committed with
+  `finding → fix → evidence` bullets; nothing else survives compaction intact.
+- **Recovery (new chat, ≤ 3 turns):** `git log --oneline -15` + `git status --short` → view
+  `/memories/session/<task>.md` → read `.guidance/project/STATUS.md`. Then state the plan.
+- **Prefix:** the same 4-line `STEP 0` block sits at the top of **all 6** `AGENTS.md` files
+  (root router + 5 bands). Edit all six or none — a band opened standalone must still carry it.

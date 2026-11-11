@@ -1,3 +1,8 @@
+> **STEP 0 — memory recovery (mandatory, first action of any session):** `git log --oneline -12`,
+> then `git status --short`, then open the active checkpoint — `/memories/session/<task>.md`,
+> falling back to `.guidance/project/STATUS.md`. Only then plan. Every finished action category
+> leaves **3 pointer lines** (`CHANGED →`, `PROVED →`, `NEXT →`); see `.guidance/AGENT_RULES.md` §10.
+
 # AGENTS.md — Demo showcase (part of the Framework band)
 
 Source rules live in `packages/AGENTS.md`; **read that first.** This file only adds demo specifics.

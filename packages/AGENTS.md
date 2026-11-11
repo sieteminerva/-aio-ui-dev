@@ -1,3 +1,8 @@
+> **STEP 0 — memory recovery (mandatory, first action of any session):** `git log --oneline -12`,
+> then `git status --short`, then open the active checkpoint — `/memories/session/<task>.md`,
+> falling back to `.guidance/project/STATUS.md`. Only then plan. Every finished action category
+> leaves **3 pointer lines** (`CHANGED →`, `PROVED →`, `NEXT →`); see `.guidance/AGENT_RULES.md` §10.
+
 # AGENTS.md — Framework band (`packages/**` + `examples/demo/**`)
 
 AIO UI framework source plus its showcase demo. This is the trunk.
@@ -28,6 +33,9 @@ npm run verify           # full gate — run once per batch, not per step
   (e.g. `ProductGrid.css` → `ProductCard.css`).
 - Publish through `config.emit?.(…)`; a component is framework-agnostic and never imports the app.
 - A component self-describes sub-components via `manifest modules` (self-contained packages).
+- A route's components are declared **once**, in the plan handed to the registry:
+  `registerModule(components, [{ route, components: ["article", "fab-menu"] }])`. `builder` on a
+  node names the component the node **is** — never a dependency list (`builder: []` is closed).
 
 ## Traps (do not regress)
 
@@ -48,9 +56,12 @@ npm run verify           # full gate — run once per batch, not per step
 ## Open design (decide, do not implement blind)
 
 `isRoot` (`.guidance/plan-generator.md` §3.11): default builder node wraps (`div#masonry` host);
-`isRoot: true` should **replace** the host with the builder root. `AioApp.blockToNode()` already
-sets `isRoot: true` for page blocks — one flag, two meanings. Review `AioApp`'s entry/render path
-before implementing.
+`isRoot: true` should **replace** the host with the builder root. Decided: `onCreated` wins and
+keeps the host (a hook owns its mount), and an unresolved builder falls back to the host. Decided
+against: adding a helper or a new parameter to existing renderer methods — `buildStructure`
+already holds `builderFn`, and `attachMetadata` can tell a builder root by its `getMetadata`.
+`AioApp.blockToNode()` keeps emitting `isRoot: true`; until this lands, page-document blocks
+still render an empty host.
 
 ## Verify
 
