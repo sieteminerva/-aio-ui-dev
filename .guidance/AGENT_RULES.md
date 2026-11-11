@@ -118,3 +118,16 @@ and a commit drags in someone else's half-finished batch.
 - **Budget:** ≤ 60k tokens / ~15 turns per batch (§7). At ~80k: finish the edit, run the gate,
   write the CP, commit, then ask the user to compact. **The agent signals; the user presses the
   button** — an agent cannot trigger compaction itself.
+
+### Reply footer (every reply)
+
+End every reply with one line so both sides can track the budget without guessing:
+
+```
+ctx ~<n>k / 200k · turn <n> · batch: <name> · CP <n> · gate: <green|red|not run>
+```
+
+- `<n>k` is an **estimate** — no agent can read its own token counter. State it as `~`, and say
+  so once if the user asks for precision.
+- Turns to the next threshold: 60k = wrap the batch, 80k = commit + signal compaction, 100k = stop.
+- Never pad the footer with prose; one line, same position, every time.
