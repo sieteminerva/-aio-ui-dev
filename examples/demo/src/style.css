@@ -5,7 +5,13 @@
  * Rule for everything below: use `packages/styles` first — `.container`, `.grid`, `.row`,
  * `.column`, `.half`, and the `--app-*` tokens. What remains is either demo-only wiring
  * (marked as such) or an extraction candidate (marked `EXTRACT`).
+ *
+ * Written with CSS nesting, like the packages (`.guidance/mandatory/CODING_PRINCIPLES.md`:
+ * "preserve the repository's intentional CSS nesting style"): one owner block per region,
+ * children addressed with `&`. Media queries stay at the top level on purpose — a flat
+ * breakpoint block is easier to hand-edit than a nested one.
  */
+
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
@@ -15,129 +21,82 @@ body {
 }
 
 .page {
-  padding: var(--app-padding-layout);
   display: grid;
   gap: var(--app-gap);
-}
-
-header.intro h1 {
-  margin: 0 0 0.25rem;
-  font-size: 1.5rem;
-}
-
-header.intro p,
-p.meta {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--app-text-accent-color, #555);
-}
-
-/*
- * Route shell — the demo now has four routes, so the page needs a nav and a couple of
- * layout hooks. Still zero overrides of component internals.
- */
-nav.demo-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.75rem 2rem;
-  background: var(--app-surface-strong, #fff);
-  border-bottom: 1px solid var(--app-border-color, #e2e2e6);
-  color: var(--app-text-color, #111);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-nav.demo-nav .brand {
-  font-weight: 700;
-  color: var(--app-text-color, #111);
-  text-decoration: none;
-}
-
-nav.demo-nav .navigations {
-  display: flex;
-  gap: 0.25rem;
-}
-
-nav.demo-nav .item {
-  padding: 0.35rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.85rem;
-  color: var(--app-text-accent-color, #444);
-  text-decoration: none;
-}
-
-nav.demo-nav .item:hover {
-  background: var(--app-surface-muted, #f0f0f2);
-  color: var(--app-text-color, #111);
-}
-
-/* Product page: filter block + list + detail */
-.catalog {
-  display: grid;
-  gap: 1rem;
-}
-
-.catalog .filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.catalog .filter {
-  padding: 0.4rem 0.9rem;
-  font: inherit;
-  font-size: 0.85rem;
-  text-transform: capitalize;
-  background: #fff;
-  color: #444;
-  border: 1px solid #dcdce2;
-  border-radius: 9999px;
-  cursor: pointer;
-}
-
-.catalog .filter.active {
-  background: #111;
-  border-color: #111;
-  color: #fff;
-}
-
-.catalog .catalog-status {
-  margin: 0;
-  min-height: 1.2em;
-  font-size: 0.85rem;
-  color: #2a7a45;
-}
-
-.catalog .catalog-detail {
-  padding: 1.25rem;
-  background: #fff;
-  border: 1px solid #e2e2e6;
-  border-radius: 6px;
-}
-
-/* Article + form hosts */
-.article-host,
-.form-host {
-  display: grid;
-  gap: 1rem;
-}
-
-.form-log {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  background: #111;
-  color: #d6d6d6;
-  border-radius: 6px;
-  font-family: ui-monospace, monospace;
-  font-size: 0.75rem;
-  overflow-x: auto;
+  padding: var(--app-padding-layout);
 }
 
 /* ==========================================================================
-   Docs shell (#kitchen) — aside + main + tab panels
+   Shell chrome — `header` (top menu) + page title
+   ========================================================================== */
+
+/*
+ * Page title block for the single-column routes. A `header`, not a `div`, but the shared
+ * sheet centres every `header`, so the alignment is reset here: a page title belongs to
+ * the left edge of its column.
+ */
+header.docs-head {
+  display: grid;
+  gap: 0.2rem;
+  align-items: start;
+  padding: 0;
+  text-align: start;
+
+  & h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    color: var(--app-text-heading-color, #111);
+  }
+
+  & p.meta {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--app-text-accent-color, #555);
+  }
+}
+
+.docs-top {
+  /* Same reset as above: the shell decides where the bar sits. */
+  display: block;
+  padding: 0;
+  text-align: start;
+
+  /*
+   * Demo-only: `Menu.css` pins `.nav` to the viewport (`position: fixed`), which in a docs
+   * shell would float over the content. The top bar sits in the flow instead.
+   */
+  & .nav {
+    position: static;
+    width: 100%;
+    max-width: none;
+    border: 1px solid var(--app-border-color, #e2e2e6);
+    border-radius: var(--app-component-border-radius, 1rem);
+    box-shadow: none;
+  }
+
+  /* `Menu.css` ships no active state for links, so the shell marks the current route. */
+  & .navigations a {
+    padding: 0.3rem 0.85rem;
+    border-radius: 9999px;
+    transition:
+      background 0.2s ease,
+      color 0.2s ease;
+
+    &:hover {
+      background: var(--app-surface-muted, #f0f0f2);
+      color: var(--app-text-color, #111);
+    }
+
+    &.is-active {
+      background: var(--app-surface-muted, #f0f0f2);
+      color: var(--app-text-heading-color, #111);
+      font-weight: 700;
+    }
+  }
+}
+
+/* ==========================================================================
+   Docs split — aside + main
    ========================================================================== */
 
 /*
@@ -151,12 +110,6 @@ nav.demo-nav .item:hover {
   grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
   gap: var(--app-gap);
   align-items: start;
-}
-
-@media (max-width: 900px) {
-  .docs {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /*
@@ -180,59 +133,64 @@ nav.demo-nav .item:hover {
   --radius-component: var(--app-component-border-radius, 1rem);
 }
 
+.docs-aside {
+  & .nav {
+    position: sticky;
+    top: var(--app-gap);
+    height: auto;
+    max-width: none;
+    /*
+     * The list is taller than a short viewport (13 components in 3 tiers). Sticky plus its
+     * own scroll keeps every tier reachable instead of clipping the last ones under the fold.
+     */
+    max-height: calc(100dvh - (var(--app-gap) * 2));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--app-border-color, #e2e2e6);
+    border-radius: var(--app-component-border-radius, 1rem);
+    box-shadow: var(--app-shadow-soft, none);
+  }
+
+  /* Tier labels are headings inside the list, not destinations (`onNavigate` blocks them). */
+  & .navigations > .item > a.group {
+    margin-top: 0.5rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--app-text-accent-color, #5b5b63);
+    cursor: default;
+    pointer-events: none;
+  }
+
+  & .navigations > .item > a.is-active {
+    background: var(--app-surface-muted, #f4eee2);
+    color: var(--app-text-color, #111);
+    font-weight: 700;
+  }
+}
+
 /*
- * Demo-only: `Menu.css` pins `.nav` to the viewport (`position: fixed`), which in a docs
- * shell would float over the content. Inside the demo the nav belongs to its column, so
- * the top bar sits in the flow and the sidebar sticks to the top of the viewport instead.
+ * Demo-only: on a wide screen the sidebar is a permanent list, not a disclosure.
+ * `Menu.css` hides `.navigations` behind the hamburger under 768px; a docs sidebar wants
+ * the list open — but only where it is actually a column. Below that breakpoint the
+ * builder's own hamburger is the right behaviour, so the override stops.
  */
-.docs-top .nav {
-  position: static;
-  max-width: none;
-  border: 1px solid var(--app-border-color, #e2e2e6);
-  border-radius: var(--app-component-border-radius, 1rem);
-  box-shadow: none;
+@media (min-width: 769px) {
+  .docs-aside .navigations {
+    display: flex !important;
+    opacity: 1 !important;
+    padding-top: 0.5rem;
+  }
+
+  .docs-aside .hamburger-btn {
+    display: none;
+  }
 }
 
-.docs-aside .nav {
-  position: sticky;
-  top: var(--app-gap);
-  height: auto;
-  max-width: none;
-  border: 1px solid var(--app-border-color, #e2e2e6);
-  border-radius: var(--app-component-border-radius, 1rem);
-  box-shadow: var(--app-shadow-soft, none);
-}
-
-/*
- * Demo-only: the sidebar is a permanent list, not a disclosure. `Menu.css` hides
- * `.navigations` behind the hamburger under 768px and pads the list for a fixed bar; a
- * docs sidebar wants the list open at every width and no toggle.
- */
-.docs-aside .nav .navigations {
-  display: flex !important;
-  opacity: 1 !important;
-  padding-top: 0.5rem;
-}
-
-.docs-aside .hamburger-btn {
-  display: none;
-}
-
-/* Tier labels are headings inside the list, not destinations (`onNavigate` blocks them). */
-.docs-aside .navigations > .item > a.group {
-  margin-top: 0.5rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--app-text-accent-color, #5b5b63);
-  cursor: default;
-  pointer-events: none;
-}
-
-.docs-aside .navigations > .item > a.is-active {
-  background: var(--app-surface-muted, #f4eee2);
-  color: var(--app-text-color, #111);
-  font-weight: 700;
+@media (max-width: 900px) {
+  .docs {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .docs-main {
@@ -241,7 +199,10 @@ nav.demo-nav .item:hover {
   min-width: 0;
 }
 
-/* Display panel ---------------------------------------------------------- */
+/* ==========================================================================
+   Display panel — live preview
+   ========================================================================== */
+
 .preview-panel,
 .usage-panel,
 .api-panel {
@@ -249,44 +210,119 @@ nav.demo-nav .item:hover {
   gap: 0.75rem;
 }
 
-.preview-variant + .preview-variant {
-  margin-top: 0.75rem;
+.preview-panel {
+  & .preview-variant {
+    & + .preview-variant {
+      margin-top: 0.75rem;
+    }
+
+    /* A failed component must be loud: this page exists to surface exactly that. */
+    &[data-status="error"] {
+      padding-left: 0.75rem;
+      border-left: 3px solid #d33;
+    }
+
+    & .eyebrow {
+      margin: 0 0 0.35rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--app-text-accent-color, #5b5b63);
+    }
+
+    & .stage-note {
+      margin: 0.35rem 0 0;
+      font-size: 0.72rem;
+      color: var(--app-text-accent-color, #5b5b63);
+
+      /* Always in the markup, filled only for a staged frame. */
+      &:empty {
+        display: none;
+      }
+    }
+  }
 }
 
 /*
  * Demo-only preview frame: a component that positions itself (`fab`) needs a containing
  * block that is this box, not the viewport.
+ *
+ * The frame is sized by its content, and `is-stage` allocates the space for the rows that
+ * have no height of their own (see `stage` in `manifest.ts`). Space is reserved up front —
+ * nothing is measured.
  */
 .preview-frame {
   position: relative;
-  min-height: 240px;
   padding: 1rem;
   border: 1px dashed var(--app-border-color, #e2e2e6);
   border-radius: var(--app-component-border-radius, 1rem);
   background: var(--app-page-background, #f7f7f8);
   overflow: hidden;
+
+  &.is-stage {
+    min-height: 220px;
+  }
+
+  /*
+   * Demo-only: `FabMenu.css` is `position: fixed; z-index: 999999`. Inside the frame — and
+   * only there — the fab belongs to its container; the theme switcher stays viewport-fixed.
+   */
+  & .fab {
+    position: absolute;
+    z-index: 1;
+  }
 }
+
+/* ==========================================================================
+   Placeholders — loading / empty / error
+   ========================================================================== */
 
 /*
- * Demo-only: `FabMenu.css` is `position: fixed; z-index: 999999`. Inside the frame — and
- * only there — the fab belongs to its container; the theme switcher stays viewport-fixed.
+ * EXTRACT → packages/styles/src/components.css
+ * The one placeholder box. Loading, empty and error share their geometry on purpose: the
+ * page does not jump when data arrives, and "nothing here yet" is never a blank screen.
+ * No package ships this, and every app needs it. The error colour has no token yet —
+ * `--app-status-error` would be the honest place for it.
  */
-.preview-frame .fab {
-  position: absolute;
-  z-index: 1;
-}
+.state {
+  display: grid;
+  justify-items: center;
+  gap: 0.35rem;
+  padding: var(--app-margin-layout, 2rem) var(--app-gap);
+  border: 1px dashed var(--app-border-color, #e2e2e6);
+  border-radius: var(--app-component-border-radius, 1rem);
+  background: var(--app-surface-background-color, #fff);
+  text-align: center;
 
-.preview-variant .eyebrow {
-  margin: 0 0 0.35rem;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--app-text-accent-color, #5b5b63);
-}
+  & .state-spinner {
+    width: 24px;
+    height: 24px;
+    background-image: var(--app-spinner-content);
+    background-repeat: no-repeat;
+    background-size: contain;
+  }
 
-.preview-variant[data-status="error"] {
-  border-left: 3px solid #d33;
-  padding-left: 0.75rem;
+  & .state-title {
+    margin: 0;
+    font-weight: 600;
+    color: var(--app-text-color, #111);
+  }
+
+  & .state-detail {
+    margin: 0;
+    max-width: 46ch;
+    font-size: 0.8rem;
+    color: var(--app-text-accent-color, #5b5b63);
+  }
+
+  &.state-error {
+    border-style: solid;
+    border-color: #d33;
+
+    & .state-title {
+      color: #d33;
+    }
+  }
 }
 
 /* A failed component must be loud: this page exists to surface exactly that. */
@@ -297,6 +333,7 @@ nav.demo-nav .item:hover {
   font-size: 0.8rem;
 }
 
+/* Demo-only: the modal renders nothing until opened, so the display needs a trigger. */
 .open-modal {
   justify-self: start;
   margin-top: 0.5rem;
@@ -310,82 +347,155 @@ nav.demo-nav .item:hover {
   cursor: pointer;
 }
 
-/* Cara Penggunaan panel -------------------------------------------------- */
-.summary {
-  margin: 0;
-  font-size: 0.95rem;
+/* ==========================================================================
+   Cara Penggunaan + API panels
+   ========================================================================== */
+
+.usage-panel {
+  & .summary {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  /* Definition list: label column shrinks to its content, value column wraps. */
+  & .facts {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.2rem 0.9rem;
+    margin: 0;
+
+    & dt {
+      font-family: ui-monospace, monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--app-text-accent-color, #5b5b63);
+    }
+
+    & dd {
+      margin: 0;
+      font-size: 0.85rem;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  & .snippet {
+    margin: 0;
+    padding: 0.9rem 1rem;
+    background: #14100c;
+    color: #e9e2d8;
+    border-radius: var(--app-component-border-radius, 1rem);
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+
+  & .limits {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
 }
 
-/* Definition list: label column shrinks to its content, value column wraps. */
-.facts {
+.api-panel {
+  & h4 {
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--app-text-accent-color, #5b5b63);
+  }
+
+  & .api-rows,
+  & .api-config {
+    border-collapse: collapse;
+    font-size: 0.8rem;
+
+    & th,
+    & td {
+      padding: 0.3rem 0.9rem 0.3rem 0;
+      border-bottom: 1px solid var(--app-border-color, #e2e2e6);
+      text-align: left;
+      vertical-align: top;
+    }
+  }
+
+  & .api-rows th {
+    width: 1%;
+    white-space: nowrap;
+    font-family: ui-monospace, monospace;
+    font-weight: 600;
+    color: var(--app-text-accent-color, #5b5b63);
+  }
+}
+
+/* ==========================================================================
+   Product route — filters, status, catalog body
+   ========================================================================== */
+
+.catalog {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: 0.2rem 0.9rem;
-  margin: 0;
+  gap: 1rem;
+
+  & .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  & .filter {
+    padding: 0.4rem 0.9rem;
+    font: inherit;
+    font-size: 0.85rem;
+    text-transform: capitalize;
+    background: var(--app-surface-strong, #fff);
+    color: var(--app-text-color, #444);
+    border: 1px solid var(--app-border-color, #dcdce2);
+    border-radius: 9999px;
+    cursor: pointer;
+
+    &.active {
+      background: var(--app-primary-color, #111);
+      color: var(--app-surface-strong, #fff);
+      border-color: var(--app-primary-color, #111);
+    }
+  }
+
+  & .catalog-status {
+    margin: 0;
+    min-height: 1.2em;
+    font-size: 0.85rem;
+    color: var(--app-primary-color, #2a7a45);
+  }
+
+  & .catalog-detail {
+    padding: 1.25rem;
+    background: var(--app-surface-strong, #fff);
+    border: 1px solid var(--app-border-color, #e2e2e6);
+    border-radius: var(--app-component-border-radius, 6px);
+  }
 }
 
-.facts dt {
-  font-family: ui-monospace, monospace;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--app-text-accent-color, #5b5b63);
+/* ==========================================================================
+   Article + form routes
+   ========================================================================== */
+
+.article-host,
+.form-host {
+  display: grid;
+  gap: 1rem;
 }
 
-.facts dd {
+.form-log {
   margin: 0;
-  font-size: 0.85rem;
-  overflow-wrap: anywhere;
-}
-
-.snippet {
-  margin: 0;
-  padding: 0.9rem 1rem;
+  padding: 0.75rem 1rem;
+  /* A code block stays dark in both themes; the palette is not theme-dependent on purpose. */
   background: #14100c;
   color: #e9e2d8;
-  border-radius: var(--app-component-border-radius, 1rem);
+  border-radius: var(--app-component-border-radius, 6px);
   font-family: ui-monospace, monospace;
-  font-size: 0.72rem;
-  line-height: 1.5;
-  overflow-x: auto;
-}
-
-.limits {
-  margin: 0;
-  padding-left: 1.1rem;
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-/* API panel -------------------------------------------------------------- */
-.api-rows,
-.api-config {
-  border-collapse: collapse;
-  font-size: 0.8rem;
-}
-
-.api-rows th,
-.api-rows td,
-.api-config th,
-.api-config td {
-  padding: 0.3rem 0.9rem 0.3rem 0;
-  border-bottom: 1px solid var(--app-border-color, #e2e2e6);
-  text-align: left;
-  vertical-align: top;
-}
-
-.api-rows th {
-  width: 1%;
-  white-space: nowrap;
-  font-family: ui-monospace, monospace;
-  font-weight: 600;
-  color: var(--app-text-accent-color, #5b5b63);
-}
-
-.api-panel h4 {
-  margin: 0.5rem 0 0;
   font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--app-text-accent-color, #5b5b63);
+  overflow-x: auto;
 }

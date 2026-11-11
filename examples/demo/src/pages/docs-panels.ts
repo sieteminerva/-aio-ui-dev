@@ -9,35 +9,10 @@
  * component and a real table inside a panel.
  */
 import { apiOf, entryHash, tierGroups, usageOf, variantsOf } from "../docs";
+import { mountInto, node } from "../dom";
 import type { iDemoEntry } from "../manifest";
 
 type BuildFn = (name: string, data?: any) => HTMLElement;
-
-/**
- * Append built content into a host.
- *
- * `mount()` only exists on elements the DOM renderer created. Panel internals are plain
- * `document.createElement` nodes, so they get `appendChild` — same result, no metadata.
- */
-export function mountInto(host: HTMLElement, child: unknown): void {
-  if (!child) return;
-  const element = child instanceof HTMLElement ? child : (child as any).element;
-  if (!(element instanceof HTMLElement)) {
-    throw new Error(`builder returned ${typeof child}, not an element`);
-  }
-  if (typeof (host as any).mount === "function") {
-    (host as any).mount(element);
-  } else {
-    host.appendChild(element);
-  }
-}
-
-function node(tag: string, className?: string, text?: string): HTMLElement {
-  const element = document.createElement(tag);
-  if (className) element.className = className;
-  if (text !== undefined) element.textContent = text;
-  return element;
-}
 
 /** `path`, `stylesheet`, `builder` … as a definition list, one pair per fact. */
 function factList(fields: { label: string; value: string }[]): HTMLElement {
@@ -55,12 +30,28 @@ export function previewPanel(entry: iDemoEntry, build: BuildFn): HTMLElement {
   for (const variant of variantsOf(entry)) {
     const block = node("article", "preview-variant");
     const frame = node("div", "preview-frame");
+    const note = node("p", "stage-note");
+    // Assembled up front so `stage()` can fill the note from anywhere, and a frame that
+    // fails later still appears in its final position.
+    block.append(node("p", "eyebrow", variant.label), frame, note);
     let opener: HTMLElement | null = null;
 
     try {
       const built = build(entry.name, variant.payload);
       mountInto(frame, built);
       block.dataset.status = "ok";
+
+      // A component that positions itself out of flow (`fab`) or renders nothing until it
+      // is opened (`modal`) has no height of its own, so a frame sized by content would be
+      // an empty strip. The table says which rows those are (`stage`) — nothing is measured
+      // here, because computed style on a detached panel is meaningless.
+      if (entry.stage) {
+        frame.classList.add("is-stage");
+        note.textContent =
+          entry.kind === "modal"
+            ? "dialog tampil sebagai overlay di dalam frame ini begitu dibuka"
+            : "komponen memosisikan dirinya sendiri; frame ini menjadi containing block";
+      }
 
       // A modal renders nothing until it is opened, so the display would show an empty
       // frame. `build()` hands back the element here, while the control handle arrives
@@ -80,7 +71,6 @@ export function previewPanel(entry: iDemoEntry, build: BuildFn): HTMLElement {
       frame.append(node("p", "error", `✖ ${(error as Error).message}`));
     }
 
-    block.append(node("p", "eyebrow", variant.label), frame);
     if (opener) block.append(opener);
     panel.append(block);
   }

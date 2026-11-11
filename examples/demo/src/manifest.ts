@@ -58,6 +58,12 @@ export interface iDemoEntry {
   /** How much wiring the component asks for; the page groups sections by this. */
   tier: DemoTier;
   kind: "element" | "modal";
+  /**
+   * The Display frame must act as the containing block: the component positions itself out
+   * of flow (`fab`) or renders nothing until it is opened (`modal`), so a frame sized by its
+   * content would be an empty strip. A display hint only — the builder receives nothing extra.
+   */
+  stage?: boolean;
   /** Payload handed to `build(name, payload)`. */
   payload: any;
   /** Config merged into the builder (selectors, callbacks, per-build options). */
@@ -233,6 +239,8 @@ export const DEMO: iDemoEntry[] = [
     category: "navigation",
     tier: "intermediate",
     kind: "element",
+    // `FabMenu.css` is `position: fixed`; in the frame it is contained, so it needs a stage.
+    stage: true,
     // `FabMenu.prepare` reads `content.actions` and `content.title` — no wrapper.
     payload: {
       title: "Actions",
@@ -288,6 +296,7 @@ export const DEMO: iDemoEntry[] = [
     category: "chrome",
     tier: "intermediate",
     kind: "modal",
+    stage: true,
     // `destroyOnClose: true` makes a modal single-use; a mounted demo wants reuse.
     payload: "Isi modal dari payload demo.",
     config: {

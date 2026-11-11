@@ -71,11 +71,13 @@ const pages = {
  * switcher) and is mounted on every route, hence the repetition.
  */
 const componentRoutes: iComponentRoute[] = [
-  // `menu` is the docs shell itself: top nav plus one sidebar per tier on the elements route.
+  // Every route mounts the same shell menu, so every route names it. A builder called
+  // inside `onCreated` is invisible to the node collector, and this plan is the only
+  // thing that preloads it — a missing entry fails the render on a cold load.
   { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'menu', 'fab-menu'] },
-  { route: 'product', components: ['product', 'fab-menu'] },
-  { route: 'article', components: ['article', 'fab-menu'] },
-  { route: 'form', components: ['form', 'fab-menu'] },
+  { route: 'product', components: ['product', 'menu', 'fab-menu'] },
+  { route: 'article', components: ['article', 'menu', 'fab-menu'] },
+  { route: 'form', components: ['form', 'menu', 'fab-menu'] },
 ];
 
 const themeStorage = globalThis.localStorage;
@@ -110,7 +112,7 @@ async function start(container: HTMLElement) {
     .register('article', pageComponent('@aio-ui/article', '@aio-ui/article/Article.css', undefined, 'ArticleBuilder'))
     // The form's adapter stack is declared here, not inside the page: the registry resolves
     // it, `Form.provideModules()` partitions it, and the page only supplies a schema.
-    .register('form', pageComponent('@aio-ui/form', '@aio-ui/form/Form.css', formManifest()))
+    .register('form', pageComponent('@aio-ui/form', '@aio-ui/form/Form.css', formManifest(), 'FormBuilder'))
     // The theme switcher is a fab menu with per-item handlers, so it needs config too.
     .register('fab-menu', pageComponent('@aio-ui/fabmenu', '@aio-ui/fabmenu/FabMenu.css'))
     // The docs shell: `menu` is one builder with two shapes, `top` and `sidebar`.

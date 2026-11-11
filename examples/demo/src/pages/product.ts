@@ -1,7 +1,7 @@
 import type { iPageContent, iPageController, iPageContext } from "@aio-ui/app";
 
-import { demoNav, pageIntro } from "../nav";
-import { themeSwitcher } from "../theme-switcher";
+import { pageHead, shellPage } from "../shell";
+import { stateBlock } from "../states";
 
 /**
  * Product page — filters + one composition.
@@ -90,8 +90,22 @@ function mountCatalog(host: HTMLElement, products: iProductRecord[], build: Buil
   render();
 }
 
-export class ProductPage implements iPageController {
-  async onPrepare({ http, signal }: iPageContext): Promise<iPageContent | void> {
+/**
+ * The route paints its shell first and fills the catalog when the data arrives, so the
+ * loading block is a frame the visitor actually sees rather than a hidden `await`.
+ *
+ * The three outcomes share one host: loading → catalog | empty | error. Nothing is thrown
+ * out of here; a failed fetch is content, not a blank page.
+ */
+async function hydrateCatalog(
+  host: HTMLElement,
+  build: BuildFn,
+  http: iPageContext["http"],
+  signal: AbortSignal,
+): Promise<void> {
+  host.append(stateBlock("loading", { title: "Memuat katalog…", detail: "GET mock/products.json" }));
+
+  try {
     const envelope = await http.get({ sheetName: "products" });
 
     // A newer navigation already started: drop this pass instead of painting it.
@@ -99,24 +113,39 @@ export class ProductPage implements iPageController {
 
     const products: iProductRecord[] = Array.isArray(envelope?.data) ? envelope.data : [];
 
-    return {
-      ".page": {
-        content: {
-          ...demoNav,
-          ...pageIntro("Product", `${products.length} item · list + filter, komposisi di dalam komponen`),
-          ...themeSwitcher,
-          "main.product-page": {
-            content: {
-              ".catalog": {
-                // The route names `product` in the preload plan; this node only builds it.
-                onCreated: (el: HTMLElement, _render: any, build: BuildFn) => {
-                  mountCatalog(el, products, build);
-                },
-              },
-            },
+    if (!products.length) {
+      host.replaceChildren(
+        stateBlock("empty", {
+          title: "Katalog kosong",
+          detail: "Sumber data tidak berisi item, jadi filter dan grid tidak dirender.",
+        }),
+      );
+      return;
+    }
+
+    const catalog = document.createElement("div");
+    catalog.className = "catalog";
+    mountCatalog(catalog, products, build);
+    host.replaceChildren(catalog);
+  } catch (error) {
+    if (signal.aborted) return;
+    host.replaceChildren(
+      stateBlock("error", { title: "Katalog gagal dimuat", detail: (error as Error).message }),
+    );
+  }
+}
+
+export class ProductPage implements iPageController {
+  async onPrepare({ http, signal }: iPageContext): Promise<iPageContent> {
+    return shellPage({
+      main: {
+        ...pageHead("Product", "page component · list + filter, komposisi di dalam builder"),
+        "div.product-host": {
+          onCreated: (host: HTMLElement, _render: any, build: BuildFn) => {
+            void hydrateCatalog(host, build, http, signal);
           },
         },
       },
-    } as iPageContent;
+    });
   }
 }

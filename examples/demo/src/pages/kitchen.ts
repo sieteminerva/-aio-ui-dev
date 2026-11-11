@@ -1,44 +1,24 @@
 import type { iPageContent, iPageController, iPageContext } from "@aio-ui/app";
 
 import { entryForFragment } from "../docs";
+import { mountInto } from "../dom";
 import type { iDemoEntry } from "../manifest";
-import { themeSwitcher } from "../theme-switcher";
-import { apiPanel, mountInto, mountSidebar, previewPanel, usagePanel } from "./docs-panels";
+import { shellPage } from "../shell";
+import { apiPanel, mountSidebar, previewPanel, usagePanel } from "./docs-panels";
 
 type BuildFn = (name: string, data?: any) => HTMLElement;
 
 /**
  * Elements route — the docs shell from `.archives/1x/Artboard 1.png`.
  *
- *   header "Menu Utama"   menu builder, `type: "top"`
- *   aside                 one menu builder per tier, `type: "sidebar"`
+ *   header "Menu Utama"   menu builder, `type: "top"` (supplied by `shellPage`)
+ *   aside                 one menu builder, `type: "sidebar"`, grouped by tier
  *   main                  tab builder: Display · Cara Penggunaan · API
  *
  * Selection lives in the route fragment (`#kitchen/<name>`), so refresh and deep links work
  * without a new API: the router already splits `#route/fragment`, and this page reads it.
  * Both menus and the tab are the framework's own builders — the page only supplies data.
  */
-
-/** Brand first (the menu splits its flat list that way), then one link per route. */
-const TOP_NAV = [
-  { label: "@aio demo", href: "#kitchen" },
-  { label: "Elements", href: "#kitchen" },
-  { label: "Product", href: "#product" },
-  { label: "Article", href: "#article" },
-  { label: "Form", href: "#form" },
-];
-
-function mountTopMenu(host: HTMLElement, build: BuildFn): void {
-  mountInto(
-    host,
-    build("menu", {
-      content: { navigations: TOP_NAV },
-      // `menu` defaults to swallowing every click (a host decides routing). Here the
-      // builder's own navigation is exactly right: it sets the hash and the router follows.
-      config: { type: "top", onNavigate: () => false },
-    }),
-  );
-}
 
 /** Main column: one tab, three panels. Panels are elements, so the tab renders them lazily. */
 function mountMain(host: HTMLElement, entry: iDemoEntry, build: BuildFn): void {
@@ -72,27 +52,16 @@ function mountMain(host: HTMLElement, entry: iDemoEntry, build: BuildFn): void {
 }
 
 function kitchenContent(entry: iDemoEntry): iPageContent {
-  return {
-    ".page": {
-      content: {
-        ".docs-top": {
-          onCreated: (element: HTMLElement, _render: any, build: any) => mountTopMenu(element, build),
-        },
-        ".docs": {
-          content: {
-            ".docs-aside": {
-              onCreated: (element: HTMLElement, _render: any, build: any) =>
-                mountSidebar(element, build, entry.name),
-            },
-            ".docs-main": {
-              onCreated: (element: HTMLElement, _render: any, build: any) => mountMain(element, entry, build),
-            },
-          },
-        },
-        ...themeSwitcher,
-      },
+  return shellPage({
+    aside: {
+      onCreated: (element: HTMLElement, _render: any, build: BuildFn) =>
+        mountSidebar(element, build, entry.name),
     },
-  } as unknown as iPageContent;
+    main: {
+      onCreated: (element: HTMLElement, _render: any, build: BuildFn) =>
+        mountMain(element, entry, build),
+    },
+  });
 }
 
 /**

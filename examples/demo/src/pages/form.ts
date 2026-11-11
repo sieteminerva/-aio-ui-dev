@@ -2,8 +2,8 @@ import type { iPageContent } from "@aio-ui/app";
 
 import type { iComponentModuleRef } from "@aio-ui/core";
 import { FORM_ADAPTER_MANIFEST } from "@aio-ui/form/FormRegistry";
-import { demoNav, pageIntro } from "../nav";
-import { themeSwitcher } from "../theme-switcher";
+import { pageHead, shellPage } from "../shell";
+import { stateBlock } from "../states";
 import type { iBasicInputNode } from "@aio-ui/input";
 
 /**
@@ -427,61 +427,65 @@ const multiStepSchema = [
 ] as any[];
 
 export function formContent(): iPageContent {
-  return {
-    ".page": {
-      content: {
-        ...demoNav,
-        ...pageIntro("Form", "schema-driven · validation, handlers, dan submit dimiliki form itu sendiri"),
-        ...themeSwitcher,
-        "main.form-page": {
-          content: {
-            ".form-host": {
-              onCreated: (el: HTMLElement, _render: any, build: any) => {
-                const form = build("form", { schema, config: formConfig });
-                el.mount(form);
+  return shellPage({
+    main: {
+      ...pageHead("Form", "schema-driven · validation, handlers, dan submit dimiliki form itu sendiri"),
+      ".form-host": {
+        onCreated: (el: HTMLElement, _render: any, build: any) => {
+          let form: HTMLElement;
+          try {
+            form = build("form", { schema, config: formConfig });
+            el.mount(form);
+          } catch (error) {
+            el.append(stateBlock("error", { title: "Form gagal dibangun", detail: (error as Error).message }));
+            return;
+          }
 
-                const log = document.createElement("pre");
-                log.className = "form-log";
-                log.textContent = "Menunggu submit…";
+          const log = document.createElement("pre");
+          log.className = "form-log";
+          log.textContent = "Menunggu submit…";
 
-                form.addEventListener("formSubmit", (event: any) => {
-                  log.textContent = `formSubmit → ${JSON.stringify(event.detail?.data ?? {}, null, 2)}`;
-                });
+          form.addEventListener("formSubmit", (event: any) => {
+            log.textContent = `formSubmit → ${JSON.stringify(event.detail?.data ?? {}, null, 2)}`;
+          });
 
-                form.addEventListener("formValidation", (event: any) => {
-                  const { reason, message } = event.detail ?? {};
-                  if (reason !== "valid") log.textContent = `formValidation (${reason}) → ${message ?? ""}`;
-                });
+          form.addEventListener("formValidation", (event: any) => {
+            const { reason, message } = event.detail ?? {};
+            if (reason !== "valid") log.textContent = `formValidation (${reason}) → ${message ?? ""}`;
+          });
 
-                // A group's `search` action is a read, not a submit: it bubbles up from
-                // the fieldset so the page can answer without knowing the controls layer.
-                form.addEventListener("search", (event: any) => {
-                  log.textContent = `search → ${JSON.stringify(event.detail?.query ?? {}, null, 2)}`;
-                });
+          // A group's `search` action is a read, not a submit: it bubbles up from
+          // the fieldset so the page can answer without knowing the controls layer.
+          form.addEventListener("search", (event: any) => {
+            log.textContent = `search → ${JSON.stringify(event.detail?.query ?? {}, null, 2)}`;
+          });
 
-                el.appendChild(log);
-              },
-            },
-            // Multistep form: three groups become three steps.
-            ".form-host.multistep": {
-              onCreated: (el: HTMLElement, _render: any, build: any) => {
-                const form = build("form", { schema: multiStepSchema, config: { id: "demo-multistep", multistep: true } });
-                el.mount(form);
+          el.appendChild(log);
+        },
+      },
+      // Multistep form: three groups become three steps.
+      ".form-host.multistep": {
+        onCreated: (el: HTMLElement, _render: any, build: any) => {
+          let form: HTMLElement;
+          try {
+            form = build("form", { schema: multiStepSchema, config: { id: "demo-multistep", multistep: true } });
+            el.mount(form);
+          } catch (error) {
+            el.append(stateBlock("error", { title: "Form multistep gagal dibangun", detail: (error as Error).message }));
+            return;
+          }
 
-                const log = document.createElement("pre");
-                log.className = "form-log";
-                log.textContent = "Multistep siap…";
+          const log = document.createElement("pre");
+          log.className = "form-log";
+          log.textContent = "Multistep siap…";
 
-                form.addEventListener("formSubmit", (event: any) => {
-                  log.textContent = `formSubmit → ${JSON.stringify(event.detail?.data ?? {}, null, 2)}`;
-                });
+          form.addEventListener("formSubmit", (event: any) => {
+            log.textContent = `formSubmit → ${JSON.stringify(event.detail?.data ?? {}, null, 2)}`;
+          });
 
-                el.appendChild(log);
-              },
-            },
-          },
+          el.appendChild(log);
         },
       },
     },
-  } as iPageContent;
+  });
 }
