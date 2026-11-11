@@ -55,16 +55,33 @@ export function previewPanel(entry: iDemoEntry, build: BuildFn): HTMLElement {
   for (const variant of variantsOf(entry)) {
     const block = node("article", "preview-variant");
     const frame = node("div", "preview-frame");
+    let opener: HTMLElement | null = null;
 
     try {
-      mountInto(frame, build(entry.name, variant.payload));
+      const built = build(entry.name, variant.payload);
+      mountInto(frame, built);
       block.dataset.status = "ok";
+
+      // A modal renders nothing until it is opened, so the display would show an empty
+      // frame. `build()` hands back the element here, while the control handle arrives
+      // through the builder's `onReady` config — so the opener accepts either one.
+      if (entry.kind === "modal") {
+        const controls = built as any;
+        const button = node("button", "open-modal", "open modal") as HTMLButtonElement;
+        button.type = "button";
+        button.addEventListener("click", () => {
+          const handle = typeof controls?.open === "function" ? controls : (globalThis as any).__demoModal;
+          handle?.open?.();
+        });
+        opener = button;
+      }
     } catch (error) {
       block.dataset.status = "error";
       frame.append(node("p", "error", `✖ ${(error as Error).message}`));
     }
 
     block.append(node("p", "eyebrow", variant.label), frame);
+    if (opener) block.append(opener);
     panel.append(block);
   }
 

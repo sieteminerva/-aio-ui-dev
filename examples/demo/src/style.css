@@ -1,6 +1,10 @@
 /*
- * Demo styling deliberately minimal: this page measures whether components build and
- * whether their stylesheets load, not how they look. Nothing here overrides a component.
+ * Demo styling deliberately minimal: this page measures whether components build and how
+ * their stylesheets behave, not how they look. Nothing here overrides a component.
+ *
+ * Rule for everything below: use `packages/styles` first — `.container`, `.grid`, `.row`,
+ * `.column`, `.half`, and the `--app-*` tokens. What remains is either demo-only wiring
+ * (marked as such) or an extraction candidate (marked `EXTRACT`).
  */
 body {
   margin: 0;
@@ -11,9 +15,9 @@ body {
 }
 
 .page {
-  padding: 2rem;
+  padding: var(--app-padding-layout);
   display: grid;
-  gap: 2rem;
+  gap: var(--app-gap);
 }
 
 header.intro h1 {
@@ -25,49 +29,7 @@ header.intro p,
 p.meta {
   margin: 0;
   font-size: 0.8rem;
-  color: #555;
-}
-
-main.kitchen {
-  display: grid;
-  gap: 1.5rem;
-}
-
-section {
-  background: var(--app-surface-background-color, #fff);
-  border: 1px solid var(--app-border-color, #e2e2e6);
-  border-radius: 4px;
-  padding: 1rem;
-  color: var(--app-text-color, #111);
-}
-
-section h2 {
-  margin: 0 0 0.25rem;
-  font-family: ui-monospace, monospace;
-  font-size: 1rem;
-}
-
-.mount {
-  margin-top: 1rem;
-  display: grid;
-  gap: 0.75rem;
-}
-
-button.open {
-  margin-top: 0.5rem;
-}
-
-/* A failed component must be loud: this page exists to surface exactly that. */
-.mount[data-status="error"] {
-  border-left: 3px solid #d33;
-  padding-left: 0.75rem;
-}
-
-.mount .error {
-  margin: 0;
-  color: #d33;
-  font-family: ui-monospace, monospace;
-  font-size: 0.8rem;
+  color: var(--app-text-accent-color, #555);
 }
 
 /*
@@ -172,4 +134,258 @@ nav.demo-nav .item:hover {
   font-family: ui-monospace, monospace;
   font-size: 0.75rem;
   overflow-x: auto;
+}
+
+/* ==========================================================================
+   Docs shell (#kitchen) — aside + main + tab panels
+   ========================================================================== */
+
+/*
+ * EXTRACT → packages/styles/src/layout.css
+ * "Panel samping + konten" split. Nothing in the shared layout file does this today:
+ * `.row`/`.column` are flex with an equal split, and this needs one narrow fixed column
+ * that collapses to a single column on small screens.
+ */
+.docs {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: var(--app-gap);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .docs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/*
+ * EXTRACT → packages/styles/src/variables.css
+ * `Menu.css` reads its own token namespace (--surface-bg, --text-heading, --border-soft,
+ * --radius-component, --shadow-soft, --surface-muted, --text-main, --text-muted) that no
+ * package defines yet, so every colour in it resolves to nothing. Mapping that namespace
+ * onto the --app-* tokens is what makes the menu render at all; it belongs in
+ * variables.css, not in the demo.
+ */
+.docs-top,
+.docs-aside {
+  --surface-bg: var(--app-surface-background-color, #fff);
+  --surface-strong: var(--app-surface-strong, #fff);
+  --surface-muted: var(--app-surface-muted, #f4eee2);
+  --border-soft: var(--app-border-color, #e2e2e6);
+  --text-heading: var(--app-text-color, #111);
+  --text-main: var(--app-text-color, #111);
+  --text-muted: var(--app-text-accent-color, #5b5b63);
+  --shadow-soft: var(--app-shadow-soft, none);
+  --radius-component: var(--app-component-border-radius, 1rem);
+}
+
+/*
+ * Demo-only: `Menu.css` pins `.nav` to the viewport (`position: fixed`), which in a docs
+ * shell would float over the content. Inside the demo the nav belongs to its column, so
+ * the top bar sits in the flow and the sidebar sticks to the top of the viewport instead.
+ */
+.docs-top .nav {
+  position: static;
+  max-width: none;
+  border: 1px solid var(--app-border-color, #e2e2e6);
+  border-radius: var(--app-component-border-radius, 1rem);
+  box-shadow: none;
+}
+
+.docs-aside .nav {
+  position: sticky;
+  top: var(--app-gap);
+  height: auto;
+  max-width: none;
+  border: 1px solid var(--app-border-color, #e2e2e6);
+  border-radius: var(--app-component-border-radius, 1rem);
+  box-shadow: var(--app-shadow-soft, none);
+}
+
+/*
+ * Demo-only: the sidebar is a permanent list, not a disclosure. `Menu.css` hides
+ * `.navigations` behind the hamburger under 768px and pads the list for a fixed bar; a
+ * docs sidebar wants the list open at every width and no toggle.
+ */
+.docs-aside .nav .navigations {
+  display: flex !important;
+  opacity: 1 !important;
+  padding-top: 0.5rem;
+}
+
+.docs-aside .hamburger-btn {
+  display: none;
+}
+
+/* Tier labels are headings inside the list, not destinations (`onNavigate` blocks them). */
+.docs-aside .navigations > .item > a.group {
+  margin-top: 0.5rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-text-accent-color, #5b5b63);
+  cursor: default;
+  pointer-events: none;
+}
+
+.docs-aside .navigations > .item > a.is-active {
+  background: var(--app-surface-muted, #f4eee2);
+  color: var(--app-text-color, #111);
+  font-weight: 700;
+}
+
+.docs-main {
+  display: grid;
+  gap: var(--app-gap);
+  min-width: 0;
+}
+
+/* Display panel ---------------------------------------------------------- */
+.preview-panel,
+.usage-panel,
+.api-panel {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.preview-variant + .preview-variant {
+  margin-top: 0.75rem;
+}
+
+/*
+ * Demo-only preview frame: a component that positions itself (`fab`) needs a containing
+ * block that is this box, not the viewport.
+ */
+.preview-frame {
+  position: relative;
+  min-height: 240px;
+  padding: 1rem;
+  border: 1px dashed var(--app-border-color, #e2e2e6);
+  border-radius: var(--app-component-border-radius, 1rem);
+  background: var(--app-page-background, #f7f7f8);
+  overflow: hidden;
+}
+
+/*
+ * Demo-only: `FabMenu.css` is `position: fixed; z-index: 999999`. Inside the frame — and
+ * only there — the fab belongs to its container; the theme switcher stays viewport-fixed.
+ */
+.preview-frame .fab {
+  position: absolute;
+  z-index: 1;
+}
+
+.preview-variant .eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-text-accent-color, #5b5b63);
+}
+
+.preview-variant[data-status="error"] {
+  border-left: 3px solid #d33;
+  padding-left: 0.75rem;
+}
+
+/* A failed component must be loud: this page exists to surface exactly that. */
+.error {
+  margin: 0;
+  color: #d33;
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.open-modal {
+  justify-self: start;
+  margin-top: 0.5rem;
+  padding: 0.45rem 1rem;
+  font: inherit;
+  font-size: 0.85rem;
+  background: var(--app-surface-strong, #fff);
+  color: var(--app-text-color, #111);
+  border: 1px solid var(--app-border-color, #e2e2e6);
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+/* Cara Penggunaan panel -------------------------------------------------- */
+.summary {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* Definition list: label column shrinks to its content, value column wraps. */
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.2rem 0.9rem;
+  margin: 0;
+}
+
+.facts dt {
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--app-text-accent-color, #5b5b63);
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.snippet {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  background: #14100c;
+  color: #e9e2d8;
+  border-radius: var(--app-component-border-radius, 1rem);
+  font-family: ui-monospace, monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+.limits {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* API panel -------------------------------------------------------------- */
+.api-rows,
+.api-config {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.api-rows th,
+.api-rows td,
+.api-config th,
+.api-config td {
+  padding: 0.3rem 0.9rem 0.3rem 0;
+  border-bottom: 1px solid var(--app-border-color, #e2e2e6);
+  text-align: left;
+  vertical-align: top;
+}
+
+.api-rows th {
+  width: 1%;
+  white-space: nowrap;
+  font-family: ui-monospace, monospace;
+  font-weight: 600;
+  color: var(--app-text-accent-color, #5b5b63);
+}
+
+.api-panel h4 {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--app-text-accent-color, #5b5b63);
 }
