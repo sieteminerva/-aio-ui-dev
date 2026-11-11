@@ -24,6 +24,15 @@ export const TIER_COST: Record<DemoTier, string> = {
   advanced: "state, event, atau sub-modul yang hidup di dalam komponen",
 };
 
+/** One Display variant: the same component built with a different payload or config. */
+export interface iDemoVariant {
+  /** Shown above the preview, e.g. `slidesPerView: 2`. */
+  label: string;
+  payload: unknown;
+  config?: Record<string, any>;
+  note?: string;
+}
+
 /**
  * The demo table.
  *
@@ -49,6 +58,11 @@ export interface iDemoEntry {
   payload: any;
   /** Config merged into the builder (selectors, callbacks, per-build options). */
   config?: Record<string, any>;
+  /**
+   * Extra Display variants. Declared, never derived: a row only adds one when it really has
+   * a different configuration, so the Display panel cannot show a variant that does not exist.
+   */
+  variants?: iDemoVariant[];
   /** Set when the payload shape is a best guess rather than a verified contract. */
   note?: string;
 }
