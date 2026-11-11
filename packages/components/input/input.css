@@ -62,6 +62,41 @@
   --input-text-on-primary: var(--app-text-on-primary, #fff);
 }
 
+/* --------------------------------------------------------------------------
+   Dark derivations. These seven tokens are not one formula across modes (the
+   dark palette inverts the field: solid border → translucent, tinted surface →
+   flat surface), so they are re-derived here instead of inherited from the
+   light block. Values come from app tokens only; the literals are the same
+   numbers the app sheet used, kept as no-theme fallbacks.
+
+   Selectors mirror the app sheet exactly (`:root` only, never `[data-theme]`):
+   inside a themed shell the light formula is still the effective one, and this
+   pass must not change that. Known gap, reported separately: the light
+   `--input-popover-background-color` reads `--input-picker-color`, which no
+   sheet declares, so light mode has always resolved it to nothing.
+   -------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) {
+    --input-border-color: var(--app-border-color, rgba(229, 164, 67, 0.22));
+    --input-text-color: var(--app-text-color, #f3ede2);
+    --input-label-color: var(--app-text-accent-color, #bfaea0);
+    --input-placeholder-color: rgba(191, 174, 160, 0.5);
+    --input-background-color: transparent;
+    --input-picker-background: var(--app-surface-strong, #231b14);
+    --input-popover-background-color: var(--app-surface-strong, #231b14);
+  }
+}
+
+:root[data-mode="dark"] {
+  --input-border-color: var(--app-border-color, rgba(229, 164, 67, 0.22));
+  --input-text-color: var(--app-text-color, #f3ede2);
+  --input-label-color: var(--app-text-accent-color, #bfaea0);
+  --input-placeholder-color: rgba(191, 174, 160, 0.5);
+  --input-background-color: transparent;
+  --input-picker-background: var(--app-surface-strong, #231b14);
+  --input-popover-background-color: var(--app-surface-strong, #231b14);
+}
+
 input:focus-visible,
 input:is(:autofill),
 textarea:focus-visible,

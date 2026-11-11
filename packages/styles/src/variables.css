@@ -77,17 +77,6 @@
        accent  #b47828 → #1a140e 4.9:1 (white 3.7:1) */
   --app-text-on-primary: #ffffff;
   --app-text-on-accent: #1a140e;
-
-  /* Form & Component overrides */
-  --input-primary-color: var(--app-primary-color);
-  --input-accent-color: var(--app-accent-color);
-  --input-border-color: var(--app-border-color);
-  --input-text-color: var(--app-text-color);
-  --input-label-color: var(--app-text-accent-color);
-  --input-placeholder-color: rgba(110, 95, 81, 0.55);
-  --input-background-color: transparent;
-  --input-picker-background: var(--app-surface-strong);
-  --input-popover-background-color: var(--app-surface-strong);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -127,22 +116,6 @@
     /* Both brand fills are light in dark mode, so the foreground flips. */
     --app-text-on-primary: #1a140e;
     --app-text-on-accent: #1a140e;
-
-    /* Form & Component overrides */
-    --input-primary-color: var(--app-primary-color);
-    --input-accent-color: var(--app-accent-color);
-    --input-border-color: var(--app-border-color);
-    --input-text-color: var(--app-text-color);
-    --input-label-color: var(--app-text-accent-color);
-    --input-placeholder-color: rgba(191, 174, 160, 0.5);
-    --input-background-color: transparent;
-    --input-picker-background: var(--app-surface-strong);
-    --input-popover-background-color: var(--app-surface-strong);
-
-    --table-primary-color: var(--app-primary-color);
-    --table-accent-color: var(--app-accent-color);
-    --table-background-color-darken: color-mix(in srgb, var(--app-primary-color) 10%, rgb(221, 205, 65) 40%);
-    --table-background-color-darken-row: color-mix(in srgb, var(--app-accent-color) 40%, rgb(116, 117, 15) 50%);
   }
 }
 
@@ -181,18 +154,4 @@
   /* Both brand fills are light in dark mode, so the foreground flips. */
   --app-text-on-primary: #1a140e;
   --app-text-on-accent: #1a140e;
-
-  /* ---- variable input/form ---- */
-  --input-primary-color: var(--app-primary-color);
-  --input-accent-color: var(--app-accent-color);
-  --input-border-color: var(--app-border-color);
-  --input-text-color: var(--app-text-color);
-  --input-label-color: var(--app-text-accent-color);
-  --input-placeholder-color: rgba(191, 174, 160, 0.5);
-  --input-background-color: transparent;
-  --input-picker-background: var(--app-surface-strong);
-  --input-popover-background-color: var(--app-surface-strong);
-
-  --table-primary-color: var(--app-primary-color);
-  --table-accent-color: var(--app-accent-color);
 }
