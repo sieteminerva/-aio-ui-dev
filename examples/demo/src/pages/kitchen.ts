@@ -1,115 +1,107 @@
-import type { iNodeContent } from "@aio-ui/core/interface";
+import type { iPageContent, iPageController, iPageContext } from "@aio-ui/app";
 
-import { DEMO, DEMO_TIERS, TIER_COST, TIER_LABELS } from "../manifest";
+import { entryForFragment } from "../docs";
 import type { iDemoEntry } from "../manifest";
-import { demoNav, pageIntro, tierNav } from "../nav";
 import { themeSwitcher } from "../theme-switcher";
+import { apiPanel, mountInto, mountSidebars, previewPanel, usagePanel } from "./docs-panels";
+
+type BuildFn = (name: string, data?: any) => HTMLElement;
 
 /**
- * Kitchen-sink page, generated from the demo table.
+ * Elements route — the docs shell from `.archives/1x/Artboard 1.png`.
  *
- * The table is grouped by teaching tier (basic → intermediate → advanced), so the page
- * reads as a ramp: what a payload alone can build, then what needs config, then what owns
- * state. `category` stays on each card as classification — it is not the order.
+ *   header "Menu Utama"   menu builder, `type: "top"`
+ *   aside                 one menu builder per tier, `type: "sidebar"`
+ *   main                  tab builder: Display · Cara Penggunaan · API
  *
- * Each component gets its own card and its own mount call, and a failure is caught
- * **per card**: one broken builder shows a red status line instead of blanking the page.
- * That is still the point of this example — it measures component health, not taste.
+ * Selection lives in the route fragment (`#kitchen/<name>`), so refresh and deep links work
+ * without a new API: the router already splits `#route/fragment`, and this page reads it.
+ * Both menus and the tab are the framework's own builders — the page only supplies data.
  */
-function mount(host: HTMLElement, entry: iDemoEntry, build: any): void {
-  try {
-    const out = build(entry.name, entry.payload);
 
-    if (out instanceof HTMLElement) {
-      host.mount(out);
-    } else if (out?.element instanceof HTMLElement) {
-      host.mount(out.element);
-    } else {
-      throw new Error(`builder returned ${typeof out}, not an element`);
-    }
+/** Brand first (the menu splits its flat list that way), then one link per route. */
+const TOP_NAV = [
+  { label: "@aio demo", href: "#kitchen" },
+  { label: "Elements", href: "#kitchen" },
+  { label: "Product", href: "#product" },
+  { label: "Article", href: "#article" },
+  { label: "Form", href: "#form" },
+];
 
-    host.dataset.status = "ok";
-  } catch (error) {
-    host.dataset.status = "error";
-    host.dataset.error = (error as Error).message;
-    const message = document.createElement("p");
-    message.className = "error";
-    message.textContent = `✖ ${(error as Error).message}`;
-    host.appendChild(message);
-  }
+function mountTopMenu(host: HTMLElement, build: BuildFn): void {
+  mountInto(
+    host,
+    build("menu", {
+      content: { navigations: TOP_NAV },
+      // `menu` defaults to swallowing every click (a host decides routing). Here the
+      // builder's own navigation is exactly right: it sets the hash and the router follows.
+      config: { type: "top", onNavigate: () => false },
+    }),
+  );
 }
 
-/** One card: the component's own section id, its labels, and the mount host. */
-function cardContentOf(entry: iDemoEntry) {
-  return {
-    "p.eyebrow": { content: `${entry.category} · ${entry.tier}` },
-    "h3": { content: entry.name },
-    "p.meta": {
-      content: `${entry.kind}${entry.note ? ` · ${entry.note}` : ""}`,
-    },
-    ".mount": {
-      // The host is empty on purpose: the component is mounted into it, and the route
-      // names the component in the preload plan — a node never carries a list.
-      onCreated: (element: HTMLElement, _render: any, build: any) => mount(element, entry, build),
-    },
-    ...(entry.kind === "modal"
-      ? {
-        "button.open": {
-          content: "open modal",
-          onCreated: (element: HTMLElement) =>
-            element.addEventListener("click", () => (globalThis as any).__demoModal?.open?.()),
-        },
-      }
-      : {}),
-  };
-}
-
-/** Tier group: eyebrow, title, one "what it costs" line, then the cards in table order. */
-function tierSectionOf(tier: (typeof DEMO_TIERS)[number]) {
-  const rows = DEMO.filter((entry) => entry.tier === tier);
-
-  return {
-    [`section.tier#tier-${tier}`]: {
-      attrs: { "data-tier": tier },
+/** Main column: one tab, three panels. Panels are elements, so the tab renders them lazily. */
+function mountMain(host: HTMLElement, entry: iDemoEntry, build: BuildFn): void {
+  mountInto(
+    host,
+    build("tab", {
       content: {
-        "header.tier-head": {
-          content: {
-            "p.eyebrow": { content: `${tier} tier` },
-            "h2": { content: `${TIER_LABELS[tier]} · ${rows.length} komponen` },
-            "p.cost": { content: TIER_COST[tier] },
+        // No `title` here: the tab prints label and title, so a title repeats the label.
+        menu: [{ label: "Display" }, { label: "Cara Penggunaan" }, { label: "API" }],
+        body: [
+          {
+            id: "panel-display",
+            content: {
+              eyebrow: `${entry.category} · ${entry.tier}`,
+              title: entry.name,
+              description: `build("${entry.name}", payload)`,
+            },
           },
-        },
-        ".tier-grid": {
-          content: Object.fromEntries(
-            rows.map((entry) => [`section#${entry.name}`, { content: cardContentOf(entry) }]),
-          ),
-        },
+          { id: "panel-usage", content: usagePanel(entry) },
+          { id: "panel-api", content: apiPanel(entry) },
+        ],
       },
-    },
-  };
+      config: { menuPosition: "top" },
+    }),
+  );
+
+  // The live preview is filled after the tab exists: the Display panel is the first one
+  // shown, and its host has to be in the document before a component mounts in it.
+  const panel = host.querySelector<HTMLElement>("#panel-display");
+  if (panel) panel.append(previewPanel(entry, build));
 }
 
-/**
- * Grouped by tier, in tier order. `id-address` has no card of its own on purpose: it only
- * exists as a form field adapter, so it is demonstrated on `#form`.
- */
-export function kitchenContent(): iNodeContent {
+function kitchenContent(entry: iDemoEntry): iPageContent {
   return {
     ".page": {
       content: {
-        ...demoNav,
-        ...pageIntro(
-          "Elements",
-          `${DEMO.length} komponen elemen · ${DEMO_TIERS.length} tingkat · satu builder, satu node`,
-        ),
-        ...themeSwitcher,
-        "main.kitchen": {
+        ".docs-top": {
+          onCreated: (element: HTMLElement, _render: any, build: any) => mountTopMenu(element, build),
+        },
+        ".docs": {
           content: {
-            ...tierNav,
-            ...Object.assign({}, ...DEMO_TIERS.map((tier) => tierSectionOf(tier))),
+            ".docs-aside": {
+              onCreated: (element: HTMLElement, _render: any, build: any) =>
+                mountSidebars(element, build, entry.name),
+            },
+            ".docs-main": {
+              onCreated: (element: HTMLElement, _render: any, build: any) => mountMain(element, entry, build),
+            },
           },
         },
+        ...themeSwitcher,
       },
     },
-  } as unknown as iNodeContent;
+  } as unknown as iPageContent;
+}
+
+/**
+ * `#kitchen` and `#kitchen/<name>` are the same route with two fragments: the controller
+ * exists so the fragment reaches the content builder. A name that is not in the table falls
+ * back to the first row instead of rendering an empty page.
+ */
+export class KitchenPage implements iPageController {
+  async onPrepare({ fragment }: iPageContext): Promise<iPageContent | void> {
+    return kitchenContent(entryForFragment(fragment));
+  }
 }

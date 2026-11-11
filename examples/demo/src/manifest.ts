@@ -24,13 +24,17 @@ export const TIER_COST: Record<DemoTier, string> = {
   advanced: "state, event, atau sub-modul yang hidup di dalam komponen",
 };
 
-/** One Display variant: the same component built with a different payload or config. */
+/**
+ * One Display variant.
+ *
+ * A variant changes the **payload** only: `build(name, payload)` has no third argument, and
+ * the config a component sees comes from the registration. A row whose variants differ by
+ * config needs its own registration, which is a different thing — not a variant.
+ */
 export interface iDemoVariant {
-  /** Shown above the preview, e.g. `slidesPerView: 2`. */
+  /** Shown above the preview, e.g. `2 slide per view`. */
   label: string;
   payload: unknown;
-  config?: Record<string, any>;
-  note?: string;
 }
 
 /**

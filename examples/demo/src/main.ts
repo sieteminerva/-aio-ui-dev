@@ -21,7 +21,7 @@ import './style.css';
 import { DEMO, manifestFor } from './manifest';
 import { ArticlePage } from './pages/article';
 import { formContent, formManifest } from './pages/form';
-import { kitchenContent } from './pages/kitchen';
+import { KitchenPage } from './pages/kitchen';
 import { ProductPage } from './pages/product';
 import { componentAssets } from './registry.assets';
 import { productModules } from '@aio-ui/product';
@@ -60,7 +60,6 @@ const mockApi = {
 };
 
 const pages = {
-  kitchen: kitchenContent(),
   form: formContent(),
 };
 
@@ -72,7 +71,8 @@ const pages = {
  * switcher) and is mounted on every route, hence the repetition.
  */
 const componentRoutes: iComponentRoute[] = [
-  { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'fab-menu'] },
+  // `menu` is the docs shell itself: top nav plus one sidebar per tier on the elements route.
+  { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'menu', 'fab-menu'] },
   { route: 'product', components: ['product', 'fab-menu'] },
   { route: 'article', components: ['article', 'fab-menu'] },
   { route: 'form', components: ['form', 'fab-menu'] },
@@ -112,7 +112,9 @@ async function start(container: HTMLElement) {
     // it, `Form.provideModules()` partitions it, and the page only supplies a schema.
     .register('form', pageComponent('@aio-ui/form', '@aio-ui/form/Form.css', formManifest()))
     // The theme switcher is a fab menu with per-item handlers, so it needs config too.
-    .register('fab-menu', pageComponent('@aio-ui/fabmenu', '@aio-ui/fabmenu/FabMenu.css'));
+    .register('fab-menu', pageComponent('@aio-ui/fabmenu', '@aio-ui/fabmenu/FabMenu.css'))
+    // The docs shell: `menu` is one builder with two shapes, `top` and `sidebar`.
+    .register('menu', pageComponent('@aio-ui/menu', '@aio-ui/menu/Menu.css', undefined, 'MenuBuilder'));
 
   const app = new AioApp({
     container,
@@ -131,6 +133,7 @@ async function start(container: HTMLElement) {
     .registerModule(ThemeRenderer, { themes: [new DefaultTheme(), new CyberpunkTheme()] })
     .registerModule(emitter)
     // Behavior per route; their content comes from the controller.
+    .registerPage('kitchen', KitchenPage)
     .registerPage('product', ProductPage)
     .registerPage('article', ArticlePage);
 

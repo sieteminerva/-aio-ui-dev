@@ -75,7 +75,7 @@ export const RESULT_OF_KIND: Record<iDemoEntry["kind"], string> = {
  */
 export function variantsOf(entry: iDemoEntry): iDemoVariant[] {
   if (entry.variants?.length) return entry.variants;
-  return [{ label: "payload tabel", payload: entry.payload, config: entry.config }];
+  return [{ label: "payload tabel", payload: entry.payload }];
 }
 
 /** Tab "Cara Penggunaan": summary, the four facts you need, one snippet, and the limits. */
