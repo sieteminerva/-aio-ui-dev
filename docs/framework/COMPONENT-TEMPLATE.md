@@ -66,7 +66,7 @@ each one is a decision, not a copy-paste:
 | ----------------------------------------------------------- | -------------------------------------------------------------------- |
 | `packages/core/src/types/registry.ts`                       | `badge: any;` in `iBuilderRegistry` (the `builderId` must typecheck) |
 | Host asset map, e.g. `examples/demo/src/registry.assets.ts` | `modules` + `styles` entries with **static** specifiers              |
-| Content or demo table                                       | `builder: ["badge"]`, or a row in the demo manifest                  |
+| Content or demo table                                       | `builder: "badge"` on the node it _is_, or a demo manifest row       |
 
 Then `npm install` once so the workspace link for `@aio-ui/<kebab>` exists (new package
 folders are picked up by the `packages/components/*` workspace glob).

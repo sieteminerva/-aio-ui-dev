@@ -260,34 +260,47 @@ bindings are **not** copied into the node, because the renderer would turn them 
 attributes. Filling a tabled block with records is a controller/transformer job — the
 entry never fetches.
 
-## Preload derivation
+## Preload
 
-`buildersForRoute()` is gone. Implemented in `@aio-ui/core` as
-`collectComponentNames(source)`; `AioApp` calls it and hands the names to the registry:
+Two sources, unioned into one list.
+
+**1. The route plan** — the host says what each route mounts, once, where it registers
+the registry:
 
 ```ts
-const names = collectComponentNames(node); // derived, never hand-listed
-const known = names.filter((name) => registry.has(name));
-await registry.load(known, [node]); // build() stays synchronous
+app.registerModule(components, [{ route: "article", components: ["article", "fab-menu"] }]);
 ```
 
-Recognised shapes:
+`iComponentRoute = { route: string; components: string[] }`. Routes are normalised like
+`source.pages` keys, and two entries for one route are merged. A plan is an array and a
+slot is a string, so the second argument of `registerModule` cannot be misread; a plan
+on any slot other than `registry` is rejected at registration.
 
-| Shape                         | Recognised by                |
-| ----------------------------- | ---------------------------- |
-| node trees                    | `builder: "form"`            |
-| node trees that mount several | `builder: ["form", "table"]` |
-| page blocks                   | `type` on a block            |
+**2. Derived from content** — `collectComponentNames(source)` (in `@aio-ui/core`) still
+reads what a node _is_:
 
-`builder` is already a reserved key, so declaring components there can never leak into
-the DOM. An earlier attempt used a top-level `requires` key and produced an extra element
-on every node that carried it; the array form of `builder` replaced it.
+| Shape      | Recognised by     |
+| ---------- | ----------------- |
+| node       | `builder: "form"` |
+| page block | `type` on a block |
 
-The derived set is also exposed to `iPagePrepareContext.builders` so a controller can
-inspect it before the render, and to the debug channel.
+The union is filtered to registered names and loaded before the render:
 
-The rule tolerates unknown builders: a name that is not registered is reported and
-skipped, not thrown. This keeps the LITE promise — a missing component is a normal state.
+```ts
+const names = [...new Set([...(plan.get(route) ?? []), ...registry.collect(nodes)])];
+const known = names.filter((name) => registry.has(name));
+await registry.load(known, nodes); // build() stays synchronous
+```
+
+**`builder` names exactly one component, and it is never a dependency list.** A route
+that mounts several components declares them in the plan; a node only names what it is.
+The derived path stays because authored content can still name its own builder, while the
+plan carries what content cannot express (a component mounted by a handler).
+
+The list is also exposed as `iPageContext.builders`, and to the debug channel.
+
+Unknown names are reported and skipped, not thrown: a missing component is a normal
+state, which is the LITE promise.
 
 ## Events
 

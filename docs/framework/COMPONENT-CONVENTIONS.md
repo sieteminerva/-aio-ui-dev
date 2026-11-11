@@ -307,11 +307,11 @@ export interface iMyWidgetConfig extends iBuilderConfig<MyWidgetElementType> {
 
 A component is not usable until three places know its name:
 
-| Place                                                        | Entry                                                   |
-| ------------------------------------------------------------ | ------------------------------------------------------- |
-| `packages/core/src/types/registry.ts`                        | `my-widget: any;` inside `iBuilderRegistry`             |
-| Host asset map (e.g. `examples/demo/src/registry.assets.ts`) | `modules` + `styles` lazy loaders                       |
-| Content                                                      | `builder: ["my-widget"]` on a node, or a host table row |
+| Place                                                        | Entry                                             |
+| ------------------------------------------------------------ | ------------------------------------------------- |
+| `packages/core/src/types/registry.ts`                        | `my-widget: any;` inside `iBuilderRegistry`       |
+| Host asset map (e.g. `examples/demo/src/registry.assets.ts`) | `modules` + `styles` lazy loaders                 |
+| Route plan (`registerModule(components, […])`)               | `{ route: "<route>", components: ["my-widget"] }` |
 
 The asset map is written with **static specifiers** on purpose: Vite needs literal
 `import()` strings to create chunks, so a computed `import(entry.path)` produces nothing.
@@ -391,6 +391,6 @@ Anything that needs a real DOM belongs in the demo page, not the suite.
 - [ ] `builderId` / `name` = the registry key
 - [ ] `iBuilderRegistry` gained the key
 - [ ] Host asset map has `modules` + `styles` entries (static specifiers)
-- [ ] A node declares `builder: ["<kebab>"]`, or a demo table row exists
+- [ ] The route plan lists `"<kebab>"`, or a demo table row exists
 - [ ] Test covers `normalizePayload` and key/selector coverage
 - [ ] `npm run verify` is green

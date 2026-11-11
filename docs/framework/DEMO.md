@@ -33,9 +33,9 @@ demonstrated on purpose:
 - **Page-level composition** — `pages/product.ts` builds three modules itself:
   a filter block, `product-grid` (one `product-card` per record) and `product-detail`.
   The page owns "card clicked → open detail → back → list", so each module stays
-  ignorant of navigation. Modules that the page builds must be declared on the host node
-  (`builder: ["product-grid", "product-detail"]`) — that declaration is what preloads
-  them.
+  ignorant of navigation. The modules are mounted by the host node's handler and named
+  in the route plan in `main.ts` (`{ route: "product", components: […] }`), which is
+  what preloads them.
 
 - **Builder-level composition** — `#article` mounts one `article` builder and gets the
   whole slot layout (`controls` → `list` → `aside`, with `list` swapping to `detail` on
@@ -129,9 +129,10 @@ appending it to `THEMES`.
 The switcher prefers the app's own door when a handle exists:
 
 ```ts
-const app = (globalThis as any).__app;   // the demo keeps its handle for debugging
-if (app?.theme?.use) app.theme.use(id);   // router-driven: URL + storage + re-render
-else location.hash = hashWithTheme(id);   // fallback: the hash alone is enough
+const app = (globalThis as any).__app; // the demo keeps its handle for debugging
+if (app?.theme?.use)
+  app.theme.use(id); // router-driven: URL + storage + re-render
+else location.hash = hashWithTheme(id); // fallback: the hash alone is enough
 ```
 
 See [`APP.md`](./APP.md#themes--a-namespace-not-another-register) for why themes are

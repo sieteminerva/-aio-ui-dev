@@ -43,6 +43,7 @@
         "iAppSlots",
         "iAppSource",
         "iComponentRegistryPort",
+        "iComponentRoute",
         "iEventPort",
         "iHttpPort",
         "iPageBlock",
@@ -50,8 +51,14 @@
         "iPageContext",
         "iPageController",
         "iPageControllerClass",
+        "iPageDataSpec",
+        "iPageDefinition",
         "iPageDocument",
+        "iPageEventSpec",
+        "iPagePort",
         "iPageReadyContext",
+        "iPageRouteSpec",
+        "iPageSlotSpec",
         "iRendererPort",
         "iRouterFactory",
         "iRouterPort",
@@ -68,7 +75,7 @@
       ],
       "types": [
         "iArticleConfig",
-        "iArticleSlotSpec"
+        "iArticleViewSpec"
       ]
     },
     "@aio-ui/badge": {
@@ -122,6 +129,7 @@
         "mergeBuildConfig",
         "normalizeStylesheetPath",
         "qualifyId",
+        "replaceLazyCss",
         "setBuilderAdapter",
         "setTemplates",
         "splitQualifiedId",
@@ -351,13 +359,17 @@
       "kind": "package",
       "barrel": "./index.ts",
       "values": [
+        "ProductBuilder",
         "ProductCardBuilder",
         "ProductDetailBuilder",
-        "ProductGridBuilder"
+        "ProductGridBuilder",
+        "productModules"
       ],
       "types": [
+        "ProductView",
         "iProductCardConfig",
         "iProductColor",
+        "iProductConfig",
         "iProductDetailConfig",
         "iProductGridConfig",
         "iProductRecord"
