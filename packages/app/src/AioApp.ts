@@ -46,12 +46,15 @@ import type {
   iAppSlots,
   iAppSlot,
   iAppThemeFacade,
+  iComponentRoute,
   iPageBlock,
   iPageContent,
   iPageContext,
   iPageController,
   iPageControllerClass,
+  iPageDefinition,
   iPageDocument,
+  iPagePort,
   iPageReadyContext,
   iThemePort,
 } from "./types";
@@ -196,6 +199,17 @@ export class AioApp implements iApp {
 
   /** Route content keyed by normalised route name; built once at construction. */
   readonly #pages = new Map<string, iPageContent>();
+
+  /**
+   * Declarative page definitions registered via `registerPage(definition)`.
+   */
+  readonly #pageDefinitions = new Map<string, iPageDefinition>();
+
+  /**
+   * Components each route needs, from the plan handed to `registerModule(registry, …)`
+   * or derived from `iPageDefinition.requires`.
+   */
+  readonly #componentRoutes = new Map<string, string[]>();
 
   /** Registered modules, keyed by slot. Insertion order is creation order. */
   #registrations = new Map<iAppSlot, iPortRegistration>();
@@ -342,24 +356,53 @@ export class AioApp implements iApp {
     return this.#root;
   }
 
-  /** Route list derived from content and controllers — what the router validates. */
+  /** Route list derived from content, controllers, and page definitions — what the router validates. */
   public get routes(): string[] {
-    return [...new Set([...this.#pages.keys(), ...this.#controllers.keys()])];
+    return [...new Set([...this.#pages.keys(), ...this.#controllers.keys(), ...this.#pageDefinitions.keys()])];
   }
 
-  /** Registers per-route behaviour. Registering the same route twice replaces it. */
+  /** Registers per-route behaviour or declarative page-level component definition. */
   public registerPage<M extends iPageControllerClass>(
-    route: string,
-    controller: M,
+    routeOrDefinition: string | iPageDefinition,
+    controller?: M,
     config?: ConstructorParameters<M>[0]
   ): iApp {
     if (this.#rendered) {
       throw new Error("[AioApp] registerPage() must be called before render().");
     }
 
-    const key = normalizeRoute(route);
+    if (typeof routeOrDefinition === "object" && routeOrDefinition !== null) {
+      const def = routeOrDefinition as iPageDefinition;
+      const baseRoute = normalizeRoute(def.word);
+      this.#pageDefinitions.set(baseRoute, def);
+
+      // Preload plan derived directly from `requires` and `word`
+      const requiredComponents = [...new Set([def.word, ...(def.requires ?? [])])];
+      const merged = this.#componentRoutes.get(baseRoute) ?? [];
+      this.#componentRoutes.set(baseRoute, [...new Set([...merged, ...requiredComponents])]);
+
+      // Register sub-routes if specified in definition
+      if (Array.isArray(def.routes)) {
+        for (const sub of def.routes) {
+          if (!sub.path) continue;
+          const cleanSub = sub.path.replace(/^\/+/, "");
+          const subRouteKey = `${baseRoute}/${cleanSub}`;
+          this.#pageDefinitions.set(subRouteKey, def);
+          const subMerged = this.#componentRoutes.get(subRouteKey) ?? [];
+          this.#componentRoutes.set(subRouteKey, [...new Set([...subMerged, ...requiredComponents])]);
+        }
+      }
+
+      return this;
+    }
+
+    const key = normalizeRoute(routeOrDefinition);
     if (this.#controllers.has(key)) {
       console.warn(`[AioApp] Route "${key}" already has a controller; replacing it.`);
+    }
+
+    if (!controller) {
+      throw new Error(`[AioApp] Controller class required when registering route "${key}".`);
     }
 
     this.#controllers.set(key, { module: controller, config });
@@ -376,7 +419,15 @@ export class AioApp implements iApp {
    * app.registerModule(AppStorage, { driver });     // class + config
    * app.registerModule(components);                 // instance you already assembled
    * app.registerModule(fakeRouter, "router");       // plain object / test double
+   *
+   * // What each route builds is declared here, once, next to the registry:
+   * app.registerModule(components, [
+   *   { route: "article", components: ["article", "fab-menu"] },
+   * ]);
    * ```
+   *
+   * A component plan is an array, a slot is a string: the two cannot be confused. It
+   * belongs to the registry slot, because resolving components is what that slot does.
    *
    * Nothing is instantiated here: a class is constructed during `render()`, because a
    * module may need the route list, the restored theme or the change callback, which
@@ -385,24 +436,30 @@ export class AioApp implements iApp {
    *
    * @param module - Module class, or an already-built port instance/object.
    * @param config - Class: the constructor config. Instance: the slot to fill, when
-   *   the object has no `constructor.slot` (plain literal, factory result, proxy).
+   *   the object has no `constructor.slot` (plain literal, factory result, proxy), or
+   *   the per-route component plan.
    * @returns The app, for a fluent chain.
-   * @throws {Error} When called after `render()`, or when no slot can be determined.
+   * @throws {Error} When called after `render()`, when no slot can be determined, or
+   *   when a component plan is handed to a slot other than `registry`.
    */
   public registerModule<M extends iAppModuleClass>(
     module: M,
     config?: ConstructorParameters<M>[0]
   ): iApp;
   public registerModule(instance: iAppSlots[iAppSlot], slot?: iAppSlot): iApp;
+  public registerModule(instance: iAppSlots[iAppSlot], routes: iComponentRoute[]): iApp;
   public registerModule(target: unknown, config?: unknown): iApp {
     if (this.#rendered) {
       throw new Error("[AioApp] registerModule() must be called before render().");
     }
 
     const isClass = typeof target === "function";
+    const plan = !isClass && Array.isArray(config) ? (config as iComponentRoute[]) : null;
     const slot = (isClass
       ? (target as iAppModuleClass).slot
-      : ((config as iAppSlot | undefined) ?? (target as any)?.constructor?.slot)) as iAppSlot | undefined;
+      : (plan
+        ? (target as any)?.constructor?.slot
+        : ((config as iAppSlot | undefined) ?? (target as any)?.constructor?.slot))) as iAppSlot | undefined;
 
     if (!slot) {
       throw new Error(
@@ -410,6 +467,20 @@ export class AioApp implements iApp {
         '`static readonly slot = "<slot>"` to a class, or pass the slot as the ' +
         "second argument: registerModule(instance, \"router\")."
       );
+    }
+
+    if (plan) {
+      if (slot !== "registry") {
+        throw new Error(`[AioApp] A component plan belongs to the "registry" slot, not "${slot}".`);
+      }
+      for (const entry of plan) {
+        if (!entry?.route || !Array.isArray(entry.components)) {
+          throw new Error("[AioApp] Every component route needs { route, components: [] }.");
+        }
+        const route = normalizeRoute(entry.route);
+        const merged = this.#componentRoutes.get(route) ?? [];
+        this.#componentRoutes.set(route, [...new Set([...merged, ...entry.components])]);
+      }
     }
 
     if (this.#registrations.has(slot)) {
@@ -632,7 +703,10 @@ export class AioApp implements iApp {
       const footerNode = this.#source.footer ?? null;
       const nodes = [menuNode, pageNode, footerNode].filter(Boolean) as iNodeContent[];
 
-      const names = this.#registry!.collect(nodes);
+      const names = [...new Set([
+        ...(this.#componentRoutes.get(target) ?? []),
+        ...this.#registry!.collect(nodes),
+      ])];
       const known = names.filter((name) => this.#registry!.has(name));
       const missing = names.filter((name) => !this.#registry!.has(name));
 
@@ -673,23 +747,102 @@ export class AioApp implements iApp {
     fragment: string,
     signal: AbortSignal
   ): { controller: iPageController | null; context: iPageContext } {
-    const declared = this.#pages.get(route) ?? null;
+    let pageDef = this.#pageDefinitions.get(route);
+    let matchedBaseRoute = route;
+
+    if (!pageDef && route.includes("/")) {
+      const base = route.split("/")[0];
+      const candidateDef = this.#pageDefinitions.get(base);
+      if (candidateDef) {
+        pageDef = candidateDef;
+        matchedBaseRoute = base;
+      }
+    }
+
+    const declared = pageDef ? { [pageDef.word]: { builder: pageDef.word } } : (this.#pages.get(route) ?? null);
     const context: iPageContext = {
       route,
       page: declared,
       fragment,
       theme: this.#theme,
-      builders: declared ? this.#registry!.collect(pageToNode(declared, route)) : [],
+      builders: [...new Set([
+        ...(this.#componentRoutes.get(route) ?? this.#componentRoutes.get(matchedBaseRoute) ?? []),
+        ...(declared ? this.#registry!.collect(pageToNode(declared, route)) : []),
+      ])],
       http: this.#http,
       signal,
     };
 
     const entry = this.#controllers.get(route);
-    if (!entry) return { controller: null, context };
+    if (entry) {
+      const controller = new entry.module(entry.config, context);
+      this.#active = controller;
+      return { controller, context };
+    }
 
-    const controller = new entry.module(entry.config, context);
-    this.#active = controller;
-    return { controller, context };
+    if (pageDef) {
+      // Create a page-level component controller bridge with restricted port
+      const parts = route.split("/");
+      const subPath = parts.slice(1).join("/");
+      const params: Record<string, string> = {};
+
+      if (Array.isArray(pageDef.routes)) {
+        for (const spec of pageDef.routes) {
+          if (spec.path.startsWith(":") && subPath) {
+            const paramKey = spec.path.slice(1);
+            params[paramKey] = subPath;
+          }
+        }
+      }
+
+      const app = this;
+      const port: iPagePort = {
+        route,
+        subPath,
+        params,
+        fragment,
+        data: {},
+        navigate: (r: string, f?: string) => app.navigate(r, f),
+        build: (name: string, data: any) => app.#registry!.build(name as any, data),
+        events: app.#events ?? { emit: () => {}, on: () => {} },
+        signal,
+      };
+
+      let customControllerInstance: any = null;
+      if (pageDef.controller) {
+        customControllerInstance = new pageDef.controller(port);
+      }
+
+      const controller: iPageController = {
+        async onPrepare(ctx: iPageContext) {
+          // Resolve data if specified in definition
+          if (Array.isArray(pageDef.data) && pageDef.data.length > 0) {
+            for (const item of pageDef.data) {
+              if (item.sheet) {
+                try {
+                  const res = await ctx.http.get({ table: item.sheet, ...(item.query ?? {}) });
+                  port.data[item.id] = res;
+                } catch (err) {
+                  console.warn(`[AioApp] failed loading data for sheet "${item.sheet}":`, err);
+                }
+              }
+            }
+          }
+          return ctx.page ?? undefined;
+        },
+        onReady(readyCtx: iPageReadyContext) {
+          customControllerInstance?.onReady?.(readyCtx.shell);
+        },
+        onDestroy() {
+          customControllerInstance?.onDestroy?.();
+        },
+      };
+
+      this.#active = controller;
+      return { controller, context };
+    }
+
+    return { controller: null, context };
   }
 
   /** Lets the controller rewrite the menu node. The app calls it, once per render. */
@@ -825,7 +978,16 @@ export class AioApp implements iApp {
 
   /** Falls back to the default route, then to the first known route, for an unknown hash. */
   #resolveRoute(route: string): string {
-    const known = (name: string): boolean => this.#pages.has(name) || this.#controllers.has(name);
+    const known = (name: string): boolean => {
+      if (this.#pages.has(name) || this.#controllers.has(name) || this.#pageDefinitions.has(name)) {
+        return true;
+      }
+      if (name.includes("/")) {
+        const base = name.split("/")[0];
+        if (this.#pageDefinitions.has(base)) return true;
+      }
+      return false;
+    };
 
     const candidate = normalizeRoute(route, this.#defaultRoute);
     if (known(candidate)) return candidate;
