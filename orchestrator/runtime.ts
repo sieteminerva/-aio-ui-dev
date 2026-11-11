@@ -47,8 +47,14 @@ const NON_COMPONENT_WORDS = new Set(["input", "dropdown", "input-controls"]);
  * Words come from the preset itself (`builder` on a node), deduplicated and sorted, with
  * sub-module words (`input`, `dropdown`, …) left out: the registry builds those through a
  * parent's manifest, never from their own page entry.
+ *
+ * Exported so a test can compare the emitted plan with what each page actually builds: a
+ * requirement the registry cannot resolve is a blank element in the client's browser.
+ *
+ * @param preset - Validated preset; one entry per page, in preset order.
+ * @returns Route and the component words that route preloads.
  */
-function pageRequires(preset: iWebPreset): Array<{ route: string; requires: string[] }> {
+export function pageRequires(preset: iWebPreset): Array<{ route: string; requires: string[] }> {
   const walk = (node: unknown, found: Set<string>): void => {
     if (Array.isArray(node)) {
       node.forEach((child) => walk(child, found));
@@ -126,7 +132,6 @@ function emitApp(preset: iWebPreset, plan: PresetPlan, site: EmittedSite): strin
 
   const imports = [
     `import { ComponentRegistry, DOMRenderer, AioApp } from "@aio-ui/frameworks";`,
-    `import type { iPageDefinition } from "@aio-ui/frameworks";`,
     `import { HashRouter } from "@aio-ui/router";`,
   ];
   if (has("http-service")) imports.push(`import { HttpService } from "@aio-ui/http-service";`);
@@ -192,8 +197,11 @@ const pages = Object.fromEntries(PRESET.pages.map((page) => [page.id, page.conte
  * it is not a dependency list, and a component mounted from an onCreated hook is
  * invisible to a content walk, so each page declares what it needs in "requires".
  * The page tree itself stays in source.pages; the definition owns the route contract.
+ *
+ * Plain JavaScript on purpose: this file is served to a browser as-is, so no "import type"
+ * and no type annotation may appear here — both are syntax errors at runtime.
  */
-const pageDefinitions: iPageDefinition[] = ${JSON.stringify(pageRequires(preset), null, 2)};
+const pageDefinitions = ${JSON.stringify(pageRequires(preset), null, 2)};
 
 /**
  * A node carrying a builder name is a host element: the renderer builds the

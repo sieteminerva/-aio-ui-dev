@@ -81,6 +81,15 @@ describe("parsePreset — shape", () => {
     expect(issues.map((issue) => issue.code)).toContain("INVALID_SHAPE");
     expect(issues.map((issue) => issue.detail).join(" ")).toMatch(/repeats the builder name/);
   });
+
+  it("rejects a builder array instead of silently ignoring it", () => {
+    const { issues } = parsePreset({
+      ...galleryPreset,
+      pages: [{ id: "home", route: "/", content: { "main#home": { builder: ["masonry"], content: [] } } }],
+    });
+    expect(issues.map((issue) => issue.code)).toContain("INVALID_SHAPE");
+    expect(issues.map((issue) => issue.detail).join(" ")).toMatch(/one word, never a list/);
+  });
 });
 
 describe("parsePreset — closed vocabulary", () => {

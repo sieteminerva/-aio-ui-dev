@@ -83,6 +83,9 @@ Content is a tree. Two node shapes are allowed, and they may be mixed.
 A node may have: `content` (string, node, or array of nodes), `attrs`
 (string→string), `builder` + `content`, `id`, `className`.
 
+`builder` is **one word**, never an array. A node declares only the component it
+_is_; never put several names in it, and never treat it as a dependency list.
+
 **The key is always a real HTML tag** (`div`, `section`, `main`, `ul`, …), never
 the builder word. A builder node is a host: the renderer creates that element and
 mounts the component inside it. `"masonry": { "builder": "masonry" }` produces a

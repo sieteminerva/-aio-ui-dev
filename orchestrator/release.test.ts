@@ -22,6 +22,7 @@ import { createCdnResolver, emitPlan } from "./emit.ts";
 import type { PackageLayout } from "./emit.ts";
 import { generateSite } from "./generate.ts";
 import { plan } from "./plan.ts";
+import { pageRequires } from "./runtime.ts";
 import { galleryScenario, storeScenario } from "./scenarios.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -150,6 +151,28 @@ describe.skipIf(!available)("release artefacts", () => {
         const missing = Object.entries(site.importMap.imports)
           .filter(([key]) => key.endsWith("/"))
           .filter(([, url]) => !existsSync(repoPath(url)));
+        expect(missing).toEqual([]);
+      });
+
+      it("registers and maps every component a page requires", () => {
+        // A requirement is what the emitted page definition preloads. If the word has no
+        // registration the build is a no-op; if its specifier is not in the import map the
+        // browser cannot fetch it. Both surface as a blank element, not as a 404 in CI.
+        const missing: string[] = [];
+
+        for (const page of pageRequires(preset)) {
+          for (const word of page.requires) {
+            const binding = site.bindings.find((entry) => entry.word === word);
+            if (!binding) {
+              missing.push(`${page.route}: "${word}" has no registration`);
+              continue;
+            }
+            if (!(binding.specifier in site.importMap.imports)) {
+              missing.push(`${page.route}: "${word}" → ${binding.specifier} is not in the import map`);
+            }
+          }
+        }
+
         expect(missing).toEqual([]);
       });
     });

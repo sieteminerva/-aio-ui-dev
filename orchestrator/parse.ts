@@ -288,6 +288,16 @@ function inspectContent(content: unknown, where: string, inspector: ContentInspe
   if (!isRecord(content)) return;
 
   const builder = content.builder;
+  if (builder !== undefined && builder !== null && typeof builder !== "string") {
+    // A node names the component it *is*. An array here is not a dependency list:
+    // `collectComponentNames()` drops it, so the component would never load.
+    inspector.report(
+      "INVALID_SHAPE",
+      `\`builder\` must be one word, never a list: received ${JSON.stringify(builder)}. ` +
+      `A node declares the component it is; a page declares what it mounts elsewhere.`,
+      where,
+    );
+  }
   if (typeof builder === "string") {
     if (builder === "form") {
       inspectForm(content.content, where, inspector);

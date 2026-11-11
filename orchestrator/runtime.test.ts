@@ -97,8 +97,12 @@ describe("emitRuntime — page definitions", () => {
   it("declares one page definition per route and hands it to registerPage", () => {
     const { "app.js": app } = build(storePreset);
 
-    expect(app).toContain('import type { iPageDefinition } from "@aio-ui/frameworks";');
-    expect(app).toContain("const pageDefinitions: iPageDefinition[] = [");
+    expect(app).toContain('import { ComponentRegistry, DOMRenderer, AioApp } from "@aio-ui/frameworks";');
+    expect(app).toContain("const pageDefinitions = [");
+    // Served to a browser as-is: `import type` and `: Type[]` are syntax errors there,
+    // and either one silently prevents the whole site from booting.
+    expect(app).not.toMatch(/^import type /m);
+    expect(app).not.toMatch(/pageDefinitions:\s/);
     // The definition owns the route contract; the content still comes from source.pages.
     expect(app).toContain("pageDefinitions.forEach((definition) => app.registerPage(definition));");
     expect(app).toContain(".registerModule(registry)");
@@ -109,7 +113,7 @@ describe("emitRuntime — page definitions", () => {
 
   it("lists the words a route actually uses, deduplicated and sorted", () => {
     const { "app.js": app } = build(galleryPreset);
-    const plan = /const pageDefinitions: iPageDefinition\[\] = (\[[\s\S]*?\n\]);/.exec(app);
+    const plan = /const pageDefinitions = (\[[\s\S]*?\n\]);/.exec(app);
 
     expect(plan).not.toBeNull();
     const definitions = JSON.parse(plan![1]) as Array<{ route: string; requires: string[] }>;
@@ -122,12 +126,75 @@ describe("emitRuntime — page definitions", () => {
 
   it("keeps field-level modules out of the page requirements", () => {
     const { "app.js": app } = build(storePreset);
-    const plan = /const pageDefinitions: iPageDefinition\[\] = (\[[\s\S]*?\n\]);/.exec(app);
+    const plan = /const pageDefinitions = (\[[\s\S]*?\n\]);/.exec(app);
     const words = (JSON.parse(plan![1]) as Array<{ requires: string[] }>).flatMap((entry) => entry.requires);
 
     expect(words).toContain("form");
     expect(words).not.toContain("input");
     expect(words).not.toContain("dropdown");
     expect(words).not.toContain("input-controls");
+  });
+});
+
+/** The preset JSON inlined into `app.js`. */
+function inlinePreset(app: string): { pages: Array<{ id: string; content: unknown }> } {
+  const match = /const PRESET = ([\s\S]*?);\n\nconst assets/.exec(app);
+  expect(match).not.toBeNull();
+  return JSON.parse(match![1]) as { pages: Array<{ id: string; content: unknown }> };
+}
+
+/** The `pageDefinitions` array inlined into `app.js`. */
+function inlineDefinitions(app: string): Array<{ route: string; requires: string[] }> {
+  const match = /const pageDefinitions = (\[[\s\S]*?\n\]);/.exec(app);
+  expect(match).not.toBeNull();
+  return JSON.parse(match![1]) as Array<{ route: string; requires: string[] }>;
+}
+
+/** Every `builder` word in a content tree — the same walk the emitted `mount()` does. */
+function builderWords(node: unknown, found: string[] = []): string[] {
+  if (Array.isArray(node)) {
+    node.forEach((child) => builderWords(child, found));
+    return found;
+  }
+  if (!node || typeof node !== "object") return found;
+  const record = node as Record<string, unknown>;
+  if (typeof record.builder === "string") found.push(record.builder);
+  Object.values(record).forEach((child) => builderWords(child, found));
+  return found;
+}
+
+describe("emitRuntime — one word per node", () => {
+  it("never emits a builder array", () => {
+    for (const preset of [galleryPreset, storePreset]) {
+      const { "app.js": app } = build(preset);
+      expect(app).not.toContain("builder: [");
+      expect(app).not.toContain('"builder": [');
+    }
+  });
+
+  it("preloads every component a route's own nodes build", () => {
+    for (const preset of [galleryPreset, storePreset]) {
+      const { "app.js": app } = build(preset);
+      const emitted = inlinePreset(app);
+      const definitions = inlineDefinitions(app);
+      const fieldModules = new Set(["input", "dropdown", "input-controls"]);
+
+      emitted.pages.forEach((page) => {
+        const words = [...new Set(builderWords(page.content))]
+          .filter((word) => !fieldModules.has(word))
+          .sort();
+        const definition = definitions.find((entry) => entry.route === page.id);
+        expect(definition, page.id).toBeDefined();
+        expect(definition!.requires).toEqual(words);
+      });
+    }
+  });
+
+  it("registers every component a page requires", () => {
+    const { "app.js": app } = build(storePreset);
+    const missing = inlineDefinitions(app)
+      .flatMap((entry) => entry.requires)
+      .filter((word) => !app.includes(`registry.register("${word}"`));
+    expect(missing).toEqual([]);
   });
 });
