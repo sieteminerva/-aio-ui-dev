@@ -101,6 +101,7 @@ NEXT    → <one action> | blocks: <none|item>
   `/memories/session/<task>.md` → read `.guidance/project/STATUS.md`. Then state the plan.
 - **Prefix:** the same 4-line `STEP 0` block sits at the top of **all 6** `AGENTS.md` files
   (root router + 5 bands). Edit all six or none — a band opened standalone must still carry it.
+
 ## 11. One owner per session
 
 A second writer is the largest source of lost work: the tree changes under you, docs go stale,

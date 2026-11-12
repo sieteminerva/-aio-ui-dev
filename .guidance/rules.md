@@ -3,7 +3,7 @@
 ## Structure
 
 - HTML the outer element must be valid html element not just `div`, like `main>section`, `nav`, `aside` etc.
-- CSS class must be `clean one word`, also for the modifier but accepted for modifier to use `-` separator, but not more than 2 words
+- CSS written in nested style, class must be `clean one word`, also for the modifier but accepted for modifier to use `-` separator, but not more than 2 words
 - `src/style.css` is global styling file. if it reusable or configuration find or put it in `src/lib/Styles/*.css`
 - global variables written in` src/lib/Styles/variables.css`. and must be prefixed with `--app`
 - components has its own specific variables. for coloring mainly driven by `--componentname-primary-color` and `--componentname-accent-color`, the other is just color mix from it. but the value itself must be inheriting from global variables, so dont edits the component styles directly if you want to override do it in the `style.css` or `variables.css`
