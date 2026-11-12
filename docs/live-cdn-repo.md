@@ -21,7 +21,7 @@ README is §2.1.
 | Version tag    | `v0.1.1` at `5a7fc27` — points at the `cdn` commit, **not** at `main`                           |
 | CDN base       | `https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/`                                  |
 | Branch README  | `…@v0.1.1/README.md` — generated at publish time, see §2.1                                      |
-| Release assets | 42 files: 39 `aio-ui-<name>-0.1.1.tgz` + `registry.json` + `layout.json` + `checksums.txt`       |
+| Release assets | 42 files: 39 `aio-ui-<name>-0.1.1.tgz` + `registry.json` + `layout.json` + `checksums.txt`      |
 | Packages       | 39 (base/core/app/styles/utilities, 22 components, 6 modules, 3 themes, 3 kits)                 |
 
 Why the split: jsDelivr serves **repository files**, and `dist/` is not committed on `main`.
@@ -326,7 +326,7 @@ gh release create v0.1.1 .draft/release/v0.1.1/* \
 Web UI equivalent: **Releases → Draft a new release → tag `v0.1.1` → attach all 42 files →
 pre-release**. A new version gets a **new** release; the `v0.1.0` release keeps its 42 assets.
 
-Refreshing assets of an *existing* release: delete the old assets first (uploading the same name
+Refreshing assets of an _existing_ release: delete the old assets first (uploading the same name
 returns `422 already_exists`), then upload the new set. With the REST API:
 
 ```bash
@@ -383,12 +383,12 @@ Never push `main` to the old `rajutan` remote.
 
 ## 6. Updating an existing version vs a new version
 
-| Situation                                 | Action                                                                                    |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Same version, bytes not served yet        | Steps 2–8 with the same `--version`; safe only **before** the first probe of the new tag   |
-| New version                               | `node scripts/version.mjs --apply --version 0.1.2` → steps 2–8 with the new number        |
-| Only docs/scripts changed                 | Normal commit to `main`; no CDN work                                                      |
-| A site must stay on the old engine        | Do nothing — presets pin `engine.resolved`; regeneration is explicit                      |
+| Situation                          | Action                                                                                   |
+| ---------------------------------- | ---------------------------------------------------------------------------------------- |
+| Same version, bytes not served yet | Steps 2–8 with the same `--version`; safe only **before** the first probe of the new tag |
+| New version                        | `node scripts/version.mjs --apply --version 0.1.2` → steps 2–8 with the new number       |
+| Only docs/scripts changed          | Normal commit to `main`; no CDN work                                                     |
+| A site must stay on the old engine | Do nothing — presets pin `engine.resolved`; regeneration is explicit                     |
 
 ## 7. Rollback
 
@@ -404,19 +404,19 @@ Never push `main` to the old `rajutan` remote.
 
 ## 8. Troubleshooting
 
-| Symptom                                           | Cause                                                                                                         | Fix                                                                                                                                                                         |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every package URL 404s, `registry.json` 404s      | Tag still points at `main` (no `dist`)                                                                        | Run `publish-cdn.mjs --apply`                                                                                                                                                |
-| One subpath 404s (`dropdown/module`)              | URL derived from the specifier                                                                                | Check `layout.subpaths`; resolver must use `exports`                                                                                                                        |
-| A stylesheet 404s at the package root             | CSS export names a source file                                                                                | Prefer `dist/` for CSS in `release.mjs` / `layout.mjs`                                                                                                                      |
-| Browser ignores the import map                    | Missing `"imports"` wrapper                                                                                   | `runtime.ts` serialises `site.importMap`                                                                                                                                    |
-| `tar (child): Cannot connect to …`                | Absolute Windows path passed to tar                                                                           | Use repo-relative paths (the script already does)                                                                                                                           |
-| `422 already_exists` on upload                    | Asset name already present                                                                                    | Delete the old asset, then upload                                                                                                                                           |
-| jsDelivr keeps serving the old bytes              | CDN cache                                                                                                     | Purge the URL(s), wait a few seconds, hard-reload                                                                                                                           |
-| `@cdn` still reports the previous version         | Branch refs are cached `s-maxage=43200` (12 h); a wildcard purge does not always evict the file               | Purge the **exact** file (`…@cdn/registry.json`), then re-probe                                                                                                              |
-| Moved the tag, jsDelivr still serves the old tree | jsDelivr pins a tag to a commit (`immutable, max-age=31536000`); purge reports `finished` and changes nothing | Closed in `v0.1.1`: never force-move a served tag. Publish a **new version** (`version.mjs --apply --version 0.1.2`) or point `registry.base` at `@<commit-sha>` / `@cdn`.       |
-| Old registry + new assets (`integrity` mismatch)  | A tag's registry was cached before the assets were replaced                                                   | Treat that tag as unusable; publish a new version                                                                                                                           |
-| jsDelivr 404s the whole repo                      | Repository is private or tag missing                                                                          | Make it public / check `git ls-remote`                                                                                                                                      |
+| Symptom                                           | Cause                                                                                                         | Fix                                                                                                                                                                        |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Every package URL 404s, `registry.json` 404s      | Tag still points at `main` (no `dist`)                                                                        | Run `publish-cdn.mjs --apply`                                                                                                                                              |
+| One subpath 404s (`dropdown/module`)              | URL derived from the specifier                                                                                | Check `layout.subpaths`; resolver must use `exports`                                                                                                                       |
+| A stylesheet 404s at the package root             | CSS export names a source file                                                                                | Prefer `dist/` for CSS in `release.mjs` / `layout.mjs`                                                                                                                     |
+| Browser ignores the import map                    | Missing `"imports"` wrapper                                                                                   | `runtime.ts` serialises `site.importMap`                                                                                                                                   |
+| `tar (child): Cannot connect to …`                | Absolute Windows path passed to tar                                                                           | Use repo-relative paths (the script already does)                                                                                                                          |
+| `422 already_exists` on upload                    | Asset name already present                                                                                    | Delete the old asset, then upload                                                                                                                                          |
+| jsDelivr keeps serving the old bytes              | CDN cache                                                                                                     | Purge the URL(s), wait a few seconds, hard-reload                                                                                                                          |
+| `@cdn` still reports the previous version         | Branch refs are cached `s-maxage=43200` (12 h); a wildcard purge does not always evict the file               | Purge the **exact** file (`…@cdn/registry.json`), then re-probe                                                                                                            |
+| Moved the tag, jsDelivr still serves the old tree | jsDelivr pins a tag to a commit (`immutable, max-age=31536000`); purge reports `finished` and changes nothing | Closed in `v0.1.1`: never force-move a served tag. Publish a **new version** (`version.mjs --apply --version 0.1.2`) or point `registry.base` at `@<commit-sha>` / `@cdn`. |
+| Old registry + new assets (`integrity` mismatch)  | A tag's registry was cached before the assets were replaced                                                   | Treat that tag as unusable; publish a new version                                                                                                                          |
+| jsDelivr 404s the whole repo                      | Repository is private or tag missing                                                                          | Make it public / check `git ls-remote`                                                                                                                                     |
 
 ## 9. Pre-flight checklist
 
