@@ -7,11 +7,11 @@ Last updated: 2026-11-13
 
 ## Active (max 3)
 
-| #   | Task                        | Project   | State       | Gate                                                                        |
-| --- | --------------------------- | --------- | ----------- | --------------------------------------------------------------------------- |
-| 1   | Page-level components (P9b) | Framework | in progress | generator emits `iPageDefinition`s; docs still call `isRoot` proposed       |
-| 2   | Build `profile` reference   | Examples  | not started | home, services, contact, portfolio render; boundaries documented            |
-| 3   | Build `blog` reference      | Examples  | not started | home, post list, post, about render; boundaries documented                  |
+| #   | Task                        | Project   | State       | Gate                                                                  |
+| --- | --------------------------- | --------- | ----------- | --------------------------------------------------------------------- |
+| 1   | Page-level components (P9b) | Framework | in progress | generator emits `iPageDefinition`s; docs still call `isRoot` proposed |
+| 2   | Build `profile` reference   | Examples  | not started | home, services, contact, portfolio render; boundaries documented      |
+| 3   | Build `blog` reference      | Examples  | not started | home, post list, post, about render; boundaries documented            |
 
 ## Landed recently
 
