@@ -10,20 +10,10 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
-      "@aio-ui/code-block": [
-        "./index.ts"
-      ],
-      "@aio-ui/code-block/*": [
-        "./*"
-      ]
+      "@aio-ui/code-block": ["./index.ts"],
+      "@aio-ui/code-block/*": ["./*"]
     }
   },
-  "include": [
-    "**/*.ts"
-  ],
-  "exclude": [
-    "dist/**",
-    "**/__tests__/**",
-    "node_modules"
-  ]
+  "include": ["**/*.ts"],
+  "exclude": ["dist/**", "**/__tests__/**", "node_modules"]
 }
