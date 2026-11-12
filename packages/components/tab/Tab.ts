@@ -122,7 +122,9 @@ export class TabBuilder extends Builder<TabElementType, iTabConfig> {
   protected template(typeKey: TabElementType, el: HTMLElement, payload?: any): void {
     switch (typeKey) {
       case "@tab": {
-        el.className = `tab position-${this.config.menuPosition} ${el.className || ""}`.trim();
+        // `classList` dedupes: the selector already stamped `tab`, and string concatenation
+        // used to emit it twice (`tab position-top tab`).
+        el.classList.add("tab", `position-${this.config.menuPosition}`);
         el.style.minHeight = this.config.minHeight;
 
         if (this.config.container instanceof HTMLElement) {
@@ -249,7 +251,7 @@ export class TabBuilder extends Builder<TabElementType, iTabConfig> {
         if (item?.id) el.id = item.id;
         else el.id = `tabpanel-${rootId}-${idx}`;
 
-        if (item?.className) el.className = `${el.className} ${item.className}`.trim();
+        if (item?.className) el.classList.add(...String(item.className).split(" ").filter(Boolean));
 
         el.classList.add("hidden");
         el.style.display = "none";
@@ -290,7 +292,7 @@ export class TabBuilder extends Builder<TabElementType, iTabConfig> {
 
       case "@tab>footer":
         if (payload?.id) el.id = payload.id;
-        if (payload?.className) el.className = `${el.className} ${payload.className}`.trim();
+        if (payload?.className) el.classList.add(...String(payload.className).split(" ").filter(Boolean));
         el.textContent = payload?.text || "";
         break;
     }

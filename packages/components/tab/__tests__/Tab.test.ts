@@ -21,7 +21,8 @@ describe("tab", () => {
   it("renders a tab root with a menu item per menu record", () => {
     const root = build(content);
 
-    expect(root.classList.contains("tab")).toBe(true);
+    // Regression: the root class list used to repeat `tab`.
+    expect(root.className).toBe("tab position-top");
     const items = root.querySelectorAll(".menu button.button");
     expect(items).toHaveLength(1);
     expect(items[0].getAttribute("role")).toBe("tab");
