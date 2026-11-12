@@ -679,8 +679,83 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
   }
 
   // =====================================================================
-  // 🧩 SLOTTING — attach/detach
+  // 🧩 SLOTTING — host, project, attach, detach
   // =====================================================================
+
+  /**
+   * 🧩 HOST — find the receptacle element stamped for `slotKey` inside this builder's root.
+   *
+   * @param slotKey - slot name declared in this builder's config.slots.
+   * @returns receptacle element if found, or null.
+   */
+  public host(slotKey: string): HTMLElement | null {
+    const rootKey = Object.keys(this.hierarchy.get())[0] as TType | undefined;
+    const root = rootKey ? (this.load(rootKey) ?? null) : null;
+    return root?.querySelector<HTMLElement>(`[data-slot="${slotKey}"]`) ?? null;
+  }
+
+  /**
+   * 🧩 PROJECT — explicit slot door.
+   *
+   * Mounts a child DOM node or builder into a named slot of this host builder.
+   * Replaces the slot receptacle, carries over receptacle classes and non-style
+   * attributes, and keeps track of the displaced receptacle for later `detach()`.
+   *
+   * @param slotKey - slot name declared in this builder's config.slots.
+   * @param child - child element or child Builder to project into the slot.
+   * @param payload - optional payload passed to child's initialize() if child is Builder.
+   * @returns the projected HTMLElement, or null if receptacle was not found.
+   */
+  public project(slotKey: string, child: HTMLElement | Builder<any, any>, payload?: any): HTMLElement | null {
+    const receptacle = this.host(slotKey);
+    if (!receptacle) {
+      console.warn(
+        `[Builder:${String(this.builderId)}] project() found no receptacle for slot ` +
+        `"${slotKey}" in "${String(this.builderId)}" — declare it in config.slots.`
+      );
+      return null;
+    }
+
+    let element: HTMLElement;
+    let childBuilder: Builder<any, any> | null = null;
+    let childTypeKey: any = slotKey;
+
+    if (child instanceof Builder) {
+      childBuilder = child;
+      if (!Object.keys(child.hierarchy.get()).length) {
+        const identity = child.ensureIdentity(undefined, child.config, { pushNamespace: true, popNamespace: true });
+        child.#staticHierarchy = identity.hierarchy;
+        child.storage.nodes.clear();
+        child.activeLiveThemeId = child.config?.themeId || document.body.dataset.theme?.replace(/^theme-/, "") || "default";
+      }
+      const childSels = Object.keys(child.hierarchy.get());
+      childTypeKey = childSels[0] ?? slotKey;
+      const node = child.load(childTypeKey) ?? child.render(childTypeKey, payload);
+      if (!node) return null;
+      element = ((node as any).__outer as HTMLElement | undefined) ?? node;
+      child.rootElement ??= (this.load(Object.keys(this.hierarchy.get())[0] as TType) ?? null);
+    } else {
+      element = child;
+    }
+
+    element.dataset.slot = slotKey;
+    this.#projected.set(childTypeKey, { slot: slotKey, element, receptacle });
+
+    // 🔀 WELD — carry classes and attributes from receptacle
+    element.classList.add(...Array.from(receptacle.classList));
+    for (const { name, value } of Array.from(receptacle.attributes)) {
+      if (name === "style" || element.hasAttribute(name)) continue;
+      element.setAttribute(name, value);
+    }
+    receptacle.replaceWith(element);
+
+    if (childBuilder) {
+      childBuilder.#projected.set(childTypeKey, { slot: slotKey, element, receptacle });
+      childBuilder.initialize(element, payload);
+    }
+
+    return element;
+  }
 
   /**
    * 🧩 ATTACH — project ONE of this builder's keys into a slot declared by the
@@ -731,10 +806,7 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     const caller = this.#caller;
     if (!caller) return this;
 
-    const callerSels = Object.keys(caller.hierarchy.get());
-    const callerRootKey = callerSels[0] as TType | undefined;
-    const callerRoot = callerRootKey ? (caller.load(callerRootKey) ?? null) : null;
-    const receptacle = callerRoot?.querySelector<HTMLElement>(`[data-slot="${slotKey}"]`);
+    const receptacle = caller.host(slotKey);
     if (!receptacle) {
       console.warn(
         `[Builder:${String(this.builderId)}] attach("${String(typeKey)}") found no receptacle for slot ` +
@@ -761,8 +833,8 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     }
     receptacle.replaceWith(element);
 
-    this.rootElement ??= callerRoot;
-
+    const callerRootKey = Object.keys(caller.hierarchy.get())[0] as TType | undefined;
+    this.rootElement ??= callerRootKey ? (caller.load(callerRootKey) ?? null) : null;
 
     // 🔌 Wire THIS key only. Re-entering a scope is harmless (bind refreshes an
     // existing binding instead of stacking listeners), which is exactly why

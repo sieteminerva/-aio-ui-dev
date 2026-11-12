@@ -8,6 +8,6 @@
 export { AioApp, blockToNode, isPageDocument, normalizeRoute, pageToNode } from "./AioApp";
 export { AppStorage } from "./modules";
 export type { iStorageConfig, iStorageDriver } from "./modules";
-export type { iApp, iAppConfig, iAppModuleClass, iAppModuleContext, iAppOptions, iAppSlot, iAppSlots, iAppSource, iPageBlock, iPageContent, iPageContext, iPageController, iPageControllerClass, iPageDocument, iPageReadyContext, } from "./types";
+export type { iApp, iAppConfig, iAppModuleClass, iAppModuleContext, iAppOptions, iAppSlot, iAppSlots, iAppSource, iComponentRoute, iPageBlock, iPageContent, iPageContext, iPageController, iPageControllerClass, iPageDataSpec, iPageDefinition, iPageDocument, iPageEventSpec, iPagePort, iPageReadyContext, iPageRouteSpec, iPageSlotSpec, } from "./types";
 export type { iAnimationPort, iAppRouteState, iComponentRegistryPort, iEventPort, iHttpPort, iRendererPort, iRouterFactory, iRouterPort, iStoragePort, } from "./ports";
 //# sourceMappingURL=index.d.ts.map

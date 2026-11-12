@@ -142,6 +142,15 @@ export class AioApp {
     #debug;
     /** Route content keyed by normalised route name; built once at construction. */
     #pages = new Map();
+    /**
+     * Declarative page definitions registered via `registerPage(definition)`.
+     */
+    #pageDefinitions = new Map();
+    /**
+     * Components each route needs, from the plan handed to `registerModule(registry, …)`
+     * or derived from `iPageDefinition.requires`.
+     */
+    #componentRoutes = new Map();
     /** Registered modules, keyed by slot. Insertion order is creation order. */
     #registrations = new Map();
     /**
@@ -266,18 +275,44 @@ export class AioApp {
     get shell() {
         return this.#root;
     }
-    /** Route list derived from content and controllers — what the router validates. */
+    /** Route list derived from content, controllers, and page definitions — what the router validates. */
     get routes() {
-        return [...new Set([...this.#pages.keys(), ...this.#controllers.keys()])];
+        return [...new Set([...this.#pages.keys(), ...this.#controllers.keys(), ...this.#pageDefinitions.keys()])];
     }
-    /** Registers per-route behaviour. Registering the same route twice replaces it. */
-    registerPage(route, controller, config) {
+    /** Registers per-route behaviour or declarative page-level component definition. */
+    registerPage(routeOrDefinition, controller, config) {
         if (this.#rendered) {
             throw new Error("[AioApp] registerPage() must be called before render().");
         }
-        const key = normalizeRoute(route);
+        if (typeof routeOrDefinition === "object" && routeOrDefinition !== null) {
+            const def = routeOrDefinition;
+            const baseRoute = normalizeRoute(def.route);
+            this.#pageDefinitions.set(baseRoute, def);
+            // Preload plan derived from the root builder and `requires`. A definition without a
+            // `builder` owns a route only, so its page id is not a component worth loading.
+            const requiredComponents = [...new Set([def.builder, ...(def.requires ?? [])])].filter((name) => typeof name === "string" && name !== "");
+            const merged = this.#componentRoutes.get(baseRoute) ?? [];
+            this.#componentRoutes.set(baseRoute, [...new Set([...merged, ...requiredComponents])]);
+            // Register sub-routes if specified in definition
+            if (Array.isArray(def.routes)) {
+                for (const sub of def.routes) {
+                    if (!sub.path)
+                        continue;
+                    const cleanSub = sub.path.replace(/^\/+/, "");
+                    const subRouteKey = `${baseRoute}/${cleanSub}`;
+                    this.#pageDefinitions.set(subRouteKey, def);
+                    const subMerged = this.#componentRoutes.get(subRouteKey) ?? [];
+                    this.#componentRoutes.set(subRouteKey, [...new Set([...subMerged, ...requiredComponents])]);
+                }
+            }
+            return this;
+        }
+        const key = normalizeRoute(routeOrDefinition);
         if (this.#controllers.has(key)) {
             console.warn(`[AioApp] Route "${key}" already has a controller; replacing it.`);
+        }
+        if (!controller) {
+            throw new Error(`[AioApp] Controller class required when registering route "${key}".`);
         }
         this.#controllers.set(key, { module: controller, config });
         return this;
@@ -287,13 +322,29 @@ export class AioApp {
             throw new Error("[AioApp] registerModule() must be called before render().");
         }
         const isClass = typeof target === "function";
+        const plan = !isClass && Array.isArray(config) ? config : null;
         const slot = (isClass
             ? target.slot
-            : (config ?? target?.constructor?.slot));
+            : (plan
+                ? target?.constructor?.slot
+                : (config ?? target?.constructor?.slot)));
         if (!slot) {
             throw new Error("[AioApp] Cannot tell which slot this module fills. Add " +
                 '`static readonly slot = "<slot>"` to a class, or pass the slot as the ' +
                 "second argument: registerModule(instance, \"router\").");
+        }
+        if (plan) {
+            if (slot !== "registry") {
+                throw new Error(`[AioApp] A component plan belongs to the "registry" slot, not "${slot}".`);
+            }
+            for (const entry of plan) {
+                if (!entry?.route || !Array.isArray(entry.components)) {
+                    throw new Error("[AioApp] Every component route needs { route, components: [] }.");
+                }
+                const route = normalizeRoute(entry.route);
+                const merged = this.#componentRoutes.get(route) ?? [];
+                this.#componentRoutes.set(route, [...new Set([...merged, ...entry.components])]);
+            }
         }
         if (this.#registrations.has(slot)) {
             console.warn(`[AioApp] Slot "${slot}" already has a module; replacing it.`);
@@ -491,7 +542,10 @@ export class AioApp {
             const menuNode = this.#menu(controller);
             const footerNode = this.#source.footer ?? null;
             const nodes = [menuNode, pageNode, footerNode].filter(Boolean);
-            const names = this.#registry.collect(nodes);
+            const names = [...new Set([
+                    ...(this.#componentRoutes.get(target) ?? []),
+                    ...this.#registry.collect(nodes),
+                ])];
             const known = names.filter((name) => this.#registry.has(name));
             const missing = names.filter((name) => !this.#registry.has(name));
             this.#log("preload", { route: target, components: names, missing, sequence });
@@ -528,22 +582,97 @@ export class AioApp {
     }
     /** Creates the controller for this pass and the context handed to it. */
     #createPage(route, fragment, signal) {
-        const declared = this.#pages.get(route) ?? null;
+        let pageDef = this.#pageDefinitions.get(route);
+        let matchedBaseRoute = route;
+        if (!pageDef && route.includes("/")) {
+            const base = route.split("/")[0];
+            const candidateDef = this.#pageDefinitions.get(base);
+            if (candidateDef) {
+                pageDef = candidateDef;
+                matchedBaseRoute = base;
+            }
+        }
+        // Content wins, the definition only owns the route contract. A generated site declares
+        // one definition per page (for `requires`, `routes`, `data`) while the page tree still
+        // comes from `source.pages`; only a definition with a `builder` and no content falls back
+        // to that builder, which is what a pure page-level component needs.
+        const declared = this.#pages.get(route) ?? (pageDef?.builder ? { [pageDef.builder]: { builder: pageDef.builder } } : null);
         const context = {
             route,
             page: declared,
             fragment,
             theme: this.#theme,
-            builders: declared ? this.#registry.collect(pageToNode(declared, route)) : [],
+            builders: [...new Set([
+                    ...(this.#componentRoutes.get(route) ?? this.#componentRoutes.get(matchedBaseRoute) ?? []),
+                    ...(declared ? this.#registry.collect(pageToNode(declared, route)) : []),
+                ])],
             http: this.#http,
             signal,
         };
         const entry = this.#controllers.get(route);
-        if (!entry)
-            return { controller: null, context };
-        const controller = new entry.module(entry.config, context);
-        this.#active = controller;
-        return { controller, context };
+        if (entry) {
+            const controller = new entry.module(entry.config, context);
+            this.#active = controller;
+            return { controller, context };
+        }
+        if (pageDef) {
+            // Create a page-level component controller bridge with restricted port
+            const parts = route.split("/");
+            const subPath = parts.slice(1).join("/");
+            const params = {};
+            if (Array.isArray(pageDef.routes)) {
+                for (const spec of pageDef.routes) {
+                    if (spec.path.startsWith(":") && subPath) {
+                        const paramKey = spec.path.slice(1);
+                        params[paramKey] = subPath;
+                    }
+                }
+            }
+            const app = this;
+            const port = {
+                route,
+                subPath,
+                params,
+                fragment,
+                data: {},
+                navigate: (r, f) => app.navigate(r, f),
+                build: (name, data) => app.#registry.build(name, data),
+                events: app.#events ?? { emit: () => { }, on: () => { } },
+                signal,
+            };
+            let customControllerInstance = null;
+            if (pageDef.controller) {
+                customControllerInstance = new pageDef.controller(port);
+            }
+            const controller = {
+                async onPrepare(ctx) {
+                    // Resolve data if specified in definition
+                    if (Array.isArray(pageDef.data) && pageDef.data.length > 0) {
+                        for (const item of pageDef.data) {
+                            if (item.sheet) {
+                                try {
+                                    const res = await ctx.http.get({ table: item.sheet, ...(item.query ?? {}) });
+                                    port.data[item.id] = res;
+                                }
+                                catch (err) {
+                                    console.warn(`[AioApp] failed loading data for sheet "${item.sheet}":`, err);
+                                }
+                            }
+                        }
+                    }
+                    return ctx.page ?? undefined;
+                },
+                onReady(readyCtx) {
+                    customControllerInstance?.onReady?.(readyCtx.shell);
+                },
+                onDestroy() {
+                    customControllerInstance?.onDestroy?.();
+                },
+            };
+            this.#active = controller;
+            return { controller, context };
+        }
+        return { controller: null, context };
     }
     /** Lets the controller rewrite the menu node. The app calls it, once per render. */
     #menu(controller) {
@@ -661,7 +790,17 @@ export class AioApp {
     }
     /** Falls back to the default route, then to the first known route, for an unknown hash. */
     #resolveRoute(route) {
-        const known = (name) => this.#pages.has(name) || this.#controllers.has(name);
+        const known = (name) => {
+            if (this.#pages.has(name) || this.#controllers.has(name) || this.#pageDefinitions.has(name)) {
+                return true;
+            }
+            if (name.includes("/")) {
+                const base = name.split("/")[0];
+                if (this.#pageDefinitions.has(base))
+                    return true;
+            }
+            return false;
+        };
         const candidate = normalizeRoute(route, this.#defaultRoute);
         if (known(candidate))
             return candidate;

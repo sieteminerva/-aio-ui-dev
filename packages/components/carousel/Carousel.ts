@@ -147,6 +147,11 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
       this.rConfig = this.resolveRuntimeConfig(carousel, {}, this.slides.length);
     }
 
+    // An empty payload has no track to lay out. Bail out before the layout modes read
+    // `this.track` — a missing rail used to throw and take the whole `create()` down.
+    // The shell itself still renders, so a caller can fill it later.
+    if (!this.track || this.slides.length === 0) return;
+
     if (this.rConfig.showControl && this.slides.length > 1) {
       this.attachControls(carousel!);
     }

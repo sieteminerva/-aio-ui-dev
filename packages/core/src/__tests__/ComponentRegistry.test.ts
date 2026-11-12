@@ -56,6 +56,57 @@ function makeAssets(overrides: Partial<iComponentAssetMaps["modules"]> = {}): iC
   };
 }
 
+describe("ComponentRegistry — one module, several builders", () => {
+  let instances: FakeInstance[] = [];
+
+  beforeEach(() => {
+    instances = [];
+  });
+
+  /** A package like `@aio-ui/product`: several builders behind one path. */
+  function productAssets() {
+    class GridBuilder extends makeBuilderClass(instances) {}
+    class DetailBuilder extends makeBuilderClass(instances) {}
+    return makeAssets({ "@fake/product": async () => ({ GridBuilder, DetailBuilder }) });
+  }
+
+  it("resolves each word to the export its manifest names", async () => {
+    const registry = new ComponentRegistry(productAssets());
+    registry.register("product-card-grid", () => ({ path: "@fake/product", export: "GridBuilder" }));
+    registry.register("product-detail", () => ({ path: "@fake/product", export: "DetailBuilder" }));
+
+    await registry.load(["product-card-grid", "product-detail"]);
+    registry.build("product-card-grid", {});
+    registry.build("product-detail", {});
+
+    expect(instances.map((instance) => instance.constructor.name)).toEqual(["GridBuilder", "DetailBuilder"]);
+  });
+
+  it("falls back to the first exported function when the manifest names none", async () => {
+    const registry = new ComponentRegistry(productAssets());
+    registry.register("product-card-grid", () => ({ path: "@fake/product" }));
+    registry.register("product-detail", () => ({ path: "@fake/product" }));
+
+    await registry.load(["product-card-grid", "product-detail"]);
+    registry.build("product-card-grid", {});
+    registry.build("product-detail", {});
+
+    // Both words land on the same class — the bug the `export` field exists to prevent.
+    expect(instances[0].constructor).toBe(instances[1].constructor);
+  });
+
+  it("warns in development when a module is ambiguous and the manifest stays silent", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const registry = new ComponentRegistry(productAssets());
+    registry.register("product-card-grid", () => ({ path: "@fake/product" }));
+
+    await registry.load(["product-card-grid"]);
+
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("no \"export\" was declared"));
+    warn.mockRestore();
+  });
+});
+
 describe("ComponentRegistry manifest contract", () => {
   let instances: FakeInstance[];
 
@@ -201,6 +252,79 @@ describe("ComponentRegistry manifest contract", () => {
     expect(() => registry.build("table", {})).not.toThrow();
   });
 
+  it("resolves two words pointing at one module with different export names", async () => {
+    class AlphaBuilder {
+      create() {
+        return { tag: "alpha" };
+      }
+    }
+    class BetaBuilder {
+      create() {
+        return { tag: "beta" };
+      }
+    }
+
+    const registry = new ComponentRegistry({
+      modules: {
+        "@fake/shared-bundle": async () => ({
+          AlphaBuilder,
+          BetaBuilder,
+        }),
+      },
+      styles: {},
+    });
+
+    registry.register("product", () => ({
+      path: "@fake/shared-bundle",
+      export: "AlphaBuilder",
+    }));
+    registry.register("table", () => ({
+      path: "@fake/shared-bundle",
+      export: "BetaBuilder",
+    }));
+
+    await registry.load(["product", "table"]);
+
+    expect(registry.build("product", {})).toEqual({ tag: "alpha" });
+    expect(registry.build("table", {})).toEqual({ tag: "beta" });
+  });
+
+  it("warns in DEV mode when a module has >1 builder and no export is specified", async () => {
+    class FirstBuilder {
+      create() {
+        return { tag: "first" };
+      }
+    }
+    class SecondBuilder {
+      create() {
+        return { tag: "second" };
+      }
+    }
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const registry = new ComponentRegistry({
+      modules: {
+        "@fake/multi-bundle": async () => ({
+          FirstBuilder,
+          SecondBuilder,
+        }),
+      },
+      styles: {},
+    });
+
+    registry.register("product", () => ({
+      path: "@fake/multi-bundle",
+    }));
+
+    await registry.load(["product"]);
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('exports 2 candidates ("FirstBuilder", "SecondBuilder"), but no "export" was declared')
+    );
+    warnSpy.mockRestore();
+  });
+
   it("picks the named export a module ref asks for", async () => {
     const registry = new ComponentRegistry({
       modules: {
@@ -285,12 +409,12 @@ describe("collectComponentNames", () => {
     expect(collectComponentNames({ nested: [node, null, 42, "text"] })).toEqual(["form"]);
   });
 
-  it("accepts a builder array for nodes that mount several components", () => {
+  it("ignores a builder array: a node names one component, a route names the rest", () => {
     const source = {
-      "main#blog": { builder: ["article", "table"], onCreated: () => {} },
+      "main#blog": { builder: ["article", "table"], onCreated: () => { } },
       "#wizard": { builder: ["form"] },
     };
 
-    expect(collectComponentNames(source)).toEqual(["article", "table", "form"]);
+    expect(collectComponentNames(source)).toEqual([]);
   });
 });

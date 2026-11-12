@@ -14,7 +14,7 @@
 export { ComponentRegistry, mergeBuildConfig } from "./ComponentRegistry.js";
 export { DOMRenderer } from "./DOMRenderer.js";
 export { getBuilderAdapter, setBuilderAdapter } from "./BuilderPort.js";
-export { ensureStylesheet, injectLazyCss, isStyleInjected, normalizeStylesheetPath, styleTagId, useStylesheetAssets, } from "./Stylesheets.js";
+export { ensureStylesheet, injectLazyCss, isStyleInjected, normalizeStylesheetPath, replaceLazyCss, styleTagId, useStylesheetAssets, } from "./Stylesheets.js";
 export { TemplateRegistry, getTemplates, setTemplates } from "./TemplateRegistry.js";
 export { DEFAULT_REGISTRY_SCOPE, Registry, RegistryError, assertValidId, assertValidScope, qualifyId, splitQualifiedId, } from "./Registry/index.js";
 //# sourceMappingURL=index.js.map

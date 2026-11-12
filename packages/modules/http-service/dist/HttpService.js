@@ -219,7 +219,7 @@ export class HttpService {
             }
             // Step 8: Parse JSON and validate the application-level success flag. The whole
             // envelope is returned (not just `.data`), because consumers need `meta` for
-            // pagination — see `docs/API.md`.
+            // pagination — see `docs/framework/API.md`.
             const json = await res.json();
             if (json && (json.success === true || json.status === "success")) {
                 return json;

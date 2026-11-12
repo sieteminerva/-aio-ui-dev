@@ -189,6 +189,27 @@ export class DOMRenderer<
         currentElement.replaceChildren();
       }
 
+      // 🪄 `isRoot` — the component owns the element instead of sitting inside it.
+      // A builder node normally renders as a host: `div#masonry` is created and the builder
+      // output is appended into it. With `isRoot: true` the builder root *is* that element,
+      // so the key's tag disappears and the component becomes the anchor itself.
+      //
+      // Two guards, both deliberate:
+      // - `onCreated` keeps the host. A hook owns its mount: it was handed an element and
+      //   may append into it, so replacing that element under its feet would orphan the hook.
+      // - an unresolvable builder keeps the host too. Dropping the element would leave a hole
+      //   exactly where the author expected a component.
+      const wantsBuilderRoot =
+        typeof (value as any).builder === "string" &&
+        (value as any).isRoot === true &&
+        typeof (value as any).onCreated !== "function" &&
+        !!builderFn;
+
+      if (wantsBuilderRoot) {
+        const builtRoot = builderFn!((value as any).builder as keyof iBuilderRegistry, value);
+        if (builtRoot && builtRoot !== currentElement) currentElement = builtRoot;
+      }
+
       // Phase 2: 🧱 ATTRIBUTE PROCESSOR
       this.attributeProcessor(currentElement, value, id, classNames, parsedAttrs);
 
@@ -280,8 +301,8 @@ export class DOMRenderer<
       return `${tag}${idPart}${classPart}`;
     })();
 
-    // `builder` may be a name or an array of names (a node that creates several
-    // components itself). Only a single named builder can be a template root.
+    // `builder` names the one component this node is, so it can be a template root.
+    // A route that needs several components declares them on the registry, not here.
     const builderName = typeof val?.builder === "string" ? val.builder : null;
     const isBuilderRoot = !!builderName && !!val?.isRoot;
     const effectiveGlobalKey = globalKey;
@@ -307,10 +328,21 @@ export class DOMRenderer<
 
     this.records.push(manualMarkupRecordItem);
 
-    if (val.builder && val.content && typeof val.content.getMetadata === "function") {
+    // The builder output reaches us one of two ways, and both carry their own metadata
+    // closure: as `content` when a composite was built elsewhere, or as the element itself
+    // when `isRoot` let the component own the host. Either way its records belong to this
+    // page's pool, so they are sewn in below instead of being orphaned.
+    const builderOutput =
+      val.builder && val.content && typeof val.content.getMetadata === "function"
+        ? val.content
+        : isBuilderRoot && typeof (el as any).getMetadata === "function"
+          ? el
+          : null;
+
+    if (builderOutput) {
 
       // Target bapak sejati dari komponen dinamis ini adalah KOORDINAT KEY DIRINYA SAAT INI (globalKey)
-      const builderOutputMeta = val.content.getMetadata({
+      const builderOutputMeta = builderOutput.getMetadata({
         scopeId: tree.scope,
         parentKey: effectiveGlobalKey // 🔗 Ikat tali pusar bapak komponen pintar ke arah dirinya saat ini!
       });

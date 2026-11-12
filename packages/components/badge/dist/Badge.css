@@ -4,38 +4,54 @@
    the `--app-*` tokens so every theme can retune it without touching this file.
    ========================================================================== */
 
+/* Component layer: declared once per document, each token deriving from an
+   app token. `[data-theme]` is included because a theme puts `--app-*` on the
+   shell element and a custom property is substituted where it is declared. */
+:root,
+[data-theme] {
+  --badge-gap: var(--app-margin-component, 0.85rem);
+  --badge-padding: var(--app-padding-component, 1rem);
+  --badge-radius: var(--app-component-border-radius, 1rem);
+  --badge-background: var(--app-surface-background-color, rgba(255, 255, 255, 0.82));
+  --badge-border-color: var(--app-border-color, rgba(168, 137, 102, 0.28));
+  --badge-label-color: var(--app-text-heading-color, #1a140e);
+  --badge-text-color: var(--app-text-accent-color, #6e5f51);
+  --badge-accent-color: var(--app-primary-color, darkgoldenrod);
+  --badge-shadow: var(--app-shadow-soft, 0 12px 35px -8px rgba(92, 60, 20, 0.08));
+}
+
 .badge-widget {
   display: block;
 }
 
 .badge {
   display: grid;
-  gap: var(--app-margin-component);
+  gap: var(--badge-gap);
 }
 
 .badge-item {
   display: grid;
   gap: 0.25rem;
-  padding: var(--app-padding-component);
-  background: var(--app-surface-background-color);
-  border: 1px solid var(--app-border-color);
-  border-radius: var(--app-component-border-radius);
+  padding: var(--badge-padding);
+  background: var(--badge-background);
+  border: 1px solid var(--badge-border-color);
+  border-radius: var(--badge-radius);
 }
 
 .badge-label {
   font-weight: 700;
-  color: var(--app-text-heading-color);
+  color: var(--badge-label-color);
 }
 
 .badge-desc {
   margin: 0;
   font-size: 0.925rem;
   line-height: 1.6;
-  color: var(--app-text-accent-color);
+  color: var(--badge-text-color);
 }
 
 /* Set from template() when config.emphasis is true. */
 .badge-widget.is-emphasis .badge-item {
-  border-color: var(--app-primary-color);
-  box-shadow: var(--app-shadow-soft);
+  border-color: var(--badge-accent-color);
+  box-shadow: var(--badge-shadow);
 }

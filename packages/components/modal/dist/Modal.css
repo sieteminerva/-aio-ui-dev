@@ -1,4 +1,25 @@
-/* Dialog */
+/* Dialog
+
+   Rooted at `.dialog` (the overlay) with `.modal` as the sheet inside it. The sheet used to
+   read seven names that no package declares (`--padding-layout`, `--padding-component`,
+   `--border-soft`, `--radius-component`, `--page-bg`, `--shadow-soft`, `--text-heading`),
+   so its padding, border, radius, background, shadow and title colour were all
+   guaranteed-invalid: the dialog rendered as bare text. Every one now derives from the app
+   layer. */
+
+:root,
+[data-theme] {
+  --modal-overlay-padding: var(--app-padding-layout, clamp(1.25rem, 3vw, 2.5rem));
+  --modal-box-padding: calc(var(--app-padding-component, 1rem) * 2);
+  --modal-border-color: var(--app-border-color, rgba(168, 137, 102, 0.28));
+  --modal-border-radius: var(--app-component-border-radius, 1rem);
+  --modal-surface: var(--app-surface-strong, #ffffff);
+  --modal-shadow: var(--app-shadow-soft, 0 12px 35px -8px rgba(92, 60, 20, 0.08));
+  --modal-title-color: var(--app-text-heading-color, #1a140e);
+  --modal-close-color: var(--app-status-error, #ff114d);
+  --modal-scrollbar-thumb: var(--app-border-color, #e0e1e2);
+}
+
 .dialog {
   position: fixed;
   top: 0;
@@ -10,7 +31,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--padding-layout);
+  padding: var(--modal-overlay-padding);
 
   background: rgba(31, 20, 49, 0.85);
   /* backdrop-filter: blur(6px);
@@ -30,13 +51,13 @@
   max-height: 90vh;
   overflow-y: auto;
 
-  padding: calc(var(--padding-component) * 2);
-  border: 1px solid var(--border-soft);
-  border-radius: var(--radius-component);
-  background: var(--page-bg);
-  box-shadow: var(--shadow-soft);
+  padding: var(--modal-box-padding);
+  border: 1px solid var(--modal-border-color);
+  border-radius: var(--modal-border-radius);
+  background: var(--modal-surface);
+  box-shadow: var(--modal-shadow);
 
-  scrollbar-color: var(--primary-light-color) transparent;
+  scrollbar-color: var(--modal-scrollbar-thumb) transparent;
   scrollbar-width: thin;
 }
 
@@ -57,7 +78,7 @@
 
 .modal .title {
   margin: 0;
-  color: var(--text-heading);
+  color: var(--modal-title-color);
   font-size: 1.2rem;
 }
 
@@ -67,7 +88,7 @@
   height: 2.3rem;
   border-radius: 999px;
   background: rgba(91, 63, 134, 0.1);
-  color: red;
+  color: var(--modal-close-color);
   font-size: 1.42rem;
   border: none;
   cursor: pointer;

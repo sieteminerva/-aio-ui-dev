@@ -1,8 +1,10 @@
-:root {
-  --allowed-color: rgba(21, 179, 60, 0.658);
-  --unallowed-color: rgba(220, 20, 60, 0.486);
-  --warning-color: rgba(236, 186, 20, 0.753);
-  --editing-color: rgba(33, 133, 208, 0.854);
+:root,
+[data-theme] {
+  /* solid: used for text, icons and borders; the *-fill pair stays available
+     for a background wash */
+  --input-file-allowed-color: var(--app-status-success, rgba(21, 179, 60, 0.658));
+  --input-file-unallowed-color: var(--app-status-error-fill, rgba(220, 20, 60, 0.486));
+  --input-file-warning-color: var(--app-status-warning, rgba(236, 186, 20, 0.753));
 }
 
 .file {
@@ -12,33 +14,33 @@
   }
 
   & .allowed i {
-    color: var(--allowed-color);
+    color: var(--input-file-allowed-color);
   }
 
   & .message.allowed {
-    color: var(--allowed-color);
+    color: var(--input-file-allowed-color);
   }
 
   & .label.allowed {
     color: var(--input-text-color);
-    background-color: var(--allowed-color);
+    background-color: var(--input-file-allowed-color);
   }
 
   & .unallowed i {
-    color: var(--unallowed-color);
+    color: var(--input-file-unallowed-color);
   }
 
   & .message.unallowed {
-    color: var(--unallowed-color);
+    color: var(--input-file-unallowed-color);
   }
 
   & .label.unallowed {
     color: var(--input-text-color);
-    background-color: var(--unallowed-color);
+    background-color: var(--input-file-unallowed-color);
   }
 
   & .warning i {
-    color: var(--warning-color);
+    color: var(--input-file-warning-color);
   }
 
   & .item {
@@ -51,11 +53,11 @@
       background: color-mix(in srgb, var(--input-primary-color) 100%, black 50%);
     }
     &:has(.unallowed) .filesize {
-      background-color: var(--unallowed-color) !important;
+      background-color: var(--input-file-unallowed-color) !important;
     }
 
     &:has(.warning) .label.filesize {
-      background-color: var(--warning-color) !important;
+      background-color: var(--input-file-warning-color) !important;
     }
 
     & .thumbnail.image {
@@ -68,8 +70,8 @@
       border-radius: 5px;
       overflow: hidden;
       &.unallowed {
-        border-color: var(--unallowed-color);
-        background: var(--unallowed-color);
+        border-color: var(--input-file-unallowed-color);
+        background: var(--input-file-unallowed-color);
       }
       img {
         display: block;
@@ -86,7 +88,7 @@
         position: relative;
         object-fit: cover;
         margin-top: 1px;
-        color: var(--unallowed-color);
+        color: var(--input-file-unallowed-color);
       }
 
       &:has(> i) {
@@ -97,11 +99,11 @@
       }
 
       &:has(.unallowed) .thumbnail.image {
-        border-color: var(--unallowed-color);
+        border-color: var(--input-file-unallowed-color);
       }
 
       &:has(.warning) .thumbnail.image {
-        border-color: var(--warning-color);
+        border-color: var(--input-file-warning-color);
       }
     }
   }
@@ -117,7 +119,7 @@
   width: 16px;
   height: 16px;
   margin: 4px;
-  color: var(--unallowed-color);
+  color: var(--input-file-unallowed-color);
 }
 
 /* ================= State ================= */
@@ -153,7 +155,7 @@
       border-bottom: none;
     }
     &:last-child:hover {
-      background-color: color-mix(in srgb, var(--input-accent-color) 80%, rgb(245, 244, 244, 0.8));
+      background-color: color-mix(in srgb, var(--input-accent-color) 80%, var(--input-paper-soft));
       border-radius: 0 0 var(--input-border-radius, 0.55em) var(--input-border-radius, 0.55em);
     }
 
@@ -166,7 +168,7 @@
     }
 
     &:last-child:hover .close i {
-      background: var(--unallowed-color);
+      background: var(--input-file-unallowed-color);
     }
 
     & .content {
@@ -176,7 +178,7 @@
         font-size: var(--input-font-size);
         font-weight: 500;
         font-style: normal;
-        color: color-mix(in srgb, var(--input-accent-color) 80%, rgb(245, 244, 244) 10%);
+        color: color-mix(in srgb, var(--input-accent-color) 80%, var(--input-paper) 10%);
         & i.icon {
           margin-right: 0.25em;
         }
@@ -187,7 +189,7 @@
         font-weight: 600;
         font-style: italic;
         &.warning {
-          color: var(--warning-color);
+          color: var(--input-file-warning-color);
         }
       }
     }
@@ -206,7 +208,7 @@
       color: var(--input-text-color-light);
       &.warning {
         color: var(--input-text-color);
-        background-color: var(--warning-color);
+        background-color: var(--input-file-warning-color);
       }
     }
 
@@ -225,7 +227,7 @@
       overflow: hidden;
       &:hover {
         transform: scale(0.95);
-        border: 1px solid var(--unallowed-color);
+        border: 1px solid var(--input-file-unallowed-color);
       }
       &:active {
         transform: scale(0.98);
@@ -275,7 +277,7 @@
       position: absolute;
       bottom: 0;
       background-color: var(--input-primary-color);
-      color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
+      color: var(--input-text-on-primary);
       padding: 1px 2px;
       font-size: 0.7rem;
       font-weight: 700;
@@ -294,13 +296,13 @@
       top: 0;
       right: 0;
       transition: 100ms;
-      background-color: var(--unallowed-color);
+      background-color: var(--input-file-unallowed-color);
       visibility: hidden;
       cursor: pointer;
       padding: 0 1px;
       border-radius: 0 0.25rem 0 0;
       & i.icon {
-        color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
+        color: color-mix(in srgb, var(--input-accent-color) 15%, var(--input-paper));
         padding: 2px;
       }
     }
@@ -336,7 +338,7 @@
     flex-grow: 1;
     flex-wrap: wrap;
     padding: 0.5em;
-    color: color-mix(in srgb, var(--input-accent-color) 5%, rgb(245, 244, 244) 90%);
+    color: color-mix(in srgb, var(--input-accent-color) 5%, var(--input-paper) 90%);
     & .title {
       font-size: calc(var(--input-font-size) * 0.7);
       line-height: 1.4;
@@ -450,8 +452,8 @@
     box-shadow: 0 2px 3px 0 color-mix(in srgb, var(--input-accent-color) 30%, var(--input-primary-color) 45%);
   }
   & input[type="file"]::file-selector-button:hover {
-    color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
-    background-color: color-mix(in srgb, var(--input-primary-color) 90%, rgb(245, 244, 244, 0.8));
+    color: color-mix(in srgb, var(--input-accent-color) 15%, var(--input-paper));
+    background-color: color-mix(in srgb, var(--input-primary-color) 90%, var(--input-paper-soft));
   }
   & input[type="file"]::file-selector-button:active {
     transform: scale(0.95);

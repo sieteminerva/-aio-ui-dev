@@ -4,12 +4,29 @@
   scoped to `.accordion` so it never restyles unrelated disclosures.
 ============================================================== */
 
+/* Component layer: declared once per document, each token deriving from an
+   app token. `[data-theme]` is included because a theme puts `--app-*` on the
+   shell element and a custom property is substituted where it is declared. */
+:root,
+[data-theme] {
+  --accordion-background: var(--app-surface-background-color, rgba(255, 255, 255, 0.82));
+  --accordion-border-color: var(--app-border-color, rgba(168, 137, 102, 0.28));
+  --accordion-border-focus: var(--app-border-focus, #925408);
+  --accordion-radius: var(--app-component-border-radius, 1rem);
+  --accordion-shadow: var(--app-shadow-soft, 0 12px 35px -8px rgba(92, 60, 20, 0.08));
+  --accordion-shadow-open: var(--app-shadow-elevated, 0 20px 48px -10px rgba(92, 60, 20, 0.16));
+  --accordion-accent-color: var(--app-primary-color, darkgoldenrod);
+  --accordion-label-color: var(--app-text-heading-color, #1a140e);
+  --accordion-text-color: var(--app-text-accent-color, #6e5f51);
+  --accordion-font-size: var(--app-font-size-base, 1rem);
+}
+
 .accordion {
   & details {
-    background: var(--app-surface-background-color);
-    border: 1px solid var(--app-border-color);
-    border-radius: var(--app-component-border-radius);
-    box-shadow: var(--app-shadow-soft);
+    background: var(--accordion-background);
+    border: 1px solid var(--accordion-border-color);
+    border-radius: var(--accordion-radius);
+    box-shadow: var(--accordion-shadow);
     overflow: hidden;
     transition:
       border-color 0.2s ease,
@@ -17,12 +34,12 @@
     margin-bottom: 1em;
 
     &:hover {
-      border-color: var(--app-primary-color);
+      border-color: var(--accordion-accent-color);
     }
 
     &[open] {
-      border-color: var(--app-border-focus);
-      box-shadow: var(--app-shadow-elevated);
+      border-color: var(--accordion-border-focus);
+      box-shadow: var(--accordion-shadow-open);
 
       & summary::after {
         content: "−";
@@ -33,8 +50,8 @@
   & summary {
     padding: 1.15rem 1.4rem;
     font-weight: 600;
-    font-size: var(--app-font-size-base);
-    color: var(--app-text-heading-color);
+    font-size: var(--accordion-font-size);
+    color: var(--accordion-label-color);
     cursor: pointer;
     user-select: none;
     display: flex;
@@ -51,7 +68,7 @@
       content: "+";
       font-size: 1.4rem;
       font-weight: 400;
-      color: var(--app-primary-color);
+      color: var(--accordion-accent-color);
       transition: transform 0.25s ease;
       line-height: 1;
     }
@@ -62,8 +79,8 @@
   & p {
     padding: 0 1.4rem 1.25rem 1.4rem;
     margin: 0;
-    color: var(--app-text-accent-color);
-    font-size: var(--app-font-size-base);
+    color: var(--accordion-text-color);
+    font-size: var(--accordion-font-size);
     line-height: 1.65;
   }
 }

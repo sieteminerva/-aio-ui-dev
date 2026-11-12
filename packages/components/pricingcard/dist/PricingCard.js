@@ -35,27 +35,22 @@ export class PricingCardBuilder extends Builder {
         return this.load("@container");
     }
     /**
-     * PHASE 5: Attaches dynamic event interactions securely onto computed DOM paths.
+     * Nothing to hydrate here: a card group repeats `@card>actions` under one selector key, so
+     * `load()` would only ever answer for the last card. The click handler is bound inside
+     * `template()` on the node that actually renders the button.
      */
     initialize() {
-        const actionData = this.payload("@card>actions");
-        if (actionData && actionData.onClick) {
-            // TODO handle attach listeners
-            const buttonElement = this.load("@card>actions")?.firstChild;
-            if (buttonElement) {
-                buttonElement.addEventListener("click", actionData.onClick);
-            }
-        }
+        // intentionally empty
     }
     template(typeKey, el, payload) {
-        if (!payload)
+        if (typeKey === "@card" && !payload)
             return;
         switch (typeKey) {
             case "@card":
                 // console.log(typeKey, { payload, el })
                 const card = el.__inner ? el.__inner : el;
                 if (payload.className)
-                    el.classList.add(...payload.className.split(" "));
+                    el.classList.add(...String(payload.className).split(" "));
                 const headerText = payload.header ?? payload.title;
                 if (headerText) {
                     const header = this.render("@card>header", headerText);
@@ -67,9 +62,14 @@ export class PricingCardBuilder extends Builder {
                     const body = this.render("@card>body", bodyContent);
                     card.append(body);
                 }
-                if (payload.price) {
+                // `price: 0` is a real price (a free tier), so presence, not truthiness, decides.
+                if (payload.price !== undefined && payload.price !== null) {
                     const price = this.render("@card>price", payload.price);
-                    const actions = this.render("@card>actions", payload.className);
+                    const actions = this.render("@card>actions", {
+                        featured: payload.featured ?? String(payload.className ?? "").split(" ").includes("is-featured"),
+                        label: payload.action?.label ?? payload.label,
+                        onClick: payload.onClick,
+                    });
                     const dividerBottom = this.render("@card>divider");
                     dividerBottom.style.marginBottom = "0";
                     card.append(price, dividerBottom, actions);
@@ -103,22 +103,25 @@ export class PricingCardBuilder extends Builder {
                 break;
             case "@card>body>item":
                 // console.log(typeKey, { payload, el })
-                el.textContent = payload.title;
+                el.textContent = payload?.title ?? "";
                 if (payload && payload.className)
                     el.classList.add(payload.className);
                 break;
-            case "@card>actions":
+            case "@card>actions": {
                 // console.log(typeKey, { payload, el })
-                const featured = payload ? payload.includes("is-featured") : false;
                 const button = document.createElement("button");
                 button.type = "button";
                 button.className = "button";
-                button.textContent = "Pilih";
-                if (featured) {
+                button.textContent = payload?.label ?? "Pilih";
+                if (payload?.featured) {
                     button.classList.add("primary");
+                }
+                if (typeof payload?.onClick === "function") {
+                    button.addEventListener("click", payload.onClick);
                 }
                 el.appendChild(button);
                 break;
+            }
         }
     }
 }

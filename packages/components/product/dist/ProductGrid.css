@@ -10,10 +10,18 @@
    only component that nests it. */
 @import "./ProductCard.css";
 
+/* Component token layer for the grid shell. The cards keep their own tokens
+   (`--product-card-*`, declared in ProductCard.css) — the grid never restyles them. */
+:root,
+[data-theme] {
+  --product-grid-gap: var(--app-gap, clamp(1rem, 2.5vw, 2rem));
+  --product-grid-focus-ring: var(--app-border-focus, #925408);
+}
+
 .grid .row.full-width {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-  gap: var(--app-gap);
+  gap: var(--product-grid-gap);
   align-items: stretch;
   width: 100%;
 }
@@ -31,7 +39,7 @@
 }
 
 .grid .row.full-width > .product:focus-within {
-  outline: 2px solid var(--app-border-focus);
+  outline: 2px solid var(--product-grid-focus-ring);
   outline-offset: 2px;
 }
 

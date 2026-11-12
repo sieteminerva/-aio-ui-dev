@@ -279,6 +279,26 @@ export declare abstract class Builder<TType extends string = string, TConfig ext
     protected load(key: TType): HTMLElement | null;
     protected payload(key: TType): any;
     /**
+     * 🧩 HOST — find the receptacle element stamped for `slotKey` inside this builder's root.
+     *
+     * @param slotKey - slot name declared in this builder's config.slots.
+     * @returns receptacle element if found, or null.
+     */
+    host(slotKey: string): HTMLElement | null;
+    /**
+     * 🧩 PROJECT — explicit slot door.
+     *
+     * Mounts a child DOM node or builder into a named slot of this host builder.
+     * Replaces the slot receptacle, carries over receptacle classes and non-style
+     * attributes, and keeps track of the displaced receptacle for later `detach()`.
+     *
+     * @param slotKey - slot name declared in this builder's config.slots.
+     * @param child - child element or child Builder to project into the slot.
+     * @param payload - optional payload passed to child's initialize() if child is Builder.
+     * @returns the projected HTMLElement, or null if receptacle was not found.
+     */
+    project(slotKey: string, child: HTMLElement | Builder<any, any>, payload?: any): HTMLElement | null;
+    /**
      * 🧩 ATTACH — project ONE of this builder's keys into a slot declared by the
      * caller's config (`slots`), and wire only that key.
      *

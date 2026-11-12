@@ -108,24 +108,24 @@
 
 .field input[list].dropdown.loading ~ span.spinner {
   visibility: visible;
-  content: var(--spinner-content); /* Menggunakan aset variabel Anda */
+  content: var(--app-spinner-content); /* shared asset from variables.css */
 }
 
 /* ==========================================================================
    5. ERROR & VALIDATION STATES
    ========================================================================== */
 .field input[list].dropdown.error {
-  background-color: #fff6f6;
-  border: 1px solid #fd5b5b;
-  color: #ff93ae;
+  background-color: var(--input-error-background-color);
+  border: 1px solid var(--input-error-color);
+  color: var(--input-error-text-color);
 }
 
 .field input[list].dropdown.error::placeholder {
-  color: #ff93ae;
+  color: var(--input-error-text-color);
 }
 
 .field:has(> input[list].dropdown.error) label {
-  color: #ff114d;
+  color: var(--input-error-color);
 }
 
 /* Container untuk menampung tag-tag badge */
@@ -140,8 +140,8 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  background-color: var(--primary-light-color, #e0e1e2);
-  color: var(--primary-text-color, rgba(0, 0, 0, 0.6));
+  background-color: var(--input-tag-background);
+  color: var(--input-tag-text-color);
   font-size: 0.85rem;
   padding: 0.3em 0.7em;
   border-radius: var(--input-border-radius, 4px);
@@ -166,7 +166,7 @@
 
 .remove-tag-btn:hover {
   opacity: 1;
-  color: #fd5b5b; /* Berubah merah saat mau dihapus */
+  color: var(--input-error-color, #fd5b5b); /* Berubah merah saat mau dihapus */
 }
 
 @keyframes fadeInTag {

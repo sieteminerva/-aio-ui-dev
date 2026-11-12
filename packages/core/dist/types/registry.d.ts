@@ -49,6 +49,8 @@ export interface iBuilderRegistry {
     tab: any;
     input: iBasicInputNode;
     "product-card": iBasicNode;
+    /** The composed catalog: grid ⇄ detail, owned by `ProductBuilder`. */
+    product: iBasicNode | iBuilderContent[];
     "product-card-grid": any;
     "product-detail": any;
     "input-controls": Array<iBasicInputNode>;
@@ -58,6 +60,10 @@ export interface iBuilderRegistry {
     "editor": iBasicNode;
     "form-editor": iBasicNode;
     badge: any;
+    /** A dark panel for source text — payload `{ code, label?, language? } | { blocks }`. */
+    "code-block": any;
+    /** A Markdown document rendered to DOM — payload `{ source: string }`. */
+    markdown: any;
 }
 export type ComponentBuilderFn<Args = any> = (content: Args) => HTMLElement | null;
 export type BuilderFunctionsMap = {

@@ -88,8 +88,9 @@ function isPlainRecord(value) {
  *
  * Two shapes are recognised:
  *
- * - node trees: a `builder` field — a name, or an array of names for a node that
- *   creates those components itself (for example inside an `onCreated` hook);
+ * - node trees: a `builder` field naming **one** component — the node the renderer
+ *   builds. A route that mounts several components declares them on the registry
+ *   (`iComponentRoute` in `@aio-ui/app`), not on a node;
  * - page blocks: a `type` field paired with a table binding (`{ type: "masonry",
  *   source: "portfolio" }`). The `source` requirement keeps input descriptors out,
  *   because they also carry a `type` (`{ type: "text" }`) that is not a component.
@@ -117,11 +118,9 @@ export function collectComponentNames(source) {
         }
         const record = value;
         const declared = record.builder;
-        // `builder` is a reserved key the renderer never turns into an element, so a
-        // node can list several components it needs with `builder: ["form", "table"]`.
-        const declaredNames = typeof declared === "string"
-            ? [declared]
-            : Array.isArray(declared) ? declared.filter((entry) => typeof entry === "string") : [];
+        // `builder` names one component. Anything else is ignored, not guessed: a node is
+        // one component, and a route's component list belongs to the registry plan.
+        const declaredNames = typeof declared === "string" ? [declared] : [];
         const type = typeof record.type === "string" && "source" in record ? record.type : undefined;
         const names = type ? [...declaredNames, type] : declaredNames;
         for (const name of names) {
@@ -280,6 +279,19 @@ export class ComponentRegistry {
             }
         }
         // Ekstrak nilai yang diminta: export bernama, default, fungsi pertama, atau namespace.
+        if (DEV && jsModule && !exportName) {
+            const candidates = Object.entries(jsModule).filter(([k, v]) => {
+                if (k === "default")
+                    return false;
+                return typeof v === "function" || (v && typeof v.create === "function");
+            });
+            if (candidates.length > 1) {
+                console.warn(`[ComponentRegistry] module "${script}" exports ${candidates.length} candidates ` +
+                    `(${candidates.map(([k]) => `"${k}"`).join(", ")}), but no "export" was declared in the manifest ` +
+                    `for component "${String(componentName)}". The loader fell back to the first candidate. ` +
+                    `Declare 'export: "<name>"' in the manifest to remove ambiguity.`);
+            }
+        }
         const builderClass = !jsModule
             ? null
             : exportName
@@ -396,7 +408,7 @@ export class ComponentRegistry {
                 this._loading.add(String(name));
                 const manifest = fn((matchedData || {}));
                 if (manifest?.path || manifest?.stylesheet) {
-                    const loadedClass = await this.loadModule(manifest.path, manifest.stylesheet, name);
+                    const loadedClass = await this.loadModule(manifest.path, manifest.stylesheet, name, manifest.export);
                     if (loadedClass)
                         this._resolvedCache.set(name, loadedClass);
                 }

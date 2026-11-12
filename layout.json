@@ -61,7 +61,8 @@
       "./DomUtils": "dist/DomUtils.js",
       "./color.utils": "dist/color.utils.js",
       "./helper": "dist/helper.js",
-      "./parseTableFile": "dist/parseTableFile.js"
+      "./parseTableFile": "dist/parseTableFile.js",
+      "./Markdown": "dist/Markdown.js"
     }
   },
   "@aio-ui/accordion": {
@@ -98,6 +99,15 @@
     "subpaths": {
       ".": "dist/index.js",
       "./Carousel.css": "dist/Carousel.css"
+    }
+  },
+  "@aio-ui/code-block": {
+    "dir": "packages/components/code-block",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./CodeBlock.css": "dist/CodeBlock.css"
     }
   },
   "@aio-ui/fabmenu": {
@@ -173,6 +183,15 @@
       "./controls/module": "dist/InputControls/InputControls.InputModule.js",
       "./popover/module": "dist/Popover.InputModule.js",
       "./input.css": "dist/input.css"
+    }
+  },
+  "@aio-ui/markdown": {
+    "dir": "packages/components/markdown",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Markdown.css": "dist/Markdown.css"
     }
   },
   "@aio-ui/masonry": {

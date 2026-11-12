@@ -162,7 +162,7 @@ section:is(.article) {
     grid-template-columns: minmax(0, 1fr) var(--article-sidebar-width);
 
     & > .controls,
-    & > .row[data-slot="list"],
+    & > .row[data-view="list"],
     & > article.detail {
       grid-column: 1;
     }
@@ -177,7 +177,7 @@ section:is(.article) {
     grid-template-columns: var(--article-sidebar-width) minmax(0, 1fr);
 
     & > .controls,
-    & > .row[data-slot="list"],
+    & > .row[data-view="list"],
     & > article.detail {
       grid-column: 2;
     }
@@ -191,7 +191,7 @@ section:is(.article) {
   /* Tanpa aside → semua full-width otomatis (auto-place, 1 kolom). */
   &:not(:has(> aside.aside)) {
     & > .controls,
-    & > .row[data-slot="list"],
+    & > .row[data-view="list"],
     & > article.detail,
     & > aside.aside {
       grid-column: 1;
@@ -533,10 +533,10 @@ section:is(.article) {
 
     &:has(> aside.aside) > aside.aside,
     &:has(> aside.aside[position="left"]) > .controls,
-    &:has(> aside.aside[position="left"]) > .row[data-slot="list"],
+    &:has(> aside.aside[position="left"]) > .row[data-view="list"],
     &:has(> aside.aside[position="left"]) > article.detail,
     &:has(> aside.aside[position="right"]) > .controls,
-    &:has(> aside.aside[position="right"]) > .row[data-slot="list"],
+    &:has(> aside.aside[position="right"]) > .row[data-view="list"],
     &:has(> aside.aside[position="right"]) > article.detail {
       grid-column: 1;
     }
@@ -560,7 +560,7 @@ section:is(.article) {
     gap: var(--article-gap);
     padding: 1rem 0.75rem;
 
-    & .row[data-slot="list"] {
+    & .row[data-view="list"] {
       grid-template-columns: 1fr;
     }
 

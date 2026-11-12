@@ -71,6 +71,31 @@ export interface iAppSource {
     menu?: iBasicNode | HTMLElement | null;
     footer?: iBasicNode | HTMLElement | null;
 }
+/**
+ * What one route mounts, declared once beside the registry.
+ *
+ * This is a **preload plan**, not a dependency list on a node: `builder` on a node names
+ * the component that node *is*, and nothing else. A component that only mounts others
+ * (a page-level component composing its sub-modules) carries no `builder` and names them
+ * here instead.
+ *
+ * ```ts
+ * app.registerModule(components, [
+ *   { route: "article", components: ["article", "fab-menu"] },
+ * ]);
+ * ```
+ *
+ * Keys are normalised like `iAppSource.pages` (trim, no `#`, lower case), so
+ * `"Article"` and `"#article"` land on the same entry; repeated declarations for one route
+ * merge instead of replacing. A plan handed to any slot other than `registry` throws at
+ * registration, because resolving components is what that slot does.
+ */
+export interface iComponentRoute {
+    /** Route this plan belongs to (normalised). */
+    route: string;
+    /** Registry words the route needs preloaded. */
+    components: string[];
+}
 /** Construction options that are not content. */
 export interface iAppOptions {
     /** Mount point, resolved once at `render()`. */
@@ -211,6 +236,100 @@ export interface iPageController {
     /** May rewrite the menu node before it is rendered. Called by the app, not by the controller. */
     attachMenu?(menu: iBasicNode): iBasicNode;
 }
+/**
+ * Route definition inside a page-level component.
+ */
+export interface iPageRouteSpec {
+    /** Relative sub-path, e.g. `""` (root) or `":uid"` (parameter). */
+    path: string;
+    /** View role or slot to activate for this path, e.g. `"grid"` or `"detail"`. */
+    view: string;
+}
+/**
+ * Slot declaration in a page-level component.
+ */
+export interface iPageSlotSpec {
+    /** Name of the slot receptacle, e.g. `"grid"`, `"detail"`. */
+    slot: string;
+    /** Role or description for tooling. */
+    role?: string;
+}
+/**
+ * Data requirement descriptor for a page-level component.
+ */
+export interface iPageDataSpec {
+    /** Identifier within `ctx.data`, e.g. `"catalog"`. */
+    id: string;
+    /** Data source / table / sheet name. */
+    sheet?: string;
+    /** Static records or initial query. */
+    query?: Record<string, any>;
+}
+/**
+ * Event contract for a page-level component.
+ */
+export interface iPageEventSpec {
+    emits?: string[];
+    listens?: string[];
+}
+/**
+ * Page port handed to a page-level component controller.
+ *
+ * Shell keeps control: this grants exactly what the shell decides,
+ * without raw `history`, `fetch`, or unrestrained DOM access.
+ */
+export interface iPagePort {
+    /** Full current route id. */
+    route: string;
+    /** Sub-route path matched within the page. */
+    subPath: string;
+    /** Route params extracted from `:param` pattern. */
+    params: Record<string, string>;
+    /** Fragment / deep-link query. */
+    fragment: string;
+    /** Data loaded according to `definition.data`. */
+    data: Record<string, any>;
+    /** Navigate safely through the shell router. */
+    navigate: (route: string, fragment?: string) => void;
+    /** Build a registered component safely via the shell registry. */
+    build: (name: string, data: any) => HTMLElement;
+    /** Isolated event port scoped to this page. */
+    events: iEventPort;
+    /** Abort signal cancelled when leaving the page. */
+    signal: AbortSignal;
+}
+/**
+ * Declarative definition of a page-level component.
+ */
+export interface iPageDefinition {
+    /**
+     * Route this definition owns, e.g. `"product"`. Normalised like `iAppSource.pages` keys,
+     * so `"Product"` and `"#product"` land on the same entry.
+     */
+    route: string;
+    /**
+     * Registry word of the root builder, e.g. `"product"`. Omit it when the page tree comes
+     * from `iAppSource.pages`; then nothing is built from the definition itself.
+     */
+    builder?: string;
+    /** Sub-routes mapped to views. */
+    routes?: iPageRouteSpec[];
+    /** Slots declared by the root builder. */
+    slots?: iPageSlotSpec[];
+    /** Exclusive sub-module refs passed to the registry. */
+    modules?: any[];
+    /** External registry words to preload when entering this page. */
+    requires?: string[];
+    /** Data descriptors to resolve for this page. */
+    data?: iPageDataSpec[];
+    /** Events emitted or listened to by this page. */
+    events?: iPageEventSpec;
+    /** Optional custom controller or lifecycle hook for this page definition. */
+    controller?: new (port: iPagePort) => void | {
+        onReady?(shell: HTMLElement): void;
+        onDestroy?(): void;
+    };
+}
 /** A page controller class; the route is given at registration, not by the class. */
 export interface iPageControllerClass<C = unknown> {
     new (config: C, context: iPageContext): iPageController;
@@ -297,8 +416,9 @@ export interface iApp {
     render(): Promise<void>;
     /** Navigates to a route through the router. */
     navigate(route: string): void;
-    /** Registers a controller for a route. */
+    /** Registers a controller for a route, or registers a declarative page definition. */
     registerPage<M extends iPageControllerClass>(route: string, controller: M, config?: ConstructorParameters<M>[0]): iApp;
+    registerPage(definition: iPageDefinition): iApp;
     /** Releases modules in reverse registration order and unmounts the page. */
     destroy(): void;
 }

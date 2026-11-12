@@ -1,34 +1,69 @@
+/* ==========================================================================
+   PRODUCT CARD — one item of the product grid
+   ========================================================================== */
+/* Component token layer — `--product-card-*`, never `--product-*`: the package ships
+   three sheets (detail / grid / card) and each owns its own prefix. `ProductGrid.css`
+   imports this file but never restyles a card.
+
+   Before this layer the sheet read `--surface-main`, `--radius-image` and
+   `--accent-strong`, none of which any package declares. Those reads were
+   guaranteed-invalid, so the plate was transparent, the media corner was square, the
+   title/price inherited the body colour, and the swatch ring fell back to the legacy
+   `#00ffcc` literal. The values below are the deliberate light-palette alignment. */
+:root,
+[data-theme] {
+  /* Geometry — literals on purpose: adding the layer must not move anything. */
+  --product-card-radius: 12px;
+  --product-card-media-radius: var(--app-image-border-radius, 1.25rem);
+
+  /* Colour */
+  --product-card-surface: var(--app-surface-strong, #ffffff);
+  --product-card-border-color: var(--app-border-color, rgba(168, 137, 102, 0.28));
+  --product-card-shadow: var(--app-shadow-soft, 0 12px 35px -8px rgba(92, 60, 20, 0.08));
+  --product-card-media-surface: var(--app-surface-muted, rgba(244, 238, 226, 0.7));
+  --product-card-text-color: var(--app-text-accent-color, #6e5f51);
+
+  /* A foreground accent and an action fill are separate on purpose: a palette has to be
+     able to move the button plate without dragging the title/price colour with it. */
+  --product-card-accent-color: var(--app-accent-strong, #d9822b);
+  --product-card-action-background: var(--app-accent-strong, #d9822b);
+  --product-card-action-color: var(--app-text-on-accent, #1a140e);
+  --product-card-swatch-active-border: var(--app-text-on-primary, #ffffff);
+
+  /* Component-private: a 10% black inset ring with no app counterpart. */
+  --product-card-swatch-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
 .row.full-width:has(.product) {
   justify-content: center;
 }
+
 .product {
   display: flex;
   flex-direction: column;
-  background: var(--surface-main);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
+  background: var(--product-card-surface);
+  border: 1px solid var(--product-card-border-color);
+  border-radius: var(--product-card-radius);
   padding: 1.25rem;
   width: 100%;
   max-width: 320px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--product-card-shadow);
   position: relative;
   overflow: hidden;
 
-  /* ====================================================
-     🔮 THE HOVER BLEND MONITOR DISPLAY PIPELINE
-     ==================================================== */
+  /* Media stage — the selected variant colour is painted onto it by the builder, so this
+     value is only the pre-paint plate. */
   & .display {
     width: 100%;
     aspect-ratio: 1 / 1;
-    background-color: #f5f5f5; /* Fallback warna baju pertama */
-    border-radius: var(--radius-image);
+    background-color: var(--product-card-media-surface);
+    border-radius: var(--product-card-media-radius);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     position: relative;
 
-    /* 🟢 MAHKOTA UTAMAA TRIK JITU ANDA: Kunci perpaduan warna dan bayangan! */
     & img.product-shadow-blend {
       width: 100%;
       height: 100%;
@@ -38,7 +73,7 @@
     }
   }
 
-  /* OPTION BUBBLE COLOR SELECTORS */
+  /* Option colour selectors */
   & .option {
     display: flex;
     gap: 0.5rem;
@@ -54,7 +89,7 @@
       height: 24px;
       cursor: pointer;
       border: 2px solid transparent;
-      box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--product-card-swatch-shadow);
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       outline: none;
 
@@ -69,50 +104,52 @@
         transform: scale(1.15);
       }
 
-      /* State Terpilih: Beri cincin pembatas warna putih neon aksen yang menyala tajam */
+      /* Selected state: a light ring plus an accent halo around the swatch. */
       &.active {
-        border-color: #fff;
+        border-color: var(--product-card-swatch-active-border);
         transform: scale(1.1);
-        box-shadow: 0 0 0 2px var(--accent-strong, #00ffcc);
+        box-shadow: 0 0 0 2px var(--product-card-accent-color);
       }
     }
   }
 
-  /* CAPTION TEXT TYPOGRAPHY */
+  /* Caption */
   & .caption {
     margin-bottom: 0.75rem;
+
     & .title {
       font-size: 1.15rem;
       font-weight: 700;
-      color: var(--accent-strong);
+      color: var(--product-card-accent-color);
       margin-bottom: 0.25rem;
       letter-spacing: -0.01em;
     }
+
     & .desc {
       font-size: 0.88rem;
-      color: var(--text-muted);
+      color: var(--product-card-text-color);
       line-height: 1.4;
     }
   }
 
-  /* PRICE TAG STYLING */
+  /* Price */
   & .price {
     font-size: 1.35rem;
     font-weight: 800;
-    color: var(--accent-strong);
+    color: var(--product-card-accent-color);
     margin-bottom: 1rem;
     letter-spacing: -0.02em;
   }
 
-  /* CHECKOUT BUTTON ACTION */
+  /* Checkout action */
   & .btn-checkout {
     width: 100%;
     padding: 0.85rem;
     font-weight: 600;
     border-radius: 6px;
     cursor: pointer;
-    background: var(--accent-strong, #00ffcc);
-    color: #000;
+    background: var(--product-card-action-background);
+    color: var(--product-card-action-color);
     border: none;
     transition: all 0.2s ease;
 

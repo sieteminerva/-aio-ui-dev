@@ -3,7 +3,7 @@
  *
  * Derived from the deployed response of `GET /exec?sheetName=…`:
  * `{ success, message, data, meta }`, with `fields` intended but currently absent
- * (see `docs/API.md`). Records are already normalised server-side: keys are
+ * (see `docs/framework/API.md`). Records are already normalised server-side: keys are
  * lower-camel and dates are ISO strings.
  */
 /** Field types the CMS can emit in `fields[].type`. */

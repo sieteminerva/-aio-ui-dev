@@ -24,7 +24,7 @@
  *   know are skipped and reported, never thrown (the LITE promise).
  */
 import type { iBasicNode, iNodeContent } from "@aio-ui/core/node";
-import type { iApp, iAppConfig, iAppModuleClass, iAppSlots, iAppSlot, iAppThemeFacade, iPageBlock, iPageContent, iPageControllerClass, iPageDocument } from "./types";
+import type { iApp, iAppConfig, iAppModuleClass, iAppSlots, iAppSlot, iAppThemeFacade, iComponentRoute, iPageBlock, iPageContent, iPageControllerClass, iPageDefinition, iPageDocument } from "./types";
 /** Canonical route key: trimmed, no leading `#`, no trailing slash, lower case. */
 export declare function normalizeRoute(route: unknown, fallback?: string): string;
 /** A page document is recognised by its `blocks` list; anything else is a node tree. */
@@ -57,10 +57,10 @@ export declare class AioApp implements iApp {
     get currentRoute(): string;
     /** Root element of the mounted page, `null` before `render()`. */
     get shell(): HTMLElement | null;
-    /** Route list derived from content and controllers — what the router validates. */
+    /** Route list derived from content, controllers, and page definitions — what the router validates. */
     get routes(): string[];
-    /** Registers per-route behaviour. Registering the same route twice replaces it. */
-    registerPage<M extends iPageControllerClass>(route: string, controller: M, config?: ConstructorParameters<M>[0]): iApp;
+    /** Registers per-route behaviour or declarative page-level component definition. */
+    registerPage<M extends iPageControllerClass>(routeOrDefinition: string | iPageDefinition, controller?: M, config?: ConstructorParameters<M>[0]): iApp;
     /**
      * Registers the module that fills a slot.
      *
@@ -71,7 +71,15 @@ export declare class AioApp implements iApp {
      * app.registerModule(AppStorage, { driver });     // class + config
      * app.registerModule(components);                 // instance you already assembled
      * app.registerModule(fakeRouter, "router");       // plain object / test double
+     *
+     * // What each route builds is declared here, once, next to the registry:
+     * app.registerModule(components, [
+     *   { route: "article", components: ["article", "fab-menu"] },
+     * ]);
      * ```
+     *
+     * A component plan is an array, a slot is a string: the two cannot be confused. It
+     * belongs to the registry slot, because resolving components is what that slot does.
      *
      * Nothing is instantiated here: a class is constructed during `render()`, because a
      * module may need the route list, the restored theme or the change callback, which
@@ -80,12 +88,15 @@ export declare class AioApp implements iApp {
      *
      * @param module - Module class, or an already-built port instance/object.
      * @param config - Class: the constructor config. Instance: the slot to fill, when
-     *   the object has no `constructor.slot` (plain literal, factory result, proxy).
+     *   the object has no `constructor.slot` (plain literal, factory result, proxy), or
+     *   the per-route component plan.
      * @returns The app, for a fluent chain.
-     * @throws {Error} When called after `render()`, or when no slot can be determined.
+     * @throws {Error} When called after `render()`, when no slot can be determined, or
+     *   when a component plan is handed to a slot other than `registry`.
      */
     registerModule<M extends iAppModuleClass>(module: M, config?: ConstructorParameters<M>[0]): iApp;
     registerModule(instance: iAppSlots[iAppSlot], slot?: iAppSlot): iApp;
+    registerModule(instance: iAppSlots[iAppSlot], routes: iComponentRoute[]): iApp;
     /**
      * Resolves the container, creates the registered modules and renders the route the URL
      * already points at.

@@ -165,8 +165,8 @@
       background-color: color-mix(in srgb, var(--input-accent-color) 90%, var(--input-primary-color) 5%);
 
       &:hover {
-        color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
-        background-color: color-mix(in srgb, var(--input-accent-color) 90%, rgb(245, 244, 244, 0.8));
+        color: color-mix(in srgb, var(--input-accent-color) 15%, var(--input-paper));
+        background-color: color-mix(in srgb, var(--input-accent-color) 90%, var(--input-paper-soft));
         border: 1px solid var(--input-primary-color) !important;
       }
 
@@ -210,12 +210,12 @@ fieldset.form-group,
     display: inline-flex;
 
     & button {
-      color: #fff;
+      color: var(--input-text-on-primary);
       background-color: var(--input-primary-color);
       border-color: var(--input-primary-color);
 
       &:hover {
-        color: #fff;
+        color: var(--input-text-on-primary);
         background-color: color-mix(in srgb, var(--input-primary-color) 80%, black 20%);
       }
     }

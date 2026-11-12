@@ -69,7 +69,9 @@ export class TabBuilder extends Builder {
     template(typeKey, el, payload) {
         switch (typeKey) {
             case "@tab": {
-                el.className = `tab position-${this.config.menuPosition} ${el.className || ""}`.trim();
+                // `classList` dedupes: the selector already stamped `tab`, and string concatenation
+                // used to emit it twice (`tab position-top tab`).
+                el.classList.add("tab", `position-${this.config.menuPosition}`);
                 el.style.minHeight = this.config.minHeight;
                 if (this.config.container instanceof HTMLElement) {
                     el.id = this.config.container.id || el.id;
@@ -180,7 +182,7 @@ export class TabBuilder extends Builder {
                 else
                     el.id = `tabpanel-${rootId}-${idx}`;
                 if (item?.className)
-                    el.className = `${el.className} ${item.className}`.trim();
+                    el.classList.add(...String(item.className).split(" ").filter(Boolean));
                 el.classList.add("hidden");
                 el.style.display = "none";
                 if (!this.config.lazyload) {
@@ -216,7 +218,7 @@ export class TabBuilder extends Builder {
                 if (payload?.id)
                     el.id = payload.id;
                 if (payload?.className)
-                    el.className = `${el.className} ${payload.className}`.trim();
+                    el.classList.add(...String(payload.className).split(" ").filter(Boolean));
                 el.textContent = payload?.text || "";
                 break;
         }

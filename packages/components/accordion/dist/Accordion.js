@@ -19,15 +19,14 @@ export class AccordionBuilder extends Builder {
         this.config = this.resolveConfig(defaultConfig, config);
     }
     prepare(data, _config) {
-        const items = Array.isArray(data.content) ? data.content : [data.content];
+        const content = data?.content;
+        const items = (Array.isArray(content) ? content : [content]).filter(Boolean);
         return this.render("@accordion", items);
     }
     initialize() {
         // console.log(`[Section Runtime Active] Section DOM tree with ID successfully mounted and initialized.`);
     }
     template(typeKey, el, payload) {
-        if (!payload)
-            return;
         switch (typeKey) {
             case "@accordion":
                 // console.log(payload)
@@ -37,7 +36,9 @@ export class AccordionBuilder extends Builder {
                 }
                 break;
             case "@accordion>section":
-                // console.log(payload)
+                // The leaf cases below own the fallback copy, so only the record itself is guarded.
+                if (!payload)
+                    return;
                 const title = this.render("@accordion>section>title", payload.title);
                 const content = this.render("@accordion>section>content", payload.description);
                 el.append(title, content);

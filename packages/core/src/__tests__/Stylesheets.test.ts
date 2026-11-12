@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ensureStylesheet, isStyleInjected, styleTagId, useStylesheetAssets } from "../Stylesheets";
+import { ensureStylesheet, injectLazyCss, isStyleInjected, replaceLazyCss, styleTagId, useStylesheetAssets } from "../Stylesheets";
 
 /**
  * The stylesheet seam is what replaced `import "./X.css"` in every component.
@@ -83,4 +83,32 @@ describe("stylesheet seam", () => {
 
     expect(document.querySelector("style")?.textContent).toContain("border: 1px solid gold");
   });
+
+describe("stylesheet hot path (opt-in)", () => {
+  const SPEC = "@aio-ui/table/Table.css";
+
+  it("keeps injection lazy: a second inject never overwrites the sheet", () => {
+    injectLazyCss(CSS, SPEC);
+    injectLazyCss("/* edited */", SPEC);
+
+    expect(document.querySelectorAll("style")).toHaveLength(1);
+    expect(document.getElementById(styleTagId(SPEC))?.textContent).toBe(CSS);
+  });
+
+  it("swaps the text of an injected sheet without adding a second element", () => {
+    injectLazyCss(CSS, SPEC);
+
+    replaceLazyCss("@media all { table.table { border: 2px solid teal } }", SPEC);
+
+    expect(document.querySelectorAll("style")).toHaveLength(1);
+    expect(document.getElementById(styleTagId(SPEC))?.textContent).toContain("2px solid teal");
+  });
+
+  it("falls back to lazy injection when the sheet is not there yet", () => {
+    replaceLazyCss(CSS, SPEC);
+
+    expect(document.querySelectorAll("style")).toHaveLength(1);
+    expect(isStyleInjected(SPEC)).toBe(true);
+  });
+});
 });

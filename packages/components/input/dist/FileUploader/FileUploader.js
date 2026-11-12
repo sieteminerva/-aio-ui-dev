@@ -733,7 +733,7 @@ export class FileUploader {
             messageGroup.classList.add("message", "group");
             const filename = document.createElement("div");
             filename.classList.add("filename");
-            filename.style.color = "var(--unallowed-color)";
+            filename.style.color = "var(--input-file-unallowed-color)";
             filename.textContent = messageText;
             const info = document.createElement("div");
             info.classList.add("info", "unallowed");
@@ -751,7 +751,7 @@ export class FileUploader {
             item.classList.add("message", "unallowed", "group");
             const filename = document.createElement("div");
             filename.classList.add("filename");
-            filename.style.color = "var(--unallowed-color)";
+            filename.style.color = "var(--input-file-unallowed-color)";
             filename.insertAdjacentHTML("afterbegin", `<i class="icon file"></i> ${messageText}`);
             const info = document.createElement("div");
             info.classList.add("info", "unallowed");

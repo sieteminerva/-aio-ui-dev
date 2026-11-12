@@ -259,7 +259,8 @@
         &:open::picker(select) {
           opacity: 1;
           /* Timing buka eksplisit & deterministik (satu sumber: var popup) */
-          transition: all var(--popup-duration, 150ms) var(--popup-easing, ease) var(--dropdown-transition-delay, 30ms);
+          transition: all var(--input-popup-duration, 150ms) var(--input-popup-easing, ease)
+            var(--input-dropdown-transition-delay, 30ms);
           transform: translateY(-50%) translateX(-25%) scaleY(1) scaleX(1);
           box-shadow: 0 2px 3px 0 var(--input-primary-color);
           /* DETACHED popup: melayang bebas (bukan menempel di tepi input)
@@ -284,8 +285,8 @@
 
         & option:checked,
         &::part(selectedcontent) {
-          color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
-          background-color: color-mix(in srgb, var(--input-primary-color) 80%, rgb(245, 244, 244, 0.8));
+          color: color-mix(in srgb, var(--input-accent-color) 15%, var(--input-paper));
+          background-color: color-mix(in srgb, var(--input-primary-color) 80%, var(--input-paper-soft));
         }
       }
 
@@ -334,7 +335,7 @@
 
       border: 1px solid var(--input-primary-color);
       border-radius: var(--input-border-radius);
-      transition-delay: var(--dropdown-transition-delay, 30ms);
+      transition-delay: var(--input-dropdown-transition-delay, 30ms);
       background-color: var(--input-popover-background-color);
       backdrop-filter: blur(12px);
       color: inherit;
@@ -352,7 +353,7 @@
       &:popover-open {
         z-index: 10;
         opacity: 1;
-        transition-delay: var(--dropdown-transition-delay, 30ms);
+        transition-delay: var(--input-dropdown-transition-delay, 30ms);
         transform: translateY(-80%) translateX(0) scaleY(1) scaleX(1);
         scrollbar-width: thin;
         box-shadow: 0 2px 3px 0 var(--input-primary-color);
@@ -413,8 +414,8 @@
       & .field select:open::picker(select) {
         display: block;
         opacity: 0;
-        transform: translateY(calc(var(--popup-distance, 4px) * -1)) translateX(-25%) scaleY(0%) scaleX(99.7%);
-        transition-delay: var(--dropdown-transition-delay, 30ms);
+        transform: translateY(calc(var(--input-popup-distance, 4px) * -1)) translateX(-25%) scaleY(0%) scaleX(99.7%);
+        transition-delay: var(--input-dropdown-transition-delay, 30ms);
 
         & > .input-popover {
           &:popover-open {
@@ -499,7 +500,7 @@
 
     &::after {
       content: "";
-      mask-image: var(--spinner-content);
+      mask-image: var(--app-spinner-content);
       mask-size: contain;
       mask-repeat: no-repeat;
       mask-mode: alpha;

@@ -329,6 +329,16 @@ already provides, so their base styling stays with whoever renders them (`@aio-u
 `@aio-ui/form`, or your own CSS). What this package ships is its own contribution: the
 `loading` and `error` states, written with `--app-*` tokens and plain fallbacks.
 
+### Tokens
+
+Declared once on `:root, [data-theme]` in `id-address.css`. One token is enough, but it keeps the
+override contract: redeclare it on any ancestor to retheme the error state without touching the
+package.
+
+| Token                      | Derives from         | Used for                                          |
+| -------------------------- | -------------------- | ------------------------------------------------- |
+| `--id-address-error-color` | `--app-status-error` | Border, outline and dropdown hairline in `.error` |
+
 ---
 
 # Quick Start

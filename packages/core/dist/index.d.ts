@@ -13,7 +13,7 @@
 export { ComponentRegistry, mergeBuildConfig } from "./ComponentRegistry";
 export { DOMRenderer } from "./DOMRenderer";
 export { getBuilderAdapter, setBuilderAdapter } from "./BuilderPort";
-export { ensureStylesheet, injectLazyCss, isStyleInjected, normalizeStylesheetPath, styleTagId, useStylesheetAssets, } from "./Stylesheets";
+export { ensureStylesheet, injectLazyCss, isStyleInjected, normalizeStylesheetPath, replaceLazyCss, styleTagId, useStylesheetAssets, } from "./Stylesheets";
 export { TemplateRegistry, getTemplates, setTemplates } from "./TemplateRegistry";
 export { DEFAULT_REGISTRY_SCOPE, Registry, RegistryError, assertValidId, assertValidScope, qualifyId, splitQualifiedId, } from "./Registry/index";
 export type { iComponentAssetMaps, iComponentManifest, iComponentModuleRef, RegisterFn } from "./ComponentRegistry";

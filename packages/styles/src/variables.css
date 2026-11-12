@@ -54,16 +54,29 @@
   --app-shadow-soft: 0 12px 35px -8px rgba(92, 60, 20, 0.08);
   --app-shadow-elevated: 0 20px 48px -10px rgba(92, 60, 20, 0.16);
 
-  /* Form & Component overrides */
-  --input-primary-color: var(--app-primary-color);
-  --input-accent-color: var(--app-accent-color);
-  --input-border-color: var(--app-border-color);
-  --input-text-color: var(--app-text-color);
-  --input-label-color: var(--app-text-accent-color);
-  --input-placeholder-color: rgba(110, 95, 81, 0.55);
-  --input-background-color: transparent;
-  --input-picker-background: var(--app-surface-strong);
-  --input-popover-background-color: var(--app-surface-strong);
+  /* Status colours, symmetric across the four states:
+       <state>          solid        — text, icons, 1px borders
+       <state>-fill     translucent  — background / hover wash under light text
+     `error` additionally carries -soft (small text on a surface) and -surface
+     (a field wash); those two roles have exactly one consumer each, so the
+     other states only get them when something needs them. */
+  --app-status-error: #ff114d;
+  --app-status-error-soft: #ff93ae;
+  --app-status-error-surface: #fff6f6;
+  --app-status-error-fill: rgba(220, 20, 60, 0.486);
+  --app-status-success: #15a13b;
+  --app-status-success-fill: rgba(21, 179, 60, 0.658);
+  --app-status-warning: #b07c00;
+  --app-status-warning-fill: rgba(236, 186, 20, 0.753);
+  --app-status-info: #1a6fb5;
+  --app-status-info-fill: rgba(33, 133, 208, 0.854);
+
+  /* Foreground for text and icons that sit on a solid brand fill.
+     Picked by WCAG contrast against the fill, never by taste:
+       primary #925408 → white 6.0:1 (dark text only 3.0:1)
+       accent  #b47828 → #1a140e 4.9:1 (white 3.7:1) */
+  --app-text-on-primary: #ffffff;
+  --app-text-on-accent: #1a140e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -89,21 +102,20 @@
     --app-shadow-soft: 0 16px 40px -10px rgba(0, 0, 0, 0.55);
     --app-shadow-elevated: 0 24px 50px -8px rgba(0, 0, 0, 0.75);
 
-    /* Form & Component overrides */
-    --input-primary-color: var(--app-primary-color);
-    --input-accent-color: var(--app-accent-color);
-    --input-border-color: var(--app-border-color);
-    --input-text-color: var(--app-text-color);
-    --input-label-color: var(--app-text-accent-color);
-    --input-placeholder-color: rgba(191, 174, 160, 0.5);
-    --input-background-color: transparent;
-    --input-picker-background: var(--app-surface-strong);
-    --input-popover-background-color: var(--app-surface-strong);
+    --app-status-error: #ff5a7c;
+    --app-status-error-soft: #ffa9bd;
+    --app-status-error-surface: rgba(255, 17, 77, 0.12);
+    --app-status-error-fill: rgba(255, 90, 124, 0.42);
+    --app-status-success: #4cd964;
+    --app-status-success-fill: rgba(21, 179, 60, 0.55);
+    --app-status-warning: #f5c53d;
+    --app-status-warning-fill: rgba(236, 186, 20, 0.62);
+    --app-status-info: #4aa3e8;
+    --app-status-info-fill: rgba(33, 133, 208, 0.72);
 
-    --table-primary-color: var(--app-primary-color);
-    --table-accent-color: var(--app-accent-color);
-    --table-background-color-darken: color-mix(in srgb, var(--app-primary-color) 10%, rgb(221, 205, 65) 40%);
-    --table-background-color-darken-row: color-mix(in srgb, var(--app-accent-color) 40%, rgb(116, 117, 15) 50%);
+    /* Both brand fills are light in dark mode, so the foreground flips. */
+    --app-text-on-primary: #1a140e;
+    --app-text-on-accent: #1a140e;
   }
 }
 
@@ -128,16 +140,18 @@
   --app-shadow-soft: 0 16px 40px -10px rgba(0, 0, 0, 0.55);
   --app-shadow-elevated: 0 24px 50px -8px rgba(0, 0, 0, 0.75);
 
-  --input-primary-color: var(--app-primary-color);
-  --input-accent-color: var(--app-accent-color);
-  --input-border-color: var(--app-border-color);
-  --input-text-color: var(--app-text-color);
-  --input-label-color: var(--app-text-accent-color);
-  --input-placeholder-color: rgba(191, 174, 160, 0.5);
-  --input-background-color: transparent;
-  --input-picker-background: var(--app-surface-strong);
-  --input-popover-background-color: var(--app-surface-strong);
+  --app-status-error: #ff5a7c;
+  --app-status-error-soft: #ffa9bd;
+  --app-status-error-surface: rgba(255, 17, 77, 0.12);
+  --app-status-error-fill: rgba(255, 90, 124, 0.42);
+  --app-status-success: #4cd964;
+  --app-status-success-fill: rgba(21, 179, 60, 0.55);
+  --app-status-warning: #f5c53d;
+  --app-status-warning-fill: rgba(236, 186, 20, 0.62);
+  --app-status-info: #4aa3e8;
+  --app-status-info-fill: rgba(33, 133, 208, 0.72);
 
-  --table-primary-color: var(--app-primary-color);
-  --table-accent-color: var(--app-accent-color);
+  /* Both brand fills are light in dark mode, so the foreground flips. */
+  --app-text-on-primary: #1a140e;
+  --app-text-on-accent: #1a140e;
 }

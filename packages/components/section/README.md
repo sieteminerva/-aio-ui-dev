@@ -49,6 +49,35 @@ The second CTA is styled as secondary (outline) automatically.
 | `@section>content>actions`      | `div`     | `section-actions` |
 | `@section>content>actions>item` | `a`       | `section-cta`     |
 
+## Tokens
+
+Declared once on `:root, [data-theme]` in `Section.css`. Each derives from an app token with a
+literal fallback, so a theme retunes the app token and this sheet follows; redeclare a
+`--section-*` token on an ancestor to retheme this component alone.
+
+| Token                            | Derives from                | Used for                            |
+| -------------------------------- | --------------------------- | ----------------------------------- |
+| `--section-gap`                  | `--app-gap`                 | Grid gap                            |
+| `--section-image-radius`         | `--app-image-border-radius` | Media corner radius                 |
+| `--section-shadow`               | `--app-shadow-soft`         | Media shadow                        |
+| `--section-eyebrow-size`         | `--app-font-size-xs`        | Eyebrow size                        |
+| `--section-title-size`           | `--app-font-size-2xl`       | Title size                          |
+| `--section-title-size-compact`   | `--app-font-size-xl`        | Title size under `768px`            |
+| `--section-text-size`            | `--app-font-size-base`      | Description size                    |
+| `--section-cta-size`             | `--app-font-size-sm`        | CTA label size                      |
+| `--section-accent-color`         | `--app-primary-color`       | Eyebrow text, CTA hairline, 2nd CTA |
+| `--section-cta-background`       | `--app-primary-color`       | CTA fill                            |
+| `--section-cta-hover-background` | `--app-primary-hover`       | CTA fill on hover / focus           |
+| `--section-cta-text-color`       | `--app-text-on-primary`     | CTA label on the fill               |
+| `--section-cta-focus-ring`       | `--app-border-focus`        | Focus outline                       |
+| `--section-title-color`          | `--app-text-heading-color`  | Title text                          |
+| `--section-text-color`           | `--app-text-accent-color`   | Description text                    |
+
+`--section-accent-color` and `--section-cta-background` carry the same value on purpose: one is a
+foreground/border token, the other a fill, so a palette can move them independently. The CTA
+foreground must stay derived from `--app-text-on-primary` — it is the WCAG pick for text on the
+primary fill, not a background colour reused as ink.
+
 ## Notes
 
 - Legacy payloads carry `className: "column half"` / `"column full"` from the old flex

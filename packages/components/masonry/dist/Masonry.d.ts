@@ -47,6 +47,16 @@ export declare class MasonryBuilder extends Builder<MasonryElementType, iMasonry
     private _initPaginationTrigger;
     private _handleNextBatchTrigger;
     private _loadNextBatch;
+    /**
+     * Pins the column count to the configuration, never to how many items a filter
+     * happened to leave behind.
+     *
+     * A card is one column wide, so its size must not change when the visitor filters:
+     * clamping the count to the item total (`min(configured, itemCount)`) made a single
+     * match stretch across the whole grid, and two matches each half of it — the same
+     * card, three different sizes, depending only on how many siblings it had.
+     * The responsive clamps live in `Masonry.css`, which is where viewport width belongs.
+     */
     private _syncColumnCount;
     private _killPaginationControls;
     private _renderFilterMenu;

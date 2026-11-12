@@ -11,7 +11,9 @@ export declare class PricingCardBuilder extends Builder<PricingCardElementType, 
     constructor(config?: Partial<iPricingCardConfig>);
     prepare(data: iBasicNode, _config?: Partial<iBuilderConfig<PricingCardElementType>> | undefined): HTMLElement;
     /**
-     * PHASE 5: Attaches dynamic event interactions securely onto computed DOM paths.
+     * Nothing to hydrate here: a card group repeats `@card>actions` under one selector key, so
+     * `load()` would only ever answer for the last card. The click handler is bound inside
+     * `template()` on the node that actually renders the button.
      */
     initialize(): void;
     protected template(typeKey: PricingCardElementType, el: HTMLElement, payload: any): void;

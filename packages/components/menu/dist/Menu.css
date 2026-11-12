@@ -1,6 +1,27 @@
 /* ==========================================================================
    4. NAVIGATION SPECIFICATION (.nav Framework)
    ========================================================================== */
+
+/* Component token layer. This sheet used to read a private namespace
+   (`--surface-bg`, `--border-soft`, `--text-heading`, `--text-main`, `--text-muted`,
+   `--shadow-soft`, `--radius-component`) that no package declared, so it only
+   rendered because the host bridged those names onto the app tokens. Values here
+   are exactly that bridge, so nothing moves visually; the names are now the
+   package's own and an app overrides a menu by redeclaring `--menu-*`. */
+:root,
+[data-theme] {
+  --menu-background: var(--app-surface-background-color, #ffffff);
+  --menu-border-color: var(--app-border-color, rgba(168, 137, 102, 0.28));
+  --menu-shadow: var(--app-shadow-soft, 0 12px 35px -8px rgba(92, 60, 20, 0.08));
+  --menu-radius: var(--app-component-border-radius, 1rem);
+  /* The bridge mapped `--text-heading` to the body colour, not to
+     `--app-text-heading-color`, so the heading token keeps that value on purpose. */
+  --menu-heading-color: var(--app-text-color, #2c251e);
+  --menu-text-color: var(--app-text-color, #2c251e);
+  --menu-muted-color: var(--app-text-accent-color, #6e5f51);
+  --menu-hover-background: var(--app-surface-muted, rgba(244, 238, 226, 0.7));
+}
+
 .nav {
   position: fixed;
   top: 0;
@@ -15,16 +36,16 @@
   gap: 1rem;
   padding: 0.95rem 1.2rem;
 
-  background: var(--surface-bg);
+  background: var(--menu-background);
   backdrop-filter: blur(16px);
-  border: 1px solid var(--border-soft);
-  box-shadow: var(--shadow-soft);
-  border-radius: 0 0 var(--radius-component) var(--radius-component);
+  border: 1px solid var(--menu-border-color);
+  box-shadow: var(--menu-shadow);
+  border-radius: 0 0 var(--menu-radius) var(--menu-radius);
   transition: all 300ms ease-in;
 }
 
 .nav .brand a {
-  color: var(--text-heading);
+  color: var(--menu-heading-color);
   text-decoration: none;
   font-weight: 800;
 }
@@ -44,7 +65,7 @@
 .nav .navigations a,
 .nav .actions a {
   display: block;
-  color: var(--text-muted);
+  color: var(--menu-muted-color);
   text-decoration: none;
   font-weight: 600;
   height: 100%;
@@ -65,18 +86,18 @@
 }
 
 .nav .actions .item {
-  border-radius: var(--radius-component);
+  border-radius: var(--menu-radius);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 5px;
-  color: var(--text-main);
+  color: var(--menu-text-color);
 }
 
 .nav .actions .item:hover {
-  background-color: var(--surface-muted);
+  background-color: var(--menu-hover-background);
   transform: translateY(-1px) !important;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--menu-shadow);
   transition: all 1ms ease;
 }
 
@@ -84,7 +105,7 @@
   display: none;
   background: none;
   border: none;
-  color: var(--text-heading);
+  color: var(--menu-heading-color);
   cursor: pointer;
   padding: 0.5rem;
   margin-left: auto;
