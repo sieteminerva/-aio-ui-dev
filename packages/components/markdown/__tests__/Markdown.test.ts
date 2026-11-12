@@ -91,12 +91,12 @@ describe("MarkdownBuilder", () => {
 
   it("renders a fenced block with the code-block markup", () => {
     const root = render(["```ts", "const a = 1;", "```"].join("\n"));
-    const pre = root.querySelector("pre.code-block");
+    const pre = root.querySelector("pre.paper");
 
     expect(pre).not.toBeNull();
-    expect(pre?.querySelector("code.code-block-source")?.textContent).toBe("const a = 1;");
+    expect(pre?.querySelector("code.body")?.textContent).toBe("const a = 1;");
     expect((pre as HTMLElement | null)?.dataset.language).toBe("ts");
-    expect(root.querySelector(".code-block-label")?.textContent).toBe("ts");
+    expect(root.querySelector(".code-block .label")?.textContent).toBe("ts");
   });
 
   it("renders lists", () => {

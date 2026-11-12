@@ -49,15 +49,15 @@ A ` ```mermaid ` fence is an ordinary fenced block; highlighting is a renderer's
 | `@markdown`                     | `article`    | `markdown` — the document root    |
 | `@markdown>heading-1` … `-4`    | `h1` … `h4`  | `markdown-h1` … `markdown-h4`     |
 | `@markdown>paragraph`           | `p`          | `markdown-p`                      |
-| `@markdown>fence`               | `figure`     | `code-block-figure`               |
-| `@markdown>fence>label`         | `figcaption` | `code-block-label` (language)     |
-| `@markdown>fence>code`          | `pre`        | `code-block`                      |
-| `@markdown>fence>code>source`   | `code`       | `code-block-source`               |
+| `@markdown>fence`               | `figure`     | `code-block frame`                |
+| `@markdown>fence>label`         | `figcaption` | `label` (language)                |
+| `@markdown>fence>code`          | `pre`        | `paper`                           |
+| `@markdown>fence>code>source`   | `code`       | `body`                            |
 | `@markdown>unordered` / `>item` | `ul` / `li`  | `markdown-list` / `markdown-item` |
 | `@markdown>ordered` / `>item`   | `ol` / `li`  | `markdown-list` / `markdown-item` |
 | `@markdown>table`               | `table`      | `markdown-table`                  |
 | `@markdown>table>row`           | `tr`         | `markdown-row`                    |
-| `@markdown>table>row>head`      | `th`         | `markdown-head-cell`              |
+| `@markdown>table>row>head`      | `th`         | `markdown-head`                   |
 | `@markdown>table>row>cell`      | `td`         | `markdown-cell`                   |
 | `@markdown>quote`               | `blockquote` | `markdown-quote`                  |
 | `@markdown>quote>paragraph`     | `p`          | `markdown-p`                      |
