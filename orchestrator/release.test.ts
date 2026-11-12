@@ -13,7 +13,7 @@
  *    specifiers (`@aio-ui/core`, …); if one is missing from the import map the
  *    browser stops at the barrel even though the site "looks" generated.
  */
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -47,6 +47,39 @@ interface Registry {
 /** Aggregators whose `export *` makes the import map a closure, not a list. */
 const BARRELS = ["@aio-ui/frameworks", "@aio-ui/modules", "@aio-ui/themes"];
 
+/** The directories `scripts/release.mjs` treats as publishable sections. */
+const SECTIONS = [
+  "packages",
+  "packages/components",
+  "packages/modules",
+  "packages/themes",
+  "packages/kits",
+  "packages/utilities",
+  "packages/styles",
+];
+
+/**
+ * Every `@aio-ui/*` package the workspace declares.
+ *
+ * Derived rather than counted: a hardcoded total turns `code-block` into a failing test the
+ * day it is added, which is the opposite of what this check is for.
+ */
+function workspacePackages(): string[] {
+  const names: string[] = [];
+  for (const section of SECTIONS) {
+    const dir = join(ROOT, section);
+    if (!existsSync(dir)) continue;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const manifest = join(dir, entry.name, "package.json");
+      if (!existsSync(manifest)) continue;
+      const name = JSON.parse(readFileSync(manifest, "utf8")).name as string | undefined;
+      if (name?.startsWith("@aio-ui/")) names.push(name);
+    }
+  }
+  return names;
+}
+
 describe.skipIf(!available)("release artefacts", () => {
   const registry: Registry = JSON.parse(readFileSync(join(RELEASE, "registry.json"), "utf8"));
   const layout: PackageLayout = JSON.parse(readFileSync(join(RELEASE, "layout.json"), "utf8"));
@@ -56,7 +89,7 @@ describe.skipIf(!available)("release artefacts", () => {
   const repoPath = (url: string): string => join(ROOT, url.slice(base.length));
 
   it("describes every workspace package, barrels included", () => {
-    expect(Object.keys(registry.packages)).toHaveLength(37);
+    expect(Object.keys(registry.packages).sort()).toEqual(workspacePackages().sort());
     for (const name of BARRELS) expect(registry.packages[name], name).toBeDefined();
   });
 
@@ -78,7 +111,7 @@ describe.skipIf(!available)("release artefacts", () => {
 
   it("matches every tarball against checksums.txt", () => {
     const lines = readFileSync(join(RELEASE, "checksums.txt"), "utf8").trim().split("\n");
-    expect(lines).toHaveLength(37);
+    expect(lines).toHaveLength(Object.keys(registry.packages).length);
 
     const bad: string[] = [];
     for (const line of lines) {
