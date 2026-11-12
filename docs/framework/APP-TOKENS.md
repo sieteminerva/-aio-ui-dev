@@ -51,7 +51,8 @@ state only when something reads it (a token nobody reads is a token that rots).
 | `--app-status-info-fill`     | `rgba(33, 133, 208, 0.854)` | `rgba(33, 133, 208, 0.72)` |
 
 Consumers: `input` (`--input-error-color/-text-color/-background-color`, `--input-file-*`),
-`table` (row actions, add-button hover), `form` (spinner asset only).
+`table` (row actions, add-button hover), `form` (spinner asset only), `id-address`
+(`--id-address-error-color`).
 
 ## Foreground on a brand fill
 
@@ -66,8 +67,9 @@ readable.
 
 Consumers: `section` (`.section-cta`), `input` (`InputControls` buttons and the filesize chip,
 via `--input-text-on-primary`), `masonry` (load-more button), `tab` (the active button, via
-`--tab-active-foreground`). Both brand fills are light in dark mode, so the foreground flips
-there.
+`--tab-active-foreground`), `product` (the card's swatch ring uses `--app-text-on-primary` as the
+light ring, and `--app-text-on-accent` is the ink of the card's action fill). Both brand fills are
+light in dark mode, so the foreground flips there.
 
 ## Rest of the contract
 
@@ -79,6 +81,36 @@ there.
 | Text             | `--app-text-color`, `--app-text-accent-color`, `--app-text-heading-color`                                                                                                     |
 | Line & elevation | `--app-border-color`, `--app-border-focus`, `--app-shadow-soft`, `--app-shadow-elevated`                                                                                      |
 | Asset            | `--app-spinner-content` (inline SVG data URI, theme-independent)                                                                                                              |
+
+## Component layers (who consumes this contract)
+
+Every colour, radius and elevation a component uses comes from its own layer, declared once on
+`:root, [data-theme]` in its sheet, with an `--app-*` derivation and a literal fallback. A rule body
+outside that block must not read an `--app-*` token directly — that is what makes a component
+rethemeable without touching its CSS.
+
+| Sheet                           | Prefix                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `accordion/Accordion.css`       | `--accordion-*`                                                                |
+| `article/Article.css`           | `--article-*`                                                                  |
+| `badge/Badge.css`               | `--badge-*`                                                                    |
+| `footer/Footer.css`             | `--footer-*`                                                                   |
+| `id-address/id-address.css`     | `--id-address-*`                                                               |
+| `input/input.css`               | `--input-*` (also read by `form`, `Dropdown`, `InputControls`, `FileUploader`) |
+| `masonry/Masonry.css`           | `--masonry-*`                                                                  |
+| `menu/Menu.css`                 | `--menu-*`                                                                     |
+| `message/Message.css`           | `--toast-*` (prefix predates the package name)                                 |
+| `modeswitcher/ModeSwitcher.css` | `--mode-switcher-*`                                                            |
+| `product/ProductCard.css`       | `--product-card-*`                                                             |
+| `product/ProductDetail.css`     | `--product-detail-*`                                                           |
+| `product/ProductGrid.css`       | `--product-grid-*` (the cards keep their own)                                  |
+| `section/Section.css`           | `--section-*`                                                                  |
+| `tab/Tab.css`                   | `--tab-*`                                                                      |
+| `table/Table.css`               | `--table-*`                                                                    |
+
+Sheets with no layer of their own (`carousel`, `fabmenu`, `pricingcard`, `rating`) read no app
+token either, so there is nothing to lift. `form/Form.css` owns no layer by design: it styles form
+chrome and consumes `--input-*`.
 
 ## Rules for the generator
 
@@ -104,12 +136,20 @@ never sees them. Same rule for any future non-framework token: it lives in the g
 
 ## Known gaps (packages lane, not the generator)
 
-- `FileUploader.css` still mixes literal `rgb(245, 244, 244)` into `color-mix()`, so those tints
-  do not follow a re-themed surface.
-- Not every package has a component layer yet. Done: `input`, `article`, `message`, `table`,
-  `form`, `badge`, `accordion`, `footer`, `mode-switcher`, `tab`. Still reading raw `--app-*`:
-  `masonry`, `section`, `product/ProductDetail`, `product/ProductGrid`, `id-address`. `Menu.css`
-  reads a private vocabulary no package declares and has no layer at all.
+- Component layers are complete for every sheet that reads this contract. The last two closed in the
+  batch that added `--menu-*` and `--product-card-*`: `Menu.css` had been reading a private
+  vocabulary (`--surface-bg`, `--text-main`, …) that only the demo bridged, and `ProductCard.css`
+  read `--surface-main`, `--radius-image` and `--accent-strong`, none of which any package
+  declares — so its plate was transparent on the light demo.
+- Three raw reads still sit outside a layer block (found while writing this list, **not** fixed):
+  `input/Dropdown/Dropdown.css` takes `--app-surface-muted` and `--app-text-color` on its loading
+  row instead of an `--input-*` token, and `modal/Modal.css` takes `--app-border-color` for
+  `scrollbar-color`. `Dropdown.css` also uses `--app-spinner-content` on purpose: it is an asset
+  shared by input, form and any future list surface, so it stays in `variables.css`.
+- `rgb(245, 244, 244)` no longer appears in a live rule. `input`, `InputControls`, `FileUploader`
+  and `form` mix `--input-paper` / `--input-paper-soft` instead. These are input-private, not app
+  tokens: the value is the neutral substrate every field tint is mixed onto, and neither
+  `--app-surface-strong` (pure white) nor `--app-surface-muted` (warm translucent wash) is it.
 - Two packages used to read app names that did not exist (`--app-text-muted` in `mode-switcher`,
   `--app-error-color` in `id-address`). Both now point at real tokens; the old names relied on a
   literal fallback, so they silently ignored every theme.
