@@ -3,11 +3,13 @@
 Operational guide for the published `@aio-ui/*` packages: what is live, which repository and tag
 serve it, the commands that publish it, and the checks that must pass before anything is pushed.
 
-Last verified: **2026-11-12** — the 7 sampled CDN URLs return `200`, `@cdn` and `@<commit-sha>`
-report **39** packages, and the GitHub release holds **42** assets (39 `aio-ui-<name>-0.1.0.tgz`
-
-- `registry.json` + `layout.json` + `checksums.txt`). `registry.json` on `@v0.1.0` still reports
-  37 — jsDelivr pins a tag to a commit, see §8. Installing from a clone is §3.
+Last verified: **2026-11-13** — `v0.1.1` is the current tag: 7/7 sampled CDN URLs return `200`,
+`@v0.1.1`, `@cdn` and `@5a7fc27` all report **39** packages with an identical registry, the CDN
+`checksums.txt` is byte-identical to the local one, and the GitHub release holds **42** assets
+(39 `aio-ui-<name>-0.1.1.tgz` + `registry.json` + `layout.json` + `checksums.txt`). The `v0.1.0`
+tag stays frozen at the old 37-package commit — expected, not a defect: jsDelivr pins a served tag
+permanently, so a fix ships as a **new version** (§8). Installing from a clone is §3, the branch
+README is §2.1.
 
 ## 1. What is live
 
@@ -16,9 +18,10 @@ report **39** packages, and the GitHub release holds **42** assets (39 `aio-ui-<
 | Repository     | `https://github.com/sieteminerva/-aio-ui-dev` (public)                                          |
 | Default branch | `main` — source only; `dist/` is gitignored                                                     |
 | CDN branch     | `cdn` — orphan branch, contains the unpacked tarballs (`packages/**/dist`, CSS, `package.json`) |
-| Version tag    | `v0.1.0` — points at the `cdn` commit, **not** at `main`                                        |
-| CDN base       | `https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.0/`                                  |
-| Release assets | 42 files: 39 `aio-ui-<name>-0.1.0.tgz` + `registry.json` + `layout.json` + `checksums.txt`      |
+| Version tag    | `v0.1.1` at `5a7fc27` — points at the `cdn` commit, **not** at `main`                           |
+| CDN base       | `https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/`                                  |
+| Branch README  | `…@v0.1.1/README.md` — generated at publish time, see §2.1                                      |
+| Release assets | 42 files: 39 `aio-ui-<name>-0.1.1.tgz` + `registry.json` + `layout.json` + `checksums.txt`       |
 | Packages       | 39 (base/core/app/styles/utilities, 22 components, 6 modules, 3 themes, 3 kits)                 |
 
 Why the split: jsDelivr serves **repository files**, and `dist/` is not committed on `main`.
@@ -26,41 +29,50 @@ Why the split: jsDelivr serves **repository files**, and `dist/` is not committe
 import map works while `main` stays source-only. Release assets are for `npm i`; the CDN is for
 the browser import map.
 
-> **Measured 2026-11-12 — the table above is one release behind the workspace.** The workspace,
-> `layout.json` and the `cdn` branch all carry **39** packages (`code-block` and `markdown` were
-> added after this tag), and the GitHub release now has **42** assets. jsDelivr still answers
-> `@v0.1.0` with the older 37-package tree: it pins a tag to a commit and marks the response
-> `immutable, max-age=31536000`, so moving the tag is not visible until the cache expires.
-> `@cdn` and `@<commit-sha>` serve the 39-package tree immediately. See §8 for the fix.
+> **Resolved 2026-11-13.** `v0.1.0` was published and then force-moved; jsDelivr had already
+> pinned it, so that tag keeps serving the first commit it saw (37 packages, old `integrity`).
+> Batch 13 stopped repairing it and published `v0.1.1`. Never move a tag jsDelivr has served —
+> bump the version. `@cdn` and `@<commit-sha>` are the only refs that revalidate.
 
 ## 2. Live URLs
 
 ```text
-registry     https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.0/registry.json
-layout       https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.0/layout.json
-checksums    https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.0/checksums.txt
+registry     https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/registry.json
+layout       https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/layout.json
+checksums    https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/checksums.txt
+readme       https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/README.md
 
 # bare package root → <dir>/<entry>
-@aio-ui/frameworks   …@v0.1.0/packages/kits/frameworks/dist/index.js
-@aio-ui/form         …@v0.1.0/packages/components/form/dist/index.js
+@aio-ui/frameworks   …@v0.1.1/packages/kits/frameworks/dist/index.js
+@aio-ui/form         …@v0.1.1/packages/components/form/dist/index.js
 
 # exact export subpath → <dir>/<real file>
 @aio-ui/form/Input.FormAdapter
-    …@v0.1.0/packages/components/form/dist/Input.FormAdapter.js
+    …@v0.1.1/packages/components/form/dist/Input.FormAdapter.js
 @aio-ui/input/dropdown/module
-    …@v0.1.0/packages/components/input/dist/Dropdown/Dropdown.InputModule.js
+    …@v0.1.1/packages/components/input/dist/Dropdown/Dropdown.InputModule.js
 
 # stylesheet → dist/ (never the source root)
 @aio-ui/form/Form.css
-    …@v0.1.0/packages/components/form/dist/Form.css
+    …@v0.1.1/packages/components/form/dist/Form.css
 ```
 
 URL = `base` + `layout[pkg].dir` + the file from that package's `exports` map. Prefixes alone
 (`@aio-ui/utilities/` → `…/utilities/dist/`) cannot add `.js`; the import map therefore carries
 every exact subpath too (`emit.ts` → `createCdnResolver().exact()`).
 
-`@v0.1.0` is the tag. jsDelivr also accepts `@0.1.0` (it normalises), but generated sites always
-use the tag name recorded as `engine.resolved`.
+`@v0.1.1` is the current tag. jsDelivr also accepts `@0.1.1` (it normalises), but generated sites
+always use the tag name recorded as `engine.resolved`.
+
+### 2.1 Branch README
+
+`publish-cdn.mjs` renders `templates/cdn/README.md.tpl` into `README.md` on the `cdn` branch, so
+the published branch documents itself instead of depending on a guide that never ships there. The
+package table is generated from `registry.json` at publish time (name, directory, root entry,
+release asset), so it cannot go stale; the rest covers import-map refs, offline install from the
+release assets with the peer closure, updates, and tag immutability.
+
+Verified: `curl -sI …@v0.1.1/README.md` → `200`, body reports `Version 0.1.1` / `Packages 39`.
 
 ## 3. Installing locally (the packages are not on npm)
 
@@ -161,7 +173,7 @@ any package that did not exist before.
 
 Generated from `orchestrator/layout.json`, so it matches what the resolver and the CDN serve.
 The CDN URL of any row is the tag base + `Directory` + the file, e.g.
-`…@v0.1.0/packages/components/code-block/dist/index.js`.
+`…@v0.1.1/packages/components/code-block/dist/index.js`.
 
 | Package                    | Directory                          | Entry (`exports["."]`) | Stylesheet subpath                                                                                                                                                                                 |
 | -------------------------- | ---------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -262,8 +274,8 @@ node orchestrator/layout.mjs --out orchestrator/layout.json
 ### Step 4 — build release artefacts
 
 ```bash
-node scripts/release.mjs --version 0.1.0            # dry run: prints the target and first packages
-node scripts/release.mjs --version 0.1.0 --apply    # writes .draft/release/v0.1.0/
+node scripts/release.mjs --version 0.1.1            # dry run: prints the target and first packages
+node scripts/release.mjs --version 0.1.1 --apply    # writes .draft/release/v0.1.1/
 ```
 
 Expected output: `39 tarball(s) + registry.json + layout.json + checksums.txt`.
@@ -271,41 +283,50 @@ Expected output: `39 tarball(s) + registry.json + layout.json + checksums.txt`.
 Sanity checks:
 
 ```bash
-node -e 'const r=require("./.draft/release/v0.1.0/registry.json"); console.log(r.repository, Object.keys(r.packages).length)'
-cd .draft/release/v0.1.0 && sha256sum -c checksums.txt | grep -v ': OK$' ; cd -
+node -e 'const r=require("./.draft/release/v0.1.1/registry.json"); console.log(r.repository, Object.keys(r.packages).length)'
+cd .draft/release/v0.1.1 && sha256sum -c checksums.txt | grep -v ': OK$' ; cd -
 ```
 
-### Step 5 — publish the CDN tree and move the tag
+> A release directory that does not exist yet is normal before Step 4, but it makes
+> `orchestrator/release.test.ts` **skip its 15 contract tests** rather than fail — re-run that
+> file after Step 4 to prove the artefacts.
+
+### Step 5 — publish the CDN tree and the tag
 
 ```bash
 node scripts/publish-cdn.mjs            # dry run: assembles .draft/cdn-tree and stops
-node scripts/publish-cdn.mjs --apply    # commit on `cdn`, move tag, push branch + tag
+node scripts/publish-cdn.mjs --apply    # commit on `cdn`, tag, push branch + tag
 ```
 
 What it does:
 
 1. unpacks every tarball into `.draft/cdn-tree/<package dir>` (exactly what `npm i` gets);
 2. copies `registry.json`, `layout.json`, `checksums.txt` to the tree root;
-3. creates/refreshes the orphan `cdn` branch in a temporary worktree;
-4. commits, moves tag `v<version>` onto that commit, force-pushes `cdn` and the tag.
+3. renders `README.md` from `templates/cdn/README.md.tpl` (version, tag, package table from
+   `registry.json`);
+4. creates/refreshes the orphan `cdn` branch in a temporary worktree;
+5. commits, moves tag `v<version>` onto that commit, force-pushes `cdn` and the tag.
 
-> Moving a published tag is acceptable for **pre-releases**. For an official release, bump the
-> version (`node scripts/version.mjs --apply --version 0.1.1`) and publish a new tag instead.
+> **Never re-move a tag jsDelivr already served.** It pins the tag to the first commit it saw
+> (`immutable, max-age=31536000`) and ignores purges, so the ref would report a new commit while
+> the CDN kept answering the old files. Re-publishing the same version is only safe before the
+> first probe; after that, bump (`node scripts/version.mjs --apply --version 0.1.2`) and push a
+> new tag. This is how `v0.1.1` came to exist.
 
 ### Step 6 — create/refresh the GitHub release and upload assets
 
 The CDN does not need the assets, but `npm i` and the generator do. Use the GitHub UI or CLI:
 
 ```bash
-gh release create v0.1.0 .draft/release/v0.1.0/* \
-  --prerelease --title "v0.1.0 (pre-release)" \
-  --notes "Build-free artefacts for @aio-ui 0.1.0"
+gh release create v0.1.1 .draft/release/v0.1.1/* \
+  --prerelease --title "v0.1.1 (pre-release)" \
+  --notes "Build-free artefacts for @aio-ui 0.1.1"
 ```
 
-Web UI equivalent: **Releases → Draft a new release → tag `v0.1.0` → attach all 42 files →
-pre-release**.
+Web UI equivalent: **Releases → Draft a new release → tag `v0.1.1` → attach all 42 files →
+pre-release**. A new version gets a **new** release; the `v0.1.0` release keeps its 42 assets.
 
-Replacing assets for an existing release: delete the old assets first (uploading the same name
+Refreshing assets of an *existing* release: delete the old assets first (uploading the same name
 returns `422 already_exists`), then upload the new set. With the REST API:
 
 ```bash
@@ -317,7 +338,7 @@ curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
 ### Step 7 — purge and verify jsDelivr
 
 ```bash
-curl -s "https://purge.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.0/registry.json" > /dev/null
+curl -s "https://purge.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/registry.json" > /dev/null
 sleep 3
 
 for u in registry.json \
@@ -327,7 +348,7 @@ for u in registry.json \
   packages/components/input/dist/Dropdown/Dropdown.InputModule.js \
   packages/modules/animations/dist/Animations.css \
   packages/components/form/dist/Form.css; do
-  printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.0/$u")" "$u"
+  printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/$u")" "$u"
 done
 ```
 
@@ -338,7 +359,7 @@ Every line must be `200`.
 Generate copies whose import map points at the published tag, then serve the files locally:
 
 ```bash
-SMOKE_BASE=https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.0/ \
+SMOKE_BASE=https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/ \
   npx vitest run orchestrator/release.test.ts
 
 node .draft/smoke/serve.mjs 5300
@@ -354,7 +375,7 @@ hosts are `div#masonry` / `div#carousel` (no custom elements); console has no er
 
 ```bash
 git add -A
-git commit -m "chore(release): v0.1.0"
+git commit -m "chore(release): v0.1.1"
 git push origin main
 ```
 
@@ -362,20 +383,20 @@ Never push `main` to the old `rajutan` remote.
 
 ## 6. Updating an existing version vs a new version
 
-| Situation                                 | Action                                                                                   |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Same version, rebuilt bytes (pre-release) | Steps 2–8 with the same `--version`; `publish-cdn` moves the tag; replace release assets |
-| New version                               | `node scripts/version.mjs --apply --version 0.1.1` → steps 2–8 with the new number       |
-| Only docs/scripts changed                 | Normal commit to `main`; no CDN work                                                     |
-| A site must stay on the old engine        | Do nothing — presets pin `engine.resolved`; regeneration is explicit                     |
+| Situation                                 | Action                                                                                    |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Same version, bytes not served yet        | Steps 2–8 with the same `--version`; safe only **before** the first probe of the new tag   |
+| New version                               | `node scripts/version.mjs --apply --version 0.1.2` → steps 2–8 with the new number        |
+| Only docs/scripts changed                 | Normal commit to `main`; no CDN work                                                      |
+| A site must stay on the old engine        | Do nothing — presets pin `engine.resolved`; regeneration is explicit                      |
 
 ## 7. Rollback
 
-- **Restore an earlier CDN tree:** move the tag back to the previous `cdn` commit and force-push,
-  then purge jsDelivr.
+- **Restore an earlier CDN tree:** move the `cdn` **branch** back to the previous commit. The tag
+  cannot be repaired once jsDelivr has served it — publish a new version instead.
   ```bash
   git push origin <old-cdn-commit>:refs/heads/cdn --force
-  git push origin <old-cdn-commit>:refs/tags/v0.1.0 --force
+  curl -s "https://purge.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@cdn/registry.json" > /dev/null
   ```
 - **Remove local artefacts:** `rm -rf .draft/release .draft/cdn-tree .draft/cdn-worktree`.
 - **Undo a version bump:** `git restore packages package.json package-lock.json`.
@@ -385,14 +406,15 @@ Never push `main` to the old `rajutan` remote.
 
 | Symptom                                           | Cause                                                                                                         | Fix                                                                                                                                                                         |
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Every package URL 404s, `registry.json` 404s      | Tag still points at `main` (no `dist`)                                                                        | Run `publish-cdn.mjs --apply`, purge                                                                                                                                        |
+| Every package URL 404s, `registry.json` 404s      | Tag still points at `main` (no `dist`)                                                                        | Run `publish-cdn.mjs --apply`                                                                                                                                                |
 | One subpath 404s (`dropdown/module`)              | URL derived from the specifier                                                                                | Check `layout.subpaths`; resolver must use `exports`                                                                                                                        |
 | A stylesheet 404s at the package root             | CSS export names a source file                                                                                | Prefer `dist/` for CSS in `release.mjs` / `layout.mjs`                                                                                                                      |
 | Browser ignores the import map                    | Missing `"imports"` wrapper                                                                                   | `runtime.ts` serialises `site.importMap`                                                                                                                                    |
 | `tar (child): Cannot connect to …`                | Absolute Windows path passed to tar                                                                           | Use repo-relative paths (the script already does)                                                                                                                           |
 | `422 already_exists` on upload                    | Asset name already present                                                                                    | Delete the old asset, then upload                                                                                                                                           |
 | jsDelivr keeps serving the old bytes              | CDN cache                                                                                                     | Purge the URL(s), wait a few seconds, hard-reload                                                                                                                           |
-| Moved the tag, jsDelivr still serves the old tree | jsDelivr pins a tag to a commit (`immutable, max-age=31536000`); purge reports `finished` and changes nothing | Publish a **new version/tag** (`version.mjs --apply --version 0.1.1`) or point `registry.base` at `@<commit-sha>` / `@cdn`. Never force-move a tag jsDelivr already serves. |
+| `@cdn` still reports the previous version         | Branch refs are cached `s-maxage=43200` (12 h); a wildcard purge does not always evict the file               | Purge the **exact** file (`…@cdn/registry.json`), then re-probe                                                                                                              |
+| Moved the tag, jsDelivr still serves the old tree | jsDelivr pins a tag to a commit (`immutable, max-age=31536000`); purge reports `finished` and changes nothing | Closed in `v0.1.1`: never force-move a served tag. Publish a **new version** (`version.mjs --apply --version 0.1.2`) or point `registry.base` at `@<commit-sha>` / `@cdn`.       |
 | Old registry + new assets (`integrity` mismatch)  | A tag's registry was cached before the assets were replaced                                                   | Treat that tag as unusable; publish a new version                                                                                                                           |
 | jsDelivr 404s the whole repo                      | Repository is private or tag missing                                                                          | Make it public / check `git ls-remote`                                                                                                                                      |
 
@@ -407,6 +429,7 @@ Never push `main` to the old `rajutan` remote.
 [ ] release.mjs --apply → 39 tarballs + 3 files
 [ ] checksums 39/39 OK
 [ ] publish-cdn.mjs --apply → cdn branch + tag pushed
+[ ] branch README published (curl …/@v<version>/README.md → 200, correct version)
 [ ] release assets uploaded (42 files) and marked pre-release
 [ ] purge + all CDN URLs 200
 [ ] real-CDN smoke: store form + gallery masonry/carousel, console clean
@@ -416,7 +439,7 @@ Never push `main` to the old `rajutan` remote.
 ## 10. References
 
 - `scripts/release.mjs` — tarballs, `registry.json`, `layout.json`, `checksums.txt`
-- `scripts/publish-cdn.mjs` — orphan `cdn` branch, tag move, push
+- `scripts/publish-cdn.mjs` — orphan `cdn` branch, branch README, tag, push
 - `orchestrator/emit.ts` — `createCdnResolver()`: base + `dir` + `exports` subpaths + prefixes
 - `orchestrator/release.test.ts` — counts, checksums, every URL on disk, import-map closure
 - `orchestrator/prompt.content.md` — agent handoff
