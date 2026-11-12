@@ -170,8 +170,12 @@ for (const entry of packages) {
   // workspace path (it contains spaces) on every platform.
   // The `./` prefix is required: npm parses a two-segment relative path
   // (`packages/app`) as GitHub shorthand `owner/repo` and packs over ssh
-  // instead of the local directory.
-  const output = execSync(`npm pack "./${entry.dir}" --pack-destination "${outDir}" --json`, { cwd: ROOT, encoding: "utf8" });
+  // instead of the local directory. `dir` is relative to ROOT, never absolute —
+  // "./C:\\…" is read as a path inside the cwd and resolves to nothing.
+  const output = execSync(`npm pack "./${dir}" --pack-destination "${outDir}" --json`, {
+    cwd: ROOT,
+    encoding: "utf8",
+  });
   const [packed] = JSON.parse(output);
 
   const tarballPath = join(outDir, packed.filename);
