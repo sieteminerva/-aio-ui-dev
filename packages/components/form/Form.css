@@ -285,8 +285,8 @@
 
         & option:checked,
         &::part(selectedcontent) {
-          color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
-          background-color: color-mix(in srgb, var(--input-primary-color) 80%, rgb(245, 244, 244, 0.8));
+          color: color-mix(in srgb, var(--input-accent-color) 15%, var(--input-paper));
+          background-color: color-mix(in srgb, var(--input-primary-color) 80%, var(--input-paper-soft));
         }
       }
 

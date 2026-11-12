@@ -25,6 +25,13 @@
   --input-primary-color: var(--app-primary-color, darkgoldenrod);
   --input-accent-color: var(--app-accent-color, rgba(184, 135, 11, 0.384));
 
+  /* The neutral paper every field tint is mixed onto. Not an app surface: --app-surface-strong
+     is pure white and --app-surface-muted is a warm translucent wash, so neither is this value.
+     `-soft` is the same paper at 80% alpha — the alpha sites inside color-mix() blend against
+     it, so it is a separate token, not the same colour rounded. */
+  --input-paper: rgb(245, 244, 244);
+  --input-paper-soft: rgb(245, 244, 244, 0.8);
+
   --input-border-color: var(--input-primary-color);
 
   --input-text-color: color-mix(in srgb, var(--input-accent-color) 30%, var(--input-primary-color) 45%);
@@ -393,8 +400,8 @@ select:focus-visible {
   & select option:checked,
   & select::part(selectedcontent),
   & .dropdown[data-style] > .menu > .item:is(.selected) {
-    color: color-mix(in srgb, var(--input-accent-color) 15%, rgb(245, 244, 244));
-    background-color: color-mix(in srgb, var(--input-primary-color) 80%, rgb(245, 244, 244, 0.8));
+    color: color-mix(in srgb, var(--input-accent-color) 15%, var(--input-paper));
+    background-color: color-mix(in srgb, var(--input-primary-color) 80%, var(--input-paper-soft));
   }
 
   & .dropdown[data-style] > .menu > .item {
