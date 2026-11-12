@@ -79,7 +79,7 @@ const componentRoutes: iComponentRoute[] = [
   { route: 'getting-started', components: ['menu', 'code-block', 'markdown', 'fab-menu'] },
   // The modules docs reuse the same `menu` builder for their sidebar.
   { route: 'modules', components: ['menu', 'markdown', 'fab-menu'] },
-  { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'menu', 'fab-menu'] },
+  { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'menu', 'fab-menu', 'code-block', 'markdown'] },
   { route: 'product', components: ['product', 'menu', 'fab-menu'] },
   { route: 'article', components: ['article', 'menu', 'fab-menu'] },
   { route: 'form', components: ['form', 'menu', 'fab-menu'] },

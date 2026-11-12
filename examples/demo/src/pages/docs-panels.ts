@@ -11,8 +11,28 @@
 import { apiOf, entryHash, tierGroups, usageOf, variantsOf } from "../docs";
 import { mountInto, node } from "../dom";
 import type { iDemoEntry } from "../manifest";
+import { readmeFor, sectionOf } from "../readme";
+import type { iReadmeDoc } from "../readme";
 
 type BuildFn = (name: string, data?: any) => HTMLElement;
+
+/**
+ * One README section as Markdown, heading included.
+ *
+ * The heading travels with the body so the rendered panel keeps the document's own structure,
+ * and `null` is the signal that the README does not have this section at all.
+ */
+function sectionMarkdown(doc: iReadmeDoc, heading: string): string | null {
+  const section = sectionOf(doc, heading);
+  if (!section) return null;
+  return `## ${section.heading}\n\n${section.body}`.trim();
+}
+
+/** Render Markdown with the `markdown` builder — the only sink, never `innerHTML`. */
+function renderMarkdown(host: HTMLElement, build: BuildFn, source: string): void {
+  if (!source.trim()) return;
+  mountInto(host, build("markdown", { source }));
+}
 
 /** `path`, `stylesheet`, `builder` … as a definition list, one pair per fact. */
 function factList(fields: { label: string; value: string }[]): HTMLElement {
@@ -78,12 +98,30 @@ export function previewPanel(entry: iDemoEntry, build: BuildFn): HTMLElement {
   return panel;
 }
 
-/** Cara Penggunaan: one summary line, the four facts, the snippet, then the limits. */
+/**
+ * Usage: the measured facts, then the package's own `## Payload` documentation.
+ *
+ * The prose is not written here — it is the README, split by heading and rendered by the markdown
+ * builder. When the package has no README, or none of the sections this tab wants, the panel falls
+ * back to the hand-written view-model instead of rendering an empty tab.
+ */
 export function usagePanel(entry: iDemoEntry, build: BuildFn): HTMLElement {
   const view = usageOf(entry);
   const panel = node("div", "usage-panel");
 
   panel.append(node("p", "summary", view.summary), factList(view.fields));
+
+  const doc = readmeFor(entry.path);
+  const blocks = doc
+    ? [doc.lead, sectionMarkdown(doc, "Payload"), sectionMarkdown(doc, "Supported syntax")].filter(
+      (block): block is string => Boolean(block),
+    )
+    : [];
+
+  // A README with none of these headings is still documentation: render it whole rather than
+  // showing a facts list and nothing else.
+  renderMarkdown(panel, build, blocks.length ? blocks.join("\n\n") : (doc?.text ?? ""));
+
   // The snippet is the real `code-block` component, not a hand-rolled `<pre>`: the demo
   // shows the framework by using it, and its look lives in the package, not in demo CSS.
   mountInto(panel, build("code-block", { code: view.snippet }));
@@ -97,8 +135,13 @@ export function usagePanel(entry: iDemoEntry, build: BuildFn): HTMLElement {
   return panel;
 }
 
-/** API: the table row plus every config key with the value this demo really passes. */
-export function apiPanel(entry: iDemoEntry): HTMLElement {
+/**
+ * API: the manifest's measured tables, then the README's contract sections.
+ *
+ * `Config` / `Nodes` / `Tokens` / `Wiring checklist` are read from the package README, never
+ * restated, so a component change updates the page by updating its README.
+ */
+export function apiPanel(entry: iDemoEntry, build: BuildFn): HTMLElement {
   const view = apiOf(entry);
   const panel = node("div", "api-panel");
 
@@ -121,6 +164,15 @@ export function apiPanel(entry: iDemoEntry): HTMLElement {
       config.append(line);
     }
     panel.append(node("h4", undefined, "config"), config);
+  }
+
+  const doc = readmeFor(entry.path);
+  if (doc) {
+    const blocks = ["Config", "Nodes", "Tokens", "Wiring checklist"]
+      .map((heading) => sectionMarkdown(doc, heading))
+      .filter((block): block is string => Boolean(block));
+
+    renderMarkdown(panel, build, blocks.length ? blocks.join("\n\n") : doc.text);
   }
 
   return panel;

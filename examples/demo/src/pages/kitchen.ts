@@ -38,7 +38,7 @@ function mountMain(host: HTMLElement, entry: iDemoEntry, build: BuildFn): void {
             },
           },
           { id: "panel-usage", content: usagePanel(entry, build) },
-          { id: "panel-api", content: apiPanel(entry) },
+          { id: "panel-api", content: apiPanel(entry, build) },
         ],
       },
       config: { menuPosition: "top" },
