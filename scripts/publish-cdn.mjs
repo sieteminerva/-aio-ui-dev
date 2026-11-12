@@ -10,6 +10,10 @@
  *   <repo>/packages/components/form/dist/Form.js
  *   <repo>/packages/styles/src/index.css
  *   <repo>/registry.json  layout.json  checksums.txt
+ *   <repo>/README.md
+ *
+ * The README is rendered from `templates/cdn/README.md.tpl` with the version, the tag and a
+ * package table generated from registry.json, so the published branch documents itself.
  *
  * It then moves the version tag onto that commit. The release assets stay
  * attached to the tag name, and `registry.base` keeps pointing at `@v<version>/`.
@@ -20,7 +24,7 @@
  *   node scripts/publish-cdn.mjs --apply --remote origin
  */
 import { execSync } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const ROOT = process.cwd();
@@ -66,6 +70,31 @@ for (const [name, entry] of Object.entries(registry.packages)) {
 for (const file of ["registry.json", "layout.json", "checksums.txt"]) {
   copyFileSync(join(releaseDir, file), join(treeDir, file));
 }
+
+// ---- 1b. Render the branch README from the template + registry -------------
+const README_TEMPLATE = join(ROOT, "templates", "cdn", "README.md.tpl");
+
+/** One markdown row per package: name, directory, root entry, release asset. */
+function packageRow([name, entry]) {
+  const root = entry.subpaths?.["."];
+  const asset = entry.tarball.split("/").pop();
+  return `| \`${name}\` | \`${entry.dir}\` | ${root ? `\`${root}\`` : "— (CSS only)"} | \`${asset}\` |`;
+}
+
+function renderReadme() {
+  const tokens = {
+    __VERSION__: version,
+    __TAG__: tag,
+    __REPOSITORY__: registry.repository,
+    __PACKAGE_COUNT__: String(Object.keys(registry.packages).length),
+    __GENERATED_AT__: String(registry.generatedAt ?? "").slice(0, 10),
+    __PACKAGE_TABLE__: Object.entries(registry.packages).map(packageRow).join("\n"),
+  };
+  const template = readFileSync(README_TEMPLATE, "utf8");
+  return template.replace(/__[A-Z_]+__/g, (token) => tokens[token] ?? token);
+}
+
+writeFileSync(join(treeDir, "README.md"), renderReadme());
 console.log(`[cdn] assembled ${Object.keys(registry.packages).length} packages for ${tag}`);
 
 if (!apply) {
