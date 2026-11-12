@@ -34,6 +34,14 @@ None — a data module renders nothing.
 
 None.
 
+## Methods
+
+| Method                 | Meaning                                               |
+| ---------------------- | ----------------------------------------------------- |
+| `get(query)`           | `GET` for one query; resolves with the whole envelope |
+| `post(query, payload)` | `POST` the payload; resolves with the same envelope   |
+| `destroy()`            | Aborts in-flight requests; the app calls it for you   |
+
 ## Wiring checklist
 
 1. `.registerModule(HttpService, { url: "/api" })` for a real backend.

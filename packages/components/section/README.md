@@ -26,7 +26,16 @@ A column whose own fields look like a block is treated as one block, so
 `content: [{ eyebrow, title, description, imageUrl, actions }]` also works.
 `normalizeColumns()` is the only place that decides this.
 
-## Actions
+## Config
+
+| Option      | Default      | Meaning                                           |
+| ----------- | ------------ | ------------------------------------------------- |
+| `className` | —            | Extra class added to the root, e.g. `"container"` |
+| `selectors` | see defaults | Per-key tag/class override                        |
+| `themeId`   | `"default"`  | Passed through to the theme                       |
+| `namespace` | `null`       | Prefix for generated ids                          |
+
+### Actions
 
 | Field     | Meaning                                                            |
 | --------- | ------------------------------------------------------------------ |
@@ -78,7 +87,14 @@ foreground/border token, the other a fill, so a palette can move them independen
 foreground must stay derived from `--app-text-on-primary` — it is the WCAG pick for text on the
 primary fill, not a background colour reused as ink.
 
-## Notes
+## Wiring checklist
+
+1. Add `"section"` to `iBuilderRegistry` in `packages/core/src/types/registry.ts`.
+2. Add a loader for `@aio-ui/section/Section` to the host's asset map.
+3. Add a `stylesheet` loader for `@aio-ui/section/Section.css`.
+4. List it in the host's route plan: `registerModule(components, [{ route, components: ["section"] }])`.
+
+## Appendix
 
 - Legacy payloads carry `className: "column half"` / `"column full"` from the old flex
   layout system. Those classes are still applied (so you can hook them) but `flex` and

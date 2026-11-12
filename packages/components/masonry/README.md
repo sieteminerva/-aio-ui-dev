@@ -1,90 +1,94 @@
-## Dynamic Masonry Gallery Builder
+# Masonry (`@aio-ui/masonry`)
 
-A high-performance, lightweight (under 3KB), dependency-free Vanilla TypeScript/JavaScript component designed for static landing pages. It features an automated cascading masonry grid, fluid responsive category filtering with a hardware-accelerated sliding background, native progressive lazy loading, and an accessible media lightbox modal with global keyboard bindings.
+A cascading gallery: one grid whose column count comes from CSS, a category filter with a sliding
+highlight, lazy images, batched paging and a keyboard-driven lightbox. `Masonry.css` ships with the
+package and the registry injects it, so the markup below is the whole contract.
 
-## Features
-
-- Zero Dependencies: Pure Vanilla TypeScript/ES6 implementation.
-- Robust Architecture: Built around strict Immutability and Data Encapsulation principles using ES6 Private Fields (#items) to prevent client-side script pollution or data bypassing.
-- Smart Category Filtering: Dynamically scans injected item data payloads, automatically isolates unique category metadata tokens, and establishes a seamless content filter flow.
-- Fluid Slider Animation: A 100% precision hardware-accelerated background tracker (translate3d) that dynamically recalculates node dimensions using offsetLeft metrics.
-- Infinite Scroll & Paged Delivery: Leverages the high-performance native browser IntersectionObserver API to progressively append asset batches smoothly without viewport-scroll lag (scroll jank).
-- Responsive Fluid Grid: Native adaptive layout rendering utilizing the CSS column-count engine.
-- Fail-safe Production Recovery: Injected fallback base64 vector engines handle server asset connection loss smoothly.
-
----
-
-## Installation & Setup
-
-1.  Copy the code into your project structure (e.g., MasonryBuilder.ts).
-2.  Implement your stylesheet rules (see Styling Requirements below).
-3.  Instantiate and run the execution lifecycles.
-
-## Basic Implementation Example
+## Payload
 
 ```ts
-import { MasonryBuilder, iSectionContent } from "./MasonryBuilder";
-const config = {
-  column: 3,
-  lazyload: true,
-  maxDisplayed: 4,
-  useLoadButton: false, // Set to true to switch from Auto-Infinite Scroll to a manual button
-  category: null, // Loads 'All' on init. Pass a string like "A" to default to a specific category
-};
-// Instantiationconst masonry = new MasonryBuilder(config);
-// Mock Data Structure Payload
-const galleryContent: iSectionContent = {
+{
   id: "marketing-gallery",
-  className: "my-custom-wrapper-style",
-  items: [
-    { image: "https://placehold.co", category: "Branding", title: "Project A", description: "Design work" },
-    { image: "https://placehold.co", category: "Web", title: "Project B" },
-    { image: "https://placehold.co", category: "Branding", title: "Project C" },
-    { image: "https://placehold.co", category: "Mobile", title: "Project D" },
+  className: "section masonry gallery",
+  content: [
+    { image: "https://…", category: "Branding", title: "Project A", description: "Design work" },
+    { image: "https://…", category: "Web", title: "Project B" },
   ],
-};
-// Render and append onto the UI DOM root
-const appContainer = document.getElementById("app");
-if (appContainer) {
-  const renderedComponent = masonry.prepare(galleryContent);
-  appContainer.appendChild(renderedComponent);
 }
 ```
 
----
+A bare array is wrapped into `{ content: […] }` automatically. The array itself is read from
+`content`, **not** from `items` — older drafts of this document showed `{ items: […] }`, which renders
+an empty grid. Each entry becomes one card; `category` feeds the filter bar, and the filter list is
+derived from the data, never declared. Items may also be pre-built `HTMLElement`s.
 
-## Developer API & Typing Specifications## Configuration Types (iMasonryConfig)
+## Config
 
-| Property      | Type              | Required    | Description                                                                                          |
-| ------------- | ----------------- | ----------- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| column        | number            | Yes         | Total structural column count target initialized on desktop views.                                   |
-| lazyload      | boolean           | Yes         | Opt-in to trigger native browser element loading="lazy" flags.                                       |
-| maxDisplayed  | number            | Yes         | Pagination limiter constraint matching the data volume chunk size to render per batch lifecycle.     |
-| container     | string            | HTMLElement | No                                                                                                   | Target boundary reference. If defined, automatically overrides creation of the fallback <section> shell. |
-| useLoadButton | boolean           | No          | Overrides automated scroll sentinel mechanics with a hardcoded interaction trigger button interface. |
-| category      | string            | null        | No                                                                                                   | Force state tracking constraints on component initialization.                                            |
-| selectors     | iMasonrySelectors | No          | Custom object dictionary to override class token outputs.                                            |
+| Option            | Default      | Meaning                                                                     |
+| ----------------- | ------------ | --------------------------------------------------------------------------- |
+| `column`          | `3`          | Column count written to `--masonry-columns`; the media queries clamp it     |
+| `lazyload`        | `true`       | Sets `loading="lazy"` on the card images                                    |
+| `maxDisplayed`    | `5`          | Items per batch; the first batch renders immediately                        |
+| `useLoadButton`   | `true`       | `true` renders the "more" button, `false` uses a scroll sentinel            |
+| `category`        | `null`       | Initial filter value                                                        |
+| `defaultCategory` | `null`       | Category highlighted on the first render; an unknown name falls back to all |
+| `container`       | `null`       | Element (or selector) used as the root instead of the generated `<section>` |
+| `loadFn`          | `null`       | `(page, category) => Promise<items>` for server-side paging                 |
+| `onScrollEnd`     | `null`       | Fired when the document is scrolled to the bottom                           |
+| `onLoadTriggered` | `null`       | Fired with the page number when a batch starts loading                      |
+| `selectors`       | see defaults | Per-key tag/class override                                                  |
+| `themeId`         | `"default"`  | Passed through to the theme                                                 |
+| `namespace`       | `null`       | Prefix for generated ids                                                    |
 
-## Data Security: Getter & Setter Pipelines
+### Data pipeline
 
-To prevent memory pollution, security leaks, or unwanted modifications from external source scripts, never mutate structural contents directly. The component provides clean, read-only data encapsulation workflows:
+Items are kept in a private field (`#items`) and the public `items` setter is the only way in: it
+validates that the value is an array, trims the entries and freezes them, so a host script cannot
+mutate rendered state behind the builder's back.
 
 ```ts
 const builder = new MasonryBuilder(config);
 builder.prepare(contentData);
-// ❌ ANTI-PATTERN: This will not impact internal application state
+// Anti-pattern: this mutates the array you were given, not the builder's copy
 builder.items.push({ image: "corrupted-payload.png" });
-// EXTERNAL STATE OVERRIDES (Safe Data Re-assignment)// When fetching clean content asynchronously from an external API, feed it directly into the setter:
-builder.items = freshlyFetchedPayloadFromAPI; // Automatically cleans, sanitizes, and freezes internal objects
+// The supported way: assign a fresh payload, it is cleaned and frozen on the way in
+builder.items = freshlyFetchedPayloadFromAPI;
 ```
 
----
+## Nodes
 
-## Styling Requirements (Crucial Notice)
+| Key                       | Default tag | Class / note                           |
+| ------------------------- | ----------- | -------------------------------------- |
+| `@container`              | `section`   | `masonry gallery` — the root           |
+| `@masonry`                | `div`       | `grid` — the column container          |
+| `@masonry>filter`         | `div`       | `filter menu`                          |
+| `@masonry>filter>item`    | `button`    | `item` — one per derived category      |
+| `@masonry>filter>slider`  | `span`      | `slider` — the sliding highlight       |
+| `@masonry>item`           | `div`       | `item fade-in` — one card              |
+| `@masonry>item>image`     | `img`       | no class; fills the card               |
+| `@masonry>item>title`     | `h3`        | `title`                                |
+| `@masonry>item>desc`      | `p`         | `desc`                                 |
+| `@masonry>item>actions`   | `div`       | `actions`                              |
+| `@masonry>spinner`        | `div`       | `spinner hidden`                       |
+| `@masonry>trigger`        | `button`    | `more` — the load button               |
+| `@masonry>sentinel`       | `div`       | `sentinel` — the observer target       |
+| `@masonry>modal`          | `div`       | `modal hidden` — the lightbox          |
+| `@masonry>modal>close`    | `i`         | `.close` wrapper, `icon close`         |
+| `@masonry>modal>next`     | `i`         | `.next` wrapper, `icon right arrow`    |
+| `@masonry>modal>previous` | `i`         | `.previous` wrapper, `icon left arrow` |
 
-⚠️ Developer Warning: The TypeScript architecture only generates layout nodes and toggles state flags (active, hidden, fade-in). If your CSS stylesheet structure is incorrect or missing, the layout, animations, and lightbox modal will break completely.
+## Tokens
 
-Ensure your global or modular CSS structure implements the following nested CSS styling structure:
+Declared once on `:root, [data-theme]` in `Masonry.css`. Each derives from an app token with a
+literal fallback, so a theme retunes the app token and this sheet follows; redeclare a
+`--masonry-*` token on an ancestor to retheme the grid alone.
+
+### Stylesheet reference
+
+The builder only emits layout nodes and toggles state flags (`active`, `hidden`, `fade-in`), so the
+box model, the column rules and the lightbox positioning all come from the sheet. The block below is
+the class structure it targets; `--init-columns` in it is an older draft — the builder writes
+`--masonry-columns`.
 
 ```css
 /* /_ Core Structural Layout Rules _/ */
@@ -252,25 +256,6 @@ Ensure your global or modular CSS structure implements the following nested CSS 
 }
 ```
 
-## Component Lifecycle Cleanup
-
-When managing multi-view setups or deleting container spaces dynamically within your SPA, prevent memory leaks by destroying reference scopes explicitly:
-
-// Triggers observer detachment, global keyboard event listener stripping, and DOM removal cleanups
-`masonry.destroy();`
-
----
-
-This documentation outlines everything your team needs to implement the gallery securely and cleanly. Is there any additional platform setup (such as Webpack, Vite, or a specific CSS library template connection) that you would like to include in this guide before sharing it with your team?
-
----
-
-## Tokens
-
-Declared once on `:root, [data-theme]` in `Masonry.css`. Each derives from an app token with a
-literal fallback, so a theme retunes the app token and this sheet follows; redeclare a
-`--masonry-*` token on an ancestor to retheme the grid alone.
-
 | Token                                         | Derives from                    | Used for                                 |
 | --------------------------------------------- | ------------------------------- | ---------------------------------------- |
 | `--masonry-card-radius`                       | `--app-image-border-radius`     | Card corner radius                       |
@@ -296,3 +281,15 @@ whenever the builder re-renders. Older drafts of this document called it `--init
 
 `--masonry-more-hover-color` used to be `var(--app-accent-accent)`, a token no sheet declares; the
 declaration was invalid at computed-value time, so the label simply inherited the body colour.
+
+## Wiring checklist
+
+1. Add `"masonry"` to `iBuilderRegistry` in `packages/core/src/types/registry.ts`.
+2. Add a loader for `@aio-ui/masonry/Masonry` to the host's asset map.
+3. Add a `stylesheet` loader for `@aio-ui/masonry/Masonry.css`.
+4. List it in the host's route plan: `registerModule(components, [{ route, components: ["masonry"] }])`.
+
+### Cleanup
+
+`destroy()` disconnects the `IntersectionObserver`, removes the global keydown listener and drops
+the lightbox, so a page that removes the gallery from the DOM has to call it to avoid a leak.

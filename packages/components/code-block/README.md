@@ -34,7 +34,7 @@ not highlight anything, it only reserves the hook a highlighter would use.
 | `namespace` | `null`       | Prefix for generated ids                                   |
 | `actions`   | `[]`         | Action buttons under every panel; empty keeps it read-only |
 
-## Actions
+### Actions
 
 Same shape as an input field's action set: the callback **is** the emitter, there is no
 event name to learn.

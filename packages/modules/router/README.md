@@ -8,7 +8,7 @@ theme, and a redirect instead of a blank screen when the hash names a route nobo
 None. A route change is reported through `onRouteChanged` (or the app's render pass), never
 through a payload.
 
-## Hash grammar
+### Hash grammar
 
 | Hash                         | Read as                           |
 | ---------------------------- | --------------------------------- |

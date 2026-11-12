@@ -14,7 +14,7 @@ None. Themes are supplied through config, and the active id comes from the route
 | -------- | ------- | ------------------------------------------------------- |
 | `themes` | `[]`    | Themes this app ships; the first one is the fallback id |
 
-## Lifecycle
+### Lifecycle
 
 It is a plain object with three phases, called by the app — not an event subscriber:
 
