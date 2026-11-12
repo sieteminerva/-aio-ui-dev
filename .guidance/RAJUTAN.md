@@ -44,9 +44,9 @@ The AI never names a package, and generated sites never need a build step.
 | -------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
 | Wizard               | frontend terpisah (tanpa user management)                  | Google Identity Services → spec + ID token ke orchestrator |
 | Orchestrator         | Apps Script project (standalone)                           | Gemini key, service account GitHub, engine di-bundle       |
-| Engine               | `orchestrator/*` → bundle GAS                             | pure: tanpa `fs`/`path`/`fetch`; data in → file map out    |
+| Engine               | `.draft/preset/*` → bundle GAS                             | pure: tanpa `fs`/`path`/`fetch`; data in → file map out    |
 | Template spreadsheet | one master file, duplicated per site                       | schemas managed by `TableBuilderService`                   |
-| Gemini               | `gemini-2.5-flash`, `temperature 0.2`, JSON output         | prompt: `orchestrator/prompt.content.md`                  |
+| Gemini               | `gemini-2.5-flash`, `temperature 0.2`, JSON output         | prompt: `.draft/preset/prompt.content.md`                  |
 | Drive                | temporary custody of the duplicate                         | ownership transferred to the client, then detached         |
 | GitHub               | one repo per site from a template; releases hold artefacts | framework releases: `sieteminerva/-aio-ui-dev`             |
 | Hosting              | GitHub Pages atau Cloudflare Pages (belum diputuskan)      | build-free: lima file statis per situs                     |
@@ -75,13 +75,10 @@ Conventions that must not drift:
 - **Tokens at `:root`**, themes put `--app-*` on `body[data-theme]`.
 - **Boundaries are mechanical**: `npm run check:bounds` fails on an undeclared edge.
 - **Messages are data**: `iFormConfig.messages` (`category` → `slot` → `code`).
-- **Builder node = host; `isRoot` = proposed replacement.** Default: the key is a real tag and the
-  builder output mounts inside it. Proposed (unverified): `isRoot: true` lets the builder output
-  become the element. See `plan-generator.md` §3.11 before changing the renderer or `AioApp`.
 
 ## 5. Contracts
 
-### 5.1 AI output — `iAiSiteContent` v1 (`orchestrator/ai.ts`)
+### 5.1 AI output — `iAiSiteContent` v1 (`.draft/preset/ai.ts`)
 
 ```json
 {
@@ -113,7 +110,7 @@ The model writes **content only**. Orchestrator facts (`id`, `engine`, `model`, 
 
 ### 5.3 Derivation — `plan(preset)`
 
-Content → capability table (`orchestrator/catalogue.ts`):
+Content → capability table (`.draft/preset/catalogue.ts`):
 
 | Signal                                                    | Adds                                                                                             |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -173,7 +170,7 @@ Generated-site flow:
   points at the client's `/exec`.
 - **Source on request**: `dev/` is generated for every site but handed over only when the
   client asks; an optional GitHub Action can build it. The critical path never needs a build.
-- **Cache layers** (mirrors `docs/generator/GoogleSheets CMS/Technical-Detail - Caching.jpg`):
+- **Cache layers** (mirrors `docs/GoogleSheets CMS/Technical-Detail - Caching.jpg`):
   browser `localStorage` → Apps Script `CacheService` (6 h) → immutable CDN per tag.
 
 ## 7. Outputs
@@ -210,12 +207,12 @@ npm run version:check              # exit 1 on drift or non-semver peers
 node scripts/version.mjs --apply --version 0.1.1
 node scripts/release.mjs --version 0.1.1             # dry run
 node scripts/release.mjs --version 0.1.1 --apply     # artefacts in .draft/release
-node orchestrator/layout.mjs --out orchestrator/layout.json
-npx vitest run orchestrator       # generator suite (100 tests, 1 opt-in skipped)
-npx tsc -p orchestrator/tsconfig.json
+node .draft/preset/layout.mjs --out .draft/preset/layout.json
+npx vitest run .draft/preset       # generator suite (100 tests, 1 opt-in skipped)
+npx tsc -p .draft/preset/tsconfig.json
 node scripts/publish-cdn.mjs --apply   # tarballs → cdn branch; moves the version tag
 SMOKE_BASE=https://cdn.jsdelivr.net/gh/<owner>/<repo>@v<version>/ \
-  npx vitest run orchestrator/release.test.ts   # writes .draft/cdn-smoke/
+  npx vitest run .draft/preset/release.test.ts   # writes .draft/cdn-smoke/
 node .draft/smoke/serve.mjs 5300   # then open /.draft/cdn-smoke/store/#checkout
 cd .draft/results/gallery-static_v1/dev && npx vite --port 5199
 ```
@@ -309,10 +306,10 @@ Stop any `vite` process before regenerating `.draft/results` (Windows locks the 
 | `.guidance/AGENT_RULES.md`                             | hard working rules                                          |
 | `.guidance/mandatory/`                                 | non-negotiable working rules                                |
 | `.guidance/rules.md`, `.guidance/project/`             | repository conventions                                      |
-| `docs/generator/presentation0.md`                                | product vision and business framing                         |
-| `docs/generator/apps-script-integration.md`                      | orchestrator flow: auth → Gemini → Sheets → deploy → detach |
-| `docs/generator/GoogleSheets CMS/REST_API.MD`                    | server contract (`/exec`)                                   |
-| `docs/generator/GoogleSheets CMS/Technical-Detail - Caching.jpg` | cache layers                                                |
+| `docs/presentation0.md`                                | product vision and business framing                         |
+| `docs/apps-script-integration.md`                      | orchestrator flow: auth → Gemini → Sheets → deploy → detach |
+| `docs/GoogleSheets CMS/REST_API.MD`                    | server contract (`/exec`)                                   |
+| `docs/GoogleSheets CMS/Technical-Detail - Caching.jpg` | cache layers                                                |
 | `.archives/wizard.ts`                                  | reference wizard (the `store` model flow)                   |
-| `orchestrator/README.md`                              | generator internals and rules                               |
-| `orchestrator/prompt.content.md`                      | the AI prompt                                               |
+| `.draft/preset/README.md`                              | generator internals and rules                               |
+| `.draft/preset/prompt.content.md`                      | the AI prompt                                               |
