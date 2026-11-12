@@ -6,21 +6,21 @@
 
 ## Live claims
 
-| Agent          | Band               | Task                                              | Write scope                                                                                                                                                      | Started    | Checkpoint                           | State  |
-| -------------- | ------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------ | ------ |
-| copilot b13    | Tooling + Framework | Release `v0.1.1` to the live CDN + CDN README     | `scripts/publish-cdn.mjs`, `templates/cdn/**`, `docs/live-cdn-repo.md`, `packages/*/package.json`, `package.json`, `.guidance/**`, the six band `AGENTS.md`       | 2026-11-13 | `/memories/session/page-level-plan.md` | active |
+| Agent       | Band                | Task                                          | Write scope                                                                                                                                                 | Started    | Checkpoint                             | State  |
+| ----------- | ------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------- | ------ |
+| copilot b13 | Tooling + Framework | Release `v0.1.1` to the live CDN + CDN README | `scripts/publish-cdn.mjs`, `templates/cdn/**`, `docs/live-cdn-repo.md`, `packages/*/package.json`, `package.json`, `.guidance/**`, the six band `AGENTS.md` | 2026-11-13 | `/memories/session/page-level-plan.md` | active |
 
 ## Row shape
 
-| Column      | Fill with                                                                                          |
-| ----------- | -------------------------------------------------------------------------------------------------- |
-| Agent       | Short identity + batch tag (`copilot b13`, `claude a7`). Two rows with the same agent must differ.  |
+| Column      | Fill with                                                                                                 |
+| ----------- | --------------------------------------------------------------------------------------------------------- |
+| Agent       | Short identity + batch tag (`copilot b13`, `claude a7`). Two rows with the same agent must differ.        |
 | Band        | One of `Framework`, `Gallery`, `Generator`, `Tooling` — the band whose `AGENTS.md` you are working under. |
-| Task        | One line, the same wording as the `STATUS.md` `Active` row where there is one.                     |
-| Write scope | Paths or globs you will write. Be exact: a broad glob blocks everyone. Read-only paths stay out.   |
-| Started     | `YYYY-MM-DD` of the first edit, not of the conversation.                                            |
-| Checkpoint  | `/memories/session/<task>.md`, or `.guidance/project/STATUS.md` when no memory file exists yet.     |
-| State       | `active`, `blocked` (say on what in the task cell), `handoff` (edit done, gate/commit pending).     |
+| Task        | One line, the same wording as the `STATUS.md` `Active` row where there is one.                            |
+| Write scope | Paths or globs you will write. Be exact: a broad glob blocks everyone. Read-only paths stay out.          |
+| Started     | `YYYY-MM-DD` of the first edit, not of the conversation.                                                  |
+| Checkpoint  | `/memories/session/<task>.md`, or `.guidance/project/STATUS.md` when no memory file exists yet.           |
+| State       | `active`, `blocked` (say on what in the task cell), `handoff` (edit done, gate/commit pending).           |
 
 ## Rules
 

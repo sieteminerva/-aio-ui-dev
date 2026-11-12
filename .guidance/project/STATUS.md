@@ -7,11 +7,11 @@ Last updated: 2026-11-13
 
 ## Active (max 3)
 
-| #   | Task                              | Project   | State       | Gate                                                                                     |
-| --- | --------------------------------- | --------- | ----------- | ---------------------------------------------------------------------------------------- |
-| 1   | Release `v0.1.1` to the live CDN  | Framework | in progress | fresh tag serves 39 packages; `cdn` branch carries a README; jsDelivr probe + smoke green |
-| 2   | Page-level components (P9b)       | Framework | in progress | generator emits `iPageDefinition`s; claim board in `AGENTS.md` (§11)                      |
-| 3   | Build `profile` reference         | Examples  | not started | home, services, contact, portfolio render; boundaries documented                          |
+| #   | Task                             | Project   | State       | Gate                                                                                      |
+| --- | -------------------------------- | --------- | ----------- | ----------------------------------------------------------------------------------------- |
+| 1   | Release `v0.1.1` to the live CDN | Framework | in progress | fresh tag serves 39 packages; `cdn` branch carries a README; jsDelivr probe + smoke green |
+| 2   | Page-level components (P9b)      | Framework | in progress | generator emits `iPageDefinition`s; claim board in `AGENTS.md` (§11)                      |
+| 3   | Build `profile` reference        | Examples  | not started | home, services, contact, portfolio render; boundaries documented                          |
 
 ## Landed recently
 

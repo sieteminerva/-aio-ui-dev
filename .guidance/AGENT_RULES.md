@@ -117,7 +117,7 @@ and a commit drags in someone else's half-finished batch.
   row on the claim board** `.guidance/project/AGENTS.md`. Clear both at handoff.
 - **The claim board is the only shared lock.** One row per live writer: agent identity, band,
   task, write scope (paths/globs), start date, checkpoint file, state (`active|blocked|handoff`).
-  A `STATUS.md` line says *what* is running; the board says *who owns which paths* — needed
+  A `STATUS.md` line says _what_ is running; the board says _who owns which paths_ — needed
   because two sessions can work the same task name in different bands.
 - **Overlapping scope is a stop sign.** If a live row's write scope intersects yours, do not
   edit: quote both rows to the user and ask. Overlap is allowed only when the owner's row says
