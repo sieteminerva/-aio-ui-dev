@@ -95,7 +95,7 @@ describe("MarkdownBuilder", () => {
 
     expect(pre).not.toBeNull();
     expect(pre?.querySelector("code.code-block-source")?.textContent).toBe("const a = 1;");
-    expect(pre?.dataset.language).toBe("ts");
+    expect((pre as HTMLElement | null)?.dataset.language).toBe("ts");
     expect(root.querySelector(".code-block-label")?.textContent).toBe("ts");
   });
 

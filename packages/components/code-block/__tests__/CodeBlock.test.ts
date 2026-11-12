@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DEFAULT_SELECTORS, ELEMENT_KEYS, normalizePayload } from "../index";
+import { DEFAULT_SELECTORS, ELEMENT_KEYS, normalizePayload } from "../CodeBlock";
 
 /**
  * Component tests stay DOM-free on purpose (the suite runs in `environment: "node"`).
