@@ -21,29 +21,29 @@ build("modal", document.createElement("form"));
 
 ## Config
 
-| Option           | Default            | Meaning                                                  |
-| ---------------- | ------------------ | -------------------------------------------------------- |
-| `id`             | `"modal-default"`  | DOM id; a second prepare with the same id removes the old overlay |
-| `title`          | `"Notification"`   | Header text                                              |
-| `className`      | `""`               | Extra classes on the outer overlay                       |
-| `modalClass`     | `""`               | Extra classes on the inner box                           |
-| `destroyOnClose` | `true`             | Remove on close instead of hiding                        |
-| `onOpen`         | no-op              | Called with the overlay when opened                      |
-| `onClose`        | no-op              | Called with the overlay when closed                      |
-| `onReady`        | no-op              | Receives `iModalControls` once the overlay exists        |
-| `selectors`      | see defaults       | Per-key tag/class override                               |
+| Option           | Default           | Meaning                                                           |
+| ---------------- | ----------------- | ----------------------------------------------------------------- |
+| `id`             | `"modal-default"` | DOM id; a second prepare with the same id removes the old overlay |
+| `title`          | `"Notification"`  | Header text                                                       |
+| `className`      | `""`              | Extra classes on the outer overlay                                |
+| `modalClass`     | `""`              | Extra classes on the inner box                                    |
+| `destroyOnClose` | `true`            | Remove on close instead of hiding                                 |
+| `onOpen`         | no-op             | Called with the overlay when opened                               |
+| `onClose`        | no-op             | Called with the overlay when closed                               |
+| `onReady`        | no-op             | Receives `iModalControls` once the overlay exists                 |
+| `selectors`      | see defaults      | Per-key tag/class override                                        |
 
 `iModalControls` = `{ element, open, close, unmount }`. After `destroy()`, `open()` and `close()`
 refuse to pretend the modal still works.
 
 ## Nodes
 
-| Key                | Default tag | Class / note                        |
-| ------------------ | ----------- | ----------------------------------- |
-| `@container`       | `div`       | `dialog hidden` — the overlay        |
-| `@modal`           | `div`       | `modal` — the box                    |
-| `@modal>header`    | `div`       | `header` (contains `h2.title`)       |
-| `@modal>closeBtn`  | none        | `close`; the declared tag is empty, so the wrapper decides |
+| Key               | Default tag | Class / note                                               |
+| ----------------- | ----------- | ---------------------------------------------------------- |
+| `@container`      | `div`       | `dialog hidden` — the overlay                              |
+| `@modal`          | `div`       | `modal` — the box                                          |
+| `@modal>header`   | `div`       | `header` (contains `h2.title`)                             |
+| `@modal>closeBtn` | none        | `close`; the declared tag is empty, so the wrapper decides |
 
 The body is appended by the builder, not by a declared key: the compiled payload element gets the
 `body` class.

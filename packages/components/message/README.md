@@ -23,26 +23,26 @@ Everything is optional except `message`; `header` defaults to `Congrats!`, `type
 
 ## Config
 
-| Option      | Default                  | Meaning                                              |
-| ----------- | ------------------------ | ---------------------------------------------------- |
-| `id`        | `"global-status-message"`| DOM id used to find and replace an existing toast     |
-| `element`   | `document.body`          | Container (element or id string) to prepend into      |
-| `duration`  | `3000`                   | Auto-close in ms; `0` keeps it until dismissed        |
-| `persist`   | `false`                  | Keep it open and render the close button              |
-| `onOpen`    | no-op                    | Called with the toast element once mounted            |
-| `onClose`   | no-op                    | Called with the toast element when it is removed      |
-| `selectors` | see defaults             | Per-key tag/class override                            |
+| Option      | Default                   | Meaning                                           |
+| ----------- | ------------------------- | ------------------------------------------------- |
+| `id`        | `"global-status-message"` | DOM id used to find and replace an existing toast |
+| `element`   | `document.body`           | Container (element or id string) to prepend into  |
+| `duration`  | `3000`                    | Auto-close in ms; `0` keeps it until dismissed    |
+| `persist`   | `false`                   | Keep it open and render the close button          |
+| `onOpen`    | no-op                     | Called with the toast element once mounted        |
+| `onClose`   | no-op                     | Called with the toast element when it is removed  |
+| `selectors` | see defaults              | Per-key tag/class override                        |
 
 ## Nodes
 
-| Key                        | Default tag | Class / note                      |
-| -------------------------- | ----------- | --------------------------------- |
-| `@message`                 | `div`       | `toast`                           |
-| `@message>close`           | `i`         | `close circle icon`, wrapped in `button.close` |
-| `@message>content`         | `div`       | `content`                         |
-| `@message>content>header`  | `h2`        | `header`                          |
-| `@message>content>desc`    | `p`         | `message`                         |
-| `@message>content>icon`    | `i`         | icon class only, no wrapper       |
+| Key                       | Default tag | Class / note                                   |
+| ------------------------- | ----------- | ---------------------------------------------- |
+| `@message`                | `div`       | `toast`                                        |
+| `@message>close`          | `i`         | `close circle icon`, wrapped in `button.close` |
+| `@message>content`        | `div`       | `content`                                      |
+| `@message>content>header` | `h2`        | `header`                                       |
+| `@message>content>desc`   | `p`         | `message`                                      |
+| `@message>content>icon`   | `i`         | icon class only, no wrapper                    |
 
 ## Tokens
 

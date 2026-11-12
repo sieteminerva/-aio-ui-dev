@@ -24,28 +24,28 @@ preview frame, a split pane) must override both — the demo does exactly that f
 
 ## Config
 
-| Option           | Default        | Meaning                                        |
-| ---------------- | -------------- | ---------------------------------------------- |
-| `position`       | `"bottom-left"` | One of the five `FabPosition` values           |
-| `closeOnSelected`| `true`         | Close the panel when an option is chosen       |
-| `duration`       | `10000`        | Idle ms before auto-close (`null` disables)     |
-| `closeIcon`      | `"✕"`          | Glyph shown when open                          |
-| `displayIcon`    | `"⚙️"`         | Glyph shown when closed                        |
-| `container`      | `null`         | Element the fab is appended to                 |
-| `selectors`      | see defaults   | Per-key tag/class override                     |
+| Option            | Default         | Meaning                                     |
+| ----------------- | --------------- | ------------------------------------------- |
+| `position`        | `"bottom-left"` | One of the five `FabPosition` values        |
+| `closeOnSelected` | `true`          | Close the panel when an option is chosen    |
+| `duration`        | `10000`         | Idle ms before auto-close (`null` disables) |
+| `closeIcon`       | `"✕"`           | Glyph shown when open                       |
+| `displayIcon`     | `"⚙️"`          | Glyph shown when closed                     |
+| `container`       | `null`          | Element the fab is appended to              |
+| `selectors`       | see defaults    | Per-key tag/class override                  |
 
 The trigger is appended before or after the panel depending on `position`, so the panel opens away
 from the nearest viewport edge.
 
 ## Nodes
 
-| Key                     | Default tag | Class          |
-| ----------------------- | ----------- | -------------- |
-| `@fab`                  | `div`       | `fab`          |
-| `@fab>panel`            | `div`       | `panel`        |
-| `@fab>panel>title`      | `span`      | `title`        |
-| `@fab>panel>item`       | `button`    | `item option`  |
-| `@fab>panel>trigger`    | `button`    | `trigger`      |
+| Key                  | Default tag | Class         |
+| -------------------- | ----------- | ------------- |
+| `@fab`               | `div`       | `fab`         |
+| `@fab>panel`         | `div`       | `panel`       |
+| `@fab>panel>title`   | `span`      | `title`       |
+| `@fab>panel>item`    | `button`    | `item option` |
+| `@fab>panel>trigger` | `button`    | `trigger`     |
 
 ## Tokens
 

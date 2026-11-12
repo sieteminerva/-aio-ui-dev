@@ -25,19 +25,23 @@ A single record or an array of records. Accepted aliases: `title` for `header`, 
 
 ## Nodes
 
-| Key             | Default tag | Class / note                     |
-| --------------- | ----------- | -------------------------------- |
-| `@container`    | `div`       | `row`                            |
-| `@card`         | `div`       | `card pricing`, wrapped in `.column` |
-| `@card>header`  | `div`       | `header` (contains a `span`)     |
-| `@card>price`   | `div`       | `item price-tag`                 |
-| `@card>divider` | `hr`        | `divider`                        |
-| `@card>body`    | `div`       | `body` (contains `ul.features`)  |
-| `@card>body>item` | `li`      | `item`                           |
-| `@card>actions` | `div`       | `actions` (contains `button.button`) |
+| Key               | Default tag | Class / note                         |
+| ----------------- | ----------- | ------------------------------------ |
+| `@container`      | `div`       | `row`                                |
+| `@card`           | `div`       | `card pricing`, wrapped in `.column` |
+| `@card>header`    | `div`       | `header` (contains a `span`)         |
+| `@card>price`     | `div`       | `item price-tag`                     |
+| `@card>divider`   | `hr`        | `divider`                            |
+| `@card>body`      | `div`       | `body` (contains `ul.features`)      |
+| `@card>body>item` | `li`        | `item`                               |
+| `@card>actions`   | `div`       | `actions` (contains `button.button`) |
 
 `className` on a record is added to the card element, and an `is-featured` token makes the action
 button `primary`. A card without a `price` renders no price line, divider-bottom or action.
+
+**Known defect:** the action node receives the record's `className` as its payload, and `template()`
+returns early for a falsy payload — so a record with a `price` but **no** `className` renders an empty
+`.actions` box with no button. Give every record a `className` until that is fixed.
 
 ## Tokens
 

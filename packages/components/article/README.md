@@ -11,9 +11,7 @@ component.
 
 ```ts
 {
-  data: [
-    { slug: "article-1", title: "…", thumbnail: "img.png", date: "2026-11-12", body: "…" },
-  ];
+  data: [{ slug: "article-1", title: "…", thumbnail: "img.png", date: "2026-11-12", body: "…" }];
 }
 ```
 
@@ -23,17 +21,17 @@ resolved against the stored array.
 
 ## Config
 
-| Option          | Default                 | Meaning                                              |
-| --------------- | ----------------------- | ---------------------------------------------------- |
-| `views`         | list + controls + aside | Which parts render, and in what order                |
-| `navigate`      | none                    | Called with a slug when a record is chosen           |
-| `initialSlug`   | none                    | Record to open on first paint (a deep link, not state) |
-| `initialView`   | `"list"`                | Force the first paint to `list` or `detail`           |
-| `view`          | `"list"`                | List presentation (`list` or `card`)                 |
-| `position`      | `"right"`               | Which side the aside sits on                         |
-| `recommendation`| `false`                 | Number of recommended records (or `false`)           |
-| `items`         | payload length          | Records per list page                                |
-| `selectors`     | see defaults            | Per-key tag/class override                           |
+| Option           | Default                 | Meaning                                                |
+| ---------------- | ----------------------- | ------------------------------------------------------ |
+| `views`          | list + controls + aside | Which parts render, and in what order                  |
+| `navigate`       | none                    | Called with a slug when a record is chosen             |
+| `initialSlug`    | none                    | Record to open on first paint (a deep link, not state) |
+| `initialView`    | `"list"`                | Force the first paint to `list` or `detail`            |
+| `view`           | `"list"`                | List presentation (`list` or `card`)                   |
+| `position`       | `"right"`               | Which side the aside sits on                           |
+| `recommendation` | `false`                 | Number of recommended records (or `false`)             |
+| `items`          | payload length          | Records per list page                                  |
+| `selectors`      | see defaults            | Per-key tag/class override                             |
 
 A deep link whose slug is missing from the payload falls back to the list instead of rendering an
 empty detail view, and opening it **does not** call `navigate` again (the host already rendered that
@@ -41,27 +39,27 @@ URL).
 
 ## Nodes
 
-| Key                                | Default tag | Class                    |
-| ---------------------------------- | ----------- | ------------------------ |
-| `@container`                       | `section`   | `article`                |
-| `@article>list`                    | `div`       | `row`                    |
-| `@article>pagination`              | `div`       | `pagination`             |
-| `@article>figure`                  | `figure`    | `media`                  |
-| `@article>header>title`            | `h3`        | `title`                  |
-| `@article>header>meta`             | `div`       | `meta`                   |
-| `@article>item`                    | `article`   | `item`                   |
-| `@article>item>caption`            | `p`         | `caption`                |
-| `@article>aside`                   | `aside`     | `aside`                  |
-| `@article>aside>title`             | `button`    | `title`                  |
-| `@article>aside>item`              | `a`         | `item`                   |
-| `@article>controls>back`           | `button`    | `back`                   |
-| `@article>controls>next`           | `button`    | `next`                   |
-| `@article>controls>pagination>item`| `button`    | `item`                   |
-| `@article>controls>filter`         | `h2`        | `filter`                 |
-| `@article>controls>view`           | `button`    | `view`                   |
-| `@article>detail`                  | `article`   | `detail`                 |
-| `@article>detail>header`           | `header`    | `header`                 |
-| `@article>detail>body`             | `div`       | `body`                   |
+| Key                                 | Default tag | Class        |
+| ----------------------------------- | ----------- | ------------ |
+| `@container`                        | `section`   | `article`    |
+| `@article>list`                     | `div`       | `row`        |
+| `@article>pagination`               | `div`       | `pagination` |
+| `@article>figure`                   | `figure`    | `media`      |
+| `@article>header>title`             | `h3`        | `title`      |
+| `@article>header>meta`              | `div`       | `meta`       |
+| `@article>item`                     | `article`   | `item`       |
+| `@article>item>caption`             | `p`         | `caption`    |
+| `@article>aside`                    | `aside`     | `aside`      |
+| `@article>aside>title`              | `button`    | `title`      |
+| `@article>aside>item`               | `a`         | `item`       |
+| `@article>controls>back`            | `button`    | `back`       |
+| `@article>controls>next`            | `button`    | `next`       |
+| `@article>controls>pagination>item` | `button`    | `item`       |
+| `@article>controls>filter`          | `h2`        | `filter`     |
+| `@article>controls>view`            | `button`    | `view`       |
+| `@article>detail`                   | `article`   | `detail`     |
+| `@article>detail>header`            | `header`    | `header`     |
+| `@article>detail>body`              | `div`       | `body`       |
 
 ## Tokens
 

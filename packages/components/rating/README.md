@@ -10,8 +10,10 @@ not declare a token layer, because it has no sheet to declare one in.
 ## Payload
 
 ```ts
-4.5;                          // a bare number
-{ value: 4.5 }                // or a record
+4.5; // a bare number
+{
+  value: 4.5;
+} // or a record
 ```
 
 Anything else is treated as `0`. A `star` rating prints `score / max`; `count-up`, `round-bar` and
@@ -19,27 +21,27 @@ Anything else is treated as `0`. A `star` rating prints `score / max`; `count-up
 
 ## Config
 
-| Option    | Default     | Meaning                                                     |
-| --------- | ----------- | ----------------------------------------------------------- |
-| `type`    | `"count-up"`| `star`, `round-bar`, `line-bar` or `count-up`                |
-| `max`     | `5`         | Upper bound (stars count, or the denominator of the score)   |
-| `animate` | `true`      | Animate the bar fill (a `requestAnimationFrame` pass)         |
-| `selectors` | see defaults | Per-key tag/class override                                |
+| Option      | Default      | Meaning                                                    |
+| ----------- | ------------ | ---------------------------------------------------------- |
+| `type`      | `"count-up"` | `star`, `round-bar`, `line-bar` or `count-up`              |
+| `max`       | `5`          | Upper bound (stars count, or the denominator of the score) |
+| `animate`   | `true`       | Animate the bar fill (a `requestAnimationFrame` pass)      |
+| `selectors` | see defaults | Per-key tag/class override                                 |
 
 The star branch emits exactly `max` items and marks each `star-full`, `star-half` or neither; the
 glyph comes from CSS `content`, not from the component.
 
 ## Nodes
 
-| Key                   | Default tag | Class                   |
-| --------------------- | ----------- | ----------------------- |
-| `@container`          | `div`       | `rating-widget-wrapper` |
-| `@rating`             | `div`       | `rating-core-display`   |
-| `@rating>track`       | `div`       | `bar-track`             |
-| `@rating>fill`        | `div`       | `bar-fill`              |
-| `@rating>label`       | `span`      | `rating-numerical-label`|
-| `@rating>stars-group` | `div`       | `stars-row`             |
-| `@rating>stars-item`  | `span`      | `star-icon`             |
+| Key                   | Default tag | Class                    |
+| --------------------- | ----------- | ------------------------ |
+| `@container`          | `div`       | `rating-widget-wrapper`  |
+| `@rating`             | `div`       | `rating-core-display`    |
+| `@rating>track`       | `div`       | `bar-track`              |
+| `@rating>fill`        | `div`       | `bar-fill`               |
+| `@rating>label`       | `span`      | `rating-numerical-label` |
+| `@rating>stars-group` | `div`       | `stars-row`              |
+| `@rating>stars-item`  | `span`      | `star-icon`              |
 
 `track` + `fill` are emitted for `line-bar` and `round-bar`; `stars-group` + `stars-item` for
 `star`; the label is always present.
