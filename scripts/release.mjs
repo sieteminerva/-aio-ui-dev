@@ -168,7 +168,10 @@ for (const entry of packages) {
   // layout matches `files[]` exactly — no hand-rolled archive.
   // A single quoted command string is the only form that survives this
   // workspace path (it contains spaces) on every platform.
-  const output = execSync(`npm pack "${entry.dir}" --pack-destination "${outDir}" --json`, { cwd: ROOT, encoding: "utf8" });
+  // The `./` prefix is required: npm parses a two-segment relative path
+  // (`packages/app`) as GitHub shorthand `owner/repo` and packs over ssh
+  // instead of the local directory.
+  const output = execSync(`npm pack "./${entry.dir}" --pack-destination "${outDir}" --json`, { cwd: ROOT, encoding: "utf8" });
   const [packed] = JSON.parse(output);
 
   const tarballPath = join(outDir, packed.filename);
