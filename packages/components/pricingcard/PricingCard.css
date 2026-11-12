@@ -1,4 +1,17 @@
-/* Pricing Table Styling */
+/* Pricing Table Styling
+
+   Every rule is rooted at `.card.pricing`. The sheet used to read four names that no
+   package declares (`--border-soft`, `--accent`, `--surface-strong`, `--shadow-soft`), so
+   the card border, the featured accent and its wash were all guaranteed-invalid and
+   rendered as if they were never written. They now derive from the app layer. */
+
+:root,
+[data-theme] {
+  --pricing-card-border-color: var(--app-border-color, rgba(168, 137, 102, 0.28));
+  --pricing-card-accent-color: var(--app-accent-color, #b47828);
+  --pricing-card-surface-strong: var(--app-surface-strong, #ffffff);
+  --pricing-card-surface-muted: var(--app-surface-muted, rgba(244, 238, 226, 0.7));
+}
 
 .card.pricing {
   text-align: center;
@@ -17,12 +30,12 @@
 }
 
 .card.pricing:not(.is-featured) {
-  border: 2px solid var(--border-soft);
+  border: 2px solid var(--pricing-card-border-color);
 }
 
 .card.pricing.is-featured {
-  border: 2px solid var(--accent);
-  background: linear-gradient(to bottom, var(--surface-strong), var(--shadow-soft));
+  border: 2px solid var(--pricing-card-accent-color);
+  background: linear-gradient(to bottom, var(--pricing-card-surface-strong), var(--pricing-card-surface-muted));
   transform: scale(1.05);
 }
 
@@ -36,7 +49,7 @@
 
 .card.pricing .header .eyebrow {
   font-size: 1.1rem;
-  color: var(--accent);
+  color: var(--pricing-card-accent-color);
   border: none;
   margin-bottom: 0;
   letter-spacing: 0.05em;
@@ -45,7 +58,7 @@
 .card.pricing .divider {
   border: 0;
   height: 1px;
-  background: var(--border-soft);
+  background: var(--pricing-card-border-color);
   margin: 1rem 0;
 }
 
@@ -69,7 +82,7 @@
 
 .card.pricing .features li::before {
   content: "";
-  color: var(--accent);
+  color: var(--pricing-card-accent-color);
   font-weight: bold;
 }
 

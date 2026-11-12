@@ -38,15 +38,51 @@ describe("pricing card", () => {
   });
 
   it("gives the action a primary accent only for an is-featured record", () => {
-    // Known defect: the actions node is fed the record's `className`, and `template()`
-    // returns early on a falsy payload — so a record without a className renders no button.
     const featured = build([{ header: "A", price: 1000, className: "is-featured" }]);
     const plain = build([{ header: "B", price: 2000 }]);
 
     const button = featured.querySelector(".actions button");
     expect(button?.classList.contains("primary")).toBe(true);
     expect(button?.textContent).toBe("Pilih");
-    expect(plain.querySelector(".actions button")).toBeNull();
+    // Regression: the action node used to be fed the record's `className`, so a record with a
+    // price but no className rendered an empty `.actions` box.
+    expect(plain.querySelector(".actions button")?.classList.contains("primary")).toBe(false);
+  });
+
+  it("gives every card in a group its own action button", () => {
+    const root = build([
+      { header: "A", price: 1000 },
+      { header: "B", price: 2000 },
+    ]);
+    const cards = root.querySelectorAll(".card.pricing");
+
+    expect(cards).toHaveLength(2);
+    expect(cards[0].querySelector(".actions button")).not.toBeNull();
+    expect(cards[1].querySelector(".actions button")).not.toBeNull();
+    expect(cards[0].querySelector(".actions button")).not.toBe(cards[1].querySelector(".actions button"));
+  });
+
+  it("accepts a featured flag and a click handler on a record", () => {
+    let clicked = 0;
+    const root = build([{ header: "A", price: 1000, featured: true, onClick: () => clicked++ }]);
+    const button = root.querySelector(".actions button") as HTMLButtonElement;
+
+    expect(button.classList.contains("primary")).toBe(true);
+    button.click();
+    expect(clicked).toBe(1);
+  });
+
+  it("honours an action label instead of ignoring it", () => {
+    const root = build([{ header: "A", price: 1000, action: { label: "Ambil" } }]);
+
+    expect(root.querySelector(".actions button")?.textContent).toBe("Ambil");
+  });
+
+  it("treats price 0 as a price rather than an absent one", () => {
+    const root = build([{ header: "Free", price: 0 }]);
+
+    expect(root.querySelector(".price-tag")?.textContent).toContain("Rp");
+    expect(root.querySelector(".actions button")).not.toBeNull();
   });
 
   it("renders no price, divider-bottom or action without a price", () => {

@@ -36,17 +36,24 @@ A single record or an array of records. Accepted aliases: `title` for `header`, 
 | `@card>body>item` | `li`        | `item`                               |
 | `@card>actions`   | `div`       | `actions` (contains `button.button`) |
 
-`className` on a record is added to the card element, and an `is-featured` token makes the action
-button `primary`. A card without a `price` renders no price line, divider-bottom or action.
-
-**Known defect:** the action node receives the record's `className` as its payload, and `template()`
-returns early for a falsy payload — so a record with a `price` but **no** `className` renders an empty
-`.actions` box with no button. Give every record a `className` until that is fixed.
+`className` on a record is added to the card element, and an `is-featured` class token (or an
+explicit `featured: true`) makes the action button `primary`. `action.label` (or `label`) sets the
+button copy — the default is `Pilih`. A record may also carry `onClick`, which is bound to that
+card's own button. A card without a `price` renders no price line, divider-bottom or action;
+`price: 0` counts as a price (a free tier).
 
 ## Tokens
 
-No `--pricing-card-*` layer. The sheet reads one undeclared name, `--border-soft`, which no package
-ships — an app must bridge it or the card border disappears. Recorded as a known gap.
+Declared once on `:root, [data-theme]` in `PricingCard.css`. The sheet used to read four names that no
+package declares (`--border-soft`, `--accent`, `--surface-strong`, `--shadow-soft`), so the card border
+and the featured accent/wash never applied.
+
+| Token                           | Derives from           | Used for                 |
+| ------------------------------- | ---------------------- | ------------------------ |
+| `--pricing-card-border-color`   | `--app-border-color`   | Resting card hairline    |
+| `--pricing-card-accent-color`   | `--app-accent-color`   | Eyebrow, featured border |
+| `--pricing-card-surface-strong` | `--app-surface-strong` | Featured wash (top)      |
+| `--pricing-card-surface-muted`  | `--app-surface-muted`  | Featured wash (bottom)   |
 
 ## Wiring checklist
 
