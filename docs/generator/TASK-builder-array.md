@@ -39,8 +39,8 @@ Scope: `orchestrator/**` and `docs/generator/**` only. The Framework band (`pack
       `app.registerPage(definition)`. `requires` is the component words reachable in that page's
       content, deduplicated and sorted, with field modules (`input`, `dropdown`,
       `input-controls`) left out.
-- [x] **Keep the two meanings apart in emitted code.** `mount()` reads `owner.builder` as *the
-      component the node is*; nothing in the emitted site treats `builder` as a dependency list.
+- [x] **Keep the two meanings apart in emitted code.** `mount()` reads `owner.builder` as _the
+      component the node is_; nothing in the emitted site treats `builder` as a dependency list.
 - [x] **Update prompts and docs.** `orchestrator/prompt.content.md` states the rule under
       AUTHORING RULES: "`builder` is **one word**, never an array … never treat it as a
       dependency list."
@@ -82,7 +82,7 @@ Remaining work in this file is generator-side only.
 (`SyntaxError: Unexpected token '{'`), so **every generated site failed to boot** while all unit
 tests passed — they only asserted the string was present. Fixed: the template emits plain JS,
 and `runtime.test.ts` now asserts `/^import type /m` and `/pageDefinitions:\s/` are absent.
-Lesson: a template test must assert the *language* of the output, not just its content.
+Lesson: a template test must assert the _language_ of the output, not just its content.
 
 ## Out of scope here
 
