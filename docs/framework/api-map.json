@@ -109,6 +109,18 @@
         "iCarouselConfig"
       ]
     },
+    "@aio-ui/code-block": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "CodeBlockBuilder"
+      ],
+      "types": [
+        "CodeBlockElementType",
+        "iCodeBlockConfig",
+        "iCodeBlockEntry"
+      ]
+    },
     "@aio-ui/core": {
       "kind": "package",
       "barrel": "./src/index.ts",
@@ -265,6 +277,17 @@
         "iInputActionDefinition",
         "iInputActionHandler",
         "iInputConfig"
+      ]
+    },
+    "@aio-ui/markdown": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "MarkdownBuilder"
+      ],
+      "types": [
+        "MarkdownElementType",
+        "iMarkdownConfig"
       ]
     },
     "@aio-ui/masonry": {
@@ -506,16 +529,28 @@
         "hexToRgba",
         "mergeInputConfig",
         "numberToText",
+        "parseInline",
+        "parseMarkdown",
         "parseTableRecords",
         "parseTableText",
         "selectorToTree",
         "setMetadata",
         "splitCsvRows",
+        "splitTableRow",
         "toBeString",
         "truncateText"
       ],
       "types": [
         "iAttributeSpec",
+        "iMarkdownBlock",
+        "iMarkdownFence",
+        "iMarkdownHeading",
+        "iMarkdownInline",
+        "iMarkdownLink",
+        "iMarkdownList",
+        "iMarkdownParagraph",
+        "iMarkdownQuote",
+        "iMarkdownTable",
         "iParsedTableFile"
       ]
     }

@@ -11,7 +11,11 @@ Source rules live in `packages/AGENTS.md`; **read that first.** This file only a
   (page-level composition), `#article` (builder-level slots), `#form` (schema).
 - Docs routes: `#getting-started` (setup + the AioApp contract, single column) and `#modules`
   (one row per module package, sidebar + docs; selects in the fragment like `#kitchen/<name>`).
-  Their copy comes from `src/modules.ts`; nothing is hand-written in the page.
+  Neither page writes documentation: `src/modules.ts` imports each package README with `?raw`,
+  `getting-started.ts` imports `docs/framework/APP.md`, and the `markdown` builder renders both.
+  Edit the `.md` file, not the page.
+- Any Markdown file read this way must live under the repo root; `?raw` outside `examples/demo`
+  works because Vite allows the workspace root, and it is resolved at build time (no fetch).
 - Pages are registered in `src/main.ts` via `pageComponent(path, css)` = `{ path, stylesheet,
 config, schema }`. Element rows use `schema: data`.
 - A component is demonstrated in **exactly one** place — never duplicate a route in the kitchen.

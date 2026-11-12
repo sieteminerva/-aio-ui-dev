@@ -3,14 +3,14 @@
 The demo exists to measure components, so it is split by the two kinds of thing the
 framework actually has. They behave differently, and jamming them into one page hid that.
 
-| Route              | Kind    | What it proves                                                         |
-| ------------------ | ------- | ---------------------------------------------------------------------- |
-| `#getting-started` | docs    | setup, the import map, and the AioApp contract (config, slots, routes) |
-| `#modules`         | docs    | one row per module package, with a sidebar and the API of each         |
-| `#kitchen`         | element | every component that is "one builder, one node", driven by a table     |
-| `#product`         | page    | list + filter + detail, composed **at page level**                     |
-| `#article`         | page    | the same shape, but composed **inside the builder** (its slots)        |
-| `#form`            | page    | a schema with validation, handlers and its own submit cycle            |
+| Route              | Kind    | What it proves                                                       |
+| ------------------ | ------- | -------------------------------------------------------------------- |
+| `#getting-started` | docs    | setup, the import map, and `docs/framework/APP.md` rendered verbatim |
+| `#modules`         | docs    | one row per module package; the body is that package's own README    |
+| `#kitchen`         | element | every component that is "one builder, one node", driven by a table   |
+| `#product`         | page    | list + filter + detail, composed **at page level**                   |
+| `#article`         | page    | the same shape, but composed **inside the builder** (its slots)      |
+| `#form`            | page    | a schema with validation, handlers and its own submit cycle          |
 
 The two `docs` routes print what the packages really declare: Getting Started quotes
 `packages/app/src/types.ts`, and the module rows quote each package's `slot`, config and public

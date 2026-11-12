@@ -94,10 +94,12 @@ rethemeable without touching its CSS.
 | `accordion/Accordion.css`       | `--accordion-*`                                                                |
 | `article/Article.css`           | `--article-*`                                                                  |
 | `badge/Badge.css`               | `--badge-*`                                                                    |
+| `code-block/CodeBlock.css`      | `--code-block-*` (base colours are literal: dark paper in both modes)          |
 | `footer/Footer.css`             | `--footer-*`                                                                   |
 | `id-address/id-address.css`     | `--id-address-*`                                                               |
 | `input/input.css`               | `--input-*` (also read by `form`, `Dropdown`, `InputControls`, `FileUploader`) |
 | `masonry/Masonry.css`           | `--masonry-*`                                                                  |
+| `markdown/Markdown.css`         | `--markdown-*` (imports `CodeBlock.css` for the fences it renders)             |
 | `menu/Menu.css`                 | `--menu-*`                                                                     |
 | `message/Message.css`           | `--toast-*` (prefix predates the package name)                                 |
 | `modeswitcher/ModeSwitcher.css` | `--mode-switcher-*`                                                            |
