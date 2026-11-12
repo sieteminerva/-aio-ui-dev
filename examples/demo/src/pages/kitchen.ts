@@ -27,7 +27,7 @@ function mountMain(host: HTMLElement, entry: iDemoEntry, build: BuildFn): void {
     build("tab", {
       content: {
         // No `title` here: the tab prints label and title, so a title repeats the label.
-        menu: [{ label: "Display" }, { label: "Cara Penggunaan" }, { label: "API" }],
+        menu: [{ label: "Display" }, { label: "Usage" }, { label: "API" }],
         body: [
           {
             id: "panel-display",
