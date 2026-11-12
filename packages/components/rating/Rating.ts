@@ -116,7 +116,10 @@ export class RatingBuilder extends Builder<RatingElementType, iRatingConfig> {
 
     switch (typeKey) {
       case "@container":
-        el.className = `rating-widget-wrapper type-${this.config.type} ${el.className || ""}`.trim();
+        // `classList` dedupes: the selector already stamped `rating-widget-wrapper`, and
+        // string concatenation used to emit it twice (`rating-widget-wrapper type-star
+        // rating-widget-wrapper`).
+        el.classList.add("rating-widget-wrapper", `type-${this.config.type}`);
         break;
 
       case "@rating>track":

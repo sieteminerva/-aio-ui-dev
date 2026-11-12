@@ -17,6 +17,8 @@ describe("rating", () => {
     const root = build("star", 4);
     const stars = root.querySelectorAll(".stars-row .star-icon");
 
+    // Regression: the root class list used to repeat `rating-widget-wrapper`.
+    expect(root.className).toBe("rating-widget-wrapper type-star");
     expect(stars).toHaveLength(5);
     expect(root.querySelectorAll(".star-icon.star-full")).toHaveLength(4);
     expect(root.querySelectorAll(".star-icon.star-empty")).toHaveLength(1);
