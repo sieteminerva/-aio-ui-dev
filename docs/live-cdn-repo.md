@@ -5,8 +5,9 @@ serve it, the commands that publish it, and the checks that must pass before any
 
 Last verified: **2026-11-12** — the 7 sampled CDN URLs return `200`, `@cdn` and `@<commit-sha>`
 report **39** packages, and the GitHub release holds **42** assets (39 `aio-ui-<name>-0.1.0.tgz`
-+ `registry.json` + `layout.json` + `checksums.txt`). `registry.json` on `@v0.1.0` still reports
-37 — jsDelivr pins a tag to a commit, see §8. Installing from a clone is §3.
+
+- `registry.json` + `layout.json` + `checksums.txt`). `registry.json` on `@v0.1.0` still reports
+  37 — jsDelivr pins a tag to a commit, see §8. Installing from a clone is §3.
 
 ## 1. What is live
 
@@ -105,8 +106,8 @@ the installed copy only when that copy is declared locally, otherwise it tries t
 Then `npm install`. `file:` copies at install time, so re-run it after every framework pull.
 
 > Do **not** consume `@aio-ui/frameworks` / `@aio-ui/modules` / `@aio-ui/themes` as `file:`
-deps: the kits declare real `dependencies` on unpublished packages, so npm would go to the
-registry. Import the individual packages instead, or use option B.
+> deps: the kits declare real `dependencies` on unpublished packages, so npm would go to the
+> registry. Import the individual packages instead, or use option B.
 
 **B. Workspace link (framework and app in one repo).** Add the app as another workspace member —
 this is what `examples/demo` and `examples/gallery` do:
@@ -124,13 +125,13 @@ step (a new `exports` entry additionally needs a dev-server restart — Vite cac
 
 ```html
 <script type="importmap">
-{
-  "imports": {
-    "@aio-ui/core/interface": "/aio-ui/packages/core/dist/interface.js",
-    "@aio-ui/code-block": "/aio-ui/packages/components/code-block/dist/index.js",
-    "@aio-ui/code-block/CodeBlock.css": "/aio-ui/packages/components/code-block/dist/CodeBlock.css"
+  {
+    "imports": {
+      "@aio-ui/core/interface": "/aio-ui/packages/core/dist/interface.js",
+      "@aio-ui/code-block": "/aio-ui/packages/components/code-block/dist/index.js",
+      "@aio-ui/code-block/CodeBlock.css": "/aio-ui/packages/components/code-block/dist/CodeBlock.css"
+    }
   }
-}
 </script>
 ```
 
@@ -162,47 +163,47 @@ Generated from `orchestrator/layout.json`, so it matches what the resolver and t
 The CDN URL of any row is the tag base + `Directory` + the file, e.g.
 `…@v0.1.0/packages/components/code-block/dist/index.js`.
 
-| Package               | Directory                          | Entry (`exports["."]`) | Stylesheet subpath                    |
-| --------------------- | ---------------------------------- | --------------------- | ------------------------------------- |
-| `@aio-ui/app`         | `packages/app`                     | `dist/index.js`       | —                                     |
-| `@aio-ui/base`        | `packages/base`                    | `dist/index.js`       | —                                     |
-| `@aio-ui/core`        | `packages/core`                    | `dist/index.js`       | —                                     |
-| `@aio-ui/styles`      | `packages/styles`                  | — (CSS only)          | `index.css` → `src/index.css` (+ `variables`, `typography`, `components`, `layout`, `icon`) |
-| `@aio-ui/utilities`   | `packages/utilities`               | `dist/index.js`       | —                                     |
-| `@aio-ui/accordion`   | `packages/components/accordion`    | `dist/index.js`       | `Accordion.css` → `dist/Accordion.css` |
-| `@aio-ui/article`     | `packages/components/article`      | `dist/index.js`       | `Article.css` → `dist/Article.css`     |
-| `@aio-ui/badge`       | `packages/components/badge`        | `dist/index.js`       | `Badge.css` → `dist/Badge.css`         |
-| `@aio-ui/carousel`    | `packages/components/carousel`     | `dist/index.js`       | `Carousel.css` → `dist/Carousel.css`   |
-| `@aio-ui/code-block`  | `packages/components/code-block`   | `dist/index.js`       | `CodeBlock.css` → `dist/CodeBlock.css` |
-| `@aio-ui/fabmenu`     | `packages/components/fabmenu`      | `dist/index.js`       | `FabMenu.css` → `dist/FabMenu.css`     |
-| `@aio-ui/footer`      | `packages/components/footer`       | `dist/index.js`       | `Footer.css` → `dist/Footer.css`       |
-| `@aio-ui/form`        | `packages/components/form`         | `dist/index.js`       | `Form.css` → `dist/Form.css`           |
-| `@aio-ui/id-address`  | `packages/components/id-address`   | `dist/index.js`       | `id-address.css` → `dist/id-address.css` |
-| `@aio-ui/input`       | `packages/components/input`        | `dist/index.js`       | `input.css` → `dist/input.css`, `dropdown.css` → `dist/Dropdown/Dropdown.css`, `file-uploader.css` → `dist/FileUploader/FileUploader.css`, `controls.css` → `dist/InputControls/inputControls.css` |
-| `@aio-ui/markdown`    | `packages/components/markdown`     | `dist/index.js`       | `Markdown.css` → `dist/Markdown.css`   |
-| `@aio-ui/masonry`     | `packages/components/masonry`      | `dist/index.js`       | `Masonry.css` → `dist/Masonry.css`     |
-| `@aio-ui/menu`        | `packages/components/menu`         | `dist/index.js`       | `Menu.css` → `dist/Menu.css`           |
-| `@aio-ui/message`     | `packages/components/message`      | `dist/index.js`       | `Message.css` → `dist/Message.css`     |
-| `@aio-ui/modal`       | `packages/components/modal`        | `dist/index.js`       | `Modal.css` → `dist/Modal.css`         |
-| `@aio-ui/modeswitcher` | `packages/components/modeswitcher` | `dist/index.js`       | `ModeSwitcher.css` → `dist/ModeSwitcher.css` |
-| `@aio-ui/pricingcard` | `packages/components/pricingcard`  | `dist/index.js`       | `PricingCard.css` → `dist/PricingCard.css` |
-| `@aio-ui/product`     | `packages/components/product`      | `dist/index.js`       | `ProductCard.css`, `ProductDetail.css`, `ProductGrid.css` → `dist/` |
-| `@aio-ui/rating`      | `packages/components/rating`       | `dist/index.js`       | `Rating.css` → `dist/Rating.css`       |
-| `@aio-ui/section`     | `packages/components/section`      | `dist/index.js`       | `Section.css` → `dist/Section.css`     |
-| `@aio-ui/tab`         | `packages/components/tab`          | `dist/index.js`       | `Tab.css` → `dist/Tab.css`             |
-| `@aio-ui/table`       | `packages/components/table`        | `dist/index.js`       | `Table.css` → `dist/Table.css`         |
-| `@aio-ui/animations`  | `packages/modules/animations`      | `dist/index.js`       | `Animations.css` → `dist/Animations.css` |
-| `@aio-ui/event-emitter` | `packages/modules/event-emitter` | `dist/index.js`       | —                                     |
-| `@aio-ui/http-service`| `packages/modules/http-service`    | `dist/index.js`       | —                                     |
-| `@aio-ui/module-loader` | `packages/modules/module-loader` | `dist/index.js`       | —                                     |
-| `@aio-ui/router`      | `packages/modules/router`          | `dist/index.js`       | —                                     |
-| `@aio-ui/theme`       | `packages/modules/theme`           | `dist/index.js`       | —                                     |
-| `@aio-ui/theme-cyberpunk` | `packages/themes/cyberpunk`    | `dist/index.js`       | `CyberpunkTheme.css` → `dist/src/CyberpunkTheme.css` |
-| `@aio-ui/theme-default` | `packages/themes/default`        | `dist/index.js`       | —                                     |
-| `@aio-ui/theme-horizontal` | `packages/themes/horizontal`  | `dist/index.js`       | —                                     |
-| `@aio-ui/frameworks`  | `packages/kits/frameworks`         | `dist/index.js`       | —                                     |
-| `@aio-ui/modules`     | `packages/kits/modules`            | `dist/index.js`       | —                                     |
-| `@aio-ui/themes`      | `packages/kits/themes`             | `dist/index.js`       | —                                     |
+| Package                    | Directory                          | Entry (`exports["."]`) | Stylesheet subpath                                                                                                                                                                                 |
+| -------------------------- | ---------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@aio-ui/app`              | `packages/app`                     | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/base`             | `packages/base`                    | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/core`             | `packages/core`                    | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/styles`           | `packages/styles`                  | — (CSS only)           | `index.css` → `src/index.css` (+ `variables`, `typography`, `components`, `layout`, `icon`)                                                                                                        |
+| `@aio-ui/utilities`        | `packages/utilities`               | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/accordion`        | `packages/components/accordion`    | `dist/index.js`        | `Accordion.css` → `dist/Accordion.css`                                                                                                                                                             |
+| `@aio-ui/article`          | `packages/components/article`      | `dist/index.js`        | `Article.css` → `dist/Article.css`                                                                                                                                                                 |
+| `@aio-ui/badge`            | `packages/components/badge`        | `dist/index.js`        | `Badge.css` → `dist/Badge.css`                                                                                                                                                                     |
+| `@aio-ui/carousel`         | `packages/components/carousel`     | `dist/index.js`        | `Carousel.css` → `dist/Carousel.css`                                                                                                                                                               |
+| `@aio-ui/code-block`       | `packages/components/code-block`   | `dist/index.js`        | `CodeBlock.css` → `dist/CodeBlock.css`                                                                                                                                                             |
+| `@aio-ui/fabmenu`          | `packages/components/fabmenu`      | `dist/index.js`        | `FabMenu.css` → `dist/FabMenu.css`                                                                                                                                                                 |
+| `@aio-ui/footer`           | `packages/components/footer`       | `dist/index.js`        | `Footer.css` → `dist/Footer.css`                                                                                                                                                                   |
+| `@aio-ui/form`             | `packages/components/form`         | `dist/index.js`        | `Form.css` → `dist/Form.css`                                                                                                                                                                       |
+| `@aio-ui/id-address`       | `packages/components/id-address`   | `dist/index.js`        | `id-address.css` → `dist/id-address.css`                                                                                                                                                           |
+| `@aio-ui/input`            | `packages/components/input`        | `dist/index.js`        | `input.css` → `dist/input.css`, `dropdown.css` → `dist/Dropdown/Dropdown.css`, `file-uploader.css` → `dist/FileUploader/FileUploader.css`, `controls.css` → `dist/InputControls/inputControls.css` |
+| `@aio-ui/markdown`         | `packages/components/markdown`     | `dist/index.js`        | `Markdown.css` → `dist/Markdown.css`                                                                                                                                                               |
+| `@aio-ui/masonry`          | `packages/components/masonry`      | `dist/index.js`        | `Masonry.css` → `dist/Masonry.css`                                                                                                                                                                 |
+| `@aio-ui/menu`             | `packages/components/menu`         | `dist/index.js`        | `Menu.css` → `dist/Menu.css`                                                                                                                                                                       |
+| `@aio-ui/message`          | `packages/components/message`      | `dist/index.js`        | `Message.css` → `dist/Message.css`                                                                                                                                                                 |
+| `@aio-ui/modal`            | `packages/components/modal`        | `dist/index.js`        | `Modal.css` → `dist/Modal.css`                                                                                                                                                                     |
+| `@aio-ui/modeswitcher`     | `packages/components/modeswitcher` | `dist/index.js`        | `ModeSwitcher.css` → `dist/ModeSwitcher.css`                                                                                                                                                       |
+| `@aio-ui/pricingcard`      | `packages/components/pricingcard`  | `dist/index.js`        | `PricingCard.css` → `dist/PricingCard.css`                                                                                                                                                         |
+| `@aio-ui/product`          | `packages/components/product`      | `dist/index.js`        | `ProductCard.css`, `ProductDetail.css`, `ProductGrid.css` → `dist/`                                                                                                                                |
+| `@aio-ui/rating`           | `packages/components/rating`       | `dist/index.js`        | `Rating.css` → `dist/Rating.css`                                                                                                                                                                   |
+| `@aio-ui/section`          | `packages/components/section`      | `dist/index.js`        | `Section.css` → `dist/Section.css`                                                                                                                                                                 |
+| `@aio-ui/tab`              | `packages/components/tab`          | `dist/index.js`        | `Tab.css` → `dist/Tab.css`                                                                                                                                                                         |
+| `@aio-ui/table`            | `packages/components/table`        | `dist/index.js`        | `Table.css` → `dist/Table.css`                                                                                                                                                                     |
+| `@aio-ui/animations`       | `packages/modules/animations`      | `dist/index.js`        | `Animations.css` → `dist/Animations.css`                                                                                                                                                           |
+| `@aio-ui/event-emitter`    | `packages/modules/event-emitter`   | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/http-service`     | `packages/modules/http-service`    | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/module-loader`    | `packages/modules/module-loader`   | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/router`           | `packages/modules/router`          | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/theme`            | `packages/modules/theme`           | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/theme-cyberpunk`  | `packages/themes/cyberpunk`        | `dist/index.js`        | `CyberpunkTheme.css` → `dist/src/CyberpunkTheme.css`                                                                                                                                               |
+| `@aio-ui/theme-default`    | `packages/themes/default`          | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/theme-horizontal` | `packages/themes/horizontal`       | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/frameworks`       | `packages/kits/frameworks`         | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/modules`          | `packages/kits/modules`            | `dist/index.js`        | —                                                                                                                                                                                                  |
+| `@aio-ui/themes`           | `packages/kits/themes`             | `dist/index.js`        | —                                                                                                                                                                                                  |
 
 ## 4. Prerequisites (do not skip)
 
@@ -382,18 +383,18 @@ Never push `main` to the old `rajutan` remote.
 
 ## 8. Troubleshooting
 
-| Symptom                                      | Cause                                  | Fix                                                    |
-| -------------------------------------------- | -------------------------------------- | ------------------------------------------------------ |
-| Every package URL 404s, `registry.json` 404s | Tag still points at `main` (no `dist`) | Run `publish-cdn.mjs --apply`, purge                   |
-| One subpath 404s (`dropdown/module`)         | URL derived from the specifier         | Check `layout.subpaths`; resolver must use `exports`   |
-| A stylesheet 404s at the package root        | CSS export names a source file         | Prefer `dist/` for CSS in `release.mjs` / `layout.mjs` |
-| Browser ignores the import map               | Missing `"imports"` wrapper            | `runtime.ts` serialises `site.importMap`               |
-| `tar (child): Cannot connect to …`           | Absolute Windows path passed to tar    | Use repo-relative paths (the script already does)      |
-| `422 already_exists` on upload               | Asset name already present             | Delete the old asset, then upload                      |
-| jsDelivr keeps serving the old bytes         | CDN cache                              | Purge the URL(s), wait a few seconds, hard-reload      |
+| Symptom                                           | Cause                                                                                                         | Fix                                                                                                                                                                         |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Every package URL 404s, `registry.json` 404s      | Tag still points at `main` (no `dist`)                                                                        | Run `publish-cdn.mjs --apply`, purge                                                                                                                                        |
+| One subpath 404s (`dropdown/module`)              | URL derived from the specifier                                                                                | Check `layout.subpaths`; resolver must use `exports`                                                                                                                        |
+| A stylesheet 404s at the package root             | CSS export names a source file                                                                                | Prefer `dist/` for CSS in `release.mjs` / `layout.mjs`                                                                                                                      |
+| Browser ignores the import map                    | Missing `"imports"` wrapper                                                                                   | `runtime.ts` serialises `site.importMap`                                                                                                                                    |
+| `tar (child): Cannot connect to …`                | Absolute Windows path passed to tar                                                                           | Use repo-relative paths (the script already does)                                                                                                                           |
+| `422 already_exists` on upload                    | Asset name already present                                                                                    | Delete the old asset, then upload                                                                                                                                           |
+| jsDelivr keeps serving the old bytes              | CDN cache                                                                                                     | Purge the URL(s), wait a few seconds, hard-reload                                                                                                                           |
 | Moved the tag, jsDelivr still serves the old tree | jsDelivr pins a tag to a commit (`immutable, max-age=31536000`); purge reports `finished` and changes nothing | Publish a **new version/tag** (`version.mjs --apply --version 0.1.1`) or point `registry.base` at `@<commit-sha>` / `@cdn`. Never force-move a tag jsDelivr already serves. |
-| Old registry + new assets (`integrity` mismatch) | A tag's registry was cached before the assets were replaced | Treat that tag as unusable; publish a new version |
-| jsDelivr 404s the whole repo                 | Repository is private or tag missing   | Make it public / check `git ls-remote`                 |
+| Old registry + new assets (`integrity` mismatch)  | A tag's registry was cached before the assets were replaced                                                   | Treat that tag as unusable; publish a new version                                                                                                                           |
+| jsDelivr 404s the whole repo                      | Repository is private or tag missing                                                                          | Make it public / check `git ls-remote`                                                                                                                                      |
 
 ## 9. Pre-flight checklist
 
