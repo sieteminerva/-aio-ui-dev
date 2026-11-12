@@ -1,7 +1,10 @@
-> **STEP 0 — memory recovery (mandatory, first action of any session):** `git log --oneline -12`,
+> **STEP 0 — memory recovery + claim (mandatory, first action of any session):** `git log --oneline -12`,
 > then `git status --short`, then open the active checkpoint — `/memories/session/<task>.md`,
-> falling back to `.guidance/project/STATUS.md`. Only then plan. Every finished action category
-> leaves **3 pointer lines** (`CHANGED →`, `PROVED →`, `NEXT →`); see `.guidance/AGENT_RULES.md` §10.
+> falling back to `.guidance/project/STATUS.md`. **Then read the claim board
+> `.guidance/project/AGENTS.md` and take your row before the first edit** — overlapping a live row
+> is a stop-and-ask, not an override. Only then plan. Every finished action category leaves
+> **3 pointer lines** (`CHANGED →`, `PROVED →`, `NEXT →`); see `.guidance/AGENT_RULES.md` §10
+> (checkpoint) and §11 (claims).
 
 # AGENTS.md — Framework band (`packages/**` + `examples/demo/**`)
 

@@ -99,8 +99,9 @@ NEXT    → <one action> | blocks: <none|item>
   `finding → fix → evidence` bullets; nothing else survives compaction intact.
 - **Recovery (new chat, ≤ 3 turns):** `git log --oneline -15` + `git status --short` → view
   `/memories/session/<task>.md` → read `.guidance/project/STATUS.md`. Then state the plan.
-- **Prefix:** the same 4-line `STEP 0` block sits at the top of **all 6** `AGENTS.md` files
+- **Prefix:** the same `STEP 0` block sits at the top of **all 6** band `AGENTS.md` files
   (root router + 5 bands). Edit all six or none — a band opened standalone must still carry it.
+  The block also reads the claim board (§11), so a session cannot start on an owned scope.
 
 ## 11. One owner per session
 
@@ -112,8 +113,19 @@ and a commit drags in someone else's half-finished batch.
 - **Override is allowed, blind override is not.** Before touching files another agent edited,
   prove it is idle: `git status --short` twice a few minutes apart, or compare `mtime`. Still
   changing → stop and ask the user. Once proven idle, override freely — no merge archaeology.
-- **Claim the tree** at the first edit: one line in `STATUS.md` `Active` naming the task.
-  Clear it at handoff.
+- **Claim the tree** at the first edit: one line in `STATUS.md` `Active` naming the task, **plus a
+  row on the claim board** `.guidance/project/AGENTS.md`. Clear both at handoff.
+- **The claim board is the only shared lock.** One row per live writer: agent identity, band,
+  task, write scope (paths/globs), start date, checkpoint file, state (`active|blocked|handoff`).
+  A `STATUS.md` line says *what* is running; the board says *who owns which paths* — needed
+  because two sessions can work the same task name in different bands.
+- **Overlapping scope is a stop sign.** If a live row's write scope intersects yours, do not
+  edit: quote both rows to the user and ask. Overlap is allowed only when the owner's row says
+  `handoff` **and** two `git status --short` checks prove the tree is idle.
+- **Keep your row current.** Rewrite it at every checkpoint (state, plus the task line when the
+  detail changes). A row untouched for more than a day with no matching `git status` movement is
+  dead: prove idleness twice, then take it over by rewriting the row — never leave two rows for
+  one scope.
 - **Commit per gate, before compaction.** Compaction is lossy by design; an uncommitted batch
   cannot be recovered from memory files alone.
 - **Budget:** ≤ 60k tokens / ~15 turns per batch (§7). At ~80k: finish the edit, run the gate,
