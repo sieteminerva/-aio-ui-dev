@@ -1,14 +1,14 @@
 {
   "name": "@aio-ui/router",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "files": [
     "dist",
     "*.ts"
   ],
   "peerDependencies": {
-    "@aio-ui/core": "^0.1.0",
-    "@aio-ui/utilities": "^0.1.0"
+    "@aio-ui/core": "^0.1.1",
+    "@aio-ui/utilities": "^0.1.1"
   },
   "exports": {
     ".": {

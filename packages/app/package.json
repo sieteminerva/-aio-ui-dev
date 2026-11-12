@@ -1,13 +1,13 @@
 {
   "name": "@aio-ui/app",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "files": [
     "dist",
     "src"
   ],
   "peerDependencies": {
-    "@aio-ui/core": "^0.1.0"
+    "@aio-ui/core": "^0.1.1"
   },
   "exports": {
     ".": {
