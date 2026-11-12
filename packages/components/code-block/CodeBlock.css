@@ -1,0 +1,66 @@
+/* ==========================================================================
+   Code Block (.code-block)
+   One dark "paper" panel per source snippet: a caption, then `pre > code`.
+
+   The two base colours are deliberately LITERAL in both light and dark mode. A code
+   block is paper with ink of its own — it is not a surface of the page — so it does not
+   derive from `--app-surface-*`; doing so would invert it with the theme and turn it
+   into a second card. Only the corner radius joins the app contract.
+   ========================================================================== */
+
+:root,
+[data-theme] {
+  --code-block-background: #14100c;
+  --code-block-text-color: #e9e2d8;
+  --code-block-label-color: rgba(233, 226, 216, 0.62);
+  --code-block-radius: var(--app-component-border-radius, 1rem);
+  --code-block-padding: 0.9rem 1rem;
+  --code-block-font-family: ui-monospace, monospace;
+  --code-block-font-size: 0.72rem;
+  --code-block-line-height: 1.5;
+  --code-block-label-font-size: 0.68rem;
+  --code-block-label-letter-spacing: 0.08em;
+  --code-block-gap: 0.5rem;
+  --code-block-label-gap: 0.35rem;
+}
+
+/* Several labelled blocks in one call: they stack, they do not touch. */
+.code-block-stack {
+  display: grid;
+  gap: var(--code-block-gap);
+  margin: 0;
+}
+
+.code-block-figure {
+  display: grid;
+  gap: var(--code-block-label-gap);
+  margin: 0;
+}
+
+.code-block-label {
+  font-family: var(--code-block-font-family);
+  font-size: var(--code-block-label-font-size);
+  letter-spacing: var(--code-block-label-letter-spacing);
+  text-transform: uppercase;
+  color: var(--code-block-label-color);
+}
+
+.code-block {
+  margin: 0;
+  padding: var(--code-block-padding);
+  background: var(--code-block-background);
+  color: var(--code-block-text-color);
+  border-radius: var(--code-block-radius);
+  font-family: var(--code-block-font-family);
+  font-size: var(--code-block-font-size);
+  line-height: var(--code-block-line-height);
+  overflow-x: auto;
+}
+
+/* `code` carries no look of its own here: the panel owns the type, the element is the
+   hook a highlighter would decorate. */
+.code-block-source {
+  font: inherit;
+  color: inherit;
+  white-space: pre;
+}

@@ -51,13 +51,14 @@ function notesList(notes: string[]): HTMLElement {
 }
 
 /** The docs column: summary, facts, how the demo registers it, config, then the traps. */
-function moduleDoc(module: iDemoModule): HTMLElement {
+function moduleDoc(module: iDemoModule, build: BuildFn): HTMLElement {
   const panel = node("div", "doc-panel");
 
   panel.append(node("p", "summary", module.summary), factList(module.facts));
 
   panel.append(node("h2", undefined, "Register"));
-  panel.append(node("pre", "snippet", module.snippet));
+  // The snippet is the real `code-block` component — the demo never owns code styling.
+  mountInto(panel, build("code-block", { code: module.snippet }));
 
   panel.append(node("h2", undefined, "Config"));
   panel.append(configTable(module));
@@ -70,8 +71,8 @@ function moduleDoc(module: iDemoModule): HTMLElement {
   return panel;
 }
 
-function mountMain(host: HTMLElement, module: iDemoModule): void {
-  mountInto(host, moduleDoc(module));
+function mountMain(host: HTMLElement, module: iDemoModule, build: BuildFn): void {
+  mountInto(host, moduleDoc(module, build));
 }
 
 /**
@@ -112,7 +113,7 @@ function modulesContent(module: iDemoModule): iPageContent {
     main: {
       ...pageHead(module.name, `${module.pkg} · slot: ${module.slot ?? "none"} · ${module.entry}`),
       "div.module-doc": {
-        onCreated: (element: HTMLElement) => mountMain(element, module),
+        onCreated: (element: HTMLElement, _render: any, build: BuildFn) => mountMain(element, module, build),
       },
     },
   });

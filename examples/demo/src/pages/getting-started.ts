@@ -3,6 +3,8 @@ import type { iPageContent, iPageController } from "@aio-ui/app";
 import { mountInto, node } from "../dom";
 import { pageHead, shellPage } from "../shell";
 
+type BuildFn = (name: string, data?: any) => HTMLElement;
+
 /**
  * Getting Started — setup, then the AioApp contract.
  *
@@ -22,10 +24,6 @@ function section(title: string, ...children: (HTMLElement | string)[]): HTMLElem
   return block;
 }
 
-function code(snippet: string): HTMLElement {
-  return node("pre", "snippet", snippet);
-}
-
 function table(headers: string[], rows: string[][]): HTMLElement {
   const element = node("table", "api-config");
   const head = node("tr");
@@ -41,7 +39,10 @@ function table(headers: string[], rows: string[][]): HTMLElement {
   return element;
 }
 
-function doc(): HTMLElement {
+function doc(build: BuildFn): HTMLElement {
+  // Every snippet on this page is the real `code-block` component: its look belongs to
+  // the package, and this page only decides which text goes into it.
+  const code = (snippet: string) => build("code-block", { code: snippet });
   const panel = node("div", "doc-panel");
 
   panel.append(
@@ -219,7 +220,7 @@ export class GettingStartedPage implements iPageController {
       main: {
         ...pageHead("Getting Started", "install · import map · AioApp config · slots · routes"),
         "div.doc-host": {
-          onCreated: (element: HTMLElement) => mountInto(element, doc()),
+          onCreated: (element: HTMLElement, _render: any, build: BuildFn) => mountInto(element, doc(build)),
         },
       },
     });

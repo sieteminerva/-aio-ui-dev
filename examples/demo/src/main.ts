@@ -76,9 +76,9 @@ const componentRoutes: iComponentRoute[] = [
   // Every route mounts the same shell menu, so every route names it. A builder called
   // inside `onCreated` is invisible to the node collector, and this plan is the only
   // thing that preloads it — a missing entry fails the render on a cold load.
-  { route: 'getting-started', components: ['menu', 'fab-menu'] },
+  { route: 'getting-started', components: ['menu', 'code-block', 'fab-menu'] },
   // The modules docs reuse the same `menu` builder for their sidebar.
-  { route: 'modules', components: ['menu', 'fab-menu'] },
+  { route: 'modules', components: ['menu', 'code-block', 'fab-menu'] },
   { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'menu', 'fab-menu'] },
   { route: 'product', components: ['product', 'menu', 'fab-menu'] },
   { route: 'article', components: ['article', 'menu', 'fab-menu'] },

@@ -37,7 +37,7 @@ function mountMain(host: HTMLElement, entry: iDemoEntry, build: BuildFn): void {
               description: `build("${entry.name}", payload)`,
             },
           },
-          { id: "panel-usage", content: usagePanel(entry) },
+          { id: "panel-usage", content: usagePanel(entry, build) },
           { id: "panel-api", content: apiPanel(entry) },
         ],
       },

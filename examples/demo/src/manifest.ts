@@ -135,6 +135,25 @@ export const DEMO: iDemoEntry[] = [
     note: "config: { slidesPerView: 2, animation: slide-left } → maxIndex = slides - perView",
   },
   {
+    name: "code-block",
+    path: "@aio-ui/code-block",
+    stylesheet: "@aio-ui/code-block/CodeBlock.css",
+    category: "content",
+    tier: "basic",
+    kind: "element",
+    // Two blocks in one payload: the `{ blocks }` shape is what a docs page uses.
+    payload: {
+      blocks: [
+        {
+          code: ['const app = new AioApp({ container: "#app", source: { pages } });', "await app.render();"].join("\n"),
+          label: "ts · mount",
+          language: "ts",
+        },
+        { code: "npm run verify", label: "shell · gate" },
+      ],
+    },
+  },
+  {
     name: "tab",
     path: "@aio-ui/tab",
     stylesheet: "@aio-ui/tab/Tab.css",

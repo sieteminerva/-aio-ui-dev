@@ -69,6 +69,8 @@ export interface iBuilderRegistry {
   "editor": iBasicNode;
   "form-editor": iBasicNode;
   badge: any;
+  /** A dark panel for source text — payload `{ code, label?, language? } | { blocks }`. */
+  "code-block": any;
   // Untuk komponen baru nanti, cukup daftarkan jenis array atomnya di sini:
   // stats: iStatsProperty[];
 }

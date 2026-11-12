@@ -385,18 +385,6 @@ header.docs-head {
     }
   }
 
-  & .snippet {
-    margin: 0;
-    padding: 0.9rem 1rem;
-    background: #14100c;
-    color: #e9e2d8;
-    border-radius: var(--app-component-border-radius, 1rem);
-    font-family: ui-monospace, monospace;
-    font-size: 0.72rem;
-    line-height: 1.5;
-    overflow-x: auto;
-  }
-
   & .limits {
     margin: 0;
     padding-left: 1.1rem;
@@ -465,10 +453,6 @@ header.docs-head {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--app-text-accent-color, #5b5b63);
-}
-
-.doc-panel .doc-section .snippet {
-  margin: 0;
 }
 
 /* ==========================================================================

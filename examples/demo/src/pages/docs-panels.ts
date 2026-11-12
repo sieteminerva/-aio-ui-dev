@@ -79,12 +79,14 @@ export function previewPanel(entry: iDemoEntry, build: BuildFn): HTMLElement {
 }
 
 /** Cara Penggunaan: one summary line, the four facts, the snippet, then the limits. */
-export function usagePanel(entry: iDemoEntry): HTMLElement {
+export function usagePanel(entry: iDemoEntry, build: BuildFn): HTMLElement {
   const view = usageOf(entry);
   const panel = node("div", "usage-panel");
 
   panel.append(node("p", "summary", view.summary), factList(view.fields));
-  panel.append(node("pre", "snippet", view.snippet));
+  // The snippet is the real `code-block` component, not a hand-rolled `<pre>`: the demo
+  // shows the framework by using it, and its look lives in the package, not in demo CSS.
+  mountInto(panel, build("code-block", { code: view.snippet }));
 
   if (view.limits.length) {
     const limits = node("ul", "limits");
