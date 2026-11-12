@@ -35,13 +35,13 @@ not highlight anything, it only reserves the hook a highlighter would use.
 
 ## Nodes
 
-| Key                              | Default tag  | Class / note                    |
-| -------------------------------- | ------------ | ------------------------------- |
-| `@container`                     | `div`        | `code-block-stack` — holds all  |
-| `@container>figure`              | `figure`     | `code-block-figure` — one block |
-| `@container>figure>label`        | `figcaption` | `code-block-label`, only if set |
-| `@container>figure>block`        | `pre`        | `code-block` — the panel        |
-| `@container>figure>block>source` | `code`       | `code-block-source` — the text  |
+| Key                              | Default tag  | Class / note             |
+| -------------------------------- | ------------ | ------------------------ |
+| `@container`                     | `section`    | `code-block` — holds all |
+| `@container>figure`              | `figure`     | `frame` — one block      |
+| `@container>figure>label`        | `figcaption` | `label`, only if set     |
+| `@container>figure>block`        | `pre`        | `paper` — the panel      |
+| `@container>figure>block>source` | `code`       | `body` — the text        |
 
 ## Tokens
 

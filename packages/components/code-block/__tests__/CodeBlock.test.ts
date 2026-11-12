@@ -52,7 +52,8 @@ describe("Code Block contract", () => {
   });
 
   it("renders the panel as a real pre with a code child", () => {
-    expect(DEFAULT_SELECTORS["@container>figure>block"]).toEqual({ tagName: "pre", className: "code-block" });
+    expect(DEFAULT_SELECTORS["@container"]).toEqual({ tagName: "section", className: "code-block" });
+    expect(DEFAULT_SELECTORS["@container>figure>block"]).toEqual({ tagName: "pre", className: "paper" });
     expect(DEFAULT_SELECTORS["@container>figure>block>source"]?.tagName).toBe("code");
   });
 });

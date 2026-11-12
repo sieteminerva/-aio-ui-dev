@@ -25,42 +25,45 @@
 }
 
 /* Several labelled blocks in one call: they stack, they do not touch. */
-.code-block-stack {
+.code-block {
   display: grid;
   gap: var(--code-block-gap);
   margin: 0;
-}
 
-.code-block-figure {
-  display: grid;
-  gap: var(--code-block-label-gap);
-  margin: 0;
-}
+  /* One labelled panel. A Markdown fence is a single panel, so it is the root AND its own
+     frame (`figure.code-block.frame`) instead of nesting one more wrapper. */
+  & .frame,
+  &.frame {
+    display: grid;
+    gap: var(--code-block-label-gap);
+    margin: 0;
+  }
 
-.code-block-label {
-  font-family: var(--code-block-font-family);
-  font-size: var(--code-block-label-font-size);
-  letter-spacing: var(--code-block-label-letter-spacing);
-  text-transform: uppercase;
-  color: var(--code-block-label-color);
-}
+  & .label {
+    font-family: var(--code-block-font-family);
+    font-size: clamp(0.64rem, 0.6rem + 0.15vw, var(--code-block-label-font-size));
+    letter-spacing: var(--code-block-label-letter-spacing);
+    text-transform: uppercase;
+    color: var(--code-block-label-color);
+  }
 
-.code-block {
-  margin: 0;
-  padding: var(--code-block-padding);
-  background: var(--code-block-background);
-  color: var(--code-block-text-color);
-  border-radius: var(--code-block-radius);
-  font-family: var(--code-block-font-family);
-  font-size: var(--code-block-font-size);
-  line-height: var(--code-block-line-height);
-  overflow-x: auto;
-}
+  & .paper {
+    margin: 0;
+    padding: var(--code-block-padding);
+    background: var(--code-block-background);
+    color: var(--code-block-text-color);
+    border-radius: var(--code-block-radius);
+    font-family: var(--code-block-font-family);
+    font-size: var(--code-block-font-size);
+    line-height: var(--code-block-line-height);
+    overflow-x: auto;
 
-/* `code` carries no look of its own here: the panel owns the type, the element is the
-   hook a highlighter would decorate. */
-.code-block-source {
-  font: inherit;
-  color: inherit;
-  white-space: pre;
+    /* `code` carries no look of its own here: the panel owns the type, the element is
+       the hook a highlighter would decorate. */
+    & .body {
+      font: inherit;
+      color: inherit;
+      white-space: pre;
+    }
+  }
 }

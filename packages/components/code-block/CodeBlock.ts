@@ -32,15 +32,16 @@ export const ELEMENT_KEYS = [
 export type CodeBlockElementType = (typeof ELEMENT_KEYS)[number];
 
 /**
- * Default shape per key. The block itself is a real `pre`, so a caller that only knows
+ * Default shape per key. The root is a real `section` (it is a block of source text, and it
+ * holds one or more panels); the panel itself is a real `pre`, so a caller that only knows
  * "this is code" still gets a correct element even when it overrides the wrapper.
  */
 export const DEFAULT_SELECTORS: iBuilderSelectorsConfig<CodeBlockElementType> = {
-  "@container": { tagName: "div", className: "code-block-stack" },
-  "@container>figure": { tagName: "figure", className: "code-block-figure" },
-  "@container>figure>label": { tagName: "figcaption", className: "code-block-label" },
-  "@container>figure>block": { tagName: "pre", className: "code-block" },
-  "@container>figure>block>source": { tagName: "code", className: "code-block-source" },
+  "@container": { tagName: "section", className: "code-block" },
+  "@container>figure": { tagName: "figure", className: "frame" },
+  "@container>figure>label": { tagName: "figcaption", className: "label" },
+  "@container>figure>block": { tagName: "pre", className: "paper" },
+  "@container>figure>block>source": { tagName: "code", className: "body" },
 };
 
 /** One panel of source text. `label` prints above it, `language` is a styling hook. */
