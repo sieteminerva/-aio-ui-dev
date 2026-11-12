@@ -10,11 +10,11 @@ through a payload.
 
 ## Hash grammar
 
-| Hash                          | Read as                                          |
-| ----------------------------- | ------------------------------------------------ |
-| `#route`                      | route, no fragment, current theme                |
-| `#route/fragment`             | route + the fragment to scroll to                |
-| `#route/fragment?theme=<id>`  | all three                                        |
+| Hash                         | Read as                           |
+| ---------------------------- | --------------------------------- |
+| `#route`                     | route, no fragment, current theme |
+| `#route/fragment`            | route + the fragment to scroll to |
+| `#route/fragment?theme=<id>` | all three                         |
 
 The first segment is the route. An unknown first segment is **not** an error: the router calls
 `redirect(defaultRoute, theme, segment)`, so the URL becomes `#<default>/<segment>?theme=…` and
@@ -23,12 +23,12 @@ the default page renders. That is why a bare section anchor (`#faq`) silently be
 
 ## Config
 
-| Option           | Default     | Meaning                                                        |
-| ---------------- | ----------- | -------------------------------------------------------------- |
-| `defaultRoute`   | `"home"`    | Where an unknown or empty hash lands                           |
-| `initialTheme`   | `"default"` | Theme id before the hash names one                             |
-| `validRoutes`    | `[]`        | Routes that may appear in a hash (the app fills this for you)   |
-| `onRouteChanged` | no-op       | Called with `{ route, theme, fragment }`                       |
+| Option           | Default     | Meaning                                                       |
+| ---------------- | ----------- | ------------------------------------------------------------- |
+| `defaultRoute`   | `"home"`    | Where an unknown or empty hash lands                          |
+| `initialTheme`   | `"default"` | Theme id before the hash names one                            |
+| `validRoutes`    | `[]`        | Routes that may appear in a hash (the app fills this for you) |
+| `onRouteChanged` | no-op       | Called with `{ route, theme, fragment }`                      |
 
 When registered as a module, the host context wins over `config`: `defaultRoute` and `theme`
 come from the app, and `routes` comes from what the app really registered.
@@ -43,14 +43,14 @@ None.
 
 ## Methods
 
-| Method                              | Meaning                                                        |
-| ----------------------------------- | -------------------------------------------------------------- |
-| `parseUrlHash()`                    | Current hash read as `{ route, theme, fragment }`               |
-| `navigate(routeId, theme, fragment)`| Go to a route; uses `pushState`, so no `hashchange` fires        |
-| `redirect(route, theme, fragment)`  | Replace the current entry; what an unknown route triggers        |
-| `updateValidRoutes(routes)`         | Replace the set of acceptable routes                            |
-| `updateValidRoute(route)`           | Add one route                                                   |
-| `destroy()`                         | Remove the `hashchange` listener                                |
+| Method                               | Meaning                                                   |
+| ------------------------------------ | --------------------------------------------------------- |
+| `parseUrlHash()`                     | Current hash read as `{ route, theme, fragment }`         |
+| `navigate(routeId, theme, fragment)` | Go to a route; uses `pushState`, so no `hashchange` fires |
+| `redirect(route, theme, fragment)`   | Replace the current entry; what an unknown route triggers |
+| `updateValidRoutes(routes)`          | Replace the set of acceptable routes                      |
+| `updateValidRoute(route)`            | Add one route                                             |
+| `destroy()`                          | Remove the `hashchange` listener                          |
 
 A plain `href="#x"` link bypasses `navigate()`/`redirect()` and only fires `hashchange`;
 that is why the listener exists at all.
@@ -59,6 +59,6 @@ that is why the listener exists at all.
 
 1. Add `HashRouter` to the app: `.registerModule(HashRouter)`.
 2. Do not fill `validRoutes` by hand: the app derives it from `pages ∪ controllers ∪
-   pageDefinitions`.
+pageDefinitions`.
 3. Read `app.slots.router` when a route must change outside a link.
 4. Call `destroy()` only if the app itself is being torn down — it removes the listener.

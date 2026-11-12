@@ -11,7 +11,9 @@ Fenced code is **not** restyled here: it renders the `code-block` markup
 ## Payload
 
 ```ts
-{ source: "# Title\n\nSome **text**." }
+{
+  source: "# Title\n\nSome **text**.";
+}
 ```
 
 A bare string is accepted as the source. Anything else renders nothing — guessing at a
@@ -19,18 +21,18 @@ document shape would print the wrong thing with confidence.
 
 ## Supported syntax
 
-| Block       | Written as                     | Rendered as                          |
-| ----------- | ------------------------------ | ------------------------------------ |
-| heading     | `#` … `######`                 | `h1`–`h4` (levels > 4 clamp to `h4`) |
-| paragraph   | consecutive lines              | one `p`, lines joined with a space   |
-| fenced code | ```` ```lang ````              | `figure > figcaption + pre > code`   |
-| list        | `-`/`*`/`+` or `1.`            | `ul`/`ol` + `li`                     |
-| table       | GFM pipe table                 | `table > tr > th/td`                 |
-| blockquote  | `> `                           | `blockquote` + paragraphs            |
-| rule        | `---` / `***` / `___`          | `hr`                                 |
-| inline      | `` `code` ``, `**bold**`, `*em*`/`_em_`, `[text](href)` | `code`, `strong`, `em`, `a` |
+| Block       | Written as                                              | Rendered as                          |
+| ----------- | ------------------------------------------------------- | ------------------------------------ |
+| heading     | `#` … `######`                                          | `h1`–`h4` (levels > 4 clamp to `h4`) |
+| paragraph   | consecutive lines                                       | one `p`, lines joined with a space   |
+| fenced code | ` ```lang `                                             | `figure > figcaption + pre > code`   |
+| list        | `-`/`*`/`+` or `1.`                                     | `ul`/`ol` + `li`                     |
+| table       | GFM pipe table                                          | `table > tr > th/td`                 |
+| blockquote  | `> `                                                    | `blockquote` + paragraphs            |
+| rule        | `---` / `***` / `___`                                   | `hr`                                 |
+| inline      | `` `code` ``, `**bold**`, `*em*`/`_em_`, `[text](href)` | `code`, `strong`, `em`, `a`          |
 
-A ```` ```mermaid ```` fence is an ordinary fenced block; highlighting is a renderer's job.
+A ` ```mermaid ` fence is an ordinary fenced block; highlighting is a renderer's job.
 
 ## Config
 
@@ -42,28 +44,28 @@ A ```` ```mermaid ```` fence is an ordinary fenced block; highlighting is a rend
 
 ## Nodes
 
-| Key                              | Default tag  | Class / note                      |
-| -------------------------------- | ------------ | --------------------------------- |
-| `@markdown`                      | `article`    | `markdown` — the document root    |
-| `@markdown>heading-1` … `-4`     | `h1` … `h4`  | `markdown-h1` … `markdown-h4`     |
-| `@markdown>paragraph`            | `p`          | `markdown-p`                      |
-| `@markdown>fence`                | `figure`     | `code-block-figure`               |
-| `@markdown>fence>label`          | `figcaption` | `code-block-label` (language)     |
-| `@markdown>fence>code`           | `pre`        | `code-block`                      |
-| `@markdown>fence>code>source`    | `code`       | `code-block-source`               |
-| `@markdown>unordered` / `>item`  | `ul` / `li`  | `markdown-list` / `markdown-item` |
-| `@markdown>ordered` / `>item`    | `ol` / `li`  | `markdown-list` / `markdown-item` |
-| `@markdown>table`                | `table`      | `markdown-table`                  |
-| `@markdown>table>row`            | `tr`         | `markdown-row`                    |
-| `@markdown>table>row>head`       | `th`         | `markdown-head-cell`              |
-| `@markdown>table>row>cell`       | `td`         | `markdown-cell`                   |
-| `@markdown>quote`                | `blockquote` | `markdown-quote`                  |
-| `@markdown>quote>paragraph`      | `p`          | `markdown-p`                      |
-| `@markdown>rule`                 | `hr`         | `markdown-rule`                   |
-| `@markdown>strong`               | `strong`     | `markdown-strong`                 |
-| `@markdown>emphasis`             | `em`         | `markdown-em`                     |
-| `@markdown>inline-code`          | `code`       | `markdown-code`                   |
-| `@markdown>link`                 | `a`          | `markdown-link`                   |
+| Key                             | Default tag  | Class / note                      |
+| ------------------------------- | ------------ | --------------------------------- |
+| `@markdown`                     | `article`    | `markdown` — the document root    |
+| `@markdown>heading-1` … `-4`    | `h1` … `h4`  | `markdown-h1` … `markdown-h4`     |
+| `@markdown>paragraph`           | `p`          | `markdown-p`                      |
+| `@markdown>fence`               | `figure`     | `code-block-figure`               |
+| `@markdown>fence>label`         | `figcaption` | `code-block-label` (language)     |
+| `@markdown>fence>code`          | `pre`        | `code-block`                      |
+| `@markdown>fence>code>source`   | `code`       | `code-block-source`               |
+| `@markdown>unordered` / `>item` | `ul` / `li`  | `markdown-list` / `markdown-item` |
+| `@markdown>ordered` / `>item`   | `ol` / `li`  | `markdown-list` / `markdown-item` |
+| `@markdown>table`               | `table`      | `markdown-table`                  |
+| `@markdown>table>row`           | `tr`         | `markdown-row`                    |
+| `@markdown>table>row>head`      | `th`         | `markdown-head-cell`              |
+| `@markdown>table>row>cell`      | `td`         | `markdown-cell`                   |
+| `@markdown>quote`               | `blockquote` | `markdown-quote`                  |
+| `@markdown>quote>paragraph`     | `p`          | `markdown-p`                      |
+| `@markdown>rule`                | `hr`         | `markdown-rule`                   |
+| `@markdown>strong`              | `strong`     | `markdown-strong`                 |
+| `@markdown>emphasis`            | `em`         | `markdown-em`                     |
+| `@markdown>inline-code`         | `code`       | `markdown-code`                   |
+| `@markdown>link`                | `a`          | `markdown-link`                   |
 
 An `href` outside `https?:`, `mailto:`, `#`, `/` or `.` becomes `#` — a document may not turn a
 link into a script URL.
@@ -73,20 +75,20 @@ link into a script URL.
 Declared once on `:root, [data-theme]` in `Markdown.css`. The sheet also imports
 `CodeBlock.css`, whose `--code-block-*` tokens own every code panel in the document.
 
-| Token                       | Derives from                    | Used for               |
-| --------------------------- | ------------------------------- | ---------------------- |
-| `--markdown-gap`            | literal `0.85rem`               | Distance between blocks |
-| `--markdown-text-color`     | `--app-text-color`              | Body text              |
-| `--markdown-heading-color`  | `--app-text-heading-color`      | Headings, table headers |
-| `--markdown-muted-color`    | `--app-text-accent-color`       | Quote text             |
-| `--markdown-border-color`   | `--app-border-color`            | Table hairlines        |
-| `--markdown-rule-color`     | `--app-border-color`            | `hr`                   |
-| `--markdown-accent-color`   | `--app-primary-color`           | Links, quote bar       |
-| `--markdown-inline-surface` | `--app-surface-muted`           | Inline code background |
-| `--markdown-font-size`      | literal `0.9rem`                | Body size              |
-| `--markdown-line-height`    | literal `1.65`                  | Body line spacing      |
-| `--markdown-inline-font-size` | literal `0.85em`              | Inline code size       |
-| `--markdown-inline-radius`  | literal `4px`                   | Inline code radius     |
+| Token                         | Derives from               | Used for                |
+| ----------------------------- | -------------------------- | ----------------------- |
+| `--markdown-gap`              | literal `0.85rem`          | Distance between blocks |
+| `--markdown-text-color`       | `--app-text-color`         | Body text               |
+| `--markdown-heading-color`    | `--app-text-heading-color` | Headings, table headers |
+| `--markdown-muted-color`      | `--app-text-accent-color`  | Quote text              |
+| `--markdown-border-color`     | `--app-border-color`       | Table hairlines         |
+| `--markdown-rule-color`       | `--app-border-color`       | `hr`                    |
+| `--markdown-accent-color`     | `--app-primary-color`      | Links, quote bar        |
+| `--markdown-inline-surface`   | `--app-surface-muted`      | Inline code background  |
+| `--markdown-font-size`        | literal `0.9rem`           | Body size               |
+| `--markdown-line-height`      | literal `1.65`             | Body line spacing       |
+| `--markdown-inline-font-size` | literal `0.85em`           | Inline code size        |
+| `--markdown-inline-radius`    | literal `4px`              | Inline code radius      |
 
 ## Wiring checklist
 

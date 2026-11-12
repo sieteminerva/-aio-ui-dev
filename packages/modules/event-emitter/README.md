@@ -27,13 +27,13 @@ None.
 
 ## Methods
 
-| Method            | Meaning                                                          |
-| ----------------- | ---------------------------------------------------------------- |
-| `on(event, cb)`   | Subscribe; known events are typed, custom names are accepted      |
-| `emit(event, data)` | Publish; **a throwing listener cannot stop the others** (logged) |
-| `off(event, cb)`  | Unsubscribe                                                       |
-| `clear()`         | Drop every listener                                               |
-| `destroy()`       | Same as `clear()`; present so a host can release modules generically |
+| Method              | Meaning                                                              |
+| ------------------- | -------------------------------------------------------------------- |
+| `on(event, cb)`     | Subscribe; known events are typed, custom names are accepted         |
+| `emit(event, data)` | Publish; **a throwing listener cannot stop the others** (logged)     |
+| `off(event, cb)`    | Unsubscribe                                                          |
+| `clear()`           | Drop every listener                                                  |
+| `destroy()`         | Same as `clear()`; present so a host can release modules generically |
 
 Unknown event names are deliberate: a component may name its own (`formValidation`,
 `tabs:content-loaded`, `modeChanged`).

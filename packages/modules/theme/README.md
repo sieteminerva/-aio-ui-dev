@@ -10,19 +10,19 @@ None. Themes are supplied through config, and the active id comes from the route
 
 ## Config
 
-| Option   | Default | Meaning                                                     |
-| -------- | ------- | ----------------------------------------------------------- |
-| `themes` | `[]`    | Themes this app ships; the first one is the fallback id      |
+| Option   | Default | Meaning                                                 |
+| -------- | ------- | ------------------------------------------------------- |
+| `themes` | `[]`    | Themes this app ships; the first one is the fallback id |
 
 ## Lifecycle
 
 It is a plain object with three phases, called by the app — not an event subscriber:
 
-| Phase        | When                                   | Purpose                                     |
-| ------------ | -------------------------------------- | ------------------------------------------- |
-| `prepare`    | before the DOM is built                | set what templates will read                |
-| `activate`   | after the page is attached             | the theme applies itself                    |
-| `deactivate` | before the page is replaced            | give the theme a chance to undo             |
+| Phase        | When                        | Purpose                         |
+| ------------ | --------------------------- | ------------------------------- |
+| `prepare`    | before the DOM is built     | set what templates will read    |
+| `activate`   | after the page is attached  | the theme applies itself        |
+| `deactivate` | before the page is replaced | give the theme a chance to undo |
 
 ## Nodes
 
@@ -35,12 +35,12 @@ component sheet derives its own `--<component>-*` layer from those tokens.
 
 ## Methods
 
-| Method            | Returns            | Meaning                                      |
-| ----------------- | ------------------ | -------------------------------------------- |
-| `ids` (getter)    | `string[]`         | Registered theme ids                         |
-| `current` (getter)| `string`           | Active theme id                              |
-| `register(theme)` | `void`             | Add a theme after construction               |
-| `use(themeId)`    | `void`             | Switch; an unknown id is reported and ignored |
+| Method             | Returns    | Meaning                                       |
+| ------------------ | ---------- | --------------------------------------------- |
+| `ids` (getter)     | `string[]` | Registered theme ids                          |
+| `current` (getter) | `string`   | Active theme id                               |
+| `register(theme)`  | `void`     | Add a theme after construction                |
+| `use(themeId)`     | `void`     | Switch; an unknown id is reported and ignored |
 
 `ThemeRegistry` (also exported) is the plain store behind it: `register`, `resolve`, `has`,
 `ids`, `all`, `clear`, `size`.

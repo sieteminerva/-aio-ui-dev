@@ -24,9 +24,9 @@ A definition is data, not behaviour:
 
 ## Config
 
-| Option      | Default  | Meaning                                        |
-| ----------- | -------- | ---------------------------------------------- |
-| `duplicate` | `"warn"` | Policy for two definitions sharing an id        |
+| Option      | Default  | Meaning                                  |
+| ----------- | -------- | ---------------------------------------- |
+| `duplicate` | `"warn"` | Policy for two definitions sharing an id |
 
 Constructed as `new ModuleLoader(scope, definitions?, options?)`.
 
@@ -40,14 +40,14 @@ None.
 
 ## Methods
 
-| Method                    | Meaning                                                  |
-| ------------------------- | -------------------------------------------------------- |
-| `load(id, context)`       | Load one module after its `requires`; returns the instance |
-| `resolveAll(context)`     | Load every applicable definition in dependency order      |
-| `loaded(id)` / `isLoaded(id)` / `loadedIds()` | Inspect what is live                     |
-| `ids()` / `has(id)` / `resolve(id)` | Inspect the definitions                         |
-| `unload(id)` / `unloadAll()` | Teardown in reverse load order                        |
-| `registry` (getter)       | The backing `ModuleRegistry`                              |
+| Method                                        | Meaning                                                    |
+| --------------------------------------------- | ---------------------------------------------------------- |
+| `load(id, context)`                           | Load one module after its `requires`; returns the instance |
+| `resolveAll(context)`                         | Load every applicable definition in dependency order       |
+| `loaded(id)` / `isLoaded(id)` / `loadedIds()` | Inspect what is live                                       |
+| `ids()` / `has(id)` / `resolve(id)`           | Inspect the definitions                                    |
+| `unload(id)` / `unloadAll()`                  | Teardown in reverse load order                             |
+| `registry` (getter)                           | The backing `ModuleRegistry`                               |
 
 ## Wiring checklist
 

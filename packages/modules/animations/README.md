@@ -14,26 +14,26 @@ None — the markup carries the intent:
 
 Built-in behaviours (the `animation` attribute value):
 
-| Type                  | Effect                                     |
-| --------------------- | ------------------------------------------ |
-| `fade-in`             | fade in, optional duration                 |
-| `stagger-fade`        | fade a group in sequence                   |
-| `typewriter`          | type text, optional loop / rewrite         |
-| `text-scramble`       | scramble into the final text               |
-| `count-up`            | count a number up to its value             |
-| `loading-placeholder` | placeholder while data is missing          |
+| Type                  | Effect                             |
+| --------------------- | ---------------------------------- |
+| `fade-in`             | fade in, optional duration         |
+| `stagger-fade`        | fade a group in sequence           |
+| `typewriter`          | type text, optional loop / rewrite |
+| `text-scramble`       | scramble into the final text       |
+| `count-up`            | count a number up to its value     |
+| `loading-placeholder` | placeholder while data is missing  |
 
 ## Config
 
-| Option               | Default | Meaning                                        |
-| -------------------- | ------- | ---------------------------------------------- |
-| `delay`              | `500`   | Global delay (ms) before a behaviour starts     |
-| `typewriter`         | —       | `{ loop, interval, delay, rewrite }`            |
-| `fade`               | —       | `{ duration }`                                  |
-| `staggerFade`        | —       | `{ delay, duration }`                           |
-| `scramble`           | —       | `{ chars, speed }`                              |
-| `loadingPlaceholder` | —       | `{ duration }`                                  |
-| `behaviours`         | `[]`    | Extra behaviours registered at construction     |
+| Option               | Default | Meaning                                     |
+| -------------------- | ------- | ------------------------------------------- |
+| `delay`              | `500`   | Global delay (ms) before a behaviour starts |
+| `typewriter`         | —       | `{ loop, interval, delay, rewrite }`        |
+| `fade`               | —       | `{ duration }`                              |
+| `staggerFade`        | —       | `{ delay, duration }`                       |
+| `scramble`           | —       | `{ chars, speed }`                          |
+| `loadingPlaceholder` | —       | `{ duration }`                              |
+| `behaviours`         | `[]`    | Extra behaviours registered at construction |
 
 ## Nodes
 
@@ -46,17 +46,17 @@ None of its own; timings live in the config above, not in CSS custom properties.
 
 ## Methods
 
-| Method                    | Meaning                                                     |
-| ------------------------- | ----------------------------------------------------------- |
-| `init(root)`              | Observe a subtree and play what is already there            |
-| `scan(root)`              | Force a scan; returns the animated nodes                    |
-| `mount(node)` / `unmount(node)` | Track or release one node programmatically           |
-| `observe(node)` / `unobserve(node)` | Viewport entry/exit for one node                  |
-| `trigger(node)`           | Play now, regardless of viewport                            |
-| `next(scope)`             | Advance a chained scope (`fieldset`, `form`, `section`)      |
-| `stop(node)` / `reset(target)` / `clear(target)` | Interrupt, rewind, or drop state       |
-| `use(behaviour)`          | Register one behaviour after construction                   |
-| `destroy()`               | Release observers and every record                          |
+| Method                                           | Meaning                                                 |
+| ------------------------------------------------ | ------------------------------------------------------- |
+| `init(root)`                                     | Observe a subtree and play what is already there        |
+| `scan(root)`                                     | Force a scan; returns the animated nodes                |
+| `mount(node)` / `unmount(node)`                  | Track or release one node programmatically              |
+| `observe(node)` / `unobserve(node)`              | Viewport entry/exit for one node                        |
+| `trigger(node)`                                  | Play now, regardless of viewport                        |
+| `next(scope)`                                    | Advance a chained scope (`fieldset`, `form`, `section`) |
+| `stop(node)` / `reset(target)` / `clear(target)` | Interrupt, rewind, or drop state                        |
+| `use(behaviour)`                                 | Register one behaviour after construction               |
+| `destroy()`                                      | Release observers and every record                      |
 
 ## Wiring checklist
 
