@@ -76,9 +76,9 @@ const componentRoutes: iComponentRoute[] = [
   // Every route mounts the same shell menu, so every route names it. A builder called
   // inside `onCreated` is invisible to the node collector, and this plan is the only
   // thing that preloads it — a missing entry fails the render on a cold load.
-  { route: 'getting-started', components: ['menu', 'code-block', 'fab-menu'] },
+  { route: 'getting-started', components: ['menu', 'code-block', 'markdown', 'fab-menu'] },
   // The modules docs reuse the same `menu` builder for their sidebar.
-  { route: 'modules', components: ['menu', 'code-block', 'fab-menu'] },
+  { route: 'modules', components: ['menu', 'markdown', 'fab-menu'] },
   { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'menu', 'fab-menu'] },
   { route: 'product', components: ['product', 'menu', 'fab-menu'] },
   { route: 'article', components: ['article', 'menu', 'fab-menu'] },
@@ -121,7 +121,9 @@ async function start(container: HTMLElement) {
     // The theme switcher is a fab menu with per-item handlers, so it needs config too.
     .register('fab-menu', pageComponent('@aio-ui/fabmenu', '@aio-ui/fabmenu/FabMenu.css'))
     // The docs shell: `menu` is one builder with two shapes, `top` and `sidebar`.
-    .register('menu', pageComponent('@aio-ui/menu', '@aio-ui/menu/Menu.css', undefined, 'MenuBuilder'));
+    .register("menu", pageComponent("@aio-ui/menu", "@aio-ui/menu/Menu.css", undefined, "MenuBuilder"))
+    // The docs pages render the repository's own Markdown — one builder, one sheet.
+    .register("markdown", pageComponent("@aio-ui/markdown", "@aio-ui/markdown/Markdown.css", undefined, "MarkdownBuilder"));
 
   const app = new AioApp({
     container,

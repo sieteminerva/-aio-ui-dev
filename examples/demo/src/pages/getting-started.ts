@@ -1,5 +1,10 @@
 import type { iPageContent, iPageController } from "@aio-ui/app";
 
+// The contract is not restated here: it is `docs/framework/APP.md`, imported as text at
+// build time. Only the demo-specific parts (install, import map, which module fills which
+// slot here, the gate commands) are written in this file.
+import appContract from "../../../../docs/framework/APP.md?raw";
+
 import { mountInto, node } from "../dom";
 import { pageHead, shellPage } from "../shell";
 
@@ -11,9 +16,13 @@ type BuildFn = (name: string, data?: any) => HTMLElement;
  * Single column on purpose: it is read top to bottom once. The module and component
  * references live on their own routes, where a sidebar is useful.
  *
- * Every fact here is taken from `@aio-ui/app` (types.ts) and from this demo's own entry
- * file, so the page describes what the packages really do.
+ * The page shows `docs/framework/APP.md` verbatim; editing that file is the only step to
+ * update the contract section. The screenshots of "this demo" (install commands, import map,
+ * the slot table, the gates) stay here because no package owns them.
  */
+
+/** The contract without its own `# AioApp — Framework Entry` title: the page head is the title. */
+const CONTRACT = appContract.replace(/^\s*#\s+.*\n/, "");
 
 function section(title: string, ...children: (HTMLElement | string)[]): HTMLElement {
   const block = node("section", "doc-section");
@@ -43,6 +52,7 @@ function doc(build: BuildFn): HTMLElement {
   // Every snippet on this page is the real `code-block` component: its look belongs to
   // the package, and this page only decides which text goes into it.
   const code = (snippet: string) => build("code-block", { code: snippet });
+
   const panel = node("div", "doc-panel");
 
   panel.append(
@@ -77,7 +87,7 @@ function doc(build: BuildFn): HTMLElement {
       code(
         [
           '<script type="importmap">',
-          '{',
+          "{",
           '  "imports": {',
           '    "@aio-ui/frameworks": "/vendor/@aio-ui/frameworks/dist/index.js",',
           '    "@aio-ui/frameworks/core": "/vendor/@aio-ui/frameworks/dist/core/index.js",',
@@ -90,54 +100,11 @@ function doc(build: BuildFn): HTMLElement {
     ),
   );
 
-  panel.append(
-    section(
-      "3 · Register and mount",
-      "The entry keeps two lists: component registrations and the preload plan. Nothing is handed to AioApp as a constructor dependency.",
-      code(
-        [
-          "const components = new ComponentRegistry(assetMap);",
-          'components.register("badge", manifestFor(badgeRow));',
-          "",
-          "const app = new AioApp({",
-          '  container: "#app",',
-          '  defaultRoute: "home",',
-          "  source: { pages },",
-          "})",
-          "  .registerModule(components, componentRoutes)  // registry + preload plan",
-          "  .registerModule(HashRouter)",
-          "  .registerModule(DOMRenderer)",
-          "  .registerModule(AnimationsService)",
-          "  .registerModule(HttpService, { url: '/api' })",
-          "  .registerModule(ThemeRenderer, { themes: [new DefaultTheme()] })",
-          "  .registerModule(new EventEmitter());",
-          "",
-          "await app.render();",
-        ].join("\n"),
-      ),
-    ),
-  );
+  panel.append(section("3 · The AioApp contract", build("markdown", { source: CONTRACT })));
 
   panel.append(
     section(
-      "AioApp config",
-      "Only content and general options belong here. A module takes its own config at the place it is registered, so this interface stays stable no matter how many modules an app installs.",
-      table(
-        ["key", "type", "meaning"],
-        [
-          ["container", "HTMLElement | string", "Mount point, resolved once at render()."],
-          ["defaultRoute", "string", "Route used when the hash is empty or unknown. Defaults to home."],
-          ["theme", "string", "Initial theme id. Defaults to default."],
-          ["debug", "boolean", "Resolved slots, preload graph and misses on the debug channel."],
-          ["source", "iAppSource", "{ pages, menu?, footer? } — the content the app renders."],
-        ],
-      ),
-    ),
-  );
-
-  panel.append(
-    section(
-      "Slots",
+      "4 · Slots in this demo",
       "A module declares the slot it fills (static readonly slot), so registering it for the wrong role is a type error instead of a runtime surprise.",
       table(
         ["slot", "module in this demo", "config"],
@@ -157,53 +124,11 @@ function doc(build: BuildFn): HTMLElement {
 
   panel.append(
     section(
-      "Routes",
-      "A route is content, a controller, or both. Content is a plain node tree; a controller exists when the route needs the fragment, the network or its own lifecycle.",
-      code(
-        [
-          "// 1. content only — declared once",
-          "const pages = { form: formContent() };",
-          "",
-          "// 2. a controller: prepare() runs once per render, before preload",
-          "class BlogPage implements iPageController {",
-          "  async onPrepare({ fragment, http, signal }) {",
-          "    const envelope = await http.get({ sheetName: 'blog' });",
-          "    if (signal.aborted) return;",
-          "    return shellPage({ main: articleList(envelope.data, fragment) });",
-          "  }",
-          "}",
-          "app.registerPage('blog', BlogPage);",
-        ].join("\n"),
-      ),
-      "A page context carries route, page, fragment, theme, builders, http and an AbortSignal. Returning nothing from onPrepare falls back to the content declared in source.pages.",
-    ),
-  );
-
-  panel.append(
-    section(
-      "Preload",
-      "The app preloads the components a route can mount. A node's builder names what that node is, so anything built later — inside onCreated, or composed by a page-level component — has to be named in the route plan:",
-      code(
-        [
-          "const componentRoutes: iComponentRoute[] = [",
-          "  { route: 'kitchen', components: [...elementNames, 'menu', 'fab-menu'] },",
-          "  { route: 'product', components: ['product', 'menu', 'fab-menu'] },",
-          "];",
-          "",
-          ".registerModule(components, componentRoutes)",
-        ].join("\n"),
-      ),
-      "A missing entry fails the render on a cold load, not later — the builder was never loaded.",
-    ),
-  );
-
-  panel.append(
-    section(
-      "Gates",
+      "5 · Gates",
       "The repository is a monorepo: build the packages before the examples, and run the whole gate once per batch rather than per edit.",
       code(
         [
-          "npm run verify      # build 37 packages → typecheck → bounds → api → version → tests → examples",
+          "npm run verify      # build every package → typecheck → bounds → api → version → tests → examples",
           "npm run build:demo  # build this demo",
           "npm run new:component <name>   # scaffold a component package",
         ].join("\n"),
@@ -218,7 +143,7 @@ export class GettingStartedPage implements iPageController {
   async onPrepare(): Promise<iPageContent> {
     return shellPage({
       main: {
-        ...pageHead("Getting Started", "install · import map · AioApp config · slots · routes"),
+        ...pageHead("Getting Started", "install · import map · the AioApp contract · slots · gates"),
         "div.doc-host": {
           onCreated: (element: HTMLElement, _render: any, build: BuildFn) => mountInto(element, doc(build)),
         },

@@ -1,7 +1,8 @@
 import type { iPageContent, iPageController, iPageContext } from "@aio-ui/app";
 
-import { mountInto, node } from "../dom";
-import { MODULES, moduleForFragment, moduleHash, type iDemoModule } from "../modules";
+import type { iDemoModule } from "../modules";
+import { MODULES, moduleForFragment, moduleHash } from "../modules";
+import { node } from "../dom";
 import { pageHead, shellPage } from "../shell";
 
 type BuildFn = (name: string, data?: any) => HTMLElement;
@@ -9,71 +10,16 @@ type BuildFn = (name: string, data?: any) => HTMLElement;
 /**
  * Modules route — the docs shell with a module table instead of a component table.
  *
- *   asides   one `menu` (`type: "sidebar"`) listing the six module packages
- *   main     header + the selected module's docs
+ *   aside   one `menu` (`type: "sidebar"`) listing the six module packages
+ *   main    header + the selected module's README, rendered by the `markdown` builder
  *
- * Selection lives in the fragment (`#modules/router`), exactly like `#kitchen/<name>`,
- * so deep links and refresh work without a second routing API.
+ * Selection lives in the fragment (`#modules/router`), exactly like `#kitchen/<name>`, so
+ * deep links and refresh work without a second routing API.
+ *
+ * The document itself is not written here: `src/modules.ts` imports each package README as
+ * text, and `markdown` turns it into DOM. Editing the README is the only step to update the
+ * page.
  */
-
-function factList(facts: iDemoModule["facts"]): HTMLElement {
-  const list = node("dl", "facts");
-  for (const fact of facts) {
-    list.append(node("dt", undefined, fact.label), node("dd", undefined, fact.value));
-  }
-  return list;
-}
-
-/** Config keys, or the reason there are none — never an empty table. */
-function configTable(module: iDemoModule): HTMLElement {
-  if (!module.config.length) {
-    return node("p", "summary", "No config: this module takes what the app context provides.");
-  }
-
-  const table = node("table", "api-config");
-  const head = node("tr");
-  head.append(node("th", undefined, "key"), node("th", undefined, "type"), node("th", undefined, "what it does"));
-  table.append(head);
-
-  for (const row of module.config) {
-    const line = node("tr");
-    line.append(node("td", undefined, row.key), node("td", undefined, row.value), node("td", undefined, row.meaning));
-    table.append(line);
-  }
-
-  return table;
-}
-
-function notesList(notes: string[]): HTMLElement {
-  const list = node("ul", "limits");
-  for (const note of notes) list.append(node("li", undefined, note));
-  return list;
-}
-
-/** The docs column: summary, facts, how the demo registers it, config, then the traps. */
-function moduleDoc(module: iDemoModule, build: BuildFn): HTMLElement {
-  const panel = node("div", "doc-panel");
-
-  panel.append(node("p", "summary", module.summary), factList(module.facts));
-
-  panel.append(node("h2", undefined, "Register"));
-  // The snippet is the real `code-block` component — the demo never owns code styling.
-  mountInto(panel, build("code-block", { code: module.snippet }));
-
-  panel.append(node("h2", undefined, "Config"));
-  panel.append(configTable(module));
-
-  if (module.notes.length) {
-    panel.append(node("h2", undefined, "Notes"));
-    panel.append(notesList(module.notes));
-  }
-
-  return panel;
-}
-
-function mountMain(host: HTMLElement, module: iDemoModule, build: BuildFn): void {
-  mountInto(host, moduleDoc(module, build));
-}
 
 /**
  * Sidebar.
@@ -92,17 +38,17 @@ function mountSidebar(host: HTMLElement, build: BuildFn, activeName: string): vo
     })),
   ];
 
-  mountInto(
-    host,
-    build("menu", {
-      content: { navigations },
-      config: {
-        type: "sidebar",
-        // The brand has no destination; a bare route (no fragment) is what the menu passes.
-        onNavigate: (href?: string) => !String(href ?? "").includes("/"),
-      },
-    }),
-  );
+  const menu = build("menu", {
+    content: { navigations },
+    config: {
+      type: "sidebar",
+      // The brand has no destination; a bare route (no fragment) is what the menu passes.
+      onNavigate: (href?: string) => !String(href ?? "").includes("/"),
+    },
+  });
+
+  if (typeof (host as any).mount === "function") (host as any).mount(menu);
+  else host.appendChild(menu);
 }
 
 function modulesContent(module: iDemoModule): iPageContent {
@@ -113,7 +59,11 @@ function modulesContent(module: iDemoModule): iPageContent {
     main: {
       ...pageHead(module.name, `${module.pkg} · slot: ${module.slot ?? "none"} · ${module.entry}`),
       "div.module-doc": {
-        onCreated: (element: HTMLElement, _render: any, build: BuildFn) => mountMain(element, module, build),
+        onCreated: (element: HTMLElement, _render: any, build: BuildFn) => {
+          const panel = node("div", "doc-panel");
+          panel.appendChild(build("markdown", { source: module.readme }));
+          element.appendChild(panel);
+        },
       },
     },
   });

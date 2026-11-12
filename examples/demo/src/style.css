@@ -445,8 +445,11 @@ header.docs-head {
 }
 
 /* Section titles are the same weight as the kitchen's panel sub-labels (`h4`): the page
-   title is the `h1` in the shared head, so a section must not compete with it. */
-.doc-panel h2 {
+   title is the `h1` in the shared head, so a section must not compete with it.
+   Scoped to a section's own title: a rendered Markdown document brings its own headings,
+   and they must keep the markdown hierarchy instead of becoming tiny labels. */
+.doc-panel .doc-section > h2,
+.doc-panel > h2 {
   margin: 0;
   font-size: 0.75rem;
   font-weight: 700;
