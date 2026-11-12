@@ -71,6 +71,8 @@ export interface iBuilderRegistry {
   badge: any;
   /** A dark panel for source text — payload `{ code, label?, language? } | { blocks }`. */
   "code-block": any;
+  /** A Markdown document rendered to DOM — payload `{ source: string }`. */
+  markdown: any;
   // Untuk komponen baru nanti, cukup daftarkan jenis array atomnya di sini:
   // stats: iStatsProperty[];
 }

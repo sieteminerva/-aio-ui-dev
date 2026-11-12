@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Markdown (article.markdown)
+   A rendered document: headings, paragraphs, lists, tables, quotes, and fenced
+   code panels that reuse the code-block sheet either side of this file.
+   ========================================================================== */
+@import "../code-block/CodeBlock.css";
+
+:root,
+[data-theme] {
+  --markdown-gap: 0.85rem;
+  --markdown-text-color: var(--app-text-color, #1a140e);
+  --markdown-heading-color: var(--app-text-heading-color, #1a140e);
+  --markdown-muted-color: var(--app-text-accent-color, #6e5f51);
+  --markdown-border-color: var(--app-border-color, #e2e2e6);
+  --markdown-accent-color: var(--app-primary-color, #925408);
+  --markdown-inline-surface: var(--app-surface-muted, #f4eee2);
+  --markdown-font-size: 0.9rem;
+  --markdown-line-height: 1.65;
+  --markdown-inline-font-size: 0.85em;
+  --markdown-inline-radius: 4px;
+  --markdown-rule-color: var(--app-border-color, #e2e2e6);
+}
+
+.markdown {
+  display: grid;
+  gap: var(--markdown-gap);
+  margin: 0;
+  font-size: var(--markdown-font-size);
+  line-height: var(--markdown-line-height);
+  color: var(--markdown-text-color);
+}
+
+.markdown-h1,
+.markdown-h2,
+.markdown-h3,
+.markdown-h4 {
+  margin: 0;
+  line-height: 1.25;
+  color: var(--markdown-heading-color);
+}
+
+.markdown-h1 {
+  font-size: 1.6rem;
+}
+
+.markdown-h2 {
+  font-size: 1.25rem;
+}
+
+.markdown-h3 {
+  font-size: 1.05rem;
+}
+
+.markdown-h4 {
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.markdown-p {
+  margin: 0;
+}
+
+.markdown-list {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.markdown-item {
+  margin: 0.15rem 0;
+}
+
+.markdown-quote {
+  margin: 0;
+  padding: 0.35rem 0 0.35rem 0.9rem;
+  border-left: 3px solid var(--markdown-accent-color);
+  color: var(--markdown-muted-color);
+}
+
+.markdown-rule {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--markdown-rule-color);
+}
+
+.markdown-table {
+  border-collapse: collapse;
+  font-size: var(--markdown-font-size);
+}
+
+.markdown-table th,
+.markdown-table td {
+  padding: 0.35rem 0.9rem 0.35rem 0;
+  border-bottom: 1px solid var(--markdown-border-color);
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-table th {
+  font-weight: 700;
+  color: var(--markdown-heading-color);
+}
+
+.markdown-code {
+  padding: 0.1em 0.3em;
+  border-radius: var(--markdown-inline-radius);
+  background: var(--markdown-inline-surface);
+  color: var(--markdown-text-color);
+  font-family: var(--code-block-font-family);
+  font-size: var(--markdown-inline-font-size);
+}
+
+.markdown-link {
+  color: var(--markdown-accent-color);
+  text-decoration: underline;
+}

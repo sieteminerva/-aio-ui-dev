@@ -46,6 +46,11 @@
       "development": "./src/parseTableFile.ts",
       "types": "./dist/parseTableFile.d.ts",
       "default": "./dist/parseTableFile.js"
+    },
+    "./Markdown": {
+      "development": "./src/Markdown.ts",
+      "types": "./dist/Markdown.d.ts",
+      "default": "./dist/Markdown.js"
     }
   },
   "scripts": {
