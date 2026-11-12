@@ -140,8 +140,8 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  background-color: var(--app-surface-muted, #e0e1e2);
-  color: var(--app-text-color, rgba(0, 0, 0, 0.6));
+  background-color: var(--input-tag-background);
+  color: var(--input-tag-text-color);
   font-size: 0.85rem;
   padding: 0.3em 0.7em;
   border-radius: var(--input-border-radius, 4px);

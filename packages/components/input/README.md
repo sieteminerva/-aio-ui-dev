@@ -85,7 +85,9 @@ alone.
 | `--input-background-color`         | mix of accent + white (dark: `transparent`)               |
 | `--input-background-color-hover`   | mix of accent + white                                     |
 | `--input-picker-background`        | `--input-background-color` (dark: `--app-surface-strong`) |
-| `--input-popover-background-color` | dark: `--app-surface-strong` — see "Known issues"         |
+| `--input-popover-background-color` | `--app-surface-strong`                                    |
+| `--input-tag-background`           | `--app-surface-muted`                                     |
+| `--input-tag-text-color`           | `--app-text-color`                                        |
 | `--input-error-color`              | `--app-status-error`                                      |
 | `--input-error-text-color`         | `--app-status-error-soft`                                 |
 | `--input-error-background-color`   | `--app-status-error-surface`                              |
@@ -113,13 +115,6 @@ covers both modes.
 
 The loading spinner is **not** an input token: it is shared with the form package and lives
 in the app layer as `--app-spinner-content`.
-
-## Known issues
-
-- `--input-popover-background-color` reads `--input-picker-color`, which no sheet declares.
-  Light mode therefore resolves the token to nothing and the `Form` popover paints a
-  transparent background; dark mode supplies a value through a mode block. Left as found —
-  fixing it is a visible change and needs a decision.
 
 ## Wiring checklist
 

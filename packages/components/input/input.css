@@ -43,6 +43,9 @@
   --input-background-color: color-mix(in srgb, var(--input-accent-color) 30%, #fff 100%);
   --input-background-color-hover: color-mix(in srgb, var(--input-accent-color) 50%, #fff 15%);
   --input-picker-background: color-mix(in srgb, var(--input-background-color) 100%, #fff 90%);
+  /* tag chips printed inside a multi-select field (Dropdown.css) */
+  --input-tag-background: var(--app-surface-muted, #e0e1e2);
+  --input-tag-text-color: var(--app-text-color, rgba(0, 0, 0, 0.6));
   /* a popover floats above the page, so it takes the solid surface, not the
      field tint. It used to read --input-picker-color, which nothing declares. */
   --input-popover-background-color: var(--app-surface-strong, #ffffff);
@@ -660,7 +663,7 @@ select:focus-visible {
           opacity: 0.55;
 
           &:hover {
-            color: var(--app-status-error-fill);
+            color: var(--input-error-color);
             opacity: 1;
           }
         }
