@@ -21,7 +21,9 @@ import './style.css';
 import { DEMO, manifestFor } from './manifest';
 import { ArticlePage } from './pages/article';
 import { formContent, formManifest } from './pages/form';
+import { GettingStartedPage } from './pages/getting-started';
 import { KitchenPage } from './pages/kitchen';
+import { ModulesPage } from './pages/modules';
 import { ProductPage } from './pages/product';
 import { componentAssets } from './registry.assets';
 import { productModules } from '@aio-ui/product';
@@ -74,6 +76,9 @@ const componentRoutes: iComponentRoute[] = [
   // Every route mounts the same shell menu, so every route names it. A builder called
   // inside `onCreated` is invisible to the node collector, and this plan is the only
   // thing that preloads it — a missing entry fails the render on a cold load.
+  { route: 'getting-started', components: ['menu', 'fab-menu'] },
+  // The modules docs reuse the same `menu` builder for their sidebar.
+  { route: 'modules', components: ['menu', 'fab-menu'] },
   { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'menu', 'fab-menu'] },
   { route: 'product', components: ['product', 'menu', 'fab-menu'] },
   { route: 'article', components: ['article', 'menu', 'fab-menu'] },
@@ -135,6 +140,8 @@ async function start(container: HTMLElement) {
     .registerModule(ThemeRenderer, { themes: [new DefaultTheme(), new CyberpunkTheme()] })
     .registerModule(emitter)
     // Behavior per route; their content comes from the controller.
+    .registerPage('getting-started', GettingStartedPage)
+    .registerPage('modules', ModulesPage)
     .registerPage('kitchen', KitchenPage)
     .registerPage('product', ProductPage)
     .registerPage('article', ArticlePage);

@@ -9,6 +9,9 @@ Source rules live in `packages/AGENTS.md`; **read that first.** This file only a
 
 - Routes by component kind: `#kitchen` (element rows from `src/manifest.ts`), `#product`
   (page-level composition), `#article` (builder-level slots), `#form` (schema).
+- Docs routes: `#getting-started` (setup + the AioApp contract, single column) and `#modules`
+  (one row per module package, sidebar + docs; selects in the fragment like `#kitchen/<name>`).
+  Their copy comes from `src/modules.ts`; nothing is hand-written in the page.
 - Pages are registered in `src/main.ts` via `pageComponent(path, css)` = `{ path, stylesheet,
 config, schema }`. Element rows use `schema: data`.
 - A component is demonstrated in **exactly one** place — never duplicate a route in the kitchen.

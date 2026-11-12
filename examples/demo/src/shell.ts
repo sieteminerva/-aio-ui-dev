@@ -1,11 +1,12 @@
 /**
  * The one page shell every demo route renders.
  *
- *   header   menu builder, `type: "top"` — the same menu on all four routes
+ *   header   menu builder, `type: "top"` — the same menu on every route
  *   body     one column, or `.docs` (aside + main) when the caller passes an aside
  *
  * The shell owns no component knowledge: the caller hands over the body as page content.
- * `#kitchen` passes the docs aside; `#product`, `#article` and `#form` are single-column.
+ * `#kitchen` and `#modules` pass the docs aside; `#getting-started`, `#product`, `#article`
+ * and `#form` are single-column.
  */
 import type { iPageContent } from "@aio-ui/app";
 
@@ -21,6 +22,8 @@ export function currentRoute(): string {
 /** Brand first (the menu splits its flat list that way), then one link per route. */
 const TOP_NAV = [
   { label: "@aio demo", href: "#kitchen", route: "" },
+  { label: "Getting Started", href: "#getting-started", route: "getting-started" },
+  { label: "Modules", href: "#modules", route: "modules" },
   { label: "Elements", href: "#kitchen", route: "kitchen" },
   { label: "Product", href: "#product", route: "product" },
   { label: "Article", href: "#article", route: "article" },
