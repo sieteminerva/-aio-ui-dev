@@ -335,9 +335,9 @@ Declared once on `:root, [data-theme]` in `id-address.css`. One token is enough,
 override contract: redeclare it on any ancestor to retheme the error state without touching the
 package.
 
-| Token                      | Derives from         | Used for                                            |
-| -------------------------- | -------------------- | --------------------------------------------------- |
-| `--id-address-error-color` | `--app-status-error` | Border, outline and dropdown hairline in `.error`   |
+| Token                      | Derives from         | Used for                                          |
+| -------------------------- | -------------------- | ------------------------------------------------- |
+| `--id-address-error-color` | `--app-status-error` | Border, outline and dropdown hairline in `.error` |
 
 ---
 
