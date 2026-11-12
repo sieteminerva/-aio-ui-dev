@@ -50,9 +50,22 @@ The body is appended by the builder, not by a declared key: the compiled payload
 
 ## Tokens
 
-No `--modal-*` layer. `Modal.css` reads `--padding-layout`, a name **no package declares** — an app
-must bridge it or the box loses its padding. Recorded as a known gap (the same class of issue as
-`Dropdown.css` reading `--app-surface-muted` outside the layer block).
+Declared once on `:root, [data-theme]` in `Modal.css`. The sheet previously read seven names that no
+package declares (`--padding-layout`, `--padding-component`, `--border-soft`, `--radius-component`,
+`--page-bg`, `--shadow-soft`, `--text-heading`), so the box rendered with no padding, border, radius,
+background or shadow; each now derives from the app layer.
+
+| Token                     | Derives from                    | Used for              |
+| ------------------------- | ------------------------------- | --------------------- |
+| `--modal-overlay-padding` | `--app-padding-layout`          | Overlay gutter        |
+| `--modal-box-padding`     | `--app-padding-component` × 2   | Sheet padding         |
+| `--modal-border-color`    | `--app-border-color`            | Sheet hairline        |
+| `--modal-border-radius`   | `--app-component-border-radius` | Sheet corner          |
+| `--modal-surface`         | `--app-surface-strong`          | Sheet background      |
+| `--modal-shadow`          | `--app-shadow-soft`             | Sheet shadow          |
+| `--modal-title-color`     | `--app-text-heading-color`      | Title text            |
+| `--modal-close-color`     | `--app-status-error`            | Close glyph           |
+| `--modal-scrollbar-thumb` | `--app-border-color`            | Sheet scrollbar thumb |
 
 ## Wiring checklist
 
