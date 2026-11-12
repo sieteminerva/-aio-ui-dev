@@ -72,6 +72,55 @@ Rules that keep this honest:
 
 ---
 
+## 1c. The README skeleton
+
+Every package README is documentation a consumer can rely on **and** a document the demo parses:
+`examples/demo/src/readme.ts` splits it on `##` headings and renders the named sections. That only
+works while the headings are predictable, so the H2 set is closed and its order is fixed.
+
+### Component skeleton (required, in this order)
+
+| H2                               | Must contain                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `# Title (\`@aio-ui/<folder>\`)` | H1 carries the title **and** the package id — no front matter, no metadata block.                 |
+| `## Payload`                     | Accepted shapes (bullet list or table), one fenced `ts` example, then the field rules.            |
+| `## Config`                      | `Option / Default / Meaning`, one row per key of `i<Pascal>Config`. "No options" is a valid body. |
+| `## Nodes`                       | `Key / Default tag / Class / note`, one row per `ELEMENT_KEYS` entry.                             |
+| `## Tokens`                      | One sentence about the `:root, [data-theme]` layer, then `Token / Derives from / Used for`.       |
+| `## Wiring checklist`            | The same four numbered steps (registry key → module loader → stylesheet loader → route plan).     |
+
+### Optional H2s (allowlist, fixed slot)
+
+| H2                    | Slot                                            | Used by                    |
+| --------------------- | ----------------------------------------------- | -------------------------- |
+| `## Supported syntax` | after `## Config`                               | `markdown`                 |
+| `## Methods`          | after `## Tokens`, before `## Wiring checklist` | every `packages/modules/*` |
+| `## Appendix`         | last                                            | `masonry`, `id-address`    |
+
+Any other H2 breaks the contract: `examples/demo/src/__tests__/readme.skeleton.test.ts` fails on it.
+H3s are free inside a section (`### Actions`, `### detail`, `### Built-in adapters`).
+
+### Plugin skeleton (kind: plugin)
+
+A **plugin** is a package whose markup was written by hand instead of by a builder: the DOM looks
+like a framework component's, but no `Builder` produces it. `id-address` is the reference. Plugins
+keep the component section names — so the same parser reads both kinds — and add `## Methods`:
+
+| H2                    | Must contain                                                              |
+| --------------------- | ------------------------------------------------------------------------- |
+| `## Payload`          | The schema the plugin accepts.                                            |
+| `## Config`           | Adapter mode, level, headless switch, event callbacks.                    |
+| `## Nodes`            | The markup contract (tags and classes), since there is no `ELEMENT_KEYS`. |
+| `## Tokens`           | The tokens the plugin reads or declares.                                  |
+| `## Methods`          | Public functions on the instance.                                         |
+| `## Wiring checklist` | How a host mounts it (endpoint, adapter, page slot).                      |
+| `## Appendix`         | Integrations and reference material (framework examples, REST).           |
+
+The plugin list lives in `examples/demo/src/readme.ts` as `PLUGIN_PACKAGES`, so the skeleton test
+applies the right contract instead of guessing from a folder name.
+
+---
+
 ## 2. Naming
 
 | Thing                      | Convention              | Example (`my-widget`)   |
@@ -393,4 +442,5 @@ Anything that needs a real DOM belongs in the demo page, not the suite.
 - [ ] Host asset map has `modules` + `styles` entries (static specifiers)
 - [ ] The route plan lists `"<kebab>"`, or a demo table row exists
 - [ ] Test covers `normalizePayload` and key/selector coverage
+- [ ] `README.md` follows §1c — five H2s in order (plus `## Methods` for a module)
 - [ ] `npm run verify` is green
