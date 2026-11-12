@@ -36,11 +36,18 @@ describe("accordion", () => {
     expect(root.querySelector("summary")?.textContent).toBe("Only");
   });
 
-  it("invents no copy for a record without a title", () => {
+  it("falls back to placeholder copy for a record without a title", () => {
     const root = build([{}]);
 
-    // The placeholder branches only fire for an empty string, not for a missing value.
-    expect(root.querySelector("summary")?.textContent).toBe("");
-    expect(root.querySelector(".content")).not.toBeNull();
+    // The leaf cases own the fallback copy, so a missing title/description still labels the row.
+    expect(root.querySelector("summary")?.textContent).toBe("Untitled Header");
+    expect(root.querySelector(".content p.desc")?.textContent).toBe("Untitled Content");
+  });
+
+  it("drops nullish records instead of rendering empty rows", () => {
+    const root = build([null, { title: "Only", description: "Body" }, undefined]);
+
+    expect(root.querySelectorAll("details")).toHaveLength(1);
+    expect(root.querySelector("summary")?.textContent).toBe("Only");
   });
 });

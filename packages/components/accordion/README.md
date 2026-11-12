@@ -10,7 +10,9 @@ browser's own element, open/close, keyboard support and find-in-page keep workin
 ```
 
 A single object is accepted too (it is wrapped into a one-entry list). Each entry becomes one
-`@accordion>section`; `title` fills the `summary`, `description` fills the `.content`.
+`@accordion>section`; `title` fills the `summary`, `description` fills the `.content`. A record
+missing either field is labelled `Untitled Header` / `Untitled Content`; nullish entries are dropped
+so they never render an empty row.
 
 ## Config
 

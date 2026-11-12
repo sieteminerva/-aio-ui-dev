@@ -33,7 +33,8 @@ export class AccordionBuilder extends Builder<AccordionElementType, iAccordionCo
 
   public prepare(data: iBasicNode, _config?: Partial<iAccordionConfig>): HTMLElement {
 
-    const items = Array.isArray(data.content) ? data.content : [data.content];
+    const content = data?.content;
+    const items = (Array.isArray(content) ? content : [content]).filter(Boolean);
 
     return this.render("@accordion", items) as HTMLElement;
   }
@@ -43,8 +44,6 @@ export class AccordionBuilder extends Builder<AccordionElementType, iAccordionCo
   }
 
   protected template(typeKey: AccordionElementType, el: HTMLElement, payload?: any): void {
-    if (!payload) return;
-
     switch (typeKey) {
       case "@accordion":
         // console.log(payload)
@@ -55,7 +54,8 @@ export class AccordionBuilder extends Builder<AccordionElementType, iAccordionCo
         break;
 
       case "@accordion>section":
-        // console.log(payload)
+        // The leaf cases below own the fallback copy, so only the record itself is guarded.
+        if (!payload) return;
         const title = this.render("@accordion>section>title", payload.title)!
         const content = this.render("@accordion>section>content", payload.description)!
         el.append(title, content);
