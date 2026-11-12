@@ -17,7 +17,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 import { createHash } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { createCdnResolver, emitPlan } from "./emit.ts";
 import type { PackageLayout } from "./emit.ts";
 import { generateSite } from "./generate.ts";
@@ -81,9 +81,18 @@ function workspacePackages(): string[] {
 }
 
 describe.skipIf(!available)("release artefacts", () => {
-  const registry: Registry = JSON.parse(readFileSync(join(RELEASE, "registry.json"), "utf8"));
-  const layout: PackageLayout = JSON.parse(readFileSync(join(RELEASE, "layout.json"), "utf8"));
-  const base = registry.base.endsWith("/") ? registry.base : `${registry.base}/`;
+  // Read inside `beforeAll`: a `describe` body runs even when the suite is skipped, so a
+  // top-level `readFileSync` here would throw during collection on a clean checkout and take
+  // the whole run down instead of skipping.
+  let registry: Registry;
+  let layout: PackageLayout;
+  let base: string;
+
+  beforeAll(() => {
+    registry = JSON.parse(readFileSync(join(RELEASE, "registry.json"), "utf8")) as Registry;
+    layout = JSON.parse(readFileSync(join(RELEASE, "layout.json"), "utf8")) as PackageLayout;
+    base = registry.base.endsWith("/") ? registry.base : `${registry.base}/`;
+  });
 
   /** URL under the release base → repo-relative path. */
   const repoPath = (url: string): string => join(ROOT, url.slice(base.length));
@@ -127,7 +136,12 @@ describe.skipIf(!available)("release artefacts", () => {
     ["store", storeScenario.preset],
   ] as const) {
     describe(`${label} site import map`, () => {
-      const site = emitPlan(plan(preset), createCdnResolver({ base, layout }));
+      // Same rule as the suite above: collection must not touch the artefacts.
+      let site: ReturnType<typeof emitPlan>;
+
+      beforeAll(() => {
+        site = emitPlan(plan(preset), createCdnResolver({ base, layout }));
+      });
 
       it("resolves every mapped specifier to a real file", () => {
         const missing = Object.entries(site.importMap.imports)
