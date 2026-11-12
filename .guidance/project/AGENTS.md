@@ -6,9 +6,7 @@
 
 ## Live claims
 
-| Agent       | Band                | Task                                          | Write scope                                                                                                                                                 | Started    | Checkpoint                             | State  |
-| ----------- | ------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------- | ------ |
-| copilot b13 | Tooling + Framework | Release `v0.1.1` to the live CDN + CDN README | `scripts/publish-cdn.mjs`, `templates/cdn/**`, `docs/live-cdn-repo.md`, `packages/*/package.json`, `package.json`, `.guidance/**`, the six band `AGENTS.md` | 2026-11-13 | `/memories/session/page-level-plan.md` | active |
+_No live writer. Add a row here before your first edit — see the rules below._
 
 ## Row shape
 
