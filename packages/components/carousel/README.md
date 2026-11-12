@@ -60,9 +60,14 @@ firing at a dead end.
 
 ## Tokens
 
-No `--carousel-*` layer: the sheet hardcodes its geometry. It reads one undeclared name,
-`--radius-image`, which no package ships — so a real app must bridge it or the slide keeps square
-corners. Recorded as a known gap, not restyled here.
+One token, declared once on `:root, [data-theme]`. The sheet used to read `--radius-image`, which no
+package ships, so the slide corner silently fell back to 8px.
+
+| Token                            | Derives from                | Used for     |
+| -------------------------------- | --------------------------- | ------------ |
+| `--carousel-image-border-radius` | `--app-image-border-radius` | Media corner |
+
+A payload with no slides renders the empty shell and skips layout — it does not throw.
 
 ## Wiring checklist
 

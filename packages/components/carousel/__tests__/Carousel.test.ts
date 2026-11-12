@@ -48,4 +48,13 @@ describe("carousel", () => {
     expect(root.className).toContain("auto-controls");
     expect(root.className).toContain("anim-fade");
   });
+
+  it("renders an empty shell instead of throwing when the payload has no slides", () => {
+    // Regression: the layout modes read `this.track`, which only exists once a track rendered.
+    const root = build({});
+
+    expect(root.classList.contains("carousel")).toBe(true);
+    expect(root.querySelector(".track")).toBeNull();
+    expect(root.querySelectorAll(".slide")).toHaveLength(0);
+  });
 });
