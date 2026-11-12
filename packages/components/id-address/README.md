@@ -1,251 +1,66 @@
-# IdAddressBuilder
-
-**Headless Indonesian Administrative Region Cascade Engine**
-
-A headless, adapter-based JavaScript library for building cascading Indonesian administrative region selectors.
-
-IdAddressBuilder manages hierarchical regional state, asynchronous cascading data loading, reverse postal-code lookup, and optional geocode integration — while remaining framework-agnostic and fully extensible through adapters.
-
-Built for Vanilla JS, Angular, React, Vue, Semantic UI/Fomantic UI, and custom rendering systems.
-
----
-
-# Why This Project Exists
-
-One of the biggest problems in application development is not building forms — it is maintaining **clean and reliable data** after thousands of users start filling them.
-
-Address data is one of the most common examples.
-
-When users are allowed to type addresses freely:
-
-- spelling becomes inconsistent,
-- administrative names differ between users,
-- abbreviations vary,
-- postal codes are missing,
-- and sometimes users leave fields incomplete entirely.
-
-Over time, the database slowly turns into unstructured data that is difficult to search, validate, analyze, or integrate into other systems.
-
-```txt
-Free User Input
-        ↓
-Inconsistent Address Data
-        ↓
-Difficult Validation & Analytics
-        ↓
-Junk Data
-```
-
----
-
-To solve this, many applications implement cascading address selectors:
-
-```txt
-Province → City → District → Sub-district → Postal Code
-```
-
-This approach dramatically improves consistency because users are guided through valid administrative hierarchies instead of manually typing everything themselves.
-
-But implementing this system at scale introduces a new challenge.
-
----
-
-# The Hidden Problem Behind Cascading Address Forms
-
-Once the administrative dataset becomes large:
-
-- server-side queries become complicated,
-- maintaining regional data becomes tedious,
-- frontend cascade logic becomes messy,
-- API structures become tightly coupled to UI implementations,
-- and supporting multiple frontend frameworks becomes painful.
-
-What initially started as “just a dropdown form” slowly evolves into infrastructure.
-
-```txt
-Better User Experience
-        ↓
-Better Data Consistency
-        ↓
-Higher Development & Maintenance Cost
-```
-
----
-
-# The Goal of IdAddressBuilder
-
-IdAddressBuilder was created to simplify that entire process.
-
-The idea was simple:
-
-> Create a reusable cascade engine that separates:
->
-> - hierarchical regional logic,
-> - UI rendering,
-> - and data management.
-
-So applications can maintain clean administrative data **without building the entire infrastructure repeatedly from scratch**.
-
----
-
-# Why Google Sheets + Apps Script?
-
-Instead of deploying expensive infrastructure for administrative region services, this project uses:
-
-- Google Sheets as the database,
-- Google Apps Script as the REST API layer.
-
-This provides several advantages:
-
-- free hosting (you can host it yourself in your google account simply by copying),
-- easy manual data updates,
-- simple deployment,
-- low operational cost (You don't need to maintain it, if you feel like you don't want to.),
-- and accessibility for small teams or solo developers.
-
-The backend behaves like a lightweight microservice dedicated to Indonesian administrative region data.
-
----
-
-# Built for Flexibility
-
-Another important goal was avoiding framework lock-in.
-
-Most cascading form libraries are tightly coupled to a single UI system.
-
-IdAddressBuilder was designed differently.
-
-The engine is separated from the UI through adapters and headless mode, allowing integration with:
-
-- Vanilla JS,
-- Angular,
-- React,
-- Vue,
-- Semantic UI,
-- or completely custom rendering systems.
-
-This means the same cascade engine can power multiple applications without rewriting the logic repeatedly.
-
----
-
-# The Real Objective
-
-This project is not just about dropdowns.
-
-It is about:
-
-- improving data consistency,
-- reducing maintenance complexity,
-- lowering infrastructure cost,
-- and making hierarchical regional systems reusable.
-
-If you have ever struggled with:
-
-- inconsistent address data,
-- massive cascading region queries,
-- messy administrative APIs,
-- or difficult UI integrations,
-
-then this project was probably built for the same problems you are facing.
-
-# Features
-
-- **Headless Hierarchical Cascade Engine**
-
-  Run fully without UI rendering and control the cascade programmatically.
-
-- **Adapter-Based Rendering System**
-
-  Supports pluggable UI adapters for Native HTML, Semantic UI/Fomantic UI, and custom frameworks.
-
-- **Framework-Agnostic Architecture**
-
-  Integrates with Vanilla JS, Angular, React, Vue, Svelte, and custom applications.
-
-- **Hierarchical Administrative Loader**
-
-  Province → City → District → Sub-district → Postal Code.
-
-- **Event-Driven Lifecycle**
-
-  Fully observable cascade and selection events.
-
-- **Reverse Postal-Code Lookup**
-
-  Automatically reconstruct hierarchical regional data from postal code input.
-
-- **Optional Geocode Integration**
-
-  Fetch geolocation data after full address resolution.
-
-- **Runtime Adapter Switching**
-
-  Safely rebuild and switch adapters at runtime.
-
-- **Built-in Cache Layer**
-
-  LocalStorage-based caching with configurable TTL.
-
-- **Destroy/Reinitialize Lifecycle**
-
-  Proper cleanup for SPA and dynamic applications.
-
-- **Extensible Adapter System**
-
-  Create adapters for Bootstrap, Material UI, Select2, Tailwind UI, etc.
-
-- **TypeScript Friendly**
-
-  Designed with predictable APIs and typed integration in mind.
-
----
-
-# Architecture Overview
-
-IdAddressBuilder separates:
-
-- hierarchical state management,
-- asynchronous cascading logic,
-- rendering,
-- and user interaction.
-
-This allows the engine to operate in two modes.
-
----
-
-## Adapter Mode
-
-The builder controls DOM interaction through adapters.
-
-```txt
-User Interaction
-        ↓
-Adapter
-        ↓
-IdAddressBuilder Engine
-        ↓
-REST API / Cache
-```
-
-Example:
-
-- Native HTML `<select>`
-- Semantic UI dropdowns
-- jQuery plugins
-
-### Built-in adapters
-
-| `useAdapter`         | Drives                                                                                                                           | Notes                                                                                                                                                  |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `native` _(default)_ | A plain `<select>`, or an `<input>` fed by a `<datalist>`                                                                        | The platform's controls, written to directly. Kept as the default so existing markup keeps working.                                                    |
-| `aio`                | `@aio-ui` markup: `option.placeholder`, `.dropdown[data-style="datalist" \| "select"]`, the hidden value carrier, `.field` state | Understands all three level flavours and dispatches `change`/`input`, so the component's own listeners (`elementChanged`, form values) see the answer. |
-| `base`               | Nothing (headless)                                                                                                               | Selected automatically when `headless: true`.                                                                                                          |
-
-The markup is identical between the two UI adapters — the difference is _which parts of it
-are authoritative_. `native` builds a select's prompt by renaming `options[0]`, which is
-invisible to `input.css` (`select:has(option.placeholder:checked)`), and it only knows the
-`data-style="datalist"` flavour of a custom dropdown; a `data-style="select"` level received
-its rows and dropped them. `aio` treats both as first-class:
+# IdAddressBuilder (`@aio-ui/id-address`) — plugin
+
+A **plugin**, not a builder. It renders no fields: it decorates the `[data-level]` controls a page or
+`@aio-ui/form` already rendered, and owns the cascade (propinsi → kota → kecamatan → kelurahan →
+kodepos), the reverse postal-code lookup and the optional geocode lookup. Adapters decide which
+parts of the markup are authoritative; in `headless` mode there is no markup at all and the host
+drives `schema.select()` itself.
+
+## Payload
+
+The engine takes no `content` payload. Its input is the query it sends to a data source:
+
+| Query                                            | Meaning                   |
+| ------------------------------------------------ | ------------------------- |
+| `{ level: "propinsi" }`                          | top-level rows            |
+| `{ level: "kota", parentId: <propinsi_id> }`     | children of a selection   |
+| `{ level: "kodepos", parentId: <kelurahan_id> }` | postal codes of a village |
+
+A source resolves to rows shaped `{ <level>_id, <level>_name }`, for example
+`{ propinsi_id: 12, propinsi_name: "Jawa Barat" }`. Levels, in order: `propinsi` → `kota` →
+`kecamatan` → `kelurahan` → `kodepos`.
+
+### Schema node
+
+Each level is represented once, as `IdAddressSchemaRef`:
+
+| Property      | Meaning                                 |
+| ------------- | --------------------------------------- |
+| `name`        | level key (`propinsi`, `kota`, …)       |
+| `adapterName` | adapter that drives this level          |
+| `adapter`     | the adapter instance                    |
+| `el`          | DOM element, or `null` in headless mode |
+| `next`        | the next schema node                    |
+| `index`       | position in the chain                   |
+| `isDropdown`  | whether the level is selectable         |
+| `getDetail()` | accumulated address detail so far       |
+
+## Config
+
+| Option        | Default                                                                               | Meaning                                                                         |
+| ------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `url`         | `null`                                                                                | Endpoint of the built-in fetch path; ignored when `loader` is set               |
+| `loader`      | `null`                                                                                | `(query) => Promise<rows>`; the seam for your transport, cache or mock          |
+| `service`     | `null`                                                                                | `HttpService` that owns transport + cache; built from `url` + `cache` otherwise |
+| `geocode`     | `false`                                                                               | Enable geocode lookup and `onGeocodeLoaded`                                     |
+| `cache`       | `{ enabled: true, ttlDays: 1, prefix: "IdAddressBuilder", delay: 0, timeout: 10000 }` | Forwarded to the service the builder creates                                    |
+| `container`   | `null`                                                                                | Element (or selector) holding the `[data-level]` markup                         |
+| `useAdapter`  | `null` → `native`                                                                     | `native`, `aio`, `base`, or a name passed to `registerAdapter`                  |
+| `headless`    | `false`                                                                               | No DOM; selects the `base` adapter                                              |
+| `textContent` | `loading` / `placeholder` / `notFound` copy, with `#{level}` substituted              | Labels written into the decorated controls                                      |
+
+### Adapters
+
+| `useAdapter`         | Drives                                                                                                                           | Notes                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `native` _(default)_ | A plain `<select>`, or an `<input>` fed by a `<datalist>`                                                                        | The platform's own controls, written to directly.                            |
+| `aio`                | `@aio-ui` markup: `option.placeholder`, `.dropdown[data-style="datalist" \| "select"]`, the hidden value carrier, `.field` state | Dispatches `change`/`input`, so the component's own listeners see the answer |
+| `base`               | Nothing                                                                                                                          | Selected automatically when `headless: true`                                 |
+
+The markup is identical between the two UI adapters — the difference is _which parts of it are
+authoritative_. `native` treats `data-style="select"` dropdowns as opaque; `aio` renders both
+flavours. A host may register its own adapter (`registerAdapter(name, adapter)`); an adapter
+implements `init`, `setOptions`, `setSelectedOption`, `onLevelChange`, `clear` and `destroy`.
 
 ```ts
 const picker = new IdAddressBuilder({
@@ -255,101 +70,106 @@ const picker = new IdAddressBuilder({
 });
 ```
 
-Switching adapters changes no DOM: `@aio-ui/input` and `@aio-ui/form` render the same fields
-either way, so a form can adopt `aio` without touching its schema
-(`config.address = { url, useAdapter: "aio" }`).
+### Events
 
----
+Three callbacks, all shaped `(schema, data, complete) => void`:
 
-## Headless Mode
+| Callback          | Fires when                                           |
+| ----------------- | ---------------------------------------------------- |
+| `onLevelLoaded`   | a level finished loading                             |
+| `onLevelChanged`  | a selection changed and the cascade re-ran           |
+| `onGeocodeLoaded` | geocode data for the current detail became available |
 
-The framework controls the UI while IdAddressBuilder manages state and cascading logic.
+## Nodes
 
-```txt
-Framework UI
-      ↓
-schema.select()
-      ↓
-Cascade Engine
-      ↓
-onLevelLoaded()
-      ↓
-Framework Re-render
-```
+The plugin never creates a field; it decorates the markup it is given. The contract is one control
+per level inside `config.container`:
 
-Example:
+| Node                                | Note                                                                   |
+| ----------------------------------- | ---------------------------------------------------------------------- |
+| `container`                         | Any element holding the level controls (the form, a `<section>`, …)    |
+| `[data-level="propinsi"]`           | one per level: `propinsi`, `kota`, `kecamatan`, `kelurahan`, `kodepos` |
+| `<select>` / `<input>`+`<datalist>` | the `native` carrier                                                   |
+| `.dropdown[data-level][data-style]` | the `aio` carrier; `data-style` is `datalist` or `select`              |
+| `.field`                            | the wrapper whose `loading` / `error` state is toggled                 |
 
-- Angular Reactive Forms
-- React controlled components
-- Vue composables
-- Custom rendering systems
+`[data-level]` is **not** unique to the value carrier: a custom dropdown may mark the wrapper too,
+so the builder filters the elements it decorates instead of taking every match.
 
----
+`@aio-ui/core/Stylesheets` fetches `id-address.css` on `init()`, so a host only declares where the
+sheet can be found (its `styles` asset map) — nothing is injected twice.
 
-# Why Adapters?
+## Tokens
 
-Adapters isolate rendering logic from cascading state management.
-
-This architecture allows IdAddressBuilder to:
-
-- support multiple UI libraries,
-- run in headless mode,
-- integrate with modern frameworks,
-- remain framework-agnostic,
-- and avoid coupling the engine to DOM implementations.
-
-The core engine never depends on a specific UI framework.
-
----
-
-# Installation
-
-The package is installable on its own — it needs neither `@aio-ui/form` nor
-`@aio-ui/input`:
-
-```bash
-npm install @aio-ui/id-address @aio-ui/http-service
-```
-
-| Entry                                                            | What it gives you                                                                             |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `@aio-ui/id-address`                                             | `IdAddressBuilder` and the adapters                                                           |
-| `@aio-ui/id-address/adapter`, `/adapter.native`, `/adapter.base` | the individual adapters                                                                       |
-| `@aio-ui/id-address/form`                                        | the form module (`idAddressFormAdapter`); needs `@aio-ui/form`, which is an **optional peer** |
-| `@aio-ui/id-address/id-address.css`                              | state styling (`loading`, `error`) for the controls it decorates                              |
-
-The builder requests that sheet through `@aio-ui/core/Stylesheets` on `init()`, so a host
-only has to declare where it can be fetched (its `styles` asset map) — the same seam every
-other component uses, and nothing is injected twice.
-
-## Styling
-
-The picker **does not render fields**. It decorates the `[data-level]` controls the page
-already provides, so their base styling stays with whoever renders them (`@aio-ui/input`,
-`@aio-ui/form`, or your own CSS). What this package ships is its own contribution: the
-`loading` and `error` states, written with `--app-*` tokens and plain fallbacks.
-
-### Tokens
-
-Declared once on `:root, [data-theme]` in `id-address.css`. One token is enough, but it keeps the
-override contract: redeclare it on any ancestor to retheme the error state without touching the
-package.
+Declared once on `:root, [data-theme]` in `id-address.css`. The package contributes only its own
+contribution to the field (`loading` / `error` states); the base look stays with whoever renders the
+field.
 
 | Token                      | Derives from         | Used for                                          |
 | -------------------------- | -------------------- | ------------------------------------------------- |
 | `--id-address-error-color` | `--app-status-error` | Border, outline and dropdown hairline in `.error` |
 
----
+## Methods
 
-# Quick Start
+| Method                                                 | Meaning                                                                |
+| ------------------------------------------------------ | ---------------------------------------------------------------------- |
+| `init()`                                               | Bind the adapters, load the first level, request the stylesheet        |
+| `destroy()`                                            | Remove listeners, adapters and internal state                          |
+| `registerAdapter(name, adapter)`                       | Add an adapter before `init()`                                         |
+| `loadNextLevel(level, parentId, selected?)`            | Load one level's options manually                                      |
+| `clearNextLevel(level, refresh?)`                      | Clear the levels below `level`                                         |
+| `getRegionalData(query)`                               | Run one query through the active source                                |
+| `getDetailByKodepos(kodepos, location?)`               | Reverse lookup: rebuild the address from a postal code                 |
+| `getGeocodeLocation(detail)`                           | Resolve coordinates for a detail record                                |
+| `detail` (getter)                                      | The accumulated `{ propinsi, kota, … }` record                         |
+| `config` (getter/setter)                               | Read the resolved config; the setter merges and re-derives what it can |
+| `onLevelLoaded` / `onLevelChanged` / `onGeocodeLoaded` | Register a lifecycle callback (see Config → Events)                    |
 
-## Native Adapter Example
+### `schema.load(parentId, selectedValue?)`
 
-```javascript
-import { IdAddressBuilder } from "indonesia-administrative-areas";
+Loads one level's options by hand — the escape hatch when the host owns the interaction.
+
+```js
+builder.onLevelLoaded(async (schema, data) => {
+  // manually continue the cascade
+  await schema.next.load(data[0][`${schema.name}_id`]);
+});
+```
+
+### `schema.select(selectedItem)`
+
+Programmatically performs a selection. It updates the detail state, clears the child levels, loads
+the next level, emits the lifecycle callbacks and optionally resolves geocode data.
+
+```js
+await schema.select(data.find((row) => row.kota_id === value));
+```
+
+## Wiring checklist
+
+1. `npm install @aio-ui/id-address @aio-ui/http-service` — the plugin needs neither `@aio-ui/form`
+   nor `@aio-ui/input`.
+2. Render one control per level, each marked `data-level="<level>"`, inside the container you pass
+   as `config.container`.
+3. Pick one data source: `url` (built-in fetch), `service` (shared `HttpService`) or `loader`
+   (no transport — what tests and mock rows use).
+4. Call `init()` after the markup exists and `destroy()` when the page goes away.
+
+| Entry                                                                | What it gives you                                                           |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `@aio-ui/id-address`                                                 | `IdAddressBuilder` and the config/detail types                              |
+| `@aio-ui/id-address/adapter`                                         | the adapter interface and the bundled adapters                              |
+| `@aio-ui/id-address/adapter.native`, `/adapter.aio`, `/adapter.base` | one adapter each                                                            |
+| `@aio-ui/id-address/form`                                            | `idAddressFormAdapter`; needs `@aio-ui/form`, which is an **optional peer** |
+| `@aio-ui/id-address/id-address.css`                                  | state styling (`loading`, `error`) for the controls it decorates            |
+
+### Quick start
+
+```js
+import { IdAddressBuilder } from "@aio-ui/id-address";
 
 const builder = new IdAddressBuilder({
-  url: "https://your-api-endpoint.com/api",
+  url: "https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec",
   container: document.getElementById("address-form"),
   useAdapter: "native",
 });
@@ -357,794 +177,95 @@ const builder = new IdAddressBuilder({
 builder.init();
 ```
 
----
+Headless (the host renders everything, the engine only manages state):
 
-# Headless Example
-
-```javascript
-const builder = new IdAddressBuilder({
-  url: "https://your-api-endpoint.com/api",
-  headless: true,
-});
+```js
+const builder = new IdAddressBuilder({ loader: fetchRows, headless: true });
 
 builder.init();
 
 builder.onLevelLoaded(async (schema, data) => {
-  console.log(`Loaded ${schema.name}`, data);
-
-  // simulate selecting first item
-  if (schema.next && data.length) {
-    await schema.next.load(data[0][`${schema.name}_id`]);
-  }
+  renderLevel(schema.name, data);
+  if (schema.next && data.length) await schema.next.load(data[0][`${schema.name}_id`]);
 });
 ```
 
----
+## Appendix
 
-# Adapters
+### Why this exists
 
-Built-in adapters:
+Free-typed addresses turn a database into unstructured data: spelling drifts, abbreviations differ,
+postal codes go missing and nothing can be validated or aggregated. A cascade over the official
+hierarchy fixes the shape of the data at the moment it is captured.
 
-| Adapter       | Description                         |
-| ------------- | ----------------------------------- |
-| `native`      | Standard HTML select/input elements |
-| `semantic-ui` | Fomantic UI dropdown integration    |
-| `base`        | Headless/no-op adapter              |
+### Architecture
 
----
+The engine separates four concerns — hierarchical state, asynchronous cascading, rendering and user
+interaction — which is what lets it run in two modes:
 
-# Registering Adapters
-
-```javascript
-import { IAddressAdapterSemanticUi } from "indonesia-administrative-areas";
-
-builder.registerAdapter("semantic-ui", IAddressAdapterSemanticUi);
+```txt
+Adapter mode                          Headless mode
+User Interaction → Adapter            Framework UI  → schema.select()
+      → IdAddressBuilder Engine        → Cascade Engine
+      → REST API / Cache               → onLevelLoaded() → Framework re-render
 ```
 
----
+`Why adapters`: rendering logic is isolated from cascade state, so the same engine serves vanilla
+JS, Angular, React, Vue and any custom renderer, and the core never depends on a UI library.
 
-# Creating Custom Adapters
+### Cache system
 
-Adapters implement the `IAddressAdapter` interface.
-
-```javascript
-const customAdapter = {
-  init(element) {},
-
-  setOptions(element, config) {},
-
-  setSelectedOption(element, value) {},
-
-  onLevelChange(element) {},
-
-  clear(element) {},
-
-  destroy(element) {},
-};
-
-builder.registerAdapter("custom", customAdapter);
-```
-
----
-
-# Events
-
-IdAddressBuilder exposes lifecycle events for observing and controlling the cascade.
-
----
-
-## onLevelLoaded
-
-Triggered when a level finishes loading.
-
-```javascript
-builder.onLevelLoaded((schema, data, complete) => {
-  console.log(schema.name);
-  console.log(data);
-});
-```
-
----
-
-## onLevelChanged
-
-Triggered when a level selection changes.
-
-```javascript
-builder.onLevelChanged((schema, data) => {
-  console.log(schema.name);
-  console.log(data);
-});
-```
-
----
-
-## onGeocodeLoaded
-
-Triggered when geocode data becomes available.
-
-```javascript
-builder.onGeocodeLoaded((schema, data) => {
-  console.log(data);
-});
-```
-
----
-
-# Schema API
-
-Each administrative level is represented as a schema node.
-
-Example levels:
-
-- `propinsi`
-- `kota`
-- `kecamatan`
-- `kelurahan`
-- `kodepos`
-
----
-
-## Schema Properties
-
-| Property      | Description                    |
-| ------------- | ------------------------------ |
-| `name`        | Current level name             |
-| `adapterName` | Active adapter                 |
-| `adapter`     | Adapter instance               |
-| `el`          | DOM element or virtual node    |
-| `next`        | Next schema node               |
-| `index`       | Level index                    |
-| `isDropdown`  | Whether level is selectable    |
-| `getDetail()` | Get accumulated address detail |
-
----
-
-## Schema Methods
-
-### `schema.load(parentId, selectedValue?)`
-
-Manually load options for the current level.
-
-```javascript
-await schema.load(parentId);
-```
-
-Example
+The builder owns no transport or cache any more. One of three sources answers a query:
 
 ```js
-builder.onLevelLoaded(async (schema, data) => {
-  if (schema.name === "propinsi") {
-    console.log(data);
-
-    // manually continue cascade
-    await schema.next.load(data[0].propinsi_id);
-  }
-});
-```
-
----
-
-### `schema.select(selectedItem)`
-
-Trigger a selection transition programmatically.
-
-```javascript
-await schema.select(selectedItem);
-```
-
-Example
-
-```js
-builder.onLevelLoaded((schema, data) => {
-  dropdown.addEventListener("change", async (e) => {
-    const selected = data.find((item) => {
-      return item[`${schema.name}_id`] === Number(e.target.value);
-    });
-    await schema.select(selected);
-  });
-});
-```
-
-This automatically:
-
-- updates detail state,
-- clears child levels,
-- loads next level,
-- emits lifecycle events,
-- optionally resolves geocode data.
-
----
-
-# Reverse Postal-Code Lookup
-
-Entering a postal code automatically reconstructs:
-
-- province,
-- city,
-- district,
-- sub-district,
-- and postal-code detail.
-
-This is handled internally by the cascade engine.
-
----
-
-# Geocode Integration
-
-Enable geocode support:
-
-```javascript
-const builder = new IdAddressBuilder({
-  url: apiUrl,
-  geocode: true,
-});
-```
-
-Receive geocode data:
-
-```javascript
-builder.onGeocodeLoaded((schema, data) => {
-  console.log(data);
-});
-```
-
----
-
-# Lifecycle Management
-
-IdAddressBuilder supports safe destruction and reinitialization.
-
-```javascript
-const builder = new IdAddressBuilder(options);
-
-builder.init();
-
-builder.destroy();
-```
-
-Destroy cleans:
-
-- DOM listeners,
-- adapters,
-- internal lifecycle state,
-- runtime references.
-
----
-
-# Framework Integration
-
----
-
-## Vanilla JS
-
-```javascript
-const builder = new IdAddressBuilder({
-  url: apiUrl,
-  container: document.getElementById("form"),
-  useAdapter: "native",
-});
-
-builder.init();
-```
-
----
-
-## React
-
-```jsx
-import { useEffect, useRef } from "react";
-import { IdAddressBuilder } from "indonesia-administrative-areas";
-
-function AddressForm() {
-  const containerRef = useRef();
-
-  useEffect(() => {
-    const builder = new IdAddressBuilder({
-      url: apiUrl,
-      container: containerRef.current,
-      useAdapter: "native",
-    });
-
-    builder.init();
-
-    return () => builder.destroy();
-  }, []);
-
-  return <div ref={containerRef} />;
-}
-```
-
----
-
-## Angular (Headless Mode)
-
-```typescript
-this.builder = new IdAddressBuilder({
-  url: this.apiUrl,
-  headless: true,
-});
-
-this.builder.init();
-
-this.builder.onLevelLoaded((schema, data) => {
-  this.options[schema.name] = data;
-});
-```
-
-```typescript
-async onPropinsiChange(selected) {
-
-  const schema =
-    this.builder.schema.find(
-      s => s.name === "propinsi"
-    );
-
-  await schema.select(selected);
-}
-```
-
----
-
-## Vue
-
-```vue
-<script setup>
-import { onMounted, onBeforeUnmount } from "vue";
-import { IdAddressBuilder } from "indonesia-administrative-areas";
-
-let builder;
-
-onMounted(() => {
-  builder = new IdAddressBuilder({
-    url: apiUrl,
-    container: document.getElementById("form"),
-    useAdapter: "native",
-  });
-
-  builder.init();
-});
-
-onBeforeUnmount(() => {
-  builder?.destroy();
-});
-</script>
-```
-
----
-
-# Cache System
-
-The builder no longer owns a transport or a cache. It used to carry `fetch` +
-`AbortController` + timeout + its own `localStorage` layer, which meant a second, slightly
-different HTTP stack inside a form component. Now one of three sources answers a query:
-
-```javascript
-// 1. an endpoint (a private HttpService is built from these options)
+// 1. url — a private HttpService is built from these options
 new IdAddressBuilder({ url: "https://…/exec", cache: { enabled: true, ttlDays: 1 } });
-
-// 2. a shared service (cache, timeout and abort handling are the app's)
+// 2. a shared service — cache, timeout and abort handling stay the app's
 new IdAddressBuilder({ service: myHttpService });
-
-// 3. a plain loader — no transport at all, which is what tests and mock data use
+// 3. a plain loader — no transport at all
 new IdAddressBuilder({ loader: (query) => Promise.resolve(rows) });
 ```
 
-Caching, TTL, retry and cancellation are `@aio-ui/http-service` concerns now: `cache` is
-forwarded to the service the builder creates (`cacheTtlDays`, `cachePrefix`, `delay`,
-`timeout`), and an injected service keeps its own policy. The cache key is the query's
-**values**, not its shape — `{ level: "kota", parentId: 12 }` and
-`{ level: "kecamatan", parentId: 3273 }` are different entries.
+`cache` is forwarded to the service the builder creates (`ttlDays`, `prefix`, `delay`, `timeout`);
+an injected service keeps its own policy. The cache key is the query's **values**, not its shape.
 
----
+### Framework integration
 
-# Server-Side REST API
-
-The backend API is implemented using Google Apps Script and serves Indonesian administrative region data from Google Sheets.
-
----
-
-## Spreadsheet Template
-
-Duplicate the spreadsheet template:
-
-[Google Spreadsheet Template](https://docs.google.com/spreadsheets/d/1tPKmIwF75q3-OCMyGzFMUO6VYTpAKWVqCBKng9h3m0s/copy)
-
----
-
-## Apps Script Setup
-
-1. Open the Apps Script editor from the spreadsheet.
-2. Update the `SPREADSHEET_ID`.
-3. Deploy as Web App.
-4. Use the deployment URL as the builder `url`.
-
-```javascript
-const builder = new IdAddressBuilder({
-  url: "https://script.google.com/macros/s/DEPLOYMENT_ID/exec",
-});
+```jsx
+// React
+useEffect(() => {
+  const builder = new IdAddressBuilder({ url, container: ref.current, useAdapter: "native" });
+  builder.init();
+  return () => builder.destroy();
+}, []);
 ```
 
-## REST API Reference (optional)
-
-IdAddressBuilder is powered by a lightweight REST API built with Google Apps Script.
-
-Although the library provides a complete cascading engine and adapter system, the API itself can also be used independently through standard HTTP requests.
-
-This allows integration with:
-
-- backend systems,
-- mobile applications,
-- Angular/React/Vue apps,
-- existing enterprise systems,
-- or completely custom frontend implementations.
-
----
-
-# Base Endpoint
-
-```txt id="b2k1e8"
-https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec
+```ts
+// Angular, headless
+this.builder = new IdAddressBuilder({ url: this.apiUrl, headless: true });
+this.builder.init();
+this.builder.onLevelLoaded((schema, data) => (this.options[schema.name] = data));
 ```
 
----
-
-# Hierarchical Administrative Levels
-
-The API follows Indonesia's administrative hierarchy:
-
-```txt id="w4czv6"
-Propinsi
-    ↓
-Kota / Kabupaten
-    ↓
-Kecamatan
-    ↓
-Kelurahan
-    ↓
-Kodepos
+```vue
+<!-- Vue -->
+onMounted(() => { builder = new IdAddressBuilder({ url, container: el, useAdapter: "native" }); builder.init(); });
+onBeforeUnmount(() => builder?.destroy());
 ```
 
-Each level is loaded using:
-
-- `level`
-- `parentId`
-
----
-
-# Get Province List
-
-## Request
-
-```http id="kx3yb2"
-GET /exec?level=propinsi
-```
-
-## Example
-
-```txt id="n3lq4k"
-https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec?level=propinsi
-```
-
-## Response
-
-```json id="2o3xq7"
-[
-  {
-    "propinsi_id": 24,
-    "propinsi_name": "KALIMANTAN UTARA"
-  },
-  {
-    "propinsi_id": 25,
-    "propinsi_name": "SULAWESI UTARA"
-  }
-]
-```
-
----
-
-# Get Kota / Kabupaten List
-
-## Request
-
-```http id="7uwl7m"
-GET /exec?level=kota&parentId=<PROPINSI_ID>
-```
-
-## Example
-
-```txt id="q6tqrm"
-https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec?level=kota&parentId=24
-```
-
-## Response
-
-```json id="u6a1bq"
-[
-  {
-    "kota_id": 341,
-    "kota_name": "BULUNGAN (BULONGAN)"
-  },
-  {
-    "kota_id": 342,
-    "kota_name": "TANA TIDUNG"
-  }
-]
-```
-
----
-
-# Get Kecamatan List
-
-## Request
-
-```http id="7r3l7u"
-GET /exec?level=kecamatan&parentId=<KOTA_ID>
-```
-
-## Example
-
-```txt id="fq8z5m"
-https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec?level=kecamatan&parentId=342
-```
-
-## Response
-
-```json id="v7hm1l"
-[
-  {
-    "kecamatan_id": 5098,
-    "kecamatan_name": "BETAYAU"
-  },
-  {
-    "kecamatan_id": 5107,
-    "kecamatan_name": "SESAYAP"
-  }
-]
-```
-
----
-
-# Get Kelurahan List
-
-## Request
-
-```http id="6vh1uo"
-GET /exec?level=kelurahan&parentId=<KECAMATAN_ID>
-```
-
-## Example
-
-```txt id="y7u3w8"
-https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec?level=kelurahan&parentId=5107
-```
-
-## Response
-
-```json id="y3p8md"
-[
-  {
-    "kelurahan_id": 62141,
-    "kelurahan_name": "RIAN"
-  },
-  {
-    "kelurahan_id": 62159,
-    "kelurahan_name": "SEBAWANG"
-  }
-]
-```
-
----
-
-# Get Postal Code (Final Level)
-
-## Request
-
-```http id="v8z8jw"
-GET /exec?level=kodepos&parentId=<KELURAHAN_ID>
-```
-
-## Example
-
-```txt id="j3yq8w"
-https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec?level=kodepos&parentId=62141
-```
-
-## Response
-
-```json id="7n2c6d"
-[
-  {
-    "kodepos_id": 62154,
-    "kodepos_name": 77152
-  }
-]
-```
-
----
-
-# Reverse Lookup by Postal Code
-
-The API can reconstruct the administrative hierarchy from a postal code.
-
----
-
-## Request
-
-```http id="y5z1dr"
-GET /exec?level=detail&kodepos=<KODEPOS>&location=false
-```
-
-## Example
-
-```txt id="z2w4fe"
-https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec?level=detail&kodepos=96264&location=false
-```
-
-## Response
-
-```json id="0x6j4z"
-[
-  {
-    "kodepos_name": 96264,
-    "kelurahan_id": 71182,
-    "kelurahan_name": "BANDUNG REJO",
-    "kecamatan_id": 5991,
-    "kecamatan_name": "BOLIOHUTO (BOLIYOHUTO)",
-    "kota_id": 408,
-    "kota_name": "GORONTALO",
-    "propinsi_id": 29,
-    "propinsi_name": "GORONTALO"
-  }
-]
-```
-
----
-
-# Geocode Lookup
-
-Set `location=true` to retrieve geolocation data.
-
----
-
-## Request
-
-```http id="9r2j4n"
-GET /exec?level=detail&kodepos=<KODEPOS>&location=true
-```
-
-## Example
-
-```txt id="5z9k4n"
-https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec?level=detail&kodepos=24473&location=true
-```
-
-## Response
-
-```json id="1w4h8r"
-[
-  {
-    "kelurahan_id": 19,
-    "kecamatan_id": 18,
-    "kota_id": 10,
-    "propinsi_id": 1,
-    "latitude": 4.2932389,
-    "longitude": 98.18439550000001,
-    "formatted_address": "Air Masin, Seuruway, Aceh Tamiang Regency, Aceh, Indonesia"
-  }
-]
-```
-
----
-
-# How IdAddressBuilder Uses the API
-
-Internally, IdAddressBuilder orchestrates multiple API calls to construct the complete hierarchical detail object.
-
-For example:
-
-```txt id="3wwnmg"
-Postal Code
-    ↓
-Detail Lookup
-    ↓
-Cascade Reconstruction
-    ↓
-Final Hierarchical Detail Object
-```
-
-The builder automatically transforms the API response into:
-
-```json id="v9eq0m"
-{
-  "kodepos_name": 96264,
-  "propinsi_id": 29,
-  "propinsi_name": "GORONTALO",
-  "kota_id": 408,
-  "kota_name": "GORONTALO",
-  "kecamatan_id": 5991,
-  "kecamatan_name": "BOLIOHUTO (BOLIYOHUTO)",
-  "kelurahan_id": 71182,
-  "kelurahan_name": "BANDUNG REJO"
-}
-```
-
-This reconstruction process is handled automatically by:
-
-```javascript id="3mjlwm"
-builder.getDetailByKodepos(kodepos);
-```
-
----
-
-# Query Parameters
-
-| Parameter  | Description                              |
-| ---------- | ---------------------------------------- |
-| `level`    | Administrative level to query            |
-| `parentId` | Parent region identifier                 |
-| `kodepos`  | Postal code value                        |
-| `location` | Enable geocode lookup (`true` / `false`) |
-
----
-
-# Available Levels
-
-| Level       | Description             |
-| ----------- | ----------------------- |
-| `propinsi`  | Province                |
-| `kota`      | City / Regency          |
-| `kecamatan` | District                |
-| `kelurahan` | Sub-district / Village  |
-| `kodepos`   | Postal code             |
-| `detail`    | Reverse lookup endpoint |
-| `geocode`   | Geolocation lookup      |
-
----
-
-# API Design Philosophy
-
-The API was intentionally designed to remain:
-
-- lightweight,
-- cache-friendly,
-- hierarchical,
-- composable,
-- and framework-independent.
-
-This allows developers to:
-
-- use the full IdAddressBuilder engine,
-- partially integrate the API,
-- or completely build their own UI systems on top of the endpoints.
-
----
-
-# Roadmap
-
-- Bootstrap adapter
-- Material UI adapter
-- Select2 adapter
-- Tailwind adapter
-- Enhanced geocode providers
-- Offline dataset support
-- Dedicated Angular/React/Vue packages
-- Stronger TypeScript typings
-
----
-
-# License
-
-MIT License.
-
----
-
-# Contributing
-
-Contributions, adapters, integrations, and improvements are welcome.
-
----
-
-# Author
-
-YMGH
+### Server-side REST API
+
+The reference backend is a Google Apps Script web app reading a Google Sheet. Duplicate the
+spreadsheet template, set `SPREADSHEET_ID`, deploy as a web app and use the deployment URL.
+
+| Level       | Request                                             |
+| ----------- | --------------------------------------------------- |
+| `propinsi`  | `GET /exec?level=propinsi`                          |
+| `kota`      | `GET /exec?level=kota&parentId=<propinsi_id>`       |
+| `kecamatan` | `GET /exec?level=kecamatan&parentId=<kota_id>`      |
+| `kelurahan` | `GET /exec?level=kelurahan&parentId=<kecamatan_id>` |
+| `kodepos`   | `GET /exec?level=kodepos&parentId=<kelurahan_id>`   |
+
+The API can be used on its own (mobile apps, backends, other frontends); it is not tied to this
+package. The builder sends exactly `{ level, parentId }`, which is why `loader` is the only seam a
+custom backend has to implement.
