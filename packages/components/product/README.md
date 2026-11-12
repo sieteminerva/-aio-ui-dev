@@ -27,7 +27,7 @@ The shape of the content decides the first view:
 | `themeId`     | `"default"` | Passed through to the theme                               |
 | `namespace`   | `null`      | Prefix for generated ids                                  |
 
-## Sub-modules
+### Sub-modules
 
 `productModules()` returns the two views as registry sub-modules with their own `scope` and
 `stylesheet`, so a host registers one word:
@@ -42,7 +42,9 @@ brings its own sheet. `ProductGrid.css` `@import`s `ProductCard.css`, because th
 instantiates cards directly (not through the registry) and their stylesheet would otherwise
 never be injected.
 
-## Nodes — detail
+## Nodes
+
+### detail
 
 | Key                             | Tag       | Class                    |
 | ------------------------------- | --------- | ------------------------ |
@@ -60,7 +62,7 @@ never be injected.
 | `@detail>body>actions>back`     | `button`  | `product-detail-back`    |
 | `@detail>body>actions>checkout` | `button`  | —                        |
 
-## Nodes — grid
+### grid
 
 | Key               | Tag       | Class            |
 | ----------------- | --------- | ---------------- |

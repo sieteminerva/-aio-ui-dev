@@ -27,6 +27,11 @@ export const ELEMENT_KEYS = [
   "@container>figure>label",
   "@container>figure>block",
   "@container>figure>block>source",
+  "@container>figure>actions",
+  "@container>figure>actions>copy",
+  "@container>figure>actions>edit",
+  "@container>figure>actions>save",
+  "@container>figure>actions>custom",
 ] as const;
 
 export type CodeBlockElementType = (typeof ELEMENT_KEYS)[number];
@@ -42,6 +47,11 @@ export const DEFAULT_SELECTORS: iBuilderSelectorsConfig<CodeBlockElementType> = 
   "@container>figure>label": { tagName: "figcaption", className: "label" },
   "@container>figure>block": { tagName: "pre", className: "paper" },
   "@container>figure>block>source": { tagName: "code", className: "body" },
+  "@container>figure>actions": { tagName: "div", className: "actions" },
+  "@container>figure>actions>copy": { tagName: "button", className: "copy" },
+  "@container>figure>actions>edit": { tagName: "button", className: "edit" },
+  "@container>figure>actions>save": { tagName: "button", className: "save" },
+  "@container>figure>actions>custom": { tagName: "button", className: "custom" },
 };
 
 /** One panel of source text. `label` prints above it, `language` is a styling hook. */
@@ -53,8 +63,68 @@ export interface iCodeBlockEntry {
   language?: string;
 }
 
+/** What an action button can do. `custom` only runs its own `onClick`. */
+export type iCodeBlockActionType = "copy" | "edit" | "save" | "custom";
+
+/**
+ * Handed to `onClick` — same vocabulary as `iInputActionContext`, so a caller that already
+ * writes input actions reads the same fields here.
+ */
+export interface iCodeBlockActionContext {
+  /** The button's own type. */
+  action: iCodeBlockActionType;
+  /** Element the action acts on: the `<code>` panel, or `null` if the figure is gone. */
+  element: HTMLElement | null;
+  /** The `<figure>` that owns the panel. */
+  parentElement: HTMLElement;
+  /** Panel text: the current source, or the committed text after a `save`. */
+  value: string;
+  /** Caption of the panel, when it has one. */
+  label?: string;
+  /** `data-language` of the panel, when it was set. */
+  language?: string;
+  /** Position of the panel inside its container, `0`-based. */
+  index: number;
+  button: HTMLButtonElement;
+  event: MouseEvent;
+  /** Free slot for whatever the handler produced. */
+  result?: unknown;
+}
+
+/** Emitter for an action: the callback in the config IS the event sink. */
+export type iCodeBlockActionHandler = (
+  parentElement: HTMLElement,
+  context: iCodeBlockActionContext,
+) => void | Promise<void>;
+
+/**
+ * One button printed under the panel.
+ *
+ * `copy` / `edit` / `save` are wired here and need nothing from the caller; `custom` is a
+ * plain button whose only behaviour is `onClick`. Editable mode is a `contentEditable`
+ * attribute on the `<code>` element (the same mechanism `Table` uses per cell), so the
+ * panel becomes its own editor instead of a swapped-in `<textarea>`.
+ */
+export interface iCodeBlockAction {
+  type: iCodeBlockActionType;
+  /** Button text. Defaults to the capitalised type (`Copy`, `Edit`, `Save`, `Run`). */
+  label?: string;
+  onClick: iCodeBlockActionHandler;
+}
+
+/** Default button text per action type. */
+export const ACTION_LABELS: Record<iCodeBlockActionType, string> = {
+  copy: "Copy",
+  edit: "Edit",
+  save: "Save",
+  custom: "Run",
+};
+
 /** Component options. Add only what a caller genuinely needs to change per instance. */
-export interface iCodeBlockConfig extends iBuilderConfig<CodeBlockElementType> { }
+export interface iCodeBlockConfig extends iBuilderConfig<CodeBlockElementType> {
+  /** Buttons under every panel. Empty (the default) keeps the block read-only. */
+  actions?: iCodeBlockAction[];
+}
 
 /**
  * Payload normalizer.
@@ -108,6 +178,7 @@ export class CodeBlockBuilder extends Builder<CodeBlockElementType, iCodeBlockCo
       namespace: null,
       emit: () => { },
       selectors: DEFAULT_SELECTORS,
+      actions: [],
     };
 
     this.config = this.resolveConfig(defaultConfig, config);
@@ -138,6 +209,19 @@ export class CodeBlockBuilder extends Builder<CodeBlockElementType, iCodeBlockCo
         figure.appendChild(block);
       }
 
+      // Actions live per panel: every button acts on the `code` element of its own figure.
+      // Nothing is rendered when the caller configured none, so the read-only DOM is unchanged.
+      const actions = this.config.actions ?? [];
+      if (actions.length) {
+        const row = this.render("@container>figure>actions", { count: actions.length });
+        for (const action of actions) {
+          const key = `@container>figure>actions>${action.type}` as CodeBlockElementType;
+          const button = this.render(key, action);
+          if (button) row?.appendChild(button);
+        }
+        if (row) figure.appendChild(row);
+      }
+
       container?.appendChild(figure);
     }
 
@@ -162,14 +246,88 @@ export class CodeBlockBuilder extends Builder<CodeBlockElementType, iCodeBlockCo
         el.textContent = payload?.code ?? "";
         break;
 
+      case "@container>figure>actions>copy":
+      case "@container>figure>actions>edit":
+      case "@container>figure>actions>save":
+      case "@container>figure>actions>custom": {
+        const button = el as HTMLButtonElement;
+        const type = typeKey.split(">").pop() as iCodeBlockActionType;
+        const label = payload?.label ?? ACTION_LABELS[type];
+        button.type = "button";
+        button.dataset.action = type;
+        button.textContent = label;
+        button.title = label;
+        break;
+      }
+
       default:
         break;
     }
   }
 
   /**
-   * Interaction wiring. A code block is purely visual, so nothing here is needed; the
-   * hook stays explicit so a later highlighter has one obvious place to start.
+   * Wire the action buttons — one listener per button, resolved against `config.actions`.
+   *
+   * `edit` / `save` only flip the `contentEditable` attribute on the panel's `<code>`; the
+   * committed text goes back through `textContent`, so nothing is ever parsed as HTML.
+   * Reporting is the caller's: the action's own `onClick` is the sink, exactly like an
+   * input field's action set — there is no separate event name to learn.
    */
-  public initialize(): void { }
+  public initialize(el?: HTMLElement): void {
+    const container = el ?? (this.load("@container") as HTMLElement | null);
+    if (!container) return;
+
+    container.querySelectorAll<HTMLButtonElement>("button[data-action]").forEach((button) => {
+      button.addEventListener("click", (event) => this.#runAction(event, button));
+    });
+  }
+
+  #runAction(event: MouseEvent, button: HTMLButtonElement): void {
+    event.preventDefault();
+
+    const type = button.dataset.action as iCodeBlockActionType | undefined;
+    const action = (this.config.actions ?? []).find((entry) => entry.type === type);
+    if (!type || !action || !button.closest("figure")) return;
+
+    const figure = button.closest("figure") as HTMLElement;
+    const code = (figure.querySelector("code") ?? null) as HTMLElement | null;
+    const panel = (figure.querySelector("pre") ?? null) as HTMLElement | null;
+
+    if (type === "edit" && code) {
+      code.contentEditable = "true";
+      figure.classList.add("editing");
+      code.focus();
+    }
+
+    if (type === "save" && code) {
+      const committed = (code.textContent ?? "").replace(/\s+$/, "");
+      code.textContent = committed;
+      code.contentEditable = "false";
+      figure.classList.remove("editing");
+    }
+
+    const value = code?.textContent ?? "";
+
+    if (type === "copy") {
+      // Clipboard access is async and can be denied; a click must not throw either way.
+      const clipboard = navigator.clipboard;
+      if (clipboard) void clipboard.writeText(value).catch(() => undefined);
+    }
+
+    const context: iCodeBlockActionContext = {
+      action: type,
+      element: code,
+      parentElement: figure,
+      value,
+      label: action.label,
+      language: panel?.dataset.language,
+      index: Array.from(figure.parentElement?.children ?? []).indexOf(figure),
+      button,
+      event,
+    };
+
+    // A handler may be async (persist the edited source); a rejection belongs to the caller.
+    const outcome = action.onClick(figure, context);
+    if (outcome) void outcome.catch(() => undefined);
+  }
 }

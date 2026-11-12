@@ -1,6 +1,6 @@
 {
   "name": "@aio-ui/modules",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Aggregated public surface for modules.",
   "files": [
@@ -15,12 +15,12 @@
     }
   },
   "dependencies": {
-    "@aio-ui/module-loader": "^0.1.0",
-    "@aio-ui/router": "^0.1.0",
-    "@aio-ui/http-service": "^0.1.0",
-    "@aio-ui/event-emitter": "^0.1.0",
-    "@aio-ui/theme": "^0.1.0",
-    "@aio-ui/animations": "^0.1.0"
+    "@aio-ui/module-loader": "^0.1.1",
+    "@aio-ui/router": "^0.1.1",
+    "@aio-ui/http-service": "^0.1.1",
+    "@aio-ui/event-emitter": "^0.1.1",
+    "@aio-ui/theme": "^0.1.1",
+    "@aio-ui/animations": "^0.1.1"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

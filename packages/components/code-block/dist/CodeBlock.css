@@ -22,6 +22,14 @@
   --code-block-label-letter-spacing: 0.08em;
   --code-block-gap: 0.5rem;
   --code-block-label-gap: 0.35rem;
+  --code-block-action-color: rgba(233, 226, 216, 0.7);
+  --code-block-action-hover-color: #e9e2d8;
+  --code-block-action-background: rgba(233, 226, 216, 0.08);
+  --code-block-action-hover-background: rgba(233, 226, 216, 0.16);
+  --code-block-action-padding: 0.3rem 0.6rem;
+  --code-block-action-gap: 0.35rem;
+  --code-block-action-radius: calc(var(--code-block-radius) * 0.5);
+  --code-block-edit-outline: 1px solid rgba(233, 226, 216, 0.45);
 }
 
 /* Several labelled blocks in one call: they stack, they do not touch. */
@@ -65,5 +73,44 @@
       color: inherit;
       white-space: pre;
     }
+
+    /* In edit mode the panel itself is the editor: no outline of the browser's own. */
+    & [contenteditable="true"] {
+      outline: none;
+      cursor: text;
+    }
+  }
+
+  /* Action row. Only rendered when the caller configures `actions`, so a read-only block
+     keeps the exact DOM it always had. */
+  & .actions {
+    display: flex;
+    gap: var(--code-block-action-gap);
+    justify-content: flex-end;
+  }
+
+  & .actions button {
+    padding: var(--code-block-action-padding);
+    border: 0;
+    border-radius: var(--code-block-action-radius);
+    background: var(--code-block-action-background);
+    color: var(--code-block-action-color);
+    font-family: var(--code-block-font-family);
+    font-size: var(--code-block-label-font-size);
+    letter-spacing: var(--code-block-label-letter-spacing);
+    text-transform: uppercase;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--code-block-action-hover-background);
+      color: var(--code-block-action-hover-color);
+    }
+  }
+
+  /* The panel being edited: a hairline so it reads as a field, not as paper. */
+  & .frame.editing .paper {
+    outline: var(--code-block-edit-outline);
+    outline-offset: 2px;
   }
 }

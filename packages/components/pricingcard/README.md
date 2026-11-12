@@ -23,6 +23,17 @@ A single record or an array of records. Accepted aliases: `title` for `header`, 
 `price` is formatted with `Intl.NumberFormat("id-ID", { currency: "IDR" })` and printed inside a
 `strong`; the surrounding sentence is fixed copy (`Mulai dari … / pax`).
 
+## Config
+
+| Option      | Default      | Meaning                     |
+| ----------- | ------------ | --------------------------- |
+| `selectors` | see defaults | Per-key tag/class override  |
+| `themeId`   | `"default"`  | Passed through to the theme |
+| `namespace` | `null`       | Prefix for generated ids    |
+
+`iPricingCardConfig` adds nothing else: the card is entirely payload-driven, so anything that
+looks like a setting (`featured`, `label`, `onClick`, `className`) belongs on the record.
+
 ## Nodes
 
 | Key               | Default tag | Class / note                         |

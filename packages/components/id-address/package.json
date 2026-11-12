@@ -1,6 +1,6 @@
 {
   "name": "@aio-ui/id-address",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "files": [
     "dist",
@@ -41,10 +41,10 @@
     "./id-address.css": "./id-address.css"
   },
   "peerDependencies": {
-    "@aio-ui/http-service": "^0.1.0",
-    "@aio-ui/module-loader": "^0.1.0",
-    "@aio-ui/core": "^0.1.0",
-    "@aio-ui/form": "^0.1.0"
+    "@aio-ui/http-service": "^0.1.1",
+    "@aio-ui/module-loader": "^0.1.1",
+    "@aio-ui/core": "^0.1.1",
+    "@aio-ui/form": "^0.1.1"
   },
   "peerDependenciesMeta": {
     "@aio-ui/form": {

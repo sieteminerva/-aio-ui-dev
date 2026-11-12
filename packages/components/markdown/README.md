@@ -19,6 +19,14 @@ Fenced code is **not** restyled here: it renders the `code-block` markup
 A bare string is accepted as the source. Anything else renders nothing — guessing at a
 document shape would print the wrong thing with confidence.
 
+## Config
+
+| Option      | Default      | Meaning                     |
+| ----------- | ------------ | --------------------------- |
+| `selectors` | see defaults | Per-key tag/class override  |
+| `themeId`   | `"default"`  | Passed through to the theme |
+| `namespace` | `null`       | Prefix for generated ids    |
+
 ## Supported syntax
 
 | Block       | Written as                                              | Rendered as                          |
@@ -33,14 +41,6 @@ document shape would print the wrong thing with confidence.
 | inline      | `` `code` ``, `**bold**`, `*em*`/`_em_`, `[text](href)` | `code`, `strong`, `em`, `a`          |
 
 A ` ```mermaid ` fence is an ordinary fenced block; highlighting is a renderer's job.
-
-## Config
-
-| Option      | Default      | Meaning                     |
-| ----------- | ------------ | --------------------------- |
-| `selectors` | see defaults | Per-key tag/class override  |
-| `themeId`   | `"default"`  | Passed through to the theme |
-| `namespace` | `null`       | Prefix for generated ids    |
 
 ## Nodes
 

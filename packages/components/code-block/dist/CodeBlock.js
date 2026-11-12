@@ -24,6 +24,11 @@ export const ELEMENT_KEYS = [
     "@container>figure>label",
     "@container>figure>block",
     "@container>figure>block>source",
+    "@container>figure>actions",
+    "@container>figure>actions>copy",
+    "@container>figure>actions>edit",
+    "@container>figure>actions>save",
+    "@container>figure>actions>custom",
 ];
 /**
  * Default shape per key. The root is a real `section` (it is a block of source text, and it
@@ -36,6 +41,18 @@ export const DEFAULT_SELECTORS = {
     "@container>figure>label": { tagName: "figcaption", className: "label" },
     "@container>figure>block": { tagName: "pre", className: "paper" },
     "@container>figure>block>source": { tagName: "code", className: "body" },
+    "@container>figure>actions": { tagName: "div", className: "actions" },
+    "@container>figure>actions>copy": { tagName: "button", className: "copy" },
+    "@container>figure>actions>edit": { tagName: "button", className: "edit" },
+    "@container>figure>actions>save": { tagName: "button", className: "save" },
+    "@container>figure>actions>custom": { tagName: "button", className: "custom" },
+};
+/** Default button text per action type. */
+export const ACTION_LABELS = {
+    copy: "Copy",
+    edit: "Edit",
+    save: "Save",
+    custom: "Run",
 };
 /**
  * Payload normalizer.
@@ -93,6 +110,7 @@ export class CodeBlockBuilder extends Builder {
             namespace: null,
             emit: () => { },
             selectors: DEFAULT_SELECTORS,
+            actions: [],
         };
         this.config = this.resolveConfig(defaultConfig, config);
     }
@@ -119,6 +137,20 @@ export class CodeBlockBuilder extends Builder {
                     block.appendChild(source);
                 figure.appendChild(block);
             }
+            // Actions live per panel: every button acts on the `code` element of its own figure.
+            // Nothing is rendered when the caller configured none, so the read-only DOM is unchanged.
+            const actions = this.config.actions ?? [];
+            if (actions.length) {
+                const row = this.render("@container>figure>actions", { count: actions.length });
+                for (const action of actions) {
+                    const key = `@container>figure>actions>${action.type}`;
+                    const button = this.render(key, action);
+                    if (button)
+                        row?.appendChild(button);
+                }
+                if (row)
+                    figure.appendChild(row);
+            }
             container?.appendChild(figure);
         }
         return this.load("@container");
@@ -139,14 +171,81 @@ export class CodeBlockBuilder extends Builder {
             case "@container>figure>block>source":
                 el.textContent = payload?.code ?? "";
                 break;
+            case "@container>figure>actions>copy":
+            case "@container>figure>actions>edit":
+            case "@container>figure>actions>save":
+            case "@container>figure>actions>custom": {
+                const button = el;
+                const type = typeKey.split(">").pop();
+                const label = payload?.label ?? ACTION_LABELS[type];
+                button.type = "button";
+                button.dataset.action = type;
+                button.textContent = label;
+                button.title = label;
+                break;
+            }
             default:
                 break;
         }
     }
     /**
-     * Interaction wiring. A code block is purely visual, so nothing here is needed; the
-     * hook stays explicit so a later highlighter has one obvious place to start.
+     * Wire the action buttons — one listener per button, resolved against `config.actions`.
+     *
+     * `edit` / `save` only flip the `contentEditable` attribute on the panel's `<code>`; the
+     * committed text goes back through `textContent`, so nothing is ever parsed as HTML.
+     * Reporting is the caller's: the action's own `onClick` is the sink, exactly like an
+     * input field's action set — there is no separate event name to learn.
      */
-    initialize() { }
+    initialize(el) {
+        const container = el ?? this.load("@container");
+        if (!container)
+            return;
+        container.querySelectorAll("button[data-action]").forEach((button) => {
+            button.addEventListener("click", (event) => this.#runAction(event, button));
+        });
+    }
+    #runAction(event, button) {
+        event.preventDefault();
+        const type = button.dataset.action;
+        const action = (this.config.actions ?? []).find((entry) => entry.type === type);
+        if (!type || !action || !button.closest("figure"))
+            return;
+        const figure = button.closest("figure");
+        const code = (figure.querySelector("code") ?? null);
+        const panel = (figure.querySelector("pre") ?? null);
+        if (type === "edit" && code) {
+            code.contentEditable = "true";
+            figure.classList.add("editing");
+            code.focus();
+        }
+        if (type === "save" && code) {
+            const committed = (code.textContent ?? "").replace(/\s+$/, "");
+            code.textContent = committed;
+            code.contentEditable = "false";
+            figure.classList.remove("editing");
+        }
+        const value = code?.textContent ?? "";
+        if (type === "copy") {
+            // Clipboard access is async and can be denied; a click must not throw either way.
+            const clipboard = navigator.clipboard;
+            if (clipboard)
+                void clipboard.writeText(value).catch(() => undefined);
+        }
+        const context = {
+            action: type,
+            element: code,
+            parentElement: figure,
+            value,
+            label: action.label,
+            language: panel?.dataset.language,
+            index: Array.from(figure.parentElement?.children ?? []).indexOf(figure),
+            button,
+            event,
+        };
+        // A handler may be async (persist the edited source); a rejection belongs to the caller.
+        const outcome = action.onClick(figure, context);
+        if (outcome)
+            void outcome.catch(() => undefined);
+    }
 }
 //# sourceMappingURL=CodeBlock.js.map
