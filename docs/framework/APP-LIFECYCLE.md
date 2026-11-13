@@ -47,13 +47,13 @@ replaces the page, not only when the route name changes — see §2 and L6.
 
 ## 2. What the app guarantees today (measured 2026-11-13)
 
-| Fact                                                                     | Evidence                                                                                |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
-| `#release()` runs on **every** replacing pass (route, fragment or theme) | `packages/app/src/AioApp.ts` — `#renderRoute()` calls it before `#createPage()`         |
+| Fact                                                                     | Evidence                                                                                         |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `#release()` runs on **every** replacing pass (route, fragment or theme) | `packages/app/src/AioApp.ts` — `#renderRoute()` calls it before `#createPage()`                  |
 | Every builder is destroyed when its page is discarded                    | `ComponentRegistry.build()` pins the instance; `#paint()` calls `registry.releaseBuilders(root)` |
-| `KitchenPage` keeps its shell and destroys its builders in `onDestroy`   | `examples/demo/src/pages/kitchen.ts`                                                    |
-| DOM is replaced, never accumulated                                       | 20 navigations: `document.querySelectorAll("*")` 144–213, no trend                      |
-| Lazy CSS is injected once per component                                  | `<style>` 22 → 24 → 29 → 30 across first visits, then flat; `cssRules` 341 constant     |
+| `KitchenPage` keeps its shell and destroys its builders in `onDestroy`   | `examples/demo/src/pages/kitchen.ts`                                                             |
+| DOM is replaced, never accumulated                                       | 20 navigations: `document.querySelectorAll("*")` 144–213, no trend                               |
+| Lazy CSS is injected once per component                                  | `<style>` 22 → 24 → 29 → 30 across first visits, then flat; `cssRules` 341 constant              |
 
 `#kitchen/a → #kitchen/b` is one route with two fragments. Before L6 that meant the old
 tree was dropped by `replaceChildren` and nothing in it was told to stop — the amplifier

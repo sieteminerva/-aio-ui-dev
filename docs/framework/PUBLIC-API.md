@@ -251,12 +251,12 @@ Removed from the public surface:
 
 Batch 20 moved the _hold_ out of core and made the mockup a component:
 
-| Moved / added                                  | Where                                       | Why                                                                                                          |
-| ---------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `holdUntilStyled`, `releaseMarkers`            | `@aio-ui/base/BaseAdapters/Hydration`       | hiding an unstyled root is a lifecycle detail of `create()`; core keeps only the loader (`ensureStylesheet`) |
-| `Builder.loading?()`                           | `@aio-ui/base`                              | a component draws its own silhouette instead of a generic skin; opt-in, so no existing builder changes       |
-| `Skeleton`, `SkeletonBuilder`, `iSkeletonSpec` | `@aio-ui/skeleton` (new package, mandatory) | the mockup must be styled _before_ the real sheet exists, so its CSS ships with the app shell                |
-| `--app-skeleton-bg`                            | `packages/styles/src/variables.css`         | the one colour that has to exist before a component layer does                                               |
+| Moved / added                                      | Where                                                  | Why                                                                                                                  |
+| -------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `holdUntilStyled`, `releaseMarkers`                | `@aio-ui/base/BaseAdapters/Hydration`                  | hiding an unstyled root is a lifecycle detail of `create()`; core keeps only the loader (`ensureStylesheet`)         |
+| `Builder.loading?()`                               | `@aio-ui/base`                                         | a component draws its own silhouette instead of a generic skin; opt-in, so no existing builder changes               |
+| `Skeleton`, `SkeletonBuilder`, `iSkeletonSpec`     | `@aio-ui/skeleton` (new package, mandatory)            | the mockup must be styled _before_ the real sheet exists, so its CSS ships with the app shell                        |
+| `--app-skeleton-bg`                                | `packages/styles/src/variables.css`                    | the one colour that has to exist before a component layer does                                                       |
 | `BUILDER_INSTANCE`, `attachBuilder` (teardown pin) | `@aio-ui/core` internals (`Registry/BuilderInstances`) | only the registry ever sweeps a whole tree; a standalone builder is never swept, so `create()` stays free of the pin |
 
 **Version:** breaking removal of an exported symbol, so the family moves **0.1.1 → 0.2.0**

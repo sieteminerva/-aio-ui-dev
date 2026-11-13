@@ -66,8 +66,8 @@ describe("ComponentRegistry — one module, several builders", () => {
 
   /** A package like `@aio-ui/product`: several builders behind one path. */
   function productAssets() {
-    class GridBuilder extends makeBuilderClass(instances) {}
-    class DetailBuilder extends makeBuilderClass(instances) {}
+    class GridBuilder extends makeBuilderClass(instances) { }
+    class DetailBuilder extends makeBuilderClass(instances) { }
     return makeAssets({ "@fake/product": async () => ({ GridBuilder, DetailBuilder }) });
   }
 
@@ -97,7 +97,7 @@ describe("ComponentRegistry — one module, several builders", () => {
   });
 
   it("warns in development when a module is ambiguous and the manifest stays silent", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => { });
     const registry = new ComponentRegistry(productAssets());
     registry.register("product-card-grid", () => ({ path: "@fake/product" }));
 
@@ -320,7 +320,7 @@ describe("ComponentRegistry manifest contract", () => {
       }
     }
 
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
 
     const registry = new ComponentRegistry({
       modules: {
