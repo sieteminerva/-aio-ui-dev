@@ -9,6 +9,11 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 - [ ] Review `AioApp` entry/render output, then define and implement `isRoot` builder semantics
       (default host wraps; `isRoot: true` replaces the host with the builder root). See `plan-generator.md` §3.11.
+- [ ] Give the remaining builders a `loading()` mockup (16 of 18 still fall back to the shimmer):
+      start with the ones whose box shape is obvious — `carousel`, `masonry`, `product-grid`,
+      `article`, `markdown`, `menu`. Keep each to a handful of `Skeleton.create` nodes.
+- [ ] Observe the mockup path in a real browser (cold sheet): needs a throttled network or a
+      disabled HTTP cache — Vite resolves the loader in one microtask, so dev never shows the hold.
 - [ ] Fix and validate the Masonry column distribution.
 - [ ] Audit remaining `TemplateRegistry` and page registration references.
 - [ ] Activate a `ModuleLoader` in a real Form instance and verify both paths in the browser.
