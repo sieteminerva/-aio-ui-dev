@@ -204,6 +204,12 @@ app.registerPage("blog", BlogPage, { limit: 5 });
 | `onDestroy`  | —                   | release what the controller acquired                                |
 | `attachMenu` | `iBasicNode`        | rewrite the menu node; **called by the app**, not by the controller |
 
+`onDestroy` runs when the route **name** changes, not when only the fragment changes
+(`#kitchen/a → #kitchen/b` is one route). It is also the only teardown hook: the app keeps
+no builder instances, so a page that mounts components must destroy them itself. Ownership
+per resource, and the leaks measured when nothing releases it, are in
+[`APP-LIFECYCLE.md`](./APP-LIFECYCLE.md).
+
 `iPageContext` = `{ route, page, fragment, theme, builders, http, signal }`.
 `iPageReadyContext` = `{ route, page, shell, menu, footer, blocks }`, where `blocks` maps
 every rendered element that carries an `id`.

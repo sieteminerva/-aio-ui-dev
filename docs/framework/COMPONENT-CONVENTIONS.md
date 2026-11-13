@@ -334,6 +334,10 @@ new MyWidgetBuilder(config)      // resolveConfig: themeId, selectors, namespace
 and nulls `config`. If you override it: do your cleanup **first**, then call
 `super.destroy()`, and make it idempotent (a second call must not throw).
 
+`Base.destroy()` releases no timers, observers or global listeners — whatever you started in
+`initialize()` is yours to stop. Which resources need releasing, and the measured leaks that
+happen when they are not, are in [`APP-LIFECYCLE.md`](./APP-LIFECYCLE.md).
+
 ---
 
 ## 9. Config surface
