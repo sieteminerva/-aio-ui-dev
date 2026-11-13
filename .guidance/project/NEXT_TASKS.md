@@ -7,24 +7,6 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Framework (`packages/`, `examples/demo`)
 
-- [ ] **Restructure the anti-FOUC gate — it is too convoluted for what it does.** The current
-      shape spans six places: `HydrationGate` (class, 5 methods, `#holdRoot`, `isLoaded`),
-      `Builder.hydration` + `isLoaded` accessors, `BuilderPort.releaseHydration` (base→core
-      indirection), `ComponentRegistry._launchPostLoadInstance` + `_stylesReady`/`_stylesLoading`,
-      `Stylesheets.ready`/`loading`, and `isStylesheetPending`. Target: **one** function that takes
-      a root + specifier, marks it, releases it when `ensureStylesheet` settles, and nothing else —
-      no gate object, no per-instance flag, no adapter method. Decide the public-API break
-      (`HydrationGate` is exported from `@aio-ui/base` and listed in `PUBLIC-API.md`/`api-map`) and
-      the version bump before deleting it.
-- [ ] Sync the `#form` demo documentation with what the page actually does (`examples/demo/src/pages/form.ts`
-      grew states, the Id Address cascade, the CSV table and `stateBlock`); check `DEMO.md`
-      §Page components, `FIELD-TYPES.md` and the form package README against the code.
-- [ ] Give `#kitchen/<name>` a teardown path: `AioApp.#release()` runs only when the route name
-      changes, so a fragment switch never calls `onDestroy` and no page can destroy its builders.
-      Needs an instance registry (or a controller-owned list) plus `KitchenPage.onDestroy`.
-      _Why it matters: `Dropdown` already ships the abort pattern and `Carousel`/`Masonry` have
-      working `destroy()`s — nothing calls them. The next builder that adds a global listener or a
-      timer will leak exactly like batch 15's two cases._
 - [ ] Review `AioApp` entry/render output, then define and implement `isRoot` builder semantics
       (default host wraps; `isRoot: true` replaces the host with the builder root). See `plan-generator.md` §3.11.
 - [ ] Fix and validate the Masonry column distribution.

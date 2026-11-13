@@ -25,18 +25,18 @@ a field node is the input package's contract, not this one.
 
 ### Group and row keys
 
-| Key        | On         | Meaning                                                                     |
-| ---------- | ---------- | --------------------------------------------------------------------------- |
-| `id`       | group, row | Identity; cascade paths and the submit payload use it                       |
-| `legend`   | group      | Text of the `<legend>` (`title` is the fallback)                            |
-| `title`    | group, row | Heading; on a group it doubles as the legend when `legend` is absent         |
-| `description` | group   | Paragraph under the legend                                                  |
-| `group`    | group      | Fieldset children                                                           |
-| `row`      | row        | Inline children — layout, not a fieldset                                    |
-| `label`    | row        | Title rendered above the row (`@form>row>title`)                             |
-| `column`   | group, row | Column count for the layout                                                 |
-| `actions`  | group, row | Action words rendered in the corner: `search`, `copy`, `editor`, `repeater`  |
-| `actionsPosition` | group, row | Where those buttons sit (`config.position` is the older spelling)      |
+| Key               | On         | Meaning                                                                     |
+| ----------------- | ---------- | --------------------------------------------------------------------------- |
+| `id`              | group, row | Identity; cascade paths and the submit payload use it                       |
+| `legend`          | group      | Text of the `<legend>` (`title` is the fallback)                            |
+| `title`           | group, row | Heading; on a group it doubles as the legend when `legend` is absent        |
+| `description`     | group      | Paragraph under the legend                                                  |
+| `group`           | group      | Fieldset children                                                           |
+| `row`             | row        | Inline children — layout, not a fieldset                                    |
+| `label`           | row        | Title rendered above the row (`@form>row>title`)                            |
+| `column`          | group, row | Column count for the layout                                                 |
+| `actions`         | group, row | Action words rendered in the corner: `search`, `copy`, `editor`, `repeater` |
+| `actionsPosition` | group, row | Where those buttons sit (`config.position` is the older spelling)           |
 
 A field's own keys (`type`, `id`, `title`, `placeholder`, `editable`, `condition`,
 `config.wide`, `config.csv`, …) belong to `@aio-ui/input`; `config.wide` (`50` = half,
@@ -44,32 +44,32 @@ A field's own keys (`type`, `id`, `title`, `placeholder`, `editable`, `condition
 
 ## Config
 
-| Option                              | Default          | Meaning                                                       |
-| ----------------------------------- | ---------------- | ------------------------------------------------------------- |
-| `id`, `name`                        | `""`             | Form identity; the id is derived from `id` (`form-<slug>`)    |
-| `title`                             | `""`             | Heading above the first group                                 |
-| `description`                       | `""`             | Paragraph under the heading                                   |
-| `method`, `action`                  | `"post"`, `""`   | Native form attributes                                        |
-| `className`                         | `""`             | Extra classes, de-duplicated                                  |
-| `submitButton`                      | `true`           | Render the submit button                                      |
-| `buttonText`                        | `"Submit"`       | Submit label                                                  |
-| `buttonClass`                       | `""`             | Extra classes on the submit button                            |
-| `resetOnSubmit` / `resetOnComplete` | `false` / `true` | Clear before sending / after success                          |
-| `multistep`                         | `false`          | Split groups into steps with gating                           |
-| `cascading`                         | `false`          | Honour each field's `condition`                               |
-| `cascadeMode`                       | `"template"`     | `template` plants a `<template>`; `hidden` builds then hides  |
-| `onCascade`                         | `null`           | Called with every cascade mount / unmount / gate              |
-| `calculation`                       | `false`          | Enable formula fields                                         |
-| `messages`                          | built-in         | Every sentence the form says back (validation, gate, submit)  |
-| `files`                             | `"ignore"`       | `"ignore"` keeps files out of the payload; a function opts in |
-| `excludeEmpty`                      | `false`          | Drop `""`, `false` and empty arrays from the submit payload   |
-| `onSubmit`                          | `null`           | Called with the assembled payload                             |
-| `footer`                            | `null`           | Element or string appended after the actions                  |
-| `minHeight`                         | `"400px"`        | Reserved height for lazily loaded groups                      |
-| `createEventListener`               | `true`           | Bind the form's own submit/reset listeners                    |
-| `autoDisableNextStep`               | `false`          | Disable `next` until the current step validates               |
+| Option                              | Default          | Meaning                                                                   |
+| ----------------------------------- | ---------------- | ------------------------------------------------------------------------- |
+| `id`, `name`                        | `""`             | Form identity; the id is derived from `id` (`form-<slug>`)                |
+| `title`                             | `""`             | Heading above the first group                                             |
+| `description`                       | `""`             | Paragraph under the heading                                               |
+| `method`, `action`                  | `"post"`, `""`   | Native form attributes                                                    |
+| `className`                         | `""`             | Extra classes, de-duplicated                                              |
+| `submitButton`                      | `true`           | Render the submit button                                                  |
+| `buttonText`                        | `"Submit"`       | Submit label                                                              |
+| `buttonClass`                       | `""`             | Extra classes on the submit button                                        |
+| `resetOnSubmit` / `resetOnComplete` | `false` / `true` | Clear before sending / after success                                      |
+| `multistep`                         | `false`          | Split groups into steps with gating                                       |
+| `cascading`                         | `false`          | Honour each field's `condition`                                           |
+| `cascadeMode`                       | `"template"`     | `template` plants a `<template>`; `hidden` builds then hides              |
+| `onCascade`                         | `null`           | Called with every cascade mount / unmount / gate                          |
+| `calculation`                       | `false`          | Enable formula fields                                                     |
+| `messages`                          | built-in         | Every sentence the form says back (validation, gate, submit)              |
+| `files`                             | `"ignore"`       | `"ignore"` keeps files out of the payload; a function opts in             |
+| `excludeEmpty`                      | `false`          | Drop `""`, `false` and empty arrays from the submit payload               |
+| `onSubmit`                          | `null`           | Called with the assembled payload                                         |
+| `footer`                            | `null`           | Element or string appended after the actions                              |
+| `minHeight`                         | `"400px"`        | Reserved height for lazily loaded groups                                  |
+| `createEventListener`               | `true`           | Bind the form's own submit/reset listeners                                |
+| `autoDisableNextStep`               | `false`          | Disable `next` until the current step validates                           |
 | `address`                           | `null`           | `{ loader, url, service, geocode, useAdapter }` for `[data-level]` fields |
-| `modules`                           | `null`           | Optional `ModuleLoader` replacing any built-in feature handler |
+| `modules`                           | `null`           | Optional `ModuleLoader` replacing any built-in feature handler            |
 
 `address.loader` wins over `url`/`service`; `useAdapter` picks the picker markup (`"aio"` for
 this framework, `"native"` for platform controls, default `"native"`).
