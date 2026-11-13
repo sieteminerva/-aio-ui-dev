@@ -3,9 +3,10 @@
 Table renders a header, a body and a footer from one data object, and owns the behaviour a static
 table does not: pagination, sorting, selection, inline editing, per-cell options and row formulas.
 
-Cells may be plain values or objects (`{ value, className, href, … }`), and the helper exports
-(`__normalizeCell`, `__applyCellOptions`, `__applyFormula`, `numberToText`) are the same functions the
-builder uses, so a host can reuse them.
+Cells may be plain values or objects shaped `{ text, options }` — `options` is a `TableCellOptions`
+(`class`, `color`, `wide`, `textAlign`, `verticalAlign`, `rowSpan`, `colSpan`, `format`, `formula`). The
+helper exports (`__normalizeCell`, `__applyCellOptions`, `__applyFormula`, `numberToText`) are the same
+functions the builder uses, so a host can reuse them.
 
 ## Payload
 
@@ -14,7 +15,7 @@ builder uses, so a host can reuse them.
   header: ["Name", "Qty", "Price"],
   body: [
     ["Coffee", 2, 45000],
-    ["Tea", { value: 1, className: "muted" }, 20000],
+    ["Tea", { text: 1, options: { class: "muted" } }, 20000],
   ],
   footer: null,
 }
@@ -22,6 +23,10 @@ builder uses, so a host can reuse them.
 
 `header` is an array of column titles, `body` an array of row arrays (same order as `header`), and
 `footer` either `null` or a footer definition. A missing key is treated as an empty array.
+
+A cell object is only recognised when it carries `text`: `__normalizeCell` keeps `text` and `options`
+and drops everything else, so a `{ value, className }` cell is printed as `[object Object]`. A header
+object is the same `{ text, options, group }`.
 
 ## Config
 
