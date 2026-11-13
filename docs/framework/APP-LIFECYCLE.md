@@ -122,11 +122,11 @@ After: 10 visits move the heap by **−0.19 MB** (was +2.65) and exactly **1** i
 
 ### L3 — Global listener owned by nobody · **the class of L2**
 
-`examples/demo/src/main.ts` adds `beforeunload` once and a 30 s demo clock once — bounded, by
-design. A builder doing the same leaks one listener per mount, and the listener is the anchor
-that makes the whole tree immortal. `Dropdown` gets this right: every listener carries
-`{ signal: this.abortController.signal }` and `destroy()` calls `abort()`. The pattern only
-works if something calls `destroy()` — see §2.
+`examples/demo/src/main.ts` adds `beforeunload` and a 30 s demo clock once — bounded, by
+design. A builder doing the same leaks one listener per mount, and that listener is the anchor
+that makes the whole tree immortal. `Dropdown` gets it right (every listener carries
+`{ signal: this.abortController.signal }`, `destroy()` calls `abort()`) — the pattern still
+needs someone to call `destroy()`, which §2 says nobody does.
 
 ### L4 — Singleton accumulation · **rule, no current violation**
 
@@ -137,12 +137,10 @@ no `animation` attribute today (measured: 0 nodes), so this was not the L2 ancho
 
 ### Not leaks
 
-- `<style>` growth on first visit of a component — one sheet per component, cached.
-- Handlers on nodes that are replaced — they die with the node.
+- `<style>` growth on first visit — one sheet per component, cached. Handlers on replaced
+  nodes die with the node (`a.tier-*`: 178 adds / 0 removes, all discarded).
 - `window.__app`, `__emitter`, `__demoModal`, `message`'s `config.element` — deliberate demo
   handles pinning exactly one tree.
-- Listener counts per navigation (`a.tier-*`: 178 adds / 0 removes) — those anchors are
-  discarded, not retained.
 
 ---
 
@@ -163,10 +161,8 @@ Before a component lands:
 
 ## 5. Running the probe
 
-Census runs in the browser console (Chrome CDP), no dependency needed. Start the demo with
-`npm --workspace @aio-ui/example-demo run dev -- --host 127.0.0.1 --port 5210 --strictPort`,
-paste this **before** the app boots (DevTools → Sources → snippet reload, or an init script),
-then navigate:
+Paste this **before** the app boots (DevTools → Sources → snippet reload, or an init script)
+on the demo dev server, then navigate `#kitchen/...` repeatedly:
 
 ```js
 const T = EventTarget.prototype,
@@ -189,28 +185,28 @@ T.removeEventListener = function (ty) {
   reg.set(k, (reg.get(k) || 0) - 1);
   return rem.apply(this, arguments);
 };
-const si = window.setInterval;
-window.__iv = [];
-window.setInterval = function (fn, ms) {
-  const id = si.apply(window, arguments);
-  window.__iv.push(id);
-  return id;
-};
 // after N navigations, in the console:
 ({
-  listeners: [...reg]
-    .filter(([, n]) => n > 0)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 15),
-  intervals: window.__iv.length,
+  listeners: [...reg].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 15),
   nodes: document.querySelectorAll("*").length,
   styles: document.querySelectorAll("style").length,
 });
 ```
 
-Read it as: a counter that grows per navigation names the owner. Then, for retention, take a
-`WeakRef` to the component root before navigating away, force GC (`HeapProfiler.collectGarbage`
-via CDP) and count how many still `deref()` — 8/8 alive means the tree is not collectable.
+Wrap `setInterval`/`clearInterval` the same way when the suspect owns a timer. A counter that
+grows per navigation names the owner. For retention, take a `WeakRef` to the component root
+before navigating away, force GC (`HeapProfiler.collectGarbage` via CDP) and count how many
+still `deref()` — 8/8 alive means the tree is not collectable.
+
+Compare against a control pair (`#kitchen/badge ↔ #kitchen/getting-started`); anything near
++0.1 MB / 10 visits is noise, anything near +0.2 MB / visit is a leak.
+
+Finding the owner when the numbers say "retained": counts do not name the anchor. Take a heap
+snapshot over CDP (`HeapProfiler.takeHeapSnapshot`), build the reverse edge map from
+`nodes`/`edges` (`meta.node_fields` / `meta.edge_fields`), then BFS **retainers** from the
+retained node until a `synthetic`/native root appears. Walking first-retainers blindly loops
+inside DOM↔closure cycles (element → `getMetadata` closure → `capturedRecords` → element), so
+the BFS needs a visited set; the first non-cyclic path ends at the anchor in one step.
 
 Compare against a control pair (`#kitchen/badge ↔ #kitchen/getting-started`); anything near
 +0.1 MB / 10 visits is noise, anything near +0.2 MB / visit is a leak.
