@@ -15,6 +15,13 @@ Last updated: 2026-11-13
 
 ## Landed recently
 
+- **Batch 17 (2026-11-13):** form-route leak closed. The census split the two suspects: the
+  `id-address` Apps Script fetches settle (0 aborted, ≤2 in flight, 0 pending timers) while
+  **60 live `document` listeners** (6 dropdowns × 2 × 5 visits) pinned every form. `Dropdown`
+  now binds the outside-close listener only while the menu is open and listens for box clicks
+  on the live node, so a closed widget owns no global; after the fix 0 document listeners
+  remain, the form subtree is collectable, and two 10-visit blocks add +0.17 / +0.10 MB
+  (was +0.24/visit). Gate: 592 pass.
 - **Batch 16 (2026-11-13):** masonry leak closed. Heap snapshot retainer path named the anchor:
   `document.addEventListener("keydown", handleKeyDown)` in `_initModal` — the closure captures
   `this`, so **21 instances** stayed alive (~260 KB per visit). Listener moved onto the modal

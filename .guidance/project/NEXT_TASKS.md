@@ -16,9 +16,6 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
       _Why it matters: `Dropdown` already ships the abort pattern and `Carousel`/`Masonry` have
       working `destroy()`s — nothing calls them. The next builder that adds a global listener or a
       timer will leak exactly like batch 15's two cases._
-- [ ] Attribute the form route's heap growth (~0.24–0.36 MB/visit, `<style>` flat after the first
-      load) — partly the `id-address` plugin's timing-out Apps Script fetches, partly `Dropdown`'s
-      never-aborted `AbortController`; separate the two with the census, then fix the culprit.
 - [ ] Review `AioApp` entry/render output, then define and implement `isRoot` builder semantics
       (default host wraps; `isRoot: true` replaces the host with the builder root). See `plan-generator.md` §3.11.
 - [ ] Fix and validate the Masonry column distribution.
