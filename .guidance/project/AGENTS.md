@@ -6,9 +6,7 @@
 
 ## Live claims
 
-| Agent       | Band      | Task                                                  | Write scope                                                                                                                                                                                                                                                          | Started    | Checkpoint                             | State  |
-| ----------- | --------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------- | ------ |
-| copilot b20 | Framework | `loading()` mockup hook in `Builder` + skeleton token | `packages/base/src/**`, `packages/core/src/{Stylesheets.ts,index.ts,__tests__}`, `packages/styles/src/**`, `packages/components/{product,table}/**`, `packages/modules/animations/Animations.css`, `docs/framework/**`, `packages/AGENTS.md`, `.guidance/project/**` | 2026-11-14 | `/memories/session/page-level-plan.md` | active |
+_No live writer. Add a row here before your first edit — see the rules below._
 
 ## Row shape
 
