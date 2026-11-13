@@ -115,7 +115,7 @@ After: 10 visits move the heap by **−0.19 MB** (was +2.65) and exactly **1** i
 
 `examples/demo/src/main.ts` adds `beforeunload` and a 30 s demo clock once — bounded, by
 design. A builder doing the same leaks one listener per mount, and that listener is the anchor
-that makes the whole tree immortal. `{ signal }` makes removal *possible*, not *happen* (§2).
+that makes the whole tree immortal. `{ signal }` makes removal _possible_, not _happen_ (§2).
 
 ### L4 — Singleton accumulation · **rule, no current violation**
 

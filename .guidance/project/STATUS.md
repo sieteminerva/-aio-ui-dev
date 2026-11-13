@@ -27,26 +27,14 @@ Last updated: 2026-11-13
   `this`, so **21 instances** stayed alive (~260 KB per visit). Listener moved onto the modal
   overlay (`tabindex="-1"`), pinned by a test; after the fix 10 visits move the heap **−0.19 MB**
   and one instance is live. Keyboard still works (`ArrowRight`/`Escape`). Gate: 589 pass.
-- **Batch 15 (2026-11-13):** the suspected demo leak is **real and partly fixed**. Census over 21
-  +66 route navigations: DOM (`144–213` nodes) and CSS (`22` `<style>`, `341` rules) are bounded;
-  the carousel was the leak — `setInterval 4000ms` **+1 per mount, `clearInterval` never called**,
-  the detached track advanced `translateX(0%)` → `translateX(-25%)` in 5 s, 8/8 roots alive after
-  two forced GCs. Fixed by a `destroy()` override (+1 test, 588 pass). Masonry is still open:
-  **~250 KB per visit, 8/8 roots alive, no timer/observer/style growth — retainer unidentified**.
+- **Batch 15 (2026-11-13):** the suspected demo leak was real. Census over 21 navigations: DOM
+  (`144–213` nodes) and CSS (`22` `<style>`, `341` rules) are bounded; the carousel leaked —
+  `setInterval 4000ms` **+1 per mount, `clearInterval` never called**, the detached track advanced
+  `translateX(0%)` → `translateX(-25%)` in 5 s, 8/8 roots alive after two forced GCs. Fixed by a
+  `destroy()` override (+1 test, 588 pass); masonry and the form route followed in batches 16/17.
   Records and probe live in `docs/framework/APP-LIFECYCLE.md`.
-- **Batch 14 (2026-11-13):** `#kitchen` covers 18 of the 22 components (the other four own a route
-  or are a plugin); `scripts/AGENTS.md` now states the real 39-package count and the
-  never-move-a-served-tag rule; the table README documents `{ text, options }` — the old
-  `{ value, className }` example printed `[object Object]`.
-- **Batch 13 (2026-11-13):** tag `v0.1.1` at `5a7fc27` is live (39 packages, 42 release assets,
-  7/7 probes `200`, CDN smoke green); the `cdn` branch now carries a generated README; six
-  other-writer files committed; claim board added to `.guidance/project/AGENTS.md` (§11).
-- **Batch 12 (2026-11-13):** one README skeleton for every package (COMPONENT-CONVENTIONS §1c),
-  `id-address` documented as a plugin, skeleton contract test, and the demo kitchen reads the
-  package READMEs instead of hand-written copy.
-- **Batch 11 (2026-11-12):** release pipeline + orphan `cdn` branch + tag `v0.1.0`. That tag was
-  force-moved after jsDelivr had served it and is frozen at the old commit — the reason `v0.1.1`
-  exists. Never move a served tag again.
+
+_(Batches 11–14 are in `git log`; only open work stays in this file.)_
 
 ## Blocked
 

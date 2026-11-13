@@ -7,9 +7,6 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Framework (`packages/`, `examples/demo`)
 
-- [ ] ~~Trace the suspected memory leak in `examples/demo`~~ — done, batch 15 + 16: carousel
-      interval and masonry's `document` keydown both fixed and pinned by tests; the trace, numbers
-      and probe live in `docs/framework/APP-LIFECYCLE.md`.
 - [ ] Give `#kitchen/<name>` a teardown path: `AioApp.#release()` runs only when the route name
       changes, so a fragment switch never calls `onDestroy` and no page can destroy its builders.
       Needs an instance registry (or a controller-owned list) plus `KitchenPage.onDestroy`.
@@ -28,7 +25,6 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 - [ ] Add typed `TemplateRegistry` and `PageRegistry` adapters.
 - [ ] Add Vitest coverage for the `ComponentRegistry` adapter (needs `jsdom`).
 - [ ] Define `AppRegistry` as the application registry composition container.
-- [ ] Define `ModuleLoader` as the module loading and activation mechanism.
 - [ ] Migrate Form optional features through `FormModuleRegistry`.
 
 ## Gallery (`examples/gallery` — profile model)
