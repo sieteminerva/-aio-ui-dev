@@ -16,18 +16,19 @@ it in the same commit as a flag or an output path.
 
 ## Scripts
 
-| Script              | Purpose                                                                                                        |
-| ------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Script              | Purpose                                                                                                                                                    |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `build-pack.mjs`    | report / `--apply` packaging; `--build` (= `build:pkgs`) builds all 38 TypeScript packages, adds `.js` to relative imports, strips CSS side-effect imports |
-| `release.mjs`       | build release artefacts for one explicit version (`--version 0.1.2 --apply`)                                    |
-| `publish-cdn.mjs`   | unpack the 39 tarballs onto the orphan `cdn` branch, render its `README.md`, **tag the new version** (`--apply`), then push |
-| `version.mjs`       | version report / `--check` (currently a fixed `0.1.1` across 39 packages)                                       |
-| `bounds.mjs`        | dependency-boundary check (`check:bounds`)                                                                     |
-| `api.mjs`           | public-API surface check (`check:api`); `--write` regenerates `docs/framework/api-map.json`                     |
-| `new-component.mjs` | scaffold a component from `templates/component/`                                                               |
+| `release.mjs`       | build release artefacts for one explicit version (`--version 0.1.2 --apply`)                                                                               |
+| `publish-cdn.mjs`   | unpack the 39 tarballs onto the orphan `cdn` branch, render its `README.md`, **tag the new version** (`--apply`), then push                                |
+| `version.mjs`       | version report / `--check` (currently a fixed `0.1.1` across 39 packages)                                                                                  |
+| `bounds.mjs`        | dependency-boundary check (`check:bounds`)                                                                                                                 |
+| `api.mjs`           | public-API surface check (`check:api`); `--write` regenerates `docs/framework/api-map.json`                                                                |
+| `new-component.mjs` | scaffold a component from `templates/component/`                                                                                                           |
 
 Package count: the workspace is **39 packages** (5 core + 22 components + 6 modules + 3 themes
-+ 3 kits). `build:pkgs` builds 38 — `@aio-ui/styles` is CSS-only and has no build script.
+
+- 3 kits). `build:pkgs` builds 38 — `@aio-ui/styles` is CSS-only and has no build script.
 
 ## Rules
 
