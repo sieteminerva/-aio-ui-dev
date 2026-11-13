@@ -252,6 +252,19 @@ public prepare(data: any): HTMLElement {
 | Return `this.load("@container")`, not a local variable      | The element in the node store is the canonical one (wrappers and hydration markers live there).                                                        |
 | `prepare()` must be pure with respect to the DOM outside it | It runs before `initialize()`, on every render.                                                                                                        |
 
+### Anti-FOUC markers belong to the framework, not the component
+
+`create()` decides the hold itself. When the host serves this component's `stylesheet` and
+the document does not have it yet, the root is returned with `data-hydrating` +
+`--is-loading: 1`, and it is released from the same `ensureStylesheet()` promise the
+builder started — so a component that no registry ever sees still heals itself.
+
+- Never write `data-hydrating`, `data-loaded` or `--is-loading` in a component.
+- Never call `hydration.applyHold()` from a subclass; `create()` already asked the seam.
+- A component the host serves no sheet for is never held — there is nothing to wait for.
+- The decision is per sheet, not per instance: two components built in one pass own two
+  sheets, so "this instance already loaded once" would freeze the wrong subtree.
+
 Multi-mode components (e.g. `Rating`'s four visual types, `Footer`'s two rows) branch on
 `this.config` inside `prepare()` and render only the keys that mode needs.
 

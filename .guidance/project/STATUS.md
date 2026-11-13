@@ -15,6 +15,12 @@ Last updated: 2026-11-13
 
 ## Landed recently
 
+- **Batch 18 (2026-11-13):** anti-FOUC gate reconnected. `applyHold()` had **no caller anywhere in
+  the repo history**, so only the release half ran: `[data-hydrating]` never matched, the shimmer
+  CSS was dead, and the freeze rested entirely on the registry's preload. `create()` now asks the
+  stylesheet seam (`isStylesheetPending`) and holds its own root only while *that component's*
+  sheet is missing, releasing from the same `ensureStylesheet()` promise — a builder no registry
+  ever sees heals itself. 12 new tests; gate: 604 pass / 1 skip.
 - **Batch 17 (2026-11-13):** form-route leak closed. The census split the two suspects: the
   `id-address` Apps Script fetches settle (0 aborted, ≤2 in flight, 0 pending timers) while
   **60 live `document` listeners** (6 dropdowns × 2 × 5 visits) pinned every form. `Dropdown`
