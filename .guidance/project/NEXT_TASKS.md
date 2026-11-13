@@ -9,7 +9,6 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 - [ ] Trace the suspected memory leak in `examples/demo` (root cause may be in `packages/**`): census
       listeners / timers / `<style>` per route cycle, then one table of symptom → evidence → owner.
-      Brief: `.guidance/project/PROMPT-memory-leak.md`.
 - [ ] Write the app-lifecycle convention (`docs/framework/APP-LIFECYCLE.md`): teardown contract, the
       leak cases with a minimal repro each, reviewer checklist, probe scripts. Follows the trace above.
 - [ ] Review `AioApp` entry/render output, then define and implement `isRoot` builder semantics
