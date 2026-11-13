@@ -348,14 +348,38 @@ export class DropdownBuilder extends Builder<DropdownElementType, iDropdownConfi
     // menempel otomatis ke input via anchor-name → posisi/lebar dikelola CSS,
     // mengikuti scroll/resize tanpa listener tambahan.
     let hideTimer: ReturnType<typeof setTimeout> | null = null;
+
+    // 🔒 `document` listener hanya hidup SELAMA menu terbuka. Listener permanen
+    // yang menutup `this` adalah akar kebocoran halaman form: setiap dropdown
+    // memegang dua listener `document` (click + mousedown) sampai `destroy()`,
+    // dan tidak ada yang memanggil `destroy()` saat rute berganti. Bukti dan
+    // angka: `docs/framework/APP-LIFECYCLE.md` §3.
+    let outsideBound = false;
+    const onOutsideDown = (e: MouseEvent) => {
+      const boxEl = box();
+      if (boxEl && !boxEl.contains(e.target as Node)) close();
+    };
+    const unbindOutside = () => {
+      if (!outsideBound) return;
+      document.removeEventListener("mousedown", onOutsideDown);
+      outsideBound = false;
+    };
+    const bindOutside = () => {
+      if (outsideBound) return;
+      document.addEventListener("mousedown", onOutsideDown, { signal: this.abortController.signal });
+      outsideBound = true;
+    };
     const open = () => {
       if (hideTimer) { window.clearTimeout(hideTimer); hideTimer = null; }
+      bindBoxClick();
+      bindOutside();
       if (!menu.matches(":popover-open")) menu.showPopover();
       // Tambahkan .visible pada frame berikutnya agar animasi masuk terlihat
       requestAnimationFrame(() => menu.classList.add("visible"));
       input.setAttribute("aria-expanded", "true");
     };
     const close = () => {
+      unbindOutside();
       menu.classList.remove("visible");
       input.setAttribute("aria-expanded", "false");
       if (hideTimer) window.clearTimeout(hideTimer);
@@ -367,26 +391,31 @@ export class DropdownBuilder extends Builder<DropdownElementType, iDropdownConfi
     };
     const toggle = () => (menu.matches(":popover-open") ? close() : open());
 
-    // Jaga input tetap fokus saat berinteraksi dengan menu
-    menu.addEventListener("mousedown", (e) => e.preventDefault(), { signal: this.abortController.signal });
-
-    // Klik input → buka/tutup (toggle), bukan reopen terus-menerus saat fokus
-    input.addEventListener("click", toggle, { signal: this.abortController.signal });
-
-    // Klik area field lain (label/tag/combo padding) → buka/tutup + fokus ke input
-    document.addEventListener("click", (e) => {
+    // Klik area field lain (label/tag/combo padding) → buka/tutup + fokus ke input.
+    // Dipasang di box HIDUP, bukan di `document`: listener milik node ikut mati
+    // bersama nodenya, jadi form yang dibangun ulang tidak tertahan olehnya.
+    let clickBoundTo: HTMLElement | null = null;
+    const onBoxClick = (e: Event) => {
       const boxEl = box();
       if (!boxEl || !boxEl.contains(e.target as Node)) return;
       const t = e.target as HTMLElement;
       if (t.closest(".item") || t === input) return;
       if (!t.closest(".remove")) { toggle(); input.focus(); }
-    }, { signal: this.abortController.signal });
-
-    // Tutup hanya jika interaksi (mousedown) terjadi DI LUAR box hidup
-    document.addEventListener("mousedown", (e) => {
+    };
+    const bindBoxClick = () => {
       const boxEl = box();
-      if (boxEl && !boxEl.contains(e.target as Node)) close();
-    }, { signal: this.abortController.signal });
+      if (!boxEl || boxEl === clickBoundTo) return;
+      clickBoundTo?.removeEventListener("click", onBoxClick);
+      boxEl.addEventListener("click", onBoxClick, { signal: this.abortController.signal });
+      clickBoundTo = boxEl;
+    };
+    bindBoxClick();
+
+    // Jaga input tetap fokus saat berinteraksi dengan menu
+    menu.addEventListener("mousedown", (e) => e.preventDefault(), { signal: this.abortController.signal });
+
+    // Klik input → buka/tutup (toggle), bukan reopen terus-menerus saat fokus
+    input.addEventListener("click", toggle, { signal: this.abortController.signal });
 
     // Mengetik → buka menu + filter (lokal / API berdebounce)
     input.addEventListener("input", () => {
