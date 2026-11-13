@@ -51,7 +51,26 @@ demonstrated on purpose:
 
 `#form` is the third case: the page supplies a schema and listens for `formSubmit` /
 `formValidation`; everything else — fields, labels, validation, submit — belongs to the
-builder.
+builder. The route holds four things worth reading before changing it:
+
+- **The schema is a page artefact** (`pages/form.ts`): three exported sets — `InputControlSet`
+  (action rows, `search`/`copy`/`editor`/`repeater`), `AddressSet` (the Id Address cascade),
+  `DropdownSet` — plus a multistep schema on a second host. Nothing in it is component code.
+- **Modules are declared, not imported** — `formManifest()` returns `FORM_ADAPTER_MANIFEST`
+  plus the three foreign adapters (`id-address/form`, `table/adapters/FormAdapter`,
+  `message/adapters/FormAdapter`). The registry resolves each as its own chunk; the page never
+  imports `table` or `id-address`.
+- **The cascade needs `cascadeMode: "hidden"`** — `cascading: true` alone plants a
+  `<template>`, which gives the next picker nothing to inject into. `AddressSet`'s four
+  dropdowns carry `data-level` (`propinsi` → `kota` → `kecamatan` → `kelurahan`) and the
+  kodepos text field closes the chain; each dropdown sets `max: 100`, because `max` is the
+  picker's render cap, not a search limit (the default 10 truncated a 61-district list).
+- **Read-only actions bubble up** — a group's `search` is a read, not a submit: the event
+  reaches the page from the fieldset, so the page answers it without knowing the controls
+  layer. `formSubmit` / `formValidation` are logged into a `pre.form-log` beside the form.
+
+The address endpoint lives in the page (`address: { url, useAdapter: "aio" }`); the picker
+ships no endpoint of its own.
 
 ## Data
 

@@ -5,11 +5,15 @@ how a table becomes a rendered block.
 
 Three vocabularies exist in this system and must never be conflated:
 
-| Vocabulary                                      | Example values                                                            | Answers                    |
-| ----------------------------------------------- | ------------------------------------------------------------------------- | -------------------------- |
-| Table schema (`TableBuilderService` validation) | `dropdown`, `currency`, `number_between`, `date`, `checkbox`              | what the cell accepts      |
-| Field type (`fields[].type`)                    | `text`, `textarea`, `number`, `select`, `date`, `checkbox`, `file`, `url` | how a user edits the value |
-| Component name                                  | `masonry`, `article`, `hero`, `footer`                                    | how the data is rendered   |
+| Vocabulary                                      | Example values                                                                            | Answers                    |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------- |
+| Table schema (`TableBuilderService` validation) | `dropdown`, `currency`, `number_between`, `date`, `checkbox`                              | what the cell accepts      |
+| Field type (`fields[].type`)                    | the `InputType` union — `text`, `textarea`, `number`, `select`, `dropdown`, `radio`, `file`, `email`, `tel`, `url`, `date`, `time`, `datetime-local`, `range`, `color`, `password`, `hidden`, `actions`, `checkbox` | how a user edits the value |
+| Component name                                  | `masonry`, `article`, `hero`, `footer`                                                    | how the data is rendered   |
+
+`fields[].type` is the same union `@aio-ui/input` accepts on a node (`packages/components/input/Input.ts`);
+the demo's `#form` route exercises `text`, `email`, `tel`, `number`, `textarea`, `select`, `dropdown`,
+`radio`, `checkbox` and `file`.
 
 Field type is derived from the **column definition** (validation + cell note). It is never
 derived from CSS classes, tag names, or header spelling.
