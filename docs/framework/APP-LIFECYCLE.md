@@ -85,31 +85,55 @@ after two forced GCs; the detached track advanced `translateX(0%)` → `translat
 5 s; V8 heap +1.3 MB per 8 visits (~160 KB each) against +0.11 MB / 10 visits for a
 `badge ↔ getting-started` control.
 
-### L2 — Instance retained with no timer · **open, retainer unidentified**
+### L2 — Instance pinned by a global listener · **fixed**
 
-Symptom: memory grows with masonry visits although the component owns no interval.
+Symptom: memory grew with masonry visits although the component owns no interval: heap
++1.99 MB per 8 visits (~250 KB each, reproduced ×3), `<style>` and node count flat, all
+observers untouched.
 
-Numbers: heap +1.99 MB per 8 visits (~250 KB each, reproduced ×3); `setTimeout` 40 created /
-**0 cleared**; `IntersectionObserver` / `MutationObserver` / `ResizeObserver` deltas 0;
-`<style>` and node count flat; 8/8 sampled `.masonry` roots alive after GC.
+The retainer path from the heap snapshot (`WeakRef` + forced GC never released it, so the tree
+was still strongly reachable):
 
-Ruled out: timers kept alive, observers, stylesheet injection, item lists on the instance.
-Not yet ruled out: the init-time slider retry (`Masonry.ts:590-591`, an unbounded
-`requestAnimationFrame` retry while `offsetWidth === 0`, plus `setTimeout(settle, 350)` at
-`Masonry.ts:605`) and demo-side helpers.
-**Do not document this as fixed.** Reproduce with the probe in §5 before changing code.
+```
+Window → HTMLDocument → … → EventListener → V8EventListener
+       → handleKeyDown [closure] → Context → this = MasonryBuilder
+```
 
-### L3 — Global listener · **rule, no current violation**
+21 `MasonryBuilder` instances were alive after ~12 mounts, each holding its own subtree: the
+modal added `document.addEventListener("keydown", handleKeyDown)`, and `handleKeyDown` closes
+over `show()`, which reads `this.currentVisibleImages`. `destroy()` was never called, so the
+listener — and through it the builder and its detached page — outlived every navigation.
 
-`examples/demo/src/main.ts` adds `beforeunload` once and a 30 s demo clock once — bounded,
-by design. A builder doing the same would leak one listener per mount.
+Fix (`packages/components/masonry/Masonry.ts`, `_initModal`): the listener belongs to the
+modal overlay, which is focusable and focused when it opens, so it dies with the node.
+
+```ts
+modalEl?.setAttribute('tabindex', '-1');
+modalEl?.addEventListener('keydown', handleKeyDown);
+const destroy = () => {
+  modalEl?.removeEventListener('keydown', handleKeyDown);
+  modalEl?.remove();
+};
+```
+
+After: 10 visits move the heap by **−0.19 MB** (was +2.65) and exactly **1** instance is live
+(the one on screen). Behaviour kept: open a card, `ArrowRight` changes `modal img src`,
+`Escape` closes it.
+
+### L3 — Global listener owned by nobody · **the class of L2**
+
+`examples/demo/src/main.ts` adds `beforeunload` once and a 30 s demo clock once — bounded, by
+design. A builder doing the same leaks one listener per mount, and the listener is the anchor
+that makes the whole tree immortal. `Dropdown` gets this right: every listener carries
+`{ signal: this.abortController.signal }` and `destroy()` calls `abort()`. The pattern only
+works if something calls `destroy()` — see §2.
 
 ### L4 — Singleton accumulation · **rule, no current violation**
 
 `AnimationsService` keeps `records: Map<HTMLElement, AnimationRecord>` and `scopes`.
 `mount(node)` adds, `unmount(node)` removes. Nothing in the demo calls `unmount`, so a page
 that animates nodes and is swapped away leaves entries behind. The masonry payload carries
-no `animation` attribute today (measured: 0 nodes), which is why L2 is not this.
+no `animation` attribute today (measured: 0 nodes), so this was not the L2 anchor.
 
 ### Not leaks
 
@@ -190,3 +214,10 @@ via CDP) and count how many still `deref()` — 8/8 alive means the tree is not 
 
 Compare against a control pair (`#kitchen/badge ↔ #kitchen/getting-started`); anything near
 +0.1 MB / 10 visits is noise, anything near +0.2 MB / visit is a leak.
+
+Finding the owner when the numbers say "retained": counts do not name the anchor. Take a heap
+snapshot over CDP (`HeapProfiler.takeHeapSnapshot`), build the reverse edge map from
+`nodes`/`edges` (`meta.node_fields` / `meta.edge_fields`), then BFS **retainers** from the
+retained node until a `synthetic`/native root appears. Walking first-retainers blindly loops
+inside DOM↔closure cycles (element → `getMetadata` closure → `capturedRecords` → element), so
+the BFS needs a visited set; the first non-cyclic path ends at the anchor in one step.
