@@ -27,9 +27,9 @@ for how a builder is written.
 **Rule 1.** A builder releases every timer and observer it creates in `destroy()`, and
 `destroy()` starts with whatever `unmount()` already does. `Base.destroy()` unhooks DOM and
 clears `storage.nodes`; nothing else is assumed. Every builder is now destroyed when its page
-is discarded — `create()` pins the instance on the root it returns, and `releaseBuilders()`
-walks a subtree for pins — so the only thing a component still has to remember is
-`super.destroy()` plus its own resources.
+is discarded — `ComponentRegistry.build()` pins the instance on the root it returns, and
+`releaseBuilders()` walks a subtree for pins — so the only thing a component still has to
+remember is `super.destroy()` plus its own resources.
 
 **Rule 2.** Never add a listener to `window`, `document` or `document.body` from a builder,
 and never keep one while it is not needed. Those targets survive the page. Listen on the
@@ -50,7 +50,7 @@ replaces the page, not only when the route name changes — see §2 and L6.
 | Fact                                                                     | Evidence                                                                                |
 | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
 | `#release()` runs on **every** replacing pass (route, fragment or theme) | `packages/app/src/AioApp.ts` — `#renderRoute()` calls it before `#createPage()`         |
-| Every builder is destroyed when its page is discarded                    | `Builder.create()` pins the instance; `#paint()` calls `registry.releaseBuilders(root)` |
+| Every builder is destroyed when its page is discarded                    | `ComponentRegistry.build()` pins the instance; `#paint()` calls `registry.releaseBuilders(root)` |
 | `KitchenPage` keeps its shell and destroys its builders in `onDestroy`   | `examples/demo/src/pages/kitchen.ts`                                                    |
 | DOM is replaced, never accumulated                                       | 20 navigations: `document.querySelectorAll("*")` 144–213, no trend                      |
 | Lazy CSS is injected once per component                                  | `<style>` 22 → 24 → 29 → 30 across first visits, then flat; `cssRules` 341 constant     |
@@ -192,10 +192,11 @@ Fix, four lines of ownership rather than a new subsystem:
 
 1. `AioApp` releases the outgoing controller on **every** replacing pass — a fragment switch
    and a theme switch both create a new instance.
-2. `Builder.create()` pins the instance on the root it returns
-   (`Symbol.for("aio-ui.builder-instance")`), and `releaseBuilders(root)` destroys every
-   pinned builder in a subtree, nested ones included. It unpins _before_ destroying, so the
-   page's `onDestroy` and the app's paint sweep cannot double-tear-down.
+2. `ComponentRegistry.build()` pins the instance on the root it returns
+   (`Symbol.for("aio-ui.builder-instance")`) — registry-only on purpose: a builder created
+   directly has no owner that would ever sweep it — and `releaseBuilders(root)` destroys
+   every pinned builder in a subtree, nested ones included. It unpins _before_ destroying, so
+   the page's `onDestroy` and the app's paint sweep cannot double-tear-down.
 3. `AioApp.#paint` releases the outgoing shell immediately before `replaceChildren`, so a
    pass that fails earlier never kills the page still on screen.
 4. `KitchenPage` keeps the shell it got in `onReady` and calls `releaseBuilders` from
@@ -230,7 +231,7 @@ Before a component lands:
 - [ ] Every `setInterval` / `requestAnimationFrame` loop has a `clear...` reachable from `destroy()`.
 - [ ] Every observer is disconnected in `destroy()`; a retried `rAF` loop has a cap.
 - [ ] `destroy()` releases instance state **before** `super.destroy()`.
-- [ ] No teardown plumbing needed: `create()` pins the instance, `releaseBuilders()` finds it.
+- [ ] No teardown plumbing needed: `build()` pins the instance, `releaseBuilders()` finds it.
       A builder still overrides `destroy()` for its own timers — nothing else is required.
 - [ ] No listener on `window` / `document` / `document.body` from a builder — a global that
       is only needed between open and close is bound there, not at init.

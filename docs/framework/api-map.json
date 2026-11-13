@@ -124,7 +124,6 @@
       "kind": "package",
       "barrel": "./src/index.ts",
       "values": [
-        "BUILDER_INSTANCE",
         "ComponentRegistry",
         "DEFAULT_REGISTRY_SCOPE",
         "DOMRenderer",
@@ -133,7 +132,6 @@
         "TemplateRegistry",
         "assertValidId",
         "assertValidScope",
-        "attachBuilder",
         "ensureStylesheet",
         "getBuilderAdapter",
         "getTemplates",

@@ -2,7 +2,7 @@ import type { iBasicNode, iBuilderRegistry } from "./interface";
 import type { iEventEmit } from "./types/events";
 import { Registry } from "./Registry";
 import { getBuilderAdapter } from "./BuilderPort";
-import { releaseBuilders as releasePinnedBuilders } from "./BuilderInstances";
+import { releaseBuilders as releasePinnedBuilders, attachBuilder } from "./Registry/BuilderInstances";
 import { injectLazyCss, isStyleInjected, useStylesheetAssets } from "./Stylesheets";
 
 /**
@@ -618,6 +618,10 @@ export class ComponentRegistry {
           if (!builtElement) {
             throw new Error(`[ComponentRegistry] Builder "${String(name)}" created a null element. Check prepare()/create() or selector definitions.`);
           }
+          // 🪦 PIN: the registry is the only owner that ever discards a whole tree, so
+          // the instance is pinned here — a builder created directly is never swept and
+          // must not pay for a symbol nobody reads.
+          attachBuilder(builtElement, instance);
           return builtElement;
         }
       } catch (error) {

@@ -6,10 +6,15 @@
  * `destroy()` — and a builder's timers, observers and global listeners outlive
  * its nodes (see `docs/framework/APP-LIFECYCLE.md`).
  *
- * `Builder.create()` pins itself on its own root; `releaseBuilders()` walks a
- * subtree, finds every pinned instance and destroys it once. That is the whole
- * mechanism: no registry side table, no per-route bookkeeping, and a nested
- * builder (a card inside a grid) is found because its root is a descendant.
+ * `ComponentRegistry.build()` pins the instance it just created on the element it
+ * returns; `releaseBuilders()` walks a subtree, finds every pinned instance and
+ * destroys it once. That is the whole mechanism: no per-route bookkeeping, and a
+ * nested builder (a card inside a grid) is found because its root is a descendant.
+ *
+ * Registry-only on purpose. A builder created directly (a table inside a form field,
+ * a component in a test) has no owner that would ever sweep it, so pinning there
+ * would only write a symbol nobody reads — the mechanism exists because *the app*
+ * replaces whole trees.
  *
  * The key is a `Symbol.for`, not a local symbol: a dev graph and a built bundle
  * can both be loaded on one page, and the pin has to mean the same thing to both.
@@ -28,8 +33,9 @@ interface iDestroyable {
  * @param instance - The builder itself.
  * @returns Nothing.
  *
- * @summary Called by `Builder.create()` as it returns. The pin lives on the node, so it
- *   leaves with the node: an element collected by the GC cannot keep a builder alive.
+ * @summary Called by `ComponentRegistry.build()`, the only owner that ever sweeps a
+ *   subtree. The pin lives on the node, so it leaves with the node: an element collected
+ *   by the GC cannot keep a builder alive.
  */
 export function attachBuilder(root: HTMLElement | null | undefined, instance: unknown): void {
   if (!root || !instance || typeof root !== "object") return;

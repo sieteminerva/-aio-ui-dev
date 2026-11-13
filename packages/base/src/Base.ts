@@ -1,6 +1,5 @@
 import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iNodeRecordItem, iNodeRecordRelations } from "@aio-ui/core/interface";
 // import { TemplateRegistry } from "@aio-ui/template-registry";
-import { attachBuilder } from "@aio-ui/core";
 // import { ElementCreatedEventBus } from "../Services/EventBus";
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
 import { holdUntilStyled } from "./BaseAdapters/Hydration";
@@ -580,11 +579,6 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
         ? () => this.loading!(content, this.config)
         : null;
       holdUntilStyled(DOMTree, this.#stylesheetSpecifier(), mockup);
-
-      // 🪦 PIN: the root carries its builder, so whoever discards this subtree can call
-      // `destroy()` on it (`releaseBuilders`). Without the pin nothing ever tells a
-      // builder that its page is gone — timers and globals survive the DOM.
-      attachBuilder(DOMTree, this);
 
       return DOMTree;
     } finally {

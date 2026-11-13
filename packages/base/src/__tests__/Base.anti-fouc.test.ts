@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { BUILDER_INSTANCE, injectLazyCss, releaseBuilders, useStylesheetAssets } from "@aio-ui/core";
+import { beforeEach, describe, expect, it } from "vitest";
+import { injectLazyCss, useStylesheetAssets } from "@aio-ui/core";
 
 import { Builder } from "../Base";
 
@@ -138,17 +138,13 @@ describe("Builder.create — anti-FOUC hold", () => {
 });
 
 describe("Builder.create — teardown pin", () => {
-  it("pins itself on the root so a discarded subtree can destroy it", () => {
-    const BuilderClass = sheetBuilder("./Undeclared.css");
-    const instance = new BuilderClass();
-    const destroy = vi.spyOn(instance, "destroy");
+  it("does not pin: only the registry pins, because only it sweeps a subtree", () => {
+    const instance = new (sheetBuilder("./Undeclared.css"))();
 
     const element = instance.create({});
 
-    // The pin is what `releaseBuilders` walks for: the instance, not the element.
-    expect((element as any)[BUILDER_INSTANCE]).toBe(instance);
-    expect(releaseBuilders(element)).toBe(1);
-    expect(destroy).toHaveBeenCalledTimes(1);
-    expect((element as any)[BUILDER_INSTANCE]).toBeUndefined();
+    const pins = Object.getOwnPropertySymbols(element)
+      .filter((symbol) => symbol.description === "aio-ui.builder-instance");
+    expect(pins).toHaveLength(0);
   });
 });
