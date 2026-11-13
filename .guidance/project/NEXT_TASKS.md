@@ -7,15 +7,18 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Framework (`packages/`, `examples/demo`)
 
-- [ ] Trace the suspected memory leak in `examples/demo` (root cause may be in `packages/**`): census
-      listeners / timers / `<style>` per route cycle, then one table of symptom → evidence → owner.
-      _(Done batch 15: carousel fixed. Remaining: masonry ~250 KB/visit with 8/8 roots retained and
-      no timer/observer — retainer unidentified; test the `Masonry.ts:590` rAF retry next.)_
+- [ ] ~~Trace the suspected memory leak in `examples/demo`~~ — done, batch 15 + 16: carousel
+      interval and masonry's `document` keydown both fixed and pinned by tests; the trace, numbers
+      and probe live in `docs/framework/APP-LIFECYCLE.md`.
 - [ ] Give `#kitchen/<name>` a teardown path: `AioApp.#release()` runs only when the route name
       changes, so a fragment switch never calls `onDestroy` and no page can destroy its builders.
       Needs an instance registry (or a controller-owned list) plus `KitchenPage.onDestroy`.
+      _Why it matters: `Dropdown` already ships the abort pattern and `Carousel`/`Masonry` have
+      working `destroy()`s — nothing calls them. The next builder that adds a global listener or a
+      timer will leak exactly like batch 15's two cases._
 - [ ] Attribute the form route's heap growth (~0.24–0.36 MB/visit, `<style>` flat after the first
-      load) — partly the `id-address` plugin's timing-out Apps Script fetches; separate the two.
+      load) — partly the `id-address` plugin's timing-out Apps Script fetches, partly `Dropdown`'s
+      never-aborted `AbortController`; separate the two with the census, then fix the culprit.
 - [ ] Review `AioApp` entry/render output, then define and implement `isRoot` builder semantics
       (default host wraps; `isRoot: true` replaces the host with the builder root). See `plan-generator.md` §3.11.
 - [ ] Fix and validate the Masonry column distribution.

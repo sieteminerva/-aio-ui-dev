@@ -15,6 +15,11 @@ Last updated: 2026-11-13
 
 ## Landed recently
 
+- **Batch 16 (2026-11-13):** masonry leak closed. Heap snapshot retainer path named the anchor:
+  `document.addEventListener("keydown", handleKeyDown)` in `_initModal` — the closure captures
+  `this`, so **21 instances** stayed alive (~260 KB per visit). Listener moved onto the modal
+  overlay (`tabindex="-1"`), pinned by a test; after the fix 10 visits move the heap **−0.19 MB**
+  and one instance is live. Keyboard still works (`ArrowRight`/`Escape`). Gate: 589 pass.
 - **Batch 15 (2026-11-13):** the suspected demo leak is **real and partly fixed**. Census over 21
   +66 route navigations: DOM (`144–213` nodes) and CSS (`22` `<style>`, `341` rules) are bounded;
   the carousel was the leak — `setInterval 4000ms` **+1 per mount, `clearInterval` never called**,
