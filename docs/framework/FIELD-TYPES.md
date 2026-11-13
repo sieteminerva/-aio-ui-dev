@@ -5,11 +5,11 @@ how a table becomes a rendered block.
 
 Three vocabularies exist in this system and must never be conflated:
 
-| Vocabulary                                      | Example values                                                                            | Answers                    |
-| ----------------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------- |
-| Table schema (`TableBuilderService` validation) | `dropdown`, `currency`, `number_between`, `date`, `checkbox`                              | what the cell accepts      |
+| Vocabulary                                      | Example values                                                                                                                                                                                                      | Answers                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| Table schema (`TableBuilderService` validation) | `dropdown`, `currency`, `number_between`, `date`, `checkbox`                                                                                                                                                        | what the cell accepts      |
 | Field type (`fields[].type`)                    | the `InputType` union — `text`, `textarea`, `number`, `select`, `dropdown`, `radio`, `file`, `email`, `tel`, `url`, `date`, `time`, `datetime-local`, `range`, `color`, `password`, `hidden`, `actions`, `checkbox` | how a user edits the value |
-| Component name                                  | `masonry`, `article`, `hero`, `footer`                                                    | how the data is rendered   |
+| Component name                                  | `masonry`, `article`, `hero`, `footer`                                                                                                                                                                              | how the data is rendered   |
 
 `fields[].type` is the same union `@aio-ui/input` accepts on a node (`packages/components/input/Input.ts`);
 the demo's `#form` route exercises `text`, `email`, `tel`, `number`, `textarea`, `select`, `dropdown`,

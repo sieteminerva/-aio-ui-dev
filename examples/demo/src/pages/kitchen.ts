@@ -1,4 +1,5 @@
-import type { iPageContent, iPageController, iPageContext } from "@aio-ui/app";
+import type { iPageContent, iPageController, iPageContext, iPageReadyContext } from "@aio-ui/app";
+import { releaseBuilders } from "@aio-ui/core";
 
 import { entryForFragment } from "../docs";
 import { mountInto } from "../dom";
@@ -68,9 +69,27 @@ function kitchenContent(entry: iDemoEntry): iPageContent {
  * `#kitchen` and `#kitchen/<name>` are the same route with two fragments: the controller
  * exists so the fragment reaches the content builder. A name that is not in the table falls
  * back to the first row instead of rendering an empty page.
+ *
+ * Because both fragments are one route, every switch re-creates this controller. That is
+ * why it keeps the shell it rendered and destroys its builders on the way out — otherwise
+ * the carousel's `setInterval` and the masonry's modal listener outlive the DOM (batch
+ * 15–17). `releaseBuilders` walks the shell for pinned builders, so nested ones (a card
+ * inside a grid, a panel inside the tab) go too.
  */
 export class KitchenPage implements iPageController {
+  /** The shell this controller rendered — its own handle on the builders it owns. */
+  #shell: HTMLElement | null = null;
+
   async onPrepare({ fragment }: iPageContext): Promise<iPageContent | void> {
     return kitchenContent(entryForFragment(fragment));
+  }
+
+  onReady({ shell }: iPageReadyContext): void {
+    this.#shell = shell;
+  }
+
+  onDestroy(): void {
+    if (this.#shell) releaseBuilders(this.#shell);
+    this.#shell = null;
   }
 }

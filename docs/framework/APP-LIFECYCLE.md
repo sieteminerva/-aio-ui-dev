@@ -11,20 +11,24 @@ for how a builder is written.
 
 ## 1. Ownership table
 
-| Resource                         | Owner                           | Released by                                        | App calls it?                 |
-| -------------------------------- | ------------------------------- | -------------------------------------------------- | ----------------------------- |
-| Root element                     | `AioApp`                        | `container.replaceChildren(tree)` on the next pass | yes, every render             |
-| Controller state                 | page controller                 | `iPageController.onDestroy()`                      | **only on route-name change** |
-| Interval / timeout               | the builder that created it     | its `destroy()` — `Base.destroy()` does **not**    | no                            |
-| `IntersectionObserver` etc.      | the builder that created it     | its `destroy()` / `unmount()`                      | no                            |
-| Listeners on own nodes           | the builder                     | the nodes going away (bounded)                     | implicit                      |
-| Listeners on `window`/`document` | the code that added them        | explicit `removeEventListener`, never a node       | no — bind only while needed   |
-| `AnimationsService.records`      | animation module (app-lifetime) | `unmount(node)` per node                           | only if someone calls it      |
-| `<style>` injected lazily        | `ComponentRegistry`             | never — one sheet per component, by design         | n/a                           |
+| Resource                         | Owner                           | Released by                                        | App calls it?                           |
+| -------------------------------- | ------------------------------- | -------------------------------------------------- | --------------------------------------- |
+| Root element                     | `AioApp`                        | `container.replaceChildren(tree)` on the next pass | yes, every render                       |
+| Builder instances                | the builder that created them   | its `destroy()`, driven by `releaseBuilders()`     | **yes — every paint, on the old shell** |
+| Controller state                 | page controller                 | `iPageController.onDestroy()`                      | **yes — every replacing pass**          |
+| Interval / timeout               | the builder that created it     | its `destroy()` — `Base.destroy()` does **not**    | yes, through that `destroy()`           |
+| `IntersectionObserver` etc.      | the builder that created it     | its `destroy()` / `unmount()`                      | yes, through that `destroy()`           |
+| Listeners on own nodes           | the builder                     | the nodes going away (bounded)                     | implicit                                |
+| Listeners on `window`/`document` | the code that added them        | explicit `removeEventListener`, never a node       | no — bind only while needed             |
+| `AnimationsService.records`      | animation module (app-lifetime) | `unmount(node)` per node                           | only if someone calls it                |
+| `<style>` injected lazily        | `ComponentRegistry`             | never — one sheet per component, by design         | n/a                                     |
 
 **Rule 1.** A builder releases every timer and observer it creates in `destroy()`, and
 `destroy()` starts with whatever `unmount()` already does. `Base.destroy()` unhooks DOM and
-clears `storage.nodes`; nothing else is assumed.
+clears `storage.nodes`; nothing else is assumed. Every builder is now destroyed when its page
+is discarded — `create()` pins the instance on the root it returns, and `releaseBuilders()`
+walks a subtree for pins — so the only thing a component still has to remember is
+`super.destroy()` plus its own resources.
 
 **Rule 2.** Never add a listener to `window`, `document` or `document.body` from a builder,
 and never keep one while it is not needed. Those targets survive the page. Listen on the
@@ -35,24 +39,24 @@ element you rendered, bind a global only between "open" and "close", or expose a
 node and offer a per-node release (`AnimationsService.mount(node)` / `unmount(node)`), so the
 page can hand nodes back. A singleton that only grows is a leak with no owner.
 
-**Rule 4.** Nothing may rely on `iPageController.onDestroy()` for a _fragment_ change. It
-runs on route change only — see §2.
+**Rule 4.** A fragment change is still a controller change: `onDestroy` runs on every pass that
+replaces the page, not only when the route name changes — see §2 and L6.
 
 ---
 
 ## 2. What the app guarantees today (measured 2026-11-13)
 
-| Fact                                                                                 | Evidence                                                                            |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| `#release()` runs only when the route **name** changes                               | `packages/app/src/AioApp.ts:680` — compares `route`, not `fragment`                 |
-| No instance registry exists, so `Base.destroy()` runs only when a caller asks for it | `packages/app/src/AioApp.ts` has no builder bookkeeping                             |
-| `KitchenPage` (and every demo page) declares no `onDestroy`                          | `examples/demo/src/pages/kitchen.ts`                                                |
-| DOM is replaced, never accumulated                                                   | 20 navigations: `document.querySelectorAll("*")` 144–213, no trend                  |
-| Lazy CSS is injected once per component                                              | `<style>` 22 → 24 → 29 → 30 across first visits, then flat; `cssRules` 341 constant |
+| Fact                                                                     | Evidence                                                                                |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| `#release()` runs on **every** replacing pass (route, fragment or theme) | `packages/app/src/AioApp.ts` — `#renderRoute()` calls it before `#createPage()`         |
+| Every builder is destroyed when its page is discarded                    | `Builder.create()` pins the instance; `#paint()` calls `registry.releaseBuilders(root)` |
+| `KitchenPage` keeps its shell and destroys its builders in `onDestroy`   | `examples/demo/src/pages/kitchen.ts`                                                    |
+| DOM is replaced, never accumulated                                       | 20 navigations: `document.querySelectorAll("*")` 144–213, no trend                      |
+| Lazy CSS is injected once per component                                  | `<style>` 22 → 24 → 29 → 30 across first visits, then flat; `cssRules` 341 constant     |
 
-`#kitchen/a → #kitchen/b` is one route with two fragments: the old tree is dropped by
-`replaceChildren` and nothing in it is told to stop. That is the amplifier behind every case
-in §3 — the leak mechanism is in `packages/**`, the frequency is the demo's.
+`#kitchen/a → #kitchen/b` is one route with two fragments. Before L6 that meant the old
+tree was dropped by `replaceChildren` and nothing in it was told to stop — the amplifier
+behind every case in §3.
 
 ---
 
@@ -174,6 +178,48 @@ collected after one forced GC; two consecutive 10-visit blocks add **+0.17 MB** 
 outside click closes, padding click opens, picking `ACEH` fires the cascade. Pinned by
 `packages/components/input/__tests__/Dropdown.test.ts` (3 tests).
 
+### L6 — A fragment switch never tore down the page it replaced · **fixed**
+
+Symptom: `#kitchen/<name>` is one route with a fragment, and `#release()` compared the route
+**name**, so every switch built a new controller and dropped the old one without `onDestroy`.
+Behind that, the framework had no teardown path at all: `Carousel.destroy()` and
+`Masonry.destroy()` existed with **no caller**, so L1/L2/L5 only stopped because each
+component removed its own global — the next builder to add a timer would have leaked exactly
+like the first one.
+
+Fix, four lines of ownership rather than a new subsystem:
+
+1. `AioApp` releases the outgoing controller on **every** replacing pass — a fragment switch
+   and a theme switch both create a new instance.
+2. `Builder.create()` pins the instance on the root it returns
+   (`Symbol.for("aio-ui.builder-instance")`), and `releaseBuilders(root)` destroys every
+   pinned builder in a subtree, nested ones included. It unpins _before_ destroying, so the
+   page's `onDestroy` and the app's paint sweep cannot double-tear-down.
+3. `AioApp.#paint` releases the outgoing shell immediately before `replaceChildren`, so a
+   pass that fails earlier never kills the page still on screen.
+4. `KitchenPage` keeps the shell it got in `onReady` and calls `releaseBuilders` from
+   `onDestroy` (the page-owned path); the paint sweep is the framework's guarantee for routes
+   whose controller declares no `onDestroy`.
+
+Measured (9 switches over `#kitchen/{badge,carousel,masonry}`, `setInterval` and
+`EventTarget.prototype.addEventListener` wrapped):
+
+| Reading                                   | Result                                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------------------- |
+| live `setInterval`                        | 1 while the carousel is mounted, **0** after leaving it (was +1/mount, never cleared) |
+| `document` / `window` listeners           | **0** throughout                                                                      |
+| page roots after 6 switches + 2 forced GC | **0 of 6 alive** (previously the page tree stayed reachable)                          |
+| heap, 10 carousel ↔ masonry switches      | **+0.38 MB** total (~+0.04/switch; control noise ~+0.1 MB/10)                         |
+| `data-hydrating` / `data-loaded`          | 0 / 6 after every switch                                                              |
+
+Pinned by `packages/app/src/__tests__/AioApp.teardown.test.ts` (3),
+`packages/core/src/__tests__/BuilderInstances.test.ts` (4) and the pin case in
+`packages/base/src/__tests__/Base.anti-fouc.test.ts`.
+
+Probe note: wrapping `EventTarget.prototype.addEventListener` to census listeners also
+retains every target it records. Run the `WeakRef` check in a **fresh page** — the first run
+of this probe read 5/6 roots alive purely because the census itself was holding them.
+
 ---
 
 ## 4. Reviewer checklist
@@ -183,6 +229,8 @@ Before a component lands:
 - [ ] Every `setInterval` / `requestAnimationFrame` loop has a `clear...` reachable from `destroy()`.
 - [ ] Every observer is disconnected in `destroy()`; a retried `rAF` loop has a cap.
 - [ ] `destroy()` releases instance state **before** `super.destroy()`.
+- [ ] No teardown plumbing needed: `create()` pins the instance, `releaseBuilders()` finds it.
+      A builder still overrides `destroy()` for its own timers — nothing else is required.
 - [ ] No listener on `window` / `document` / `document.body` from a builder — a global that
       is only needed between open and close is bound there, not at init.
 - [ ] A test proves the closed state owns no global (`document.addEventListener` spy is empty

@@ -2,6 +2,7 @@ import type { iBasicNode, iBuilderRegistry } from "./interface";
 import type { iEventEmit } from "./types/events";
 import { Registry } from "./Registry";
 import { getBuilderAdapter } from "./BuilderPort";
+import { releaseBuilders as releasePinnedBuilders } from "./BuilderInstances";
 import { injectLazyCss, isStyleInjected, useStylesheetAssets } from "./Stylesheets";
 
 /**
@@ -698,6 +699,21 @@ export class ComponentRegistry {
 
   public destroy() {
 
+  }
+
+  /**
+   * Destroys every builder pinned inside a subtree the app is about to replace.
+   *
+   * @param root - The outgoing shell (or any subtree a page remembers).
+   * @returns How many builder instances were destroyed.
+   *
+   * @summary The registry is where instances are created, so it is the natural door for
+   *   releasing them: `AioApp` calls this on the tree it is about to swap out, and a page
+   *   controller can call it from `onDestroy()` with its own shell. Idempotent — a
+   *   builder is unpinned before its `destroy()` runs, so a second sweep does nothing.
+   */
+  public releaseBuilders(root: ParentNode | null | undefined): number {
+    return releasePinnedBuilders(root);
   }
 
   public getBuilderNode(nodes: iBasicNode[] | iBasicNode, name: string, visited = new Set()): iBasicNode | undefined {

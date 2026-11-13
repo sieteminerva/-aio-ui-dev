@@ -27,6 +27,7 @@ export {
   styleTagId,
   useStylesheetAssets,
 } from "./Stylesheets";
+export { BUILDER_INSTANCE, attachBuilder, releaseBuilders } from "./BuilderInstances";
 export { TemplateRegistry, getTemplates, setTemplates } from "./TemplateRegistry";
 export {
   DEFAULT_REGISTRY_SCOPE,
