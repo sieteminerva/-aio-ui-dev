@@ -11,16 +11,16 @@ for how a builder is written.
 
 ## 1. Ownership table
 
-| Resource                       | Owner                            | Released by                                        | App calls it?                    |
-| ------------------------------ | -------------------------------- | -------------------------------------------------- | -------------------------------- |
-| Root element                   | `AioApp`                         | `container.replaceChildren(tree)` on the next pass | yes, every render                |
-| Controller state               | page controller                  | `iPageController.onDestroy()`                      | **only on route-name change**    |
-| Interval / timeout             | the builder that created it      | its `destroy()` — `Base.destroy()` does **not**     | no                               |
-| `IntersectionObserver` etc.    | the builder that created it      | its `destroy()` / `unmount()`                       | no                               |
-| Listeners on own nodes         | the builder                      | the nodes going away (bounded)                      | implicit                         |
-| Listeners on `window`/`document` | the code that added them        | explicit `removeEventListener`, never a node        | no                               |
-| `AnimationsService.records`    | animation module (app-lifetime)  | `unmount(node)` per node                            | only if someone calls it         |
-| `<style>` injected lazily      | `ComponentRegistry`              | never — one sheet per component, by design          | n/a                              |
+| Resource                         | Owner                           | Released by                                        | App calls it?                 |
+| -------------------------------- | ------------------------------- | -------------------------------------------------- | ----------------------------- |
+| Root element                     | `AioApp`                        | `container.replaceChildren(tree)` on the next pass | yes, every render             |
+| Controller state                 | page controller                 | `iPageController.onDestroy()`                      | **only on route-name change** |
+| Interval / timeout               | the builder that created it     | its `destroy()` — `Base.destroy()` does **not**    | no                            |
+| `IntersectionObserver` etc.      | the builder that created it     | its `destroy()` / `unmount()`                      | no                            |
+| Listeners on own nodes           | the builder                     | the nodes going away (bounded)                     | implicit                      |
+| Listeners on `window`/`document` | the code that added them        | explicit `removeEventListener`, never a node       | no                            |
+| `AnimationsService.records`      | animation module (app-lifetime) | `unmount(node)` per node                           | only if someone calls it      |
+| `<style>` injected lazily        | `ComponentRegistry`             | never — one sheet per component, by design         | n/a                           |
 
 **Rule 1.** A builder releases every timer and observer it creates in `destroy()`, and
 `destroy()` starts with whatever `unmount()` already does. `Base.destroy()` unhooks DOM and
@@ -34,21 +34,21 @@ Those targets survive the page. Listen on the element you rendered, or expose an
 node and offer a per-node release (`AnimationsService.mount(node)` / `unmount(node)`), so the
 page can hand nodes back. A singleton that only grows is a leak with no owner.
 
-**Rule 4.** Nothing may rely on `iPageController.onDestroy()` for a *fragment* change. It
+**Rule 4.** Nothing may rely on `iPageController.onDestroy()` for a _fragment_ change. It
 runs on route change only — see §2.
 
 ---
 
 ## 2. What the app guarantees today (measured, head `9c44e9a`)
 
-| Fact                                                                                  | Evidence                                                       |
-| ------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `#release()` runs only when the route **name** changes                                | `packages/app/src/AioApp.ts:680` — compares `route`, not `fragment` |
-| No instance registry exists, so `Base.destroy()` runs only when a caller asks for it   | `packages/app/src/AioApp.ts` has no builder bookkeeping         |
-| `KitchenPage` (and every demo page) declares no `onDestroy`                           | `examples/demo/src/pages/kitchen.ts`                            |
-| DOM is replaced, never accumulated                                                    | 20 navigations: `document.querySelectorAll("*")` 144–213, no trend |
-| Lazy CSS is injected once per component                                               | `<style>` 22 → 24 → 29 → 30 across first visits, then flat; `cssRules` 341 constant |
-| Per-node handlers die with their nodes                                                | 707 `addEventListener` vs 47 `removeEventListener`, `nodes` flat |
+| Fact                                                                                 | Evidence                                                                            |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `#release()` runs only when the route **name** changes                               | `packages/app/src/AioApp.ts:680` — compares `route`, not `fragment`                 |
+| No instance registry exists, so `Base.destroy()` runs only when a caller asks for it | `packages/app/src/AioApp.ts` has no builder bookkeeping                             |
+| `KitchenPage` (and every demo page) declares no `onDestroy`                          | `examples/demo/src/pages/kitchen.ts`                                                |
+| DOM is replaced, never accumulated                                                   | 20 navigations: `document.querySelectorAll("*")` 144–213, no trend                  |
+| Lazy CSS is injected once per component                                              | `<style>` 22 → 24 → 29 → 30 across first visits, then flat; `cssRules` 341 constant |
+| Per-node handlers die with their nodes                                               | 707 `addEventListener` vs 47 `removeEventListener`, `nodes` flat                    |
 
 `#kitchen/a → #kitchen/b` is one route with two fragments: the old tree is dropped by
 `replaceChildren` and nothing in it is told to stop. That is the amplifier behind every case
@@ -64,7 +64,7 @@ Symptom: an autoplay carousel keeps calling `next()` after the page that hosted 
 
 ```ts
 const builder = new CarouselBuilder({ autoPlay: 4000 });
-builder.create({ content: slides });   // mounts, starts the interval
+builder.create({ content: slides }); // mounts, starts the interval
 // ... route changes: the tree is detached, the interval is not
 ```
 
@@ -145,17 +145,43 @@ paste this **before** the app boots (DevTools → Sources → snippet reload, or
 then navigate:
 
 ```js
-const T = EventTarget.prototype, add = T.addEventListener, rem = T.removeEventListener;
-const reg = new Map(), key = (t, ty) => (t === window ? "window" : t === document ? "document"
-  : t?.tagName?.toLowerCase() + (t.id ? "#" + t.id : "") + " :: " + ty);
-T.addEventListener = function (ty) { const k = key(this, ty); reg.set(k, (reg.get(k) || 0) + 1); return add.apply(this, arguments); };
-T.removeEventListener = function (ty) { const k = key(this, ty); reg.set(k, (reg.get(k) || 0) - 1); return rem.apply(this, arguments); };
-const si = window.setInterval; window.__iv = [];
-window.setInterval = function (fn, ms) { const id = si.apply(window, arguments); window.__iv.push(id); return id; };
+const T = EventTarget.prototype,
+  add = T.addEventListener,
+  rem = T.removeEventListener;
+const reg = new Map(),
+  key = (t, ty) =>
+    t === window
+      ? "window"
+      : t === document
+        ? "document"
+        : t?.tagName?.toLowerCase() + (t.id ? "#" + t.id : "") + " :: " + ty;
+T.addEventListener = function (ty) {
+  const k = key(this, ty);
+  reg.set(k, (reg.get(k) || 0) + 1);
+  return add.apply(this, arguments);
+};
+T.removeEventListener = function (ty) {
+  const k = key(this, ty);
+  reg.set(k, (reg.get(k) || 0) - 1);
+  return rem.apply(this, arguments);
+};
+const si = window.setInterval;
+window.__iv = [];
+window.setInterval = function (fn, ms) {
+  const id = si.apply(window, arguments);
+  window.__iv.push(id);
+  return id;
+};
 // after N navigations, in the console:
-({ listeners: [...reg].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 15),
-   intervals: window.__iv.length, nodes: document.querySelectorAll("*").length,
-   styles: document.querySelectorAll("style").length });
+({
+  listeners: [...reg]
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15),
+  intervals: window.__iv.length,
+  nodes: document.querySelectorAll("*").length,
+  styles: document.querySelectorAll("style").length,
+});
 ```
 
 Read it as: a counter that grows per navigation names the owner. Then, for retention, take a
