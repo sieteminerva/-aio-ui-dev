@@ -619,6 +619,21 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
     if (this.container && this.config.container) this.container.innerHTML = "";
   }
 
+  /**
+   * Releases instance state, then the DOM.
+   *
+   * `Base.destroy()` unhooks the root element only: the autoplay interval and the hover
+   * listeners are state this class owns, so they are released here. Before this override a
+   * destroyed carousel kept calling `next()` every `autoPlay` ms on a detached tree — one
+   * interval per mount, `clearInterval` never called (see `docs/framework/APP-LIFECYCLE.md`).
+   */
+  public destroy(typeKey?: CarouselElementType): void {
+    this.unmount();
+    this.container?.removeEventListener("mouseenter", this.handleEnter);
+    this.container?.removeEventListener("mouseleave", this.handleLeave);
+    super.destroy(typeKey);
+  }
+
   private resolveRuntimeConfig(element: HTMLElement, payload: any, totalSlides?: number): iResolvedConfig {
 
     const mergeAttributes = (attrs: Record<string, any>): void => {

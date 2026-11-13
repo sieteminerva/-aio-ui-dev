@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { CarouselBuilder } from "../Carousel";
 
@@ -57,4 +57,37 @@ describe("carousel", () => {
     expect(root.querySelector(".track")).toBeNull();
     expect(root.querySelectorAll(".slide")).toHaveLength(0);
   });
+
+  it("stops its autoplay interval when destroyed", () => {
+    // Regression: `destroy()` used to be inherited from Base, which unhooks the DOM only —
+    // the interval outlived it and kept calling next() on a detached tree.
+    vi.useFakeTimers();
+    try {
+      const start = vi.spyOn(window, "setInterval");
+      const stop = vi.spyOn(window, "clearInterval");
+
+      const builder = new CarouselBuilder({ autoPlay: 1000 });
+      const root = builder.create(slides) as HTMLElement;
+      const track = root.querySelector(".track") as HTMLElement;
+
+      expect(start).toHaveBeenCalledTimes(1);
+      const intervalId = start.mock.results[0].value;
+
+      builder.destroy();
+
+      expect(stop).toHaveBeenCalledWith(intervalId);
+
+      // Behaviour, not just the call: one more autoplay window leaves the track alone.
+      const transform = track.style.transform;
+      vi.advanceTimersByTime(5000);
+      expect(track.style.transform).toBe(transform);
+    } finally {
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+    }
+  });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
