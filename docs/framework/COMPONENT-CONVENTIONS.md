@@ -255,17 +255,49 @@ public prepare(data: any): HTMLElement {
 ### Anti-FOUC markers belong to the framework, not the component
 
 One call at the end of `create()` does the whole job:
-`holdUntilStyled(root, this.stylesheet)` (`@aio-ui/core/Stylesheets`). It asks the seam
-whether this component's sheet is missing. If it is, the root is returned with
-`--is-loading: 1` + `data-hydrating`, and the same call releases it from its own
-`ensureStylesheet()` promise. If it is not, the root is released immediately. There is
-no gate object, no per-instance flag and no registry step.
+`holdUntilStyled(root, this.stylesheet, mockup)` (`@aio-ui/base/BaseAdapters/Hydration`).
+It asks the stylesheet seam (`@aio-ui/core`) whether this component's sheet is missing. If
+it is, the root is returned held and the same call releases it from its own
+`ensureStylesheet()` promise. If it is not, the root is released immediately. There is no
+gate object, no per-instance flag and no registry step.
 
-- Never write `data-hydrating`, `data-loaded` or `--is-loading` in a component.
+Two held shapes, one decision:
+
+| Shape     | When                               | What it writes                                                                                                |
+| --------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `mockup`  | the builder implements `loading()` | hides the real **direct children** (`display: none`), prepends the mockup, `data-mockup` + `aria-busy="true"` |
+| `shimmer` | no `loading()`                     | `--is-loading: 1` + `data-hydrating`; `@aio-ui/animations` paints the generic skin                            |
+
+- Never write `data-hydrating`, `data-loaded`, `data-mockup` or `--is-loading` in a component.
 - Never call `holdUntilStyled()` from a subclass; `create()` already does.
 - A component the host serves no sheet for is never held — there is nothing to wait for.
 - The decision is per sheet, not per instance: two components built in one pass own two
   sheets, so "this instance already loaded once" would freeze the wrong subtree.
+
+### `loading()` — the optional mockup
+
+A builder may describe its own silhouette for the moment its sheet is missing:
+
+```ts
+protected loading(): HTMLElement {
+  return Skeleton.create({
+    shape: "stack",
+    children: [
+      { shape: "bone", aspect: "1 / 1" },
+      { shape: "line", width: "62%" },
+    ],
+  });
+}
+```
+
+- Draw it with `@aio-ui/skeleton`, the **mandatory** component package: its sheet loads with
+  the app shell, so it is styled at the exact moment the real sheet is absent.
+- A mockup is a picture: a handful of nodes, no `render()`, no node records, no payload loop.
+  It is dropped the moment the sheet lands, so nothing in it should carry a listener.
+- Precision lives in the spec (`ProductCard` mirrors its display/swatches/caption/button
+  rhythm, `Table` mirrors its header and row height) — never in a rule for `[data-skeleton]`
+  written by another component. Override `--skeleton-fill` in your own layer if the tone is off.
+- If `loading()` returns nothing or throws, `create()` falls back to the shimmer skin.
 
 Multi-mode components (e.g. `Rating`'s four visual types, `Footer`'s two rows) branch on
 `this.config` inside `prepare()` and render only the keys that mode needs.

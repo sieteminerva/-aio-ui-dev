@@ -1,6 +1,7 @@
 // Components/ProductCardBuilder.ts (The Purely Integrated Polymorphic Product Card Specification)
 import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 
 // No stylesheet import here on purpose: the registry loads `ProductCard.css` from the
 // manifest (or derives it from the script path) and injects it as a real <style> node.
@@ -212,6 +213,37 @@ export class ProductCardBuilder extends Builder<ProductCardElementType, iProduct
         el.textContent = this.config.buttonText || "Add to Cart";
         break;
     }
+  }
+
+  /**
+   * 🪶 LOADING MOCKUP — the card's silhouette, composed from the mandatory
+   * `@aio-ui/skeleton` primitive.
+   *
+   * The skin has to exist before `ProductCard.css` does, so it cannot come from this
+   * component's sheet; precision comes from the spec instead — the display box reserves the
+   * same square, the swatch row mirrors the real variants, the caption keeps two lines and
+   * the button keeps its height. No `render()`, no node records, no payload loop.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "bone", aspect: "1 / 1" },
+        {
+          shape: "row",
+          gap: "0.5rem",
+          children: [
+            { shape: "circle", width: "1.25rem" },
+            { shape: "circle", width: "1.25rem" },
+            { shape: "circle", width: "1.25rem" },
+          ],
+        },
+        { shape: "line", width: "62%" },
+        { shape: "line", width: "88%" },
+        { shape: "bone", width: "35%", height: "1.1rem" },
+        { shape: "bone", height: "2.5rem" },
+      ],
+    });
   }
 
   /**

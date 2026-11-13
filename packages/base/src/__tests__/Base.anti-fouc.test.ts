@@ -13,9 +13,10 @@ import { Builder } from "../Base";
  * the registry — a builder created directly (a table inside a form field) never
  * reaches `ComponentRegistry.build()`, so it has to heal itself.
  *
- * The seam itself (`holdUntilStyled` / `releaseMarkers`) is unit-tested in
- * `@aio-ui/core`; this file only proves that `create()` calls it, at the right
- * moment, with the specifier the builder declares.
+ * The seam itself (`holdUntilStyled` / `releaseMarkers`) is unit-tested next door in
+ * `Hydration.test.ts`; this file only proves that `create()` calls it, at the right
+ * moment, with the specifier the builder declares — and hands it the builder's own
+ * `loading()` mockup when there is one.
  */
 
 const CSS = ".sheet-root { color: red }";

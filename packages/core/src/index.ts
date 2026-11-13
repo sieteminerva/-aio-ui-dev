@@ -17,12 +17,10 @@ export { DOMRenderer } from "./DOMRenderer";
 export { getBuilderAdapter, setBuilderAdapter } from "./BuilderPort";
 export {
   ensureStylesheet,
-  holdUntilStyled,
   injectLazyCss,
   isStyleInjected,
   isStylesheetPending,
   normalizeStylesheetPath,
-  releaseMarkers,
   replaceLazyCss,
   styleTagId,
   useStylesheetAssets,

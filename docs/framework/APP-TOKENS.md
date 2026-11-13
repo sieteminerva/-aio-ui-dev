@@ -80,6 +80,7 @@ light in dark mode, so the foreground flips there.
 | Surface          | `--app-page-background`, `--app-surface-background-color`, `--app-surface-strong`, `--app-surface-muted`                                                                      |
 | Text             | `--app-text-color`, `--app-text-accent-color`, `--app-text-heading-color`                                                                                                     |
 | Line & elevation | `--app-border-color`, `--app-border-focus`, `--app-shadow-soft`, `--app-shadow-elevated`                                                                                      |
+| Placeholder      | `--app-skeleton-bg` — the bone colour, consumed by `@aio-ui/skeleton` only                                                                                                    |
 | Asset            | `--app-spinner-content` (inline SVG data URI, theme-independent)                                                                                                              |
 
 ## Component layers (who consumes this contract)

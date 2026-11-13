@@ -16,6 +16,9 @@ import '@aio-ui/theme-cyberpunk/CyberpunkTheme.css';
 // (a browser import map would reject text/css as a module), so the host links them.
 import '@aio-ui/styles/index.css';
 import '@aio-ui/animations/Animations.css';
+// Mandatory, like the tokens: the placeholder primitive styles a component *while that
+// component's own sheet is still on its way*, so it can never be loaded lazily.
+import '@aio-ui/skeleton/Skeleton.css';
 import './style.css';
 
 import { DEMO, manifestFor } from './manifest';

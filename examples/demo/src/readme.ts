@@ -30,6 +30,7 @@ import pricingcardReadme from "../../../packages/components/pricingcard/README.m
 import productReadme from "../../../packages/components/product/README.md?raw";
 import ratingReadme from "../../../packages/components/rating/README.md?raw";
 import sectionReadme from "../../../packages/components/section/README.md?raw";
+import skeletonReadme from "../../../packages/components/skeleton/README.md?raw";
 import tabReadme from "../../../packages/components/tab/README.md?raw";
 import tableReadme from "../../../packages/components/table/README.md?raw";
 
@@ -63,6 +64,7 @@ const README_TEXT: Record<string, string> = {
   product: productReadme,
   rating: ratingReadme,
   section: sectionReadme,
+  skeleton: skeletonReadme,
   tab: tabReadme,
   table: tableReadme,
 };

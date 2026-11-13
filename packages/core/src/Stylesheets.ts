@@ -10,12 +10,15 @@
  *
  * Two callers use it:
  *
- * - {@link holdUntilStyled} — any builder, including the ones created *outside* the
- *   registry (a table built inside a form field, a dropdown inside an input): it hides
- *   the root while that component's own sheet is missing and reveals it when the sheet
- *   lands. This is the whole anti-FOUC contract, and this module is its only writer;
- * - the `ComponentRegistry`, which injects through the same `<style>` id scheme so a
- *   sheet touched by both paths still lands exactly once.
+ * - the `ComponentRegistry`, which injects through the `<style>` id scheme declared here;
+ * - {@link ensureStylesheet} — any builder, including the ones created *outside* the
+ *   registry (a table built inside a form field, a dropdown inside an input), asks for
+ *   its own sheet by specifier.
+ *
+ * The anti-FOUC *hold* is deliberately absent: hiding an unstyled root is a lifecycle
+ * detail of `Builder.create()` (which knows its own `loading()` mockup), so it lives next
+ * to the builder in `@aio-ui/base/BaseAdapters/Hydration`. This module only answers "is
+ * the sheet there" and "give me the sheet".
  */
 
 /** Lazy loader for one stylesheet, returning its text (`?inline` import). */
@@ -114,65 +117,13 @@ export function isStyleInjected(specifier: string): boolean {
  *
  * @summary A component without a loader is never "pending": waiting for a sheet nobody
  *   can serve would strand the anti-FOUC hold forever. A non-DOM host (SSR, tests) has no
- *   document to be styled, so it never holds either. This is the question
- *   {@link holdUntilStyled} asks *before* a root is returned — hence synchronous, unlike
- *   {@link ensureStylesheet}.
+ *   document to be styled, so it never holds either. This is the question the hold asks
+ *   *before* a root is returned — hence synchronous, unlike {@link ensureStylesheet}.
  */
 export function isStylesheetPending(specifier: string): boolean {
   const resolved = resolveLoader(specifier);
   if (!resolved) return false;
   return !isStyleInjected(resolved.key);
-}
-
-/**
- * Writes the "styled" markers on a root — the only release writer.
- *
- * @param root - The top element of a component tree.
- * @returns Nothing.
- *
- * @summary Three writes, no observers: `--is-loading: 0` (children inherit it),
- *   `data-hydrating` removed (every shimmer rule stops matching), and
- *   `data-loaded="true"` — a permanent pointer, because
- *   `[data-loaded="true"] * { --is-loading: 0 !important }` forces any stale marker
- *   below it back to `0`.
- */
-export function releaseMarkers(root: HTMLElement): void {
-  root.style.setProperty("--is-loading", "0");
-  root.removeAttribute("data-hydrating");
-  root.setAttribute("data-loaded", "true");
-}
-
-/**
- * The anti-FOUC gate: hide a component root until its own stylesheet is there.
- *
- * @param root - The root the builder is about to return (pre-mount, pre-paint).
- * @param specifier - The builder's declared `stylesheet` (`"./Table.css"`).
- * @returns Nothing. The reveal happens later, from the loader promise.
- *
- * @example
- * holdUntilStyled(root, "./Table.css"); // last line before `return root`
- *
- * @summary One function, one question, one release trigger — no gate object and no
- *   per-instance "already loaded" flag. The question is asked per *sheet*
- *   ({@link isStylesheetPending}) because two components built in one pass own two
- *   sheets, so a flag cannot answer "is *my* CSS here". Release rides
- *   {@link ensureStylesheet}, which never rejects: a builder no registry ever sees
- *   still heals itself, and the root is revealed even when the sheet fails to arrive.
- */
-export function holdUntilStyled(root: HTMLElement, specifier: string): void {
-  if (typeof document === "undefined" || typeof HTMLElement === "undefined") return;
-  if (!(root instanceof HTMLElement)) return;
-
-  if (!isStylesheetPending(specifier)) {
-    // Already styled, or the host serves no sheet for it: nothing to wait for.
-    releaseMarkers(root);
-    return;
-  }
-
-  root.style.setProperty("--is-loading", "1");
-  root.setAttribute("data-hydrating", "");
-  root.removeAttribute("data-loaded");
-  void ensureStylesheet(specifier).then(() => releaseMarkers(root));
 }
 
 /**
@@ -243,10 +194,10 @@ export function replaceLazyCss(rawCss: string, specifier: string): void {
  * @example
  * void ensureStylesheet("./Table.css"); // a table built outside the registry
  *
- * @summary The registry loads sheets for components it builds *before* rendering them
- * (anti-FOUC); this is the same job for components a builder constructs directly. It is
- * a no-op when the sheet already arrived through the registry, so the two paths cannot
- * double-inject.
+ * @summary The one call the hydration hold makes: `Builder.create()` asks for its own
+ *   sheet, so a component a builder constructs directly (never through the registry) is
+ *   styled by the same loader. It is a no-op when the sheet already arrived, so the two
+ *   paths cannot double-inject.
  */
 export function ensureStylesheet(specifier: string): Promise<void> {
   const resolved = resolveLoader(specifier);

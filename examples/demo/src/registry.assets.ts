@@ -26,6 +26,7 @@ export const componentAssets = {
     "@aio-ui/product": () => import("@aio-ui/product"),
     "@aio-ui/rating": () => import("@aio-ui/rating"),
     "@aio-ui/section": () => import("@aio-ui/section"),
+    "@aio-ui/skeleton": () => import("@aio-ui/skeleton"),
     "@aio-ui/tab": () => import("@aio-ui/tab"),
     "@aio-ui/table": () => import("@aio-ui/table"),
 
@@ -72,6 +73,7 @@ export const componentAssets = {
     "@aio-ui/product/ProductGrid.css": () => import("@aio-ui/product/ProductGrid.css?inline"),
     "@aio-ui/rating/Rating.css": () => import("@aio-ui/rating/Rating.css?inline"),
     "@aio-ui/section/Section.css": () => import("@aio-ui/section/Section.css?inline"),
+    "@aio-ui/skeleton/Skeleton.css": () => import("@aio-ui/skeleton/Skeleton.css?inline"),
     "@aio-ui/tab/Tab.css": () => import("@aio-ui/tab/Tab.css?inline"),
     "@aio-ui/table/Table.css": () => import("@aio-ui/table/Table.css?inline"),
   } as Record<string, () => Promise<unknown>>,

@@ -1,15 +1,18 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ensureStylesheet, holdUntilStyled, injectLazyCss, isStyleInjected, isStylesheetPending, releaseMarkers, replaceLazyCss, styleTagId, useStylesheetAssets } from "../Stylesheets";
+import { ensureStylesheet, injectLazyCss, isStyleInjected, isStylesheetPending, replaceLazyCss, styleTagId, useStylesheetAssets } from "../Stylesheets";
 
 /**
  * The stylesheet seam is what replaced `import "./X.css"` in every component.
  *
- * Two things have to hold: a component can name its sheet the way it always did
- * (`"./Table.css"`, relative to itself) even though the host keys the map by module
+ * Two things have to hold: a component can name its sheet the way it always did * (`"./Table.css"`, relative to itself) even though the host keys the map by module
  * specifier, and no code path may inject the same sheet twice — the registry injects
  * before a render, a nested builder asks again on `create()`.
+ *
+ * The hold that *consumes* this seam (`holdUntilStyled` / `releaseMarkers` / the
+ * `loading()` mockup) is a builder concern and is tested in
+ * `@aio-ui/base` — `BaseAdapters/Hydration`.
  */
 
 const CSS = "@media all { table.table { border: 1px solid gold } }";
@@ -126,86 +129,5 @@ describe("pending probe (anti-FOUC decision)", () => {
 
   it("is never pending for a sheet no loader can serve", () => {
     expect(isStylesheetPending("./Undeclared.css")).toBe(false);
-  });
-});
-
-describe("hold seam (the whole anti-FOUC contract)", () => {
-  function root(): HTMLElement {
-    return document.createElement("div");
-  }
-
-  /** Lets the seam's promise chain (`load → inject → release`) run one more step. */
-  function tick(): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, 0));
-  }
-
-  it("marks the root while the sheet is missing and releases it when it lands", async () => {
-    let resolveSheet!: (value: { default: string }) => void;
-    useStylesheetAssets({
-      "@aio-ui/table/Table.css": () => new Promise<{ default: string }>((resolve) => { resolveSheet = resolve; }),
-    });
-    const element = root();
-
-    holdUntilStyled(element, "./Table.css");
-
-    expect(element.style.getPropertyValue("--is-loading")).toBe("1");
-    expect(element.hasAttribute("data-hydrating")).toBe(true);
-    expect(element.hasAttribute("data-loaded")).toBe(false);
-
-    await tick(); // the loader is invoked from a microtask, not on the call itself
-    resolveSheet({ default: CSS });
-    await tick();
-
-    expect(element.hasAttribute("data-hydrating")).toBe(false);
-    expect(element.getAttribute("data-loaded")).toBe("true");
-    expect(element.style.getPropertyValue("--is-loading")).toBe("0");
-  });
-
-  it("releases immediately when the sheet is already in the document", () => {
-    useStylesheetAssets({ "@aio-ui/table/Table.css": async () => CSS });
-    injectLazyCss(CSS, "@aio-ui/table/Table.css");
-    const element = root();
-
-    holdUntilStyled(element, "./Table.css");
-
-    expect(element.hasAttribute("data-hydrating")).toBe(false);
-    expect(element.getAttribute("data-loaded")).toBe("true");
-  });
-
-  it("never holds a builder the host serves no sheet for", () => {
-    const element = root();
-
-    holdUntilStyled(element, "./Undeclared.css");
-
-    expect(element.hasAttribute("data-hydrating")).toBe(false);
-    expect(element.getAttribute("data-loaded")).toBe("true");
-  });
-
-  it("releases a held root even when the loader rejects", async () => {
-    useStylesheetAssets({
-      "@aio-ui/table/Table.css": () => Promise.reject(new Error("chunk gone")),
-    });
-    const element = root();
-
-    holdUntilStyled(element, "./Table.css");
-    expect(element.hasAttribute("data-hydrating")).toBe(true);
-
-    await tick();
-    await tick();
-
-    expect(element.hasAttribute("data-hydrating")).toBe(false);
-    expect(element.getAttribute("data-loaded")).toBe("true");
-  });
-
-  it("writes the three release markers and nothing else", () => {
-    const element = root();
-    element.style.setProperty("--is-loading", "1");
-    element.setAttribute("data-hydrating", "");
-
-    releaseMarkers(element);
-
-    expect(element.style.getPropertyValue("--is-loading")).toBe("0");
-    expect(element.hasAttribute("data-hydrating")).toBe(false);
-    expect(element.getAttribute("data-loaded")).toBe("true");
   });
 });

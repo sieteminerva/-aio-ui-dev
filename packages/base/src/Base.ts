@@ -1,8 +1,9 @@
 import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iNodeRecordItem, iNodeRecordRelations } from "@aio-ui/core/interface";
 // import { TemplateRegistry } from "@aio-ui/template-registry";
-import { holdUntilStyled, attachBuilder } from "@aio-ui/core";
+import { attachBuilder } from "@aio-ui/core";
 // import { ElementCreatedEventBus } from "../Services/EventBus";
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
+import { holdUntilStyled } from "./BaseAdapters/Hydration";
 import { setBuilderAdapter } from "@aio-ui/core";
 import { getTemplates } from "@aio-ui/core";
 import { buildNamespace, setMetadata } from "@aio-ui/utilities/Metadata";
@@ -346,6 +347,31 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
    */
   public abstract initialize(el?: HTMLElement, payload?: any, context?: any): void;
 
+  /**
+   * 🪶 LOADING MOCKUP — what this component shows while its OWN sheet is missing.
+   *
+   * Optional, and called at most once per cold `create()`: only when the sheet this builder
+   * declares is genuinely still on its way. Return a throwaway silhouette (a handful of
+   * `data-skeleton` nodes) — never the real tree, never `this.render()`, never a loop over
+   * the payload. The framework hides the real children, prepends the mockup, and restores
+   * the children the moment the sheet lands, so this hook only has to describe a shape.
+   *
+   * @example
+   * protected loading(): HTMLElement {
+   *   const mock = document.createElement("div");
+   *   mock.setAttribute("data-skeleton", "root");
+   *   mock.innerHTML = '<div data-skeleton="bone" style="height: 8rem"></div>';
+   *   return mock;
+   * }
+   *
+   * @summary Buying a good silhouette: the alternative is a per-element placeholder pass,
+   *   which knows the exact shape but also records every node and dominates the render
+   *   budget. Skip this hook and the generic shimmer skin applies instead —
+   *   `packages/styles/src/components.css` styles both, so the mockup never waits for the
+   *   stylesheet it is standing in for.
+   */
+  protected loading?(content: any, config: TConfig): HTMLElement | null | undefined;
+
   constructor() {
     this.proxyRuntime = new BuilderProxy(this.storage.proxy);
   }
@@ -548,8 +574,12 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
       // pre-paint). The seam decides per *sheet* — two components built in one pass own
       // two sheets, so no per-instance flag could answer "is my CSS here" — and it
       // releases from its own loader promise, so a builder the registry never sees
-      // heals itself.
-      holdUntilStyled(DOMTree, this.#stylesheetSpecifier());
+      // heals itself. A component that implements `loading()` shows its own mockup
+      // meanwhile; the rest fall back to the generic shimmer skin.
+      const mockup = typeof this.loading === "function"
+        ? () => this.loading!(content, this.config)
+        : null;
+      holdUntilStyled(DOMTree, this.#stylesheetSpecifier(), mockup);
 
       // 🪦 PIN: the root carries its builder, so whoever discards this subtree can call
       // `destroy()` on it (`releaseBuilders`). Without the pin nothing ever tells a

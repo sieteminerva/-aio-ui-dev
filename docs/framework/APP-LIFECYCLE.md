@@ -22,6 +22,7 @@ for how a builder is written.
 | Listeners on `window`/`document` | the code that added them        | explicit `removeEventListener`, never a node       | no — bind only while needed             |
 | `AnimationsService.records`      | animation module (app-lifetime) | `unmount(node)` per node                           | only if someone calls it                |
 | `<style>` injected lazily        | `ComponentRegistry`             | never — one sheet per component, by design         | n/a                                     |
+| Loading mockup (`[data-mockup]`) | the builder's `loading()`       | the sheet landing — `holdUntilStyled()`            | no — self-healing                       |
 
 **Rule 1.** A builder releases every timer and observer it creates in `destroy()`, and
 `destroy()` starts with whatever `unmount()` already does. `Base.destroy()` unhooks DOM and

@@ -137,7 +137,6 @@
         "ensureStylesheet",
         "getBuilderAdapter",
         "getTemplates",
-        "holdUntilStyled",
         "injectLazyCss",
         "isStyleInjected",
         "isStylesheetPending",
@@ -145,7 +144,6 @@
         "normalizeStylesheetPath",
         "qualifyId",
         "releaseBuilders",
-        "releaseMarkers",
         "replaceLazyCss",
         "setBuilderAdapter",
         "setTemplates",
@@ -437,6 +435,20 @@
         "iSectionBlock",
         "iSectionColumn",
         "iSectionConfig"
+      ]
+    },
+    "@aio-ui/skeleton": {
+      "kind": "package",
+      "barrel": "./index.ts",
+      "values": [
+        "Skeleton",
+        "SkeletonBuilder"
+      ],
+      "types": [
+        "SkeletonElementType",
+        "SkeletonShape",
+        "iSkeletonConfig",
+        "iSkeletonSpec"
       ]
     },
     "@aio-ui/styles": {

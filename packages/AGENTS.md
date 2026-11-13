@@ -31,9 +31,12 @@ npm run verify           # full gate — run once per batch, not per step
 ## Conventions (non-obvious)
 
 - **Modules own capabilities; components only render.** Fix the seam, not the abstraction.
-- A builder **never** `import "./X.css"`. Load via `@aio-ui/core/Stylesheets`; registry injects
-  the component's own CSS. A parent that nests a builder `@import`s the child sheet
-  (e.g. `ProductGrid.css` → `ProductCard.css`).
+- A builder **never** `import "./X.css"`. The sheet is requested through `ensureStylesheet`
+  (`@aio-ui/core`); `Builder.create()` holds the root until it lands. A parent that nests a builder
+  `@import`s the child sheet (e.g. `ProductGrid.css` → `ProductCard.css`).
+- The hold itself lives next to the builder (`@aio-ui/base/BaseAdapters/Hydration`), not in core:
+  `create()` hides the unstyled root, using the component's own `loading()` mockup built from
+  `@aio-ui/skeleton` (mandatory — loaded with the app shell) or the generic shimmer skin.
 - Publish through `config.emit?.(…)`; a component is framework-agnostic and never imports the app.
 - A component self-describes sub-components via `manifest modules` (self-contained packages).
 - A route's components are declared **once**, in the plan handed to the registry:

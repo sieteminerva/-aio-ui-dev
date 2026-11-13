@@ -171,8 +171,10 @@
 
 /* =========================================================================
    4. MODULE: HYDRATION HOLD — data-hydrating + --is-loading (O(1), ROOT-ONLY)
-   ONE seam owns this whole protocol: `holdUntilStyled(root, specifier)` in
-   `@aio-ui/core/Stylesheets`, called at the end of `Builder.create()`.
+   ONE seam owns this whole protocol: `holdUntilStyled(root, specifier, mockup?)`
+   in `@aio-ui/base/BaseAdapters/Hydration`, called at the end of `Builder.create()`.
+   This section is the FALLBACK skin: a builder that implements `loading()` shows
+   its own `@aio-ui/skeleton` mockup instead and never sets `data-hydrating`.
    • HOLD    — only while THAT component's own sheet is missing (asked before
                the root is returned ⇒ before the first paint): inline
                --is-loading: 1 + attr data-hydrating.
