@@ -254,13 +254,15 @@ public prepare(data: any): HTMLElement {
 
 ### Anti-FOUC markers belong to the framework, not the component
 
-`create()` decides the hold itself. When the host serves this component's `stylesheet` and
-the document does not have it yet, the root is returned with `data-hydrating` +
-`--is-loading: 1`, and it is released from the same `ensureStylesheet()` promise the
-builder started — so a component that no registry ever sees still heals itself.
+One call at the end of `create()` does the whole job:
+`holdUntilStyled(root, this.stylesheet)` (`@aio-ui/core/Stylesheets`). It asks the seam
+whether this component's sheet is missing. If it is, the root is returned with
+`--is-loading: 1` + `data-hydrating`, and the same call releases it from its own
+`ensureStylesheet()` promise. If it is not, the root is released immediately. There is
+no gate object, no per-instance flag and no registry step.
 
 - Never write `data-hydrating`, `data-loaded` or `--is-loading` in a component.
-- Never call `hydration.applyHold()` from a subclass; `create()` already asked the seam.
+- Never call `holdUntilStyled()` from a subclass; `create()` already does.
 - A component the host serves no sheet for is never held — there is nothing to wait for.
 - The decision is per sheet, not per instance: two components built in one pass own two
   sheets, so "this instance already loaded once" would freeze the wrong subtree.

@@ -12,6 +12,10 @@ import { Builder } from "../Base";
  * would either freeze everything or nothing. And the release must not depend on
  * the registry — a builder created directly (a table inside a form field) never
  * reaches `ComponentRegistry.build()`, so it has to heal itself.
+ *
+ * The seam itself (`holdUntilStyled` / `releaseMarkers`) is unit-tested in
+ * `@aio-ui/core`; this file only proves that `create()` calls it, at the right
+ * moment, with the specifier the builder declares.
  */
 
 const CSS = ".sheet-root { color: red }";
@@ -73,6 +77,7 @@ describe("Builder.create — anti-FOUC hold", () => {
 
     expect(element.getAttribute("data-hydrating")).toBe("");
     expect(element.style.getPropertyValue("--is-loading")).toBe("1");
+    expect(element.hasAttribute("data-loaded")).toBe(false);
   });
 
   it("lifts the hold by itself once the sheet lands", async () => {
@@ -107,7 +112,7 @@ describe("Builder.create — anti-FOUC hold", () => {
     expect(element.getAttribute("data-loaded")).toBe("true");
   });
 
-  it("releases the previous root when one instance builds a second time", async () => {
+  it("releases every root it held once the shared sheet settles", async () => {
     const sheet = deferred<{ default: string }>();
     useStylesheetAssets({ "/Twice.css": () => sheet.promise });
     const BuilderClass = sheetBuilder("./Twice.css");
@@ -116,12 +121,17 @@ describe("Builder.create — anti-FOUC hold", () => {
     const first = instance.create({});
     const second = instance.create({});
 
-    expect(first.hasAttribute("data-hydrating")).toBe(false);
+    // Both builds asked for the same in-flight sheet, so both are held.
+    expect(first.hasAttribute("data-hydrating")).toBe(true);
     expect(second.hasAttribute("data-hydrating")).toBe(true);
 
     sheet.resolve({ default: CSS });
     await settle();
 
+    // One promise, two roots: the seam releases the root each call owns.
+    expect(first.hasAttribute("data-hydrating")).toBe(false);
     expect(second.hasAttribute("data-hydrating")).toBe(false);
+    expect(first.getAttribute("data-loaded")).toBe("true");
+    expect(second.getAttribute("data-loaded")).toBe("true");
   });
 });

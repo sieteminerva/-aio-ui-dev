@@ -234,8 +234,9 @@ export class ComponentRegistry {
    * 🧱 Builder storage backed by the generic registry kernel.
    *
    * `duplicate: "replace"` preserves the previous silent-overwrite behaviour
-   * that HMR and preset rebuilds depend on. Lazy loading, stylesheet injection,
-   * and hydration gating stay in this adapter — the kernel only stores values.
+   * that HMR and preset rebuilds depend on. Lazy loading and stylesheet injection
+   * stay in this adapter — the kernel only stores values. The anti-FOUC hold is
+   * not here: it belongs to the builder that owns the root.
    */
   private builders = new Registry<RegisterFn<any>>("component", { duplicate: "replace" });
 
@@ -288,49 +289,8 @@ export class ComponentRegistry {
 
   private _dynamicConfigs = new Map<keyof iBuilderRegistry, Record<string, any>>();
 
-  // 🧊 ANTI-FOUC LEDGER: jejek siap-notnya stylesheet lazy (normalized vite path)
-  // serta janji pemuatan yang sedang berjalan agar build() paralel tidak dobel-fetch.
-  private _stylesReady = new Set<string>();
-  private _stylesLoading = new Map<string, Promise<void>>();
-
   /** Components currently being loaded, so a `modules` cycle cannot recurse forever. */
   private _loading = new Set<string>();
-
-  /**
-   * 🚀 POST-LAUNCH FLIPPER (O(1) RELEASE VIA POINTER data-loaded)
-   * Dipanggil SETELAH promise style lazy terselesaikan (sukses/gagal).
-   *
-   * Ini jalur CEPAT, bukan satu-satunya penulis pelepasan: `Builder.create()`
-   * memegang root-nya sendiri dan melepas dari promise `ensureStylesheet()`
-   * yang sama, sehingga builder yang dibuat di luar registry (tabel di dalam
-   * field form) juga pulih sendiri. Keduanya idempoten, jadi urutan tidak
-   * pernah penting.
-   *
-   * Pelepasan didelegasikan ke HydrationGate (instance.hydration.release(actualElement)):
-   * satu penulis marker di Base — `--is-loading: 0` + hapus `data-hydrating`
-   * + pasang `data-loaded="true"` pada elemen puncak yang memang dipegang
-   * registry. Rule CSS `[data-loaded="true"] *` lalu memaksa SELURUH
-   * keturunan membaca --is-loading: 0 (pointer permanen untuk anak-anak),
-   * tanpa forEach/querySelectorAll/observer — aman page-switching brutal.
-   */
-  private _launchPostLoadInstance(instance: any, stylePending: Promise<void>, actualElement?: HTMLElement | null): void {
-    if (!instance) return;
-
-
-    // 🛡️ Fail-open: error jaringan/chunk tetap WAJIB melepas pembekuan
-    // agar konten tidak mati selamanya di balik shimmer.
-    stylePending.catch(() => null).finally(() => {
-      try {
-        // Builder package plugged in through the port: it owns the gate type and
-        // the fallback marker writer, so core never learns about either.
-        getBuilderAdapter()?.releaseHydration(instance, actualElement);
-      } catch (releaseError) {
-        console.warn("[ComponentRegistry] Hydration release skipped:", releaseError);
-      }
-      instance.isLoaded = true;
-
-    });
-  }
 
   /**
    * Registers a component factory under a stable name.
@@ -456,11 +416,6 @@ export class ComponentRegistry {
 
           if (typeof rawCss === "string") {
             this.injectCssString(rawCss, normCss);
-            // 🧊 ANTI-FOUC LEDGER: setiap injeksi stylesheet via loadModule (termasuk
-            // saat preload) wajib menandai kunci yang SAMA dengan yang dihitung build()
-            // (normalizeVitePath). Tanpa ini, build() menganggap style belum siap →
-            // re-fetch + dobel-adoption sheet + jeda hold yang sia-sia.
-            this._stylesReady.add(normCss);
             // if (DEV) console.info(`[ComponentRegistry] 🎨 stylesheet injected: ${normCss} (${rawCss.length} chars)`);
           } else if (DEV) {
             console.warn(`[ComponentRegistry] ⚠️ CSS loader returned non-string for ${normCss} (got: ${typeof rawCss}) — stylesheet skipped`);
@@ -618,8 +573,6 @@ export class ComponentRegistry {
     // 1. Every registration returns a manifest: there are no variants to detect.
     const manifest = fn(data);
     const manifestConfig = manifest.config;
-    const cssPath = manifest.stylesheet
-      ?? (/\.[cm]?[jt]sx?$/.test(manifest.path) ? manifest.path.replace(/\.[cm]?[jt]sx?$/, ".css") : undefined);
 
     // 2. Content payload: the manifest wins; otherwise the node content is used.
     const activeThemeConfig = this._dynamicConfigs.get(name) || {};
@@ -639,32 +592,11 @@ export class ComponentRegistry {
       nodeRecord.config = finalMergedConfig;
     }
 
-    // 5. 🧊 GAYA MUNDUR CERDAS (MANIFEST CSS): muat stylesheet Manifest sambil
-    //    MENAHAN pembangunan visual sampai style benar-benar terinjeksi.
-    //    Versi lama membiarkan loadModule jalan tanpa awaits (= penyebab FOUC:
-    //    DOM terlanjur tampil telanjang menunggu CSS datang belakangan).
-    let stylePending: Promise<void> = Promise.resolve();
-    if (cssPath) {
-      // Kunci normalisasi HARUS identik dengan resolusi internal loadModule
-      // (dipanggil tanpa script di jalur ini → langsung normalizeVitePath).
-      const styleKey = normalizeVitePath(cssPath);
-      const inflight = this._stylesLoading.get(styleKey);
-
-      if (!inflight) {
-        // Belum pernah dimuat sama sekali → mulai sesi load baru.
-        const session = this.loadModule(undefined, cssPath, name as string)
-          .then(() => { this._stylesReady.add(styleKey); })
-          .catch(() => null)
-          .then(() => { this._stylesLoading.delete(styleKey); }) as Promise<void>;
-        this._stylesLoading.set(styleKey, session);
-        stylePending = session;
-      } else if (!this._stylesReady.has(styleKey)) {
-        // Ada pemuatan lintas-build yang masih menggantung → ikuti janji yang sama.
-        stylePending = inflight;
-      }
-      // Skenario ketiga (_stylesReady sudah memuat styleKey): style dijamin
-      // terinjeksi — jalur sinkron tanpa penahanan apapun (bebas jeda ulang).
-    }
+    // 5. The stylesheet is not the registry's business any more: `Builder.create()`
+    //    asks the shared seam (`Stylesheets.holdUntilStyled`) whether *this*
+    //    component's sheet is missing, hides its root if so, and releases it from the
+    //    same `ensureStylesheet()` promise. So a build never blocks on CSS here, and a
+    //    builder the registry never sees behaves identically.
 
     // 6. Kembalikan ke logika eksekusi cache standar
     const cachedClass = this._resolvedCache.get(name as string);
@@ -678,16 +610,13 @@ export class ComponentRegistry {
           if (resolvedModules && typeof instance.provideModules === "function") {
             instance.provideModules(resolvedModules);
           }
-          // 🧊 TOGGLE FASE: tandakan instance belum "loaded" SEBELUM create();
-          // create() menempel marker hold pada SATU elemen puncaknya saja.
-          instance.isLoaded = false;
+          // 🧊 The hold and its release live in `create()` (see the stylesheet seam):
+          // the builder knows whether its own sheet is missing, and it releases the
+          // root it holds even when the sheet never arrives.
           const builtElement = instance.create(contentPayload, finalMergedConfig);
           if (!builtElement) {
             throw new Error(`[ComponentRegistry] Builder "${String(name)}" created a null element. Check prepare()/create() or selector definitions.`);
           }
-          // ✅ STYLE MATANG → HydrationGate.release(): --is-loading 0 + hapus
-          // data-hydrating + data-loaded="true" (pointer pelepasan subtree).
-          this._launchPostLoadInstance(instance, stylePending, builtElement);
           return builtElement;
         }
       } catch (error) {

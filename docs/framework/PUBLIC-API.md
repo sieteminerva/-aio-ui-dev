@@ -71,7 +71,7 @@ minor, then remove; _internal_ = drop from `exports`.
 | Package                                   | Root barrel exports                                                               | Subpaths kept                                                                                                                                                                                  | Removed                                                                                                                                                                                 |
 | ----------------------------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `core`                                    | `ComponentRegistry`, `DOMRenderer`, `mergeBuildConfig`, builder port, event types | `./interface` (types), `./Stylesheets` (capability)                                                                                                                                            | `./node ./builder ./registry ./content ./page ./renderer ./api ./events` (alias→remove in 0.2.0), `./TemplateRegistry`, `./BuilderPort`, `./ComponentRegistry`, `./DOMRenderer` (alias) |
-| `base`                                    | `Builder`, `GLOBAL_INSTANCE_COUNTER`, `HydrationGate`, base types                 | `./Base` (alias)                                                                                                                                                                               | `./BaseAdapters/*` (internal) @aio-ui/frameworks                                                                                                                                        |
+| `base`                                    | `Builder`, `GLOBAL_INSTANCE_COUNTER`, base types                                  | `./Base` (alias)                                                                                                                                                                               | `./BaseAdapters/*` (internal) @aio-ui/frameworks; `HydrationGate` (0.2.0 — see §9)                                                                                                      |
 | `app`                                     | as today                                                                          | `./types`, `./ports` (types contracts)                                                                                                                                                         | `./AioApp` (alias)                                                                                                                                                                      |
 | `module-loader`                           | **new** `ModuleLoader`, `ModuleRegistry`, definition types                        | `./ModuleRegistry`, `./ModuleLoader` (alias)                                                                                                                                                   | —                                                                                                                                                                                       |
 | `utilities`                               | **new** all helpers re-exported                                                   | all 7 helper subpaths                                                                                                                                                                          | —                                                                                                                                                                                       |
@@ -95,15 +95,15 @@ force a preset regeneration for every site. So: **0.1.x = add barrels + keep ali
 
 ## 4. Ripple of the change (measured, not guessed)
 
-| Consumer                                          | What it reads                            | Action when target map lands                              |
-| ------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| Consumer                                         | What it reads                            | Action when target map lands                              |
+| ------------------------------------------------ | ---------------------------------------- | --------------------------------------------------------- |
 | `plan()` catalogue (`orchestrator/catalogue.ts`) | specifiers like `@aio-ui/form/Form`      | switch to root specifiers; keeps generated output shorter |
-| `registry.assets.ts` (demo + gallery)             | specifier → loader                       | regenerate entries; Vite needs static strings either way  |
-| `.draft/results/**`                               | generated `app.js` / `dev/src/main.ts`   | regenerate (tests do it)                                  |
-| `prompt.content.md`                               | never names packages                     | no change                                                 |
-| `docs/*`                                          | examples with subpaths                   | update examples in the same PR                            |
-| `scripts/bounds.mjs`                              | validates deep imports through `exports` | no change; it follows the map                             |
-| `release.mjs` `subpaths` output                   | mirrors `exports`                        | automatically reflects the new map                        |
+| `registry.assets.ts` (demo + gallery)            | specifier → loader                       | regenerate entries; Vite needs static strings either way  |
+| `.draft/results/**`                              | generated `app.js` / `dev/src/main.ts`   | regenerate (tests do it)                                  |
+| `prompt.content.md`                              | never names packages                     | no change                                                 |
+| `docs/*`                                         | examples with subpaths                   | update examples in the same PR                            |
+| `scripts/bounds.mjs`                             | validates deep imports through `exports` | no change; it follows the map                             |
+| `release.mjs` `subpaths` output                  | mirrors `exports`                        | automatically reflects the new map                        |
 
 ## 5. Enforcement
 
@@ -135,23 +135,23 @@ are unreachable by construction, not by discipline.
 
 **Still subpaths, on purpose:**
 
-| Kind | Example | Why it stays |
-| --- | --- | --- |
-| Types-only contracts | `@aio-ui/core/interface`, `/node`, `/page`, `/api`, `/events`, `/content`, `/builder`, `/registry`, `/renderer` | one module of types without dragging the runtime |
-| Capability modules | `@aio-ui/form/validation-adapter`, `@aio-ui/input/dropdown/module`, `@aio-ui/id-address/form` | loaded on demand, one per capability |
-| Adapters | `@aio-ui/message/adapters/FormAdapter`, `@aio-ui/table/adapters/FormAdapter` | integrations, not the component |
-| Shared type contracts | `@aio-ui/form/FormMessages`, `@aio-ui/form/FormModuleTypes` | the form ↔ message type cycle, deliberately public |
-| CSS | `@aio-ui/form/Form.css` | shipped as files |
+| Kind                  | Example                                                                                                         | Why it stays                                       |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Types-only contracts  | `@aio-ui/core/interface`, `/node`, `/page`, `/api`, `/events`, `/content`, `/builder`, `/registry`, `/renderer` | one module of types without dragging the runtime   |
+| Capability modules    | `@aio-ui/form/validation-adapter`, `@aio-ui/input/dropdown/module`, `@aio-ui/id-address/form`                   | loaded on demand, one per capability               |
+| Adapters              | `@aio-ui/message/adapters/FormAdapter`, `@aio-ui/table/adapters/FormAdapter`                                    | integrations, not the component                    |
+| Shared type contracts | `@aio-ui/form/FormMessages`, `@aio-ui/form/FormModuleTypes`                                                     | the form ↔ message type cycle, deliberately public |
+| CSS                   | `@aio-ui/form/Form.css`                                                                                         | shipped as files                                   |
 
 ### Emitted JS has to load without a bundler
 
 The gate also reads `dist/*.js`, because two things that a bundler forgives are fatal
 everywhere else:
 
-| Rule | Why |
-| --- | --- |
+| Rule                                                                              | Why                                                                                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A relative specifier must name the file (`"./Badge.js"`, `"./Registry/index.js"`) | `tsc` copies specifiers verbatim, so a bundler-friendly `"./X"` was published as-is; Node fails with `ERR_MODULE_NOT_FOUND` / `ERR_UNSUPPORTED_DIR_IMPORT` and a browser import map does no extension guessing at all, so every barrel that re-exports would 404 over HTTP |
-| No stylesheet may be imported from JS | a browser rejects `text/css` as a module. CSS ships as files and the host links them (`BASE_STYLES`, the plan's per-component `styles`, the generated `<link>`s) |
+| No stylesheet may be imported from JS                                             | a browser rejects `text/css` as a module. CSS ships as files and the host links them (`BASE_STYLES`, the plan's per-component `styles`, the generated `<link>`s)                                                                                                           |
 
 `scripts/build-pack.mjs` rewrites both after `tsc` runs, and `npm run check:api` fails if
 either comes back. This was not theoretical: before the rewrite, `import("@aio-ui/masonry")`
@@ -227,11 +227,32 @@ file that also carried selectors, normalisers and guards was still a bad file. T
 convention is written down in [`COMPONENT-CONVENTIONS.md`](./COMPONENT-CONVENTIONS.md)
 (§1b) and applied where the mixture was real:
 
-| Suffix | Duty | Applied so far |
-| --- | --- | --- |
-| `<Pascal>.kit.ts` | constants, key lists, selector maps, element-type unions, attribute tables | badge, menu, section, carousel, product-detail, product-grid, id-address |
-| `<Pascal>.engine.ts` | normalisation, transforms, fallbacks worth a DOM-free test | badge, menu, section, product-detail, product-grid |
-| `<Pascal>.behaviour.ts` | observers, timers, scheduling, event wiring | none yet — `animations/behaviours` is the module-level example |
+| Suffix                  | Duty                                                                       | Applied so far                                                           |
+| ----------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `<Pascal>.kit.ts`       | constants, key lists, selector maps, element-type unions, attribute tables | badge, menu, section, carousel, product-detail, product-grid, id-address |
+| `<Pascal>.engine.ts`    | normalisation, transforms, fallbacks worth a DOM-free test                 | badge, menu, section, product-detail, product-grid                       |
+| `<Pascal>.behaviour.ts` | observers, timers, scheduling, event wiring                                | none yet — `animations/behaviours` is the module-level example           |
+
+### 0.2.0 — the anti-FOUC gate collapsed into one function
+
+Batch 18 reconnected the hold after finding that `HydrationGate.applyHold()` had never had
+a caller; batch 19 collapsed the six places that implemented one job ("hide the root while
+its sheet is missing") into `holdUntilStyled(root, specifier)` in `@aio-ui/core/Stylesheets`,
+called once at the end of `Builder.create()`.
+
+Removed from the public surface:
+
+| Removed                                                      | Replacement                                                       |
+| ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `HydrationGate` (`@aio-ui/base` root)                        | `holdUntilStyled` / `releaseMarkers` (`@aio-ui/core`)             |
+| `Builder.hydration`, `Builder.isLoaded`                      | nothing — the hold is a fact about the document, not the instance |
+| `iBuilderAdapter.releaseHydration`                           | nothing — the builder releases the root it holds                  |
+| `ComponentRegistry` `_stylesReady` / `_stylesLoading` ledger | the seam's own `ready` / `loading` maps                           |
+
+**Version:** breaking removal of an exported symbol, so the family moves **0.1.1 → 0.2.0**
+(0.x minor is breaking by our own policy, §3). `0.2.0` is the first release allowed to
+break; the alias removals promised in §3 ship in the same release, not necessarily in the
+same commit.
 
 The builder file now holds the builder and its public types only, and no `.kit`/`.engine`
 name appears in a barrel or an `exports` map — the gate would reject it if one did. Public

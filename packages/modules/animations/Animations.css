@@ -171,17 +171,16 @@
 
 /* =========================================================================
    4. MODULE: HYDRATION HOLD — data-hydrating + --is-loading (O(1), ROOT-ONLY)
-   Hold & release terjadi pada SATU elemen puncak per komponen lazy:
-   • HOLD    (Builder.create) : hanya saat stylesheet komponen itu SENDIRI belum
-                                ada di dokumen (`isStylesheetPending`); momennya
-                                sebelum root dikembalikan ⇒ sebelum paint pertama.
-                                Inline --is-loading: 1 + attr data-hydrating.
-   • RELEASE (promise yang SAMA + registry): inline --is-loading: 0 + hapus
-                                data-hydrating + data-loaded="true".
-   Builder memegang root hanya selama sheet-nya benar-benar belum datang — bukan
-   berdasarkan flag "instance ini pernah build" — karena dua komponen dalam satu
-   pass memiliki dua stylesheet. Release selalu ikut promise `ensureStylesheet()`,
-   sehingga builder yang dibuat di luar registry pun tidak mungkin tertahan.
+   ONE seam owns this whole protocol: `holdUntilStyled(root, specifier)` in
+   `@aio-ui/core/Stylesheets`, called at the end of `Builder.create()`.
+   • HOLD    — only while THAT component's own sheet is missing (asked before
+               the root is returned ⇒ before the first paint): inline
+               --is-loading: 1 + attr data-hydrating.
+   • RELEASE — from the same `ensureStylesheet()` promise: inline
+               --is-loading: 0 + remove data-hydrating + data-loaded="true".
+   Decided per sheet, never per instance: two components in one pass own two
+   sheets. Release always rides the loader promise, so a builder no registry
+   ever sees cannot stay held (a failed load releases too).
    ========================================================================= */
 
 @keyframes isHydratingShimmer {

@@ -94,8 +94,7 @@
       "barrel": "./src/index.ts",
       "values": [
         "Builder",
-        "GLOBAL_INSTANCE_COUNTER",
-        "HydrationGate"
+        "GLOBAL_INSTANCE_COUNTER"
       ],
       "types": []
     },
@@ -136,12 +135,14 @@
         "ensureStylesheet",
         "getBuilderAdapter",
         "getTemplates",
+        "holdUntilStyled",
         "injectLazyCss",
         "isStyleInjected",
         "isStylesheetPending",
         "mergeBuildConfig",
         "normalizeStylesheetPath",
         "qualifyId",
+        "releaseMarkers",
         "replaceLazyCss",
         "setBuilderAdapter",
         "setTemplates",
