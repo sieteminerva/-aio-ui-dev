@@ -101,6 +101,27 @@ export function isStyleInjected(specifier: string): boolean {
 }
 
 /**
+ * Whether a component's own stylesheet is still on its way.
+ *
+ * @param specifier - The component's declared `stylesheet` (`"./Table.css"`).
+ * @returns `true` only when the host declares a loader for this sheet and the document
+ *   does not have it yet — the single state in which a builder must hold its root.
+ *
+ * @example
+ * if (isStylesheetPending("./Table.css")) hydrate.applyHold(root);
+ *
+ * @summary A component without a loader is never "pending": waiting for a sheet nobody
+ *   can serve would strand the anti-FOUC hold forever. A non-DOM host (SSR, tests) has no
+ *   document to be styled, so it never holds either. This is the question `create()` has
+ *   to ask *before* it returns a root — hence synchronous, unlike {@link ensureStylesheet}.
+ */
+export function isStylesheetPending(specifier: string): boolean {
+  const resolved = resolveLoader(specifier);
+  if (!resolved) return false;
+  return !isStyleInjected(resolved.key);
+}
+
+/**
  * Writes a stylesheet into the document as a real `<style>` element.
  *
  * @param rawCss - Stylesheet text as returned by the loader.

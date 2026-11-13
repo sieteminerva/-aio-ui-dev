@@ -1,6 +1,6 @@
 import type { iBuilderRegistry, iBuilderConfig, iElementProperty, iNodeRecordItem, iNodeRecordRelations } from "@aio-ui/core/interface";
 // import { TemplateRegistry } from "@aio-ui/template-registry";
-import { ensureStylesheet } from "@aio-ui/core";
+import { ensureStylesheet, isStylesheetPending } from "@aio-ui/core";
 // import { ElementCreatedEventBus } from "../Services/EventBus";
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy";
 import { HydrationGate } from "./BaseAdapters/HydrationGate";
@@ -67,8 +67,26 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
    *  had — the registry release path (`instance.hydration`) stays identical. */
 
 
-  /** Compatibility surface: ComponentRegistry does `instance.isLoaded = false`. */
-  public isLoaded: boolean = false;
+  /** 🧊 ANTI-FOUC GATE — one gate per instance; it holds this builder's own
+   *  root only while its stylesheet is missing (`create()` asks the seam) and
+   *  writes the release markers once that sheet lands. */
+  public readonly hydration = new HydrationGate();
+
+  /**
+   * Compatibility surface: `ComponentRegistry` announces `isLoaded = false`
+   * before `create()` and `true` once the lazy stylesheet settles.
+   *
+   * The hold itself is NOT keyed on this flag — a component's sheet is a fact
+   * about the document, not about how many times this instance built, so
+   * `create()` asks `isStylesheetPending()` instead.
+   */
+  public get isLoaded(): boolean {
+    return this.hydration.isLoaded;
+  }
+
+  public set isLoaded(value: boolean) {
+    this.hydration.isLoaded = value;
+  }
 
 
   /** 🧩 THE BUILDER CURRENTLY MATERIALIZING — `create()` pins itself here for
@@ -527,7 +545,11 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
     // created outside the registry (a table inside a form field, a dropdown inside an
     // input) is styled by the same lazy loader the registry uses — and a static import
     // would otherwise ride in the JS chunk and be injected a second time.
-    void ensureStylesheet(this.#stylesheetSpecifier()).catch(() => null);
+    //
+    // 🧊 The same promise is what releases the anti-FOUC hold below: `create()` may be
+    // the only caller (nothing else knows this instance exists), so a builder that keeps
+    // its own root must also heal itself — the registry path only shortens the wait.
+    const styleSheet = ensureStylesheet(this.#stylesheetSpecifier());
 
     const effectiveConfig = config || (content && typeof content === "object" ? (content as any).config : undefined);
     if (effectiveConfig) this.config = this.resolveConfig(this.config, effectiveConfig);
@@ -558,6 +580,21 @@ export abstract class Builder<TType extends string = string, TConfig extends iBu
 
       this.hierarchy.update();
       // console.log("hierarchy", this.hierarchy.get(), identity);
+
+      // 🧊 ANTI-FOUC: hold the root only while *this* component's sheet is genuinely
+      // missing — the seam answers, not a per-instance flag, because two components
+      // built in one pass own two sheets. The hold is applied before the root is
+      // returned, so it lands before the first paint; the release rides the promise
+      // started above (`ensureStylesheet` never rejects → the hold always lifts).
+      if (isStylesheetPending(this.#stylesheetSpecifier())) {
+        this.hydration.applyHold(DOMTree);
+        void styleSheet.then(() => this.hydration.release());
+      } else {
+        // Styled already, or the component ships no sheet: make sure no recycled
+        // skeleton clone keeps stale markers, and leave the permanent `data-loaded`
+        // pointer the CSS uses to force `--is-loading: 0` down the subtree.
+        this.hydration.release(DOMTree);
+      }
 
       return DOMTree;
     } finally {

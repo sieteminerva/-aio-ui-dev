@@ -19,6 +19,7 @@ export {
   ensureStylesheet,
   injectLazyCss,
   isStyleInjected,
+  isStylesheetPending,
   normalizeStylesheetPath,
   replaceLazyCss,
   styleTagId,

@@ -299,6 +299,13 @@ export class ComponentRegistry {
   /**
    * 🚀 POST-LAUNCH FLIPPER (O(1) RELEASE VIA POINTER data-loaded)
    * Dipanggil SETELAH promise style lazy terselesaikan (sukses/gagal).
+   *
+   * Ini jalur CEPAT, bukan satu-satunya penulis pelepasan: `Builder.create()`
+   * memegang root-nya sendiri dan melepas dari promise `ensureStylesheet()`
+   * yang sama, sehingga builder yang dibuat di luar registry (tabel di dalam
+   * field form) juga pulih sendiri. Keduanya idempoten, jadi urutan tidak
+   * pernah penting.
+   *
    * Pelepasan didelegasikan ke HydrationGate (instance.hydration.release(actualElement)):
    * satu penulis marker di Base — `--is-loading: 0` + hapus `data-hydrating`
    * + pasang `data-loaded="true"` pada elemen puncak yang memang dipegang

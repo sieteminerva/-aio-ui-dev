@@ -172,14 +172,16 @@
 /* =========================================================================
    4. MODULE: HYDRATION HOLD — data-hydrating + --is-loading (O(1), ROOT-ONLY)
    Hold & release terjadi pada SATU elemen puncak per komponen lazy:
-   • HOLD    (Builder.create) : inline --is-loading: 1 + attr data-hydrating
-   • RELEASE (releaseHydration): inline --is-loading: 0 + hapus data-hydrating
-                                + pasang data-loaded="true"
-   Anak-anak TIDAK pernah disentuh Javascript: visual mereka digerakkan
-   selector keturunan [data-hydrating] (presence-attr — jauh lebih murah
-   dari [style*=...] substring yang di-match ulang per elemen tiap recalc),
-   dan state --is-loading mengalir lewat warisan custom property. Tanpa
-   forEach/querySelectorAll/observer ⇒ aman page-switching brutal.
+   • HOLD    (Builder.create) : hanya saat stylesheet komponen itu SENDIRI belum
+                                ada di dokumen (`isStylesheetPending`); momennya
+                                sebelum root dikembalikan ⇒ sebelum paint pertama.
+                                Inline --is-loading: 1 + attr data-hydrating.
+   • RELEASE (promise yang SAMA + registry): inline --is-loading: 0 + hapus
+                                data-hydrating + data-loaded="true".
+   Builder memegang root hanya selama sheet-nya benar-benar belum datang — bukan
+   berdasarkan flag "instance ini pernah build" — karena dua komponen dalam satu
+   pass memiliki dua stylesheet. Release selalu ikut promise `ensureStylesheet()`,
+   sehingga builder yang dibuat di luar registry pun tidak mungkin tertahan.
    ========================================================================= */
 
 @keyframes isHydratingShimmer {

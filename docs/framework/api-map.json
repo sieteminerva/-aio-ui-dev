@@ -138,6 +138,7 @@
         "getTemplates",
         "injectLazyCss",
         "isStyleInjected",
+        "isStylesheetPending",
         "mergeBuildConfig",
         "normalizeStylesheetPath",
         "qualifyId",
