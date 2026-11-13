@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { MasonryBuilder } from "../Masonry";
 
@@ -48,5 +48,20 @@ describe("masonry", () => {
 
     expect(labels).toContain("alpha");
     expect(labels).toContain("beta");
+  });
+
+  it("keeps its keyboard handling on the modal, never on document", () => {
+    // Regression: a `document` listener captured the builder (`show` reads `this`), so every
+    // mount pinned the whole gallery — 21 live instances / ~260 KB per visit on the demo.
+    const documentSpy = vi.spyOn(document, "addEventListener");
+
+    try {
+      build(items);
+
+      const globalKeys = documentSpy.mock.calls.filter(([type]) => type === "keydown");
+      expect(globalKeys).toHaveLength(0);
+    } finally {
+      documentSpy.mockRestore();
+    }
   });
 });

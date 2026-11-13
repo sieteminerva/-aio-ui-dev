@@ -764,9 +764,16 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
       if (e.target === modalEl) hide();
     });
 
-    document.addEventListener('keydown', handleKeyDown);
+    // The keyboard listener lives on the modal, not on `document`. A document-level
+    // listener is owned by nobody: its closure captures the builder (`show` reads
+    // `this.currentVisibleImages`), so every mount pinned this whole gallery forever —
+    // measured 21 live instances / ~260 KB per visit, retainer
+    // `handleKeyDown → Context → this`. On the modal it dies with the node.
+    // `tabindex="-1"` makes the overlay focusable, which `show()` relies on below.
+    modalEl?.setAttribute('tabindex', '-1');
+    modalEl?.addEventListener('keydown', handleKeyDown);
     const destroy = () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      modalEl?.removeEventListener('keydown', handleKeyDown);
       modalEl?.remove();
     };
     return { show, updateNavigation, destroy };
