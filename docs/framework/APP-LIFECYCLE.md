@@ -18,7 +18,7 @@ for how a builder is written.
 | Interval / timeout               | the builder that created it     | its `destroy()` — `Base.destroy()` does **not**    | no                            |
 | `IntersectionObserver` etc.      | the builder that created it     | its `destroy()` / `unmount()`                      | no                            |
 | Listeners on own nodes           | the builder                     | the nodes going away (bounded)                     | implicit                      |
-| Listeners on `window`/`document` | the code that added them        | explicit `removeEventListener`, never a node       | no                            |
+| Listeners on `window`/`document` | the code that added them        | explicit `removeEventListener`, never a node       | no — bind only while needed   |
 | `AnimationsService.records`      | animation module (app-lifetime) | `unmount(node)` per node                           | only if someone calls it      |
 | `<style>` injected lazily        | `ComponentRegistry`             | never — one sheet per component, by design         | n/a                           |
 
@@ -26,9 +26,10 @@ for how a builder is written.
 `destroy()` starts with whatever `unmount()` already does. `Base.destroy()` unhooks DOM and
 clears `storage.nodes`; nothing else is assumed.
 
-**Rule 2.** Never add a listener to `window`, `document` or `document.body` from a builder.
-Those targets survive the page. Listen on the element you rendered, or expose an
-`onDestroyable` and let the caller wire it.
+**Rule 2.** Never add a listener to `window`, `document` or `document.body` from a builder,
+and never keep one while it is not needed. Those targets survive the page. Listen on the
+element you rendered, bind a global only between "open" and "close", or expose an
+`onDestroyable` and let the caller wire it. See L5.
 
 **Rule 3.** A singleton module (registered once, lives for the app) must key its state by
 node and offer a per-node release (`AnimationsService.mount(node)` / `unmount(node)`), so the
@@ -39,7 +40,7 @@ runs on route change only — see §2.
 
 ---
 
-## 2. What the app guarantees today (measured, head `9c44e9a`)
+## 2. What the app guarantees today (measured 2026-11-13)
 
 | Fact                                                                                 | Evidence                                                                            |
 | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
@@ -48,7 +49,6 @@ runs on route change only — see §2.
 | `KitchenPage` (and every demo page) declares no `onDestroy`                          | `examples/demo/src/pages/kitchen.ts`                                                |
 | DOM is replaced, never accumulated                                                   | 20 navigations: `document.querySelectorAll("*")` 144–213, no trend                  |
 | Lazy CSS is injected once per component                                              | `<style>` 22 → 24 → 29 → 30 across first visits, then flat; `cssRules` 341 constant |
-| Per-node handlers die with their nodes                                               | 707 `addEventListener` vs 47 `removeEventListener`, `nodes` flat                    |
 
 `#kitchen/a → #kitchen/b` is one route with two fragments: the old tree is dropped by
 `replaceChildren` and nothing in it is told to stop. That is the amplifier behind every case
@@ -60,15 +60,9 @@ in §3 — the leak mechanism is in `packages/**`, the frequency is the demo's.
 
 ### L1 — Interval on a detached tree · **fixed**
 
-Symptom: an autoplay carousel keeps calling `next()` after the page that hosted it is gone.
-
-```ts
-const builder = new CarouselBuilder({ autoPlay: 4000 });
-builder.create({ content: slides }); // mounts, starts the interval
-// ... route changes: the tree is detached, the interval is not
-```
-
-Fix (`packages/components/carousel/Carousel.ts`, `destroy()` override):
+Symptom: an autoplay carousel keeps calling `next()` after the page that hosted it is gone —
+the tree is detached by the next render, the interval is not. Fix
+(`packages/components/carousel/Carousel.ts`, `destroy()` override):
 
 ```ts
 public destroy(typeKey?: CarouselElementType): void {
@@ -80,10 +74,9 @@ public destroy(typeKey?: CarouselElementType): void {
 ```
 
 Numbers before the fix: `setInterval 4000ms` 7 → 17 over 10 visits (**+1 per mount, 0
-`clearInterval` in the whole session**); 8/8 sampled `.carousel` roots still dereferenced
-after two forced GCs; the detached track advanced `translateX(0%)` → `translateX(-25%)` in
-5 s; V8 heap +1.3 MB per 8 visits (~160 KB each) against +0.11 MB / 10 visits for a
-`badge ↔ getting-started` control.
+`clearInterval` in the whole session**); 8/8 `.carousel` roots still `deref()` after two
+forced GCs; the detached track advanced `translateX(0%)` → `translateX(-25%)` in 5 s; heap
++1.3 MB per 8 visits against +0.11 MB / 10 for a `badge ↔ getting-started` control.
 
 ### L2 — Instance pinned by a global listener · **fixed**
 
@@ -91,27 +84,25 @@ Symptom: memory grew with masonry visits although the component owns no interval
 +1.99 MB per 8 visits (~250 KB each, reproduced ×3), `<style>` and node count flat, all
 observers untouched.
 
-The retainer path from the heap snapshot (`WeakRef` + forced GC never released it, so the tree
-was still strongly reachable):
+The retainer path from the heap snapshot (`WeakRef` + forced GC never released it):
 
 ```
 Window → HTMLDocument → … → EventListener → V8EventListener
        → handleKeyDown [closure] → Context → this = MasonryBuilder
 ```
 
-21 `MasonryBuilder` instances were alive after ~12 mounts, each holding its own subtree: the
-modal added `document.addEventListener("keydown", handleKeyDown)`, and `handleKeyDown` closes
-over `show()`, which reads `this.currentVisibleImages`. `destroy()` was never called, so the
-listener — and through it the builder and its detached page — outlived every navigation.
-
-Fix (`packages/components/masonry/Masonry.ts`, `_initModal`): the listener belongs to the
-modal overlay, which is focusable and focused when it opens, so it dies with the node.
+21 `MasonryBuilder` instances were alive after ~12 mounts: the modal added
+`document.addEventListener("keydown", handleKeyDown)`, and that closure reads
+`this.currentVisibleImages`. `destroy()` was never called, so the listener — and through it
+the builder and its detached page — outlived every navigation. Fix
+(`packages/components/masonry/Masonry.ts`, `_initModal`): the listener belongs to the modal
+overlay, which is focusable and focused when it opens, so it dies with the node.
 
 ```ts
-modalEl?.setAttribute('tabindex', '-1');
-modalEl?.addEventListener('keydown', handleKeyDown);
+modalEl?.setAttribute("tabindex", "-1");
+modalEl?.addEventListener("keydown", handleKeyDown);
 const destroy = () => {
-  modalEl?.removeEventListener('keydown', handleKeyDown);
+  modalEl?.removeEventListener("keydown", handleKeyDown);
   modalEl?.remove();
 };
 ```
@@ -124,23 +115,64 @@ After: 10 visits move the heap by **−0.19 MB** (was +2.65) and exactly **1** i
 
 `examples/demo/src/main.ts` adds `beforeunload` and a 30 s demo clock once — bounded, by
 design. A builder doing the same leaks one listener per mount, and that listener is the anchor
-that makes the whole tree immortal. `Dropdown` gets it right (every listener carries
-`{ signal: this.abortController.signal }`, `destroy()` calls `abort()`) — the pattern still
-needs someone to call `destroy()`, which §2 says nobody does.
+that makes the whole tree immortal. `{ signal }` makes removal *possible*, not *happen* (§2).
 
 ### L4 — Singleton accumulation · **rule, no current violation**
 
-`AnimationsService` keeps `records: Map<HTMLElement, AnimationRecord>` and `scopes`.
-`mount(node)` adds, `unmount(node)` removes. Nothing in the demo calls `unmount`, so a page
-that animates nodes and is swapped away leaves entries behind. The masonry payload carries
-no `animation` attribute today (measured: 0 nodes), so this was not the L2 anchor.
+`AnimationsService` keeps `records: Map<HTMLElement, AnimationRecord>` and `scopes`;
+`mount(node)` adds, `unmount(node)` removes. Nothing in the demo calls `unmount`, so an
+animated page swapped away leaves entries behind. The masonry payload carries no `animation`
+attribute (measured: 0 nodes), so this was not the L2 anchor.
 
 ### Not leaks
 
 - `<style>` growth on first visit — one sheet per component, cached. Handlers on replaced
   nodes die with the node (`a.tier-*`: 178 adds / 0 removes, all discarded).
-- `window.__app`, `__emitter`, `__demoModal`, `message`'s `config.element` — deliberate demo
-  handles pinning exactly one tree.
+- `window.__app`, `__emitter`, `__demoModal`, `message`'s `config.element` — demo handles
+  pinning exactly one tree.
+
+### L5 — Global listener behind a teardown nobody calls · **fixed**
+
+Symptom: `#form` grew **7.51 → 9.03 MB over 5 visits** (~0.30 MB each) with DOM nodes back to
+152 and `<style>` flat at 27. The listener census showed **60 live `document` listeners** after
+5 visits — 30 `click` + 30 `mousedown`, **6 dropdowns × 2 × 5**, every one from
+`DropdownBuilder.initSelectMode`. Same session: `fetchAborted` 0, pending timers 0, in-flight
+fetches ≤ 2 — the `id-address` Apps Script timeouts that print on every visit are **not** the
+cause; they settle.
+
+```ts
+// packages/components/input/Dropdown/Dropdown.ts — before, inside initSelectMode
+document.addEventListener("click", onBox, { signal: this.abortController.signal });
+document.addEventListener("mousedown", onOutside, { signal: this.abortController.signal });
+```
+
+Nothing destroys a page-built form (§2), so both globals, and through their closures the
+builder and the whole form subtree, survived. Retainer BFS from a `DropdownBuilder`:
+
+```
+Window → HTMLDocument → … → EventListener → V8EventListener
+       → closure → Context → this = DropdownBuilder
+```
+
+Fix — a global listener may exist **only while it is needed**; everything else belongs to a
+node that dies with the page (`bindBoxClick()` runs at init and on every `open()`):
+
+```ts
+const open = () => {
+  bindBoxClick();
+  bindOutside(); /* showPopover, .visible … */
+};
+const close = () => {
+  unbindOutside(); /* hidePopover after 160 ms … */
+};
+const toggle = () => (menu.matches(":popover-open") ? close() : open());
+```
+
+After: **0** `document` listeners after 5 form visits; a `WeakRef` to `.form-host form` is
+collected after one forced GC; two consecutive 10-visit blocks add **+0.17 MB** then
+**+0.10 MB** (was +0.24 MB/visit, steady). Behaviour kept: box click opens (34 items),
+outside click closes, padding click opens, picking `ACEH` fires the cascade. Pinned by
+`packages/components/input/__tests__/Dropdown.test.ts` (3 tests).
 
 ---
 
@@ -151,7 +183,10 @@ Before a component lands:
 - [ ] Every `setInterval` / `requestAnimationFrame` loop has a `clear...` reachable from `destroy()`.
 - [ ] Every observer is disconnected in `destroy()`; a retried `rAF` loop has a cap.
 - [ ] `destroy()` releases instance state **before** `super.destroy()`.
-- [ ] No listener on `window` / `document` / `document.body` from a builder.
+- [ ] No listener on `window` / `document` / `document.body` from a builder — a global that
+      is only needed between open and close is bound there, not at init.
+- [ ] A test proves the closed state owns no global (`document.addEventListener` spy is empty
+      after `create()`) — `packages/components/input/__tests__/Dropdown.test.ts`.
 - [ ] Singleton state is keyed per node and has a symmetric release method.
 - [ ] A test proves teardown (`clearInterval` called with the created id, or a behavioural
       "one more interval window changes nothing") — `packages/components/carousel/__tests__/Carousel.test.ts`.
@@ -167,53 +202,40 @@ on the demo dev server, then navigate `#kitchen/...` repeatedly:
 ```js
 const T = EventTarget.prototype,
   add = T.addEventListener,
-  rem = T.removeEventListener;
-const reg = new Map(),
-  key = (t, ty) =>
-    t === window
-      ? "window"
-      : t === document
-        ? "document"
-        : t?.tagName?.toLowerCase() + (t.id ? "#" + t.id : "") + " :: " + ty;
-T.addEventListener = function (ty) {
-  const k = key(this, ty);
-  reg.set(k, (reg.get(k) || 0) + 1);
+  rem = T.removeEventListener,
+  reg = [];
+T.addEventListener = function (ty, fn, opts) {
+  const rec = { t: this, ty, fn, live: true, at: new Error().stack.split("\n")[2] };
+  reg.push(rec);
+  opts?.signal?.addEventListener?.("abort", () => (rec.live = false), { once: true });
   return add.apply(this, arguments);
 };
-T.removeEventListener = function (ty) {
-  const k = key(this, ty);
-  reg.set(k, (reg.get(k) || 0) - 1);
+T.removeEventListener = function (ty, fn) {
+  reg.findLast((r) => r.live && r.t === this && r.ty === ty && r.fn === fn)?.live = false;
   return rem.apply(this, arguments);
 };
-// after N navigations, in the console:
-({
-  listeners: [...reg].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 15),
-  nodes: document.querySelectorAll("*").length,
-  styles: document.querySelectorAll("style").length,
-});
+// after N navigations: alive document/window listeners, with the registering stack frame
+reg.filter((r) => r.live && (r.t === document || r.t === window)).map((r) => r.ty + " ← " + r.at);
 ```
 
-Wrap `setInterval`/`clearInterval` the same way when the suspect owns a timer. A counter that
-grows per navigation names the owner. For retention, take a `WeakRef` to the component root
-before navigating away, force GC (`HeapProfiler.collectGarbage` via CDP) and count how many
-still `deref()` — 8/8 alive means the tree is not collectable.
+Wrap `setInterval`/`clearInterval` the same way. For retention, take a `WeakRef` to the
+component root before navigating away, force GC (`HeapProfiler.collectGarbage`) and count how
+many still `deref()` — 8/8 alive means the tree is not collectable. Control pair
+(`#kitchen/badge ↔ #kitchen/getting-started`): ~+0.1 MB / 10 visits is noise, ~+0.2 MB / visit
+is a leak.
 
-Compare against a control pair (`#kitchen/badge ↔ #kitchen/getting-started`); anything near
-+0.1 MB / 10 visits is noise, anything near +0.2 MB / visit is a leak.
+Counts do not name the anchor, so when they say "retained": heap snapshot over CDP
+(`HeapProfiler.takeHeapSnapshot`), reverse edge map from `nodes`/`edges`
+(`meta.node_fields` / `meta.edge_fields`), then BFS **retainers** to a `synthetic`/native root.
+Walking first-retainers blindly loops inside DOM↔closure cycles (element → `getMetadata`
+closure → `capturedRecords` → element), so the BFS needs a visited set; the first non-cyclic
+path ends at the anchor.
 
-Finding the owner when the numbers say "retained": counts do not name the anchor. Take a heap
-snapshot over CDP (`HeapProfiler.takeHeapSnapshot`), build the reverse edge map from
-`nodes`/`edges` (`meta.node_fields` / `meta.edge_fields`), then BFS **retainers** from the
-retained node until a `synthetic`/native root appears. Walking first-retainers blindly loops
-inside DOM↔closure cycles (element → `getMetadata` closure → `capturedRecords` → element), so
-the BFS needs a visited set; the first non-cyclic path ends at the anchor in one step.
+Two traps, both hit while tracing L5:
 
-Compare against a control pair (`#kitchen/badge ↔ #kitchen/getting-started`); anything near
-+0.1 MB / 10 visits is noise, anything near +0.2 MB / visit is a leak.
-
-Finding the owner when the numbers say "retained": counts do not name the anchor. Take a heap
-snapshot over CDP (`HeapProfiler.takeHeapSnapshot`), build the reverse edge map from
-`nodes`/`edges` (`meta.node_fields` / `meta.edge_fields`), then BFS **retainers** from the
-retained node until a `synthetic`/native root appears. Walking first-retainers blindly loops
-inside DOM↔closure cycles (element → `getMetadata` closure → `capturedRecords` → element), so
-the BFS needs a visited set; the first non-cyclic path ends at the anchor in one step.
+- `takeHeapSnapshot` does **not** collect garbage. Call `HeapProfiler.collectGarbage` first,
+  or the snapshot counts unreachable objects as "live instances" (a census read 24
+  `DropdownBuilder` instances where the honest number was 0).
+- A listener census only names owners if it records `Error().stack` at registration, and
+  `{ signal }` removals never call `removeEventListener` — hook `signal.addEventListener(
+"abort")` to mark the record removed.
