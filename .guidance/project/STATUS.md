@@ -15,6 +15,13 @@ Last updated: 2026-11-13
 
 ## Landed recently
 
+- **Batch 15 (2026-11-13):** the suspected demo leak is **real and partly fixed**. Census over 21
+  +66 route navigations: DOM (`144–213` nodes) and CSS (`22` `<style>`, `341` rules) are bounded;
+  the carousel was the leak — `setInterval 4000ms` **+1 per mount, `clearInterval` never called**,
+  the detached track advanced `translateX(0%)` → `translateX(-25%)` in 5 s, 8/8 roots alive after
+  two forced GCs. Fixed by a `destroy()` override (+1 test, 588 pass). Masonry is still open:
+  **~250 KB per visit, 8/8 roots alive, no timer/observer/style growth — retainer unidentified**.
+  Records and probe live in `docs/framework/APP-LIFECYCLE.md`.
 - **Batch 14 (2026-11-13):** `#kitchen` covers 18 of the 22 components (the other four own a route
   or are a plugin); `scripts/AGENTS.md` now states the real 39-package count and the
   never-move-a-served-tag rule; the table README documents `{ text, options }` — the old

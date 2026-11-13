@@ -9,8 +9,13 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 - [ ] Trace the suspected memory leak in `examples/demo` (root cause may be in `packages/**`): census
       listeners / timers / `<style>` per route cycle, then one table of symptom → evidence → owner.
-- [ ] Write the app-lifecycle convention (`docs/framework/APP-LIFECYCLE.md`): teardown contract, the
-      leak cases with a minimal repro each, reviewer checklist, probe scripts. Follows the trace above.
+      _(Done batch 15: carousel fixed. Remaining: masonry ~250 KB/visit with 8/8 roots retained and
+      no timer/observer — retainer unidentified; test the `Masonry.ts:590` rAF retry next.)_
+- [ ] Give `#kitchen/<name>` a teardown path: `AioApp.#release()` runs only when the route name
+      changes, so a fragment switch never calls `onDestroy` and no page can destroy its builders.
+      Needs an instance registry (or a controller-owned list) plus `KitchenPage.onDestroy`.
+- [ ] Attribute the form route's heap growth (~0.24–0.36 MB/visit, `<style>` flat after the first
+      load) — partly the `id-address` plugin's timing-out Apps Script fetches; separate the two.
 - [ ] Review `AioApp` entry/render output, then define and implement `isRoot` builder semantics
       (default host wraps; `isRoot: true` replaces the host with the builder root). See `plan-generator.md` §3.11.
 - [ ] Fix and validate the Masonry column distribution.
