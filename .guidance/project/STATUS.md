@@ -15,6 +15,10 @@ Last updated: 2026-11-13
 
 ## Landed recently
 
+- **Batch 14 (2026-11-13):** `#kitchen` covers 18 of the 22 components (the other four own a route
+  or are a plugin); `scripts/AGENTS.md` now states the real 39-package count and the
+  never-move-a-served-tag rule; the table README documents `{ text, options }` — the old
+  `{ value, className }` example printed `[object Object]`.
 - **Batch 13 (2026-11-13):** tag `v0.1.1` at `5a7fc27` is live (39 packages, 42 release assets,
   7/7 probes `200`, CDN smoke green); the `cdn` branch now carries a generated README; six
   other-writer files committed; claim board added to `.guidance/project/AGENTS.md` (§11).
