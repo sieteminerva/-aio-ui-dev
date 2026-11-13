@@ -231,26 +231,26 @@ export const DEMO: iDemoEntry[] = [
     },
     note: "row 1 = content.columns[] (dynamic), row 2 = copyright",
   },
-  // {
-  //   name: "menu",
-  //   path: "@aio-ui/menu",
-  //   stylesheet: "@aio-ui/menu/Menu.css",
-  //   category: "navigation",
-  //   kind: "element",
-  //   // Flat list: first entry is the brand, an entry with `className: "button"` is the
-  //   // action, the rest are navigation links. The hamburger is rendered by the builder.
-  //   payload: {
-  //     content: {
-  //       navigations: [
-  //         { href: "#kitchen", label: "@aio demo" },
-  //         { href: "#product", label: "Product", title: "Product" },
-  //         { href: "#article", label: "Article", title: "Article" },
-  //         { href: "#form", label: "Pesan", className: "button" },
-  //       ],
-  //       actions: [],
-  //     },
-  //   },
-  // },
+  {
+    name: "menu",
+    path: "@aio-ui/menu",
+    stylesheet: "@aio-ui/menu/Menu.css",
+    category: "navigation",
+    tier: "intermediate",
+    kind: "element",
+    // Flat list: the first entry is the brand, an entry with `className: "button"` becomes an
+    // action, the rest are navigation links. The hamburger is rendered by the builder.
+    payload: {
+      navigations: [
+        { href: "#kitchen", label: "@aio demo" },
+        { href: "#kitchen/menu", label: "Kitchen", title: "Kitchen" },
+        { href: "#product", label: "Product", title: "Product" },
+        { href: "#form", label: "Pesan", className: "button" },
+      ],
+    },
+    config: { type: "top" },
+    note: "default onNavigate swallows every click; the navigations id is forced to primary-navigations, so this preview duplicates the shell's id",
+  },
   {
     name: "fab-menu",
     path: "@aio-ui/fabmenu",
@@ -327,6 +327,157 @@ export const DEMO: iDemoEntry[] = [
       },
     },
     note: "config: { id, title, destroyOnClose: false = reuse, onReady(controls) }",
+  },
+  {
+    name: "markdown",
+    path: "@aio-ui/markdown",
+    stylesheet: "@aio-ui/markdown/Markdown.css",
+    category: "content",
+    tier: "basic",
+    kind: "element",
+    // The whole point of this builder: a string in, a document out, no `innerHTML` anywhere.
+    payload: {
+      source: [
+        "# Catatan rilis",
+        "",
+        "Satu paragraf dengan **tebal**, *miring*, `kode` dan [tautan](#kitchen/markdown).",
+        "",
+        "- daftar tanpa nomor",
+        "- baris kedua",
+        "",
+        "```ts",
+        'const doc = build("markdown", { source });',
+        "```",
+        "",
+        "> Kutipan tetap terbaca sebagai kutipan.",
+      ].join("\n"),
+    },
+    variants: [
+      {
+        label: "catatan rilis",
+        payload: {
+          source: [
+            "# Catatan rilis",
+            "",
+            "Satu paragraf dengan **tebal**, *miring*, `kode` dan [tautan](#kitchen/markdown).",
+            "",
+            "- daftar tanpa nomor",
+            "- baris kedua",
+            "",
+            "```ts",
+            'const doc = build("markdown", { source });',
+            "```",
+            "",
+            "> Kutipan tetap terbaca sebagai kutipan.",
+          ].join("\n"),
+        },
+      },
+      {
+        label: "GFM table",
+        payload: {
+          source: ["| Kolom | Nilai |", "| --- | --- |", "| payload | string |", "| hasil | `article.markdown` |"].join("\n"),
+        },
+      },
+    ],
+    note: "a bare string is accepted as the source; anything else renders nothing",
+  },
+  {
+    name: "message",
+    path: "@aio-ui/message",
+    stylesheet: "@aio-ui/message/Message.css",
+    category: "chrome",
+    tier: "basic",
+    kind: "element",
+    payload: { header: "Berhasil", message: "Pesanan dikirim.", type: "success" },
+    // `element` is a DOM id: the toast prepends into that node, so the frame can hold it.
+    // `persist: true` also renders the close button and skips the auto-close timer.
+    config: { element: "panel-display", persist: true, duration: 0 },
+    variants: [
+      { label: "success", payload: { header: "Berhasil", message: "Pesanan dikirim.", type: "success" } },
+      { label: "error", payload: { header: "Gagal", message: "Koneksi terputus.", type: "error" } },
+      { label: "warning", payload: { header: "Perhatian", message: "Kuota hampir habis.", type: "warning" } },
+    ],
+    note: "config: { element: <dom id>, persist: true } — without `element` the toast mounts on document.body",
+  },
+  {
+    name: "rating",
+    path: "@aio-ui/rating",
+    stylesheet: "@aio-ui/rating/Rating.css",
+    category: "content",
+    tier: "basic",
+    kind: "element",
+    payload: 4.5,
+    config: { type: "star", max: 5 },
+    variants: [
+      { label: "4.5 dari 5", payload: 4.5 },
+      { label: "3 dari 5", payload: 3 },
+      { label: "tanpa nilai", payload: {} },
+    ],
+    note: "payload is a bare number or { value }; `type` picks the visual (star | round-bar | line-bar | count-up)",
+  },
+  {
+    name: "table",
+    path: "@aio-ui/table",
+    stylesheet: "@aio-ui/table/Table.css",
+    category: "content",
+    tier: "advanced",
+    kind: "element",
+    // `header` is the column list, `body` a row array per record — a cell may be a plain
+    // value or `{ text, options }` (an object without `text` prints as `[object Object]`).
+    payload: {
+      header: ["Produk", "Qty", "Harga"],
+      body: [
+        ["Kopi", 2, 45000],
+        ["Teh", { text: 1, options: { class: "muted" } }, 20000],
+        ["Roti", 3, 15000],
+      ],
+      footer: null,
+    },
+    config: { sortable: true, pageSize: 5 },
+    note: "config: { sortable, pageSize }; `editable` is on by default, so every row carries edit/remove actions",
+  },
+  {
+    name: "masonry",
+    path: "@aio-ui/masonry",
+    stylesheet: "@aio-ui/masonry/Masonry.css",
+    category: "layout",
+    tier: "advanced",
+    kind: "element",
+    // The array lives under `content` — `{ items }` renders an empty grid.
+    payload: {
+      id: "demo-masonry",
+      className: "section masonry gallery",
+      content: [
+        { image: image("Branding 1"), category: "Branding", title: "Identitas", description: "Logotype dan panduan warna." },
+        { image: image("Web 1"), category: "Web", title: "Landing page", description: "Satu halaman, satu tujuan." },
+        { image: image("Branding 2"), category: "Branding", title: "Kemasan", description: "Cetak dan digital." },
+        { image: image("Web 2"), category: "Web", title: "Dashboard", description: "Tabel, filter, ekspor." },
+        { image: image("Motion 1"), category: "Motion", title: "Intro", description: "Enam detik, tanpa audio." },
+        { image: image("Motion 2"), category: "Motion", title: "Loop", description: "Latar belakang bergerak." },
+      ],
+    },
+    config: { column: 2, maxDisplayed: 4 },
+    note: "config: { column: 2, maxDisplayed: 4 } — the filter list is derived from `category`, never declared",
+  },
+  {
+    name: "input",
+    path: "@aio-ui/input",
+    stylesheet: "@aio-ui/input/input.css",
+    category: "content",
+    tier: "advanced",
+    kind: "element",
+    // A single record (`iBasicInputNode`), not a list. `label` wins over `title`.
+    payload: { type: "text", id: "demo-email", title: "Email address", placeholder: "you@example.com", required: true },
+    variants: [
+      {
+        label: "text + required",
+        payload: { type: "text", id: "demo-email", title: "Email address", placeholder: "you@example.com", required: true },
+      },
+      { label: "number", payload: { type: "number", id: "demo-qty", title: "Jumlah", value: 2, step: 1 } },
+      { label: "textarea", payload: { type: "textarea", id: "demo-note", title: "Catatan", rows: 3 } },
+      { label: "password", payload: { type: "password", id: "demo-pass", title: "Kata sandi", placeholder: "••••••••" } },
+    ],
+    note: "`type` picks the field; a select field needs `config.options`, so it is not modelled as a variant here",
   },
 ];
 
