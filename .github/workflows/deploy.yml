@@ -1,4 +1,4 @@
-name: Build and Deploy to Pages
+name: Deploy demo to Pages
 
 on:
   push:
@@ -25,17 +25,26 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build
+      # The examples import the packages through the workspace symlinks, so dist/
+      # must exist before Vite resolves a single specifier.
+      - name: Build the packages
+        run: npm run build:pkgs
+
+      - name: Build the demo for a project page
+        working-directory: examples/demo
+        env:
+          DEMO_BASE: /-aio-ui-dev/
         run: npm run build
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./dist"
+          path: "examples/demo/dist"
 
   deploy:
     environment:

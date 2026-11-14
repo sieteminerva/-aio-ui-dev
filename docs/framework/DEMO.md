@@ -16,6 +16,13 @@ The two `docs` routes print what the packages really declare: Getting Started qu
 `packages/app/src/types.ts`, and the module rows quote each package's `slot`, config and public
 methods. `#modules` selects in the fragment (`#modules/router`), like `#kitchen/<name>`.
 
+## Deployed copy
+
+`https://sieteminerva.github.io/-aio-ui-dev/` — the demo, rebuilt from `main` by
+`.github/workflows/deploy.yml` (`npm ci` → `npm run build:pkgs` → demo build → Pages). The
+workflow sets `DEMO_BASE=/-aio-ui-dev/` because a project page lives under the repository name;
+local dev keeps the default `/demo/`. Routing is hash-only, so the site needs no 404 fallback.
+
 ## Element components (`#kitchen`)
 
 `manifest.ts` is the single source: one row per component with `path`, `stylesheet`,
