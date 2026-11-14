@@ -81,8 +81,8 @@ project consumes the framework from this repository. Two facts follow from that:
 
 - `dist/` is gitignored — a fresh clone has **no** `dist/`, and nothing is importable until
   `npm run build:pkgs` has run once.
-- The workspace is **39 packages** in six globs: `packages/*` (5: `app`, `base`, `core`,
-  `styles`, `utilities`), `packages/components/*` (22), `packages/modules/*` (6),
+- The workspace is **40 packages** in six globs: `packages/*` (5: `app`, `base`, `core`,
+  `styles`, `utilities`), `packages/components/*` (23), `packages/modules/*` (6),
   `packages/themes/*` (3), `packages/kits/*` (3), plus `examples/*` (2 apps).
 
 ### 3.1 Clone and build once
@@ -90,13 +90,13 @@ project consumes the framework from this repository. Two facts follow from that:
 ```bash
 git clone https://github.com/sieteminerva/-aio-ui-dev.git aio-ui
 cd aio-ui
-npm install          # workspace install: 39 packages + 2 examples
+npm install          # workspace install: 40 packages + 2 examples
 npm run build:pkgs   # writes dist/ (JS + .d.ts + copied CSS) for every TS package
 npm run verify       # optional gate: typecheck → bounds → api → version → tests → examples
 ```
 
-`npm run build:pkgs` builds **38** of the 39: `@aio-ui/styles` is CSS-only and has no build
-script. `check:api` and `version:check` still report 39.
+`npm run build:pkgs` builds **39** of the 40: `@aio-ui/styles` is CSS-only and has no build
+script. `check:api` and `version:check` report all 40.
 
 ### 3.2 Consume it from another project
 
@@ -202,6 +202,7 @@ The CDN URL of any row is the tag base + `Directory` + the file, e.g.
 | `@aio-ui/product`          | `packages/components/product`      | `dist/index.js`        | `ProductCard.css`, `ProductDetail.css`, `ProductGrid.css` → `dist/`                                                                                                                                |
 | `@aio-ui/rating`           | `packages/components/rating`       | `dist/index.js`        | `Rating.css` → `dist/Rating.css`                                                                                                                                                                   |
 | `@aio-ui/section`          | `packages/components/section`      | `dist/index.js`        | `Section.css` → `dist/Section.css`                                                                                                                                                                 |
+| `@aio-ui/skeleton`         | `packages/components/skeleton`     | `dist/index.js`        | `Skeleton.css` → `dist/Skeleton.css`                                                                                                                                                               |
 | `@aio-ui/tab`              | `packages/components/tab`          | `dist/index.js`        | `Tab.css` → `dist/Tab.css`                                                                                                                                                                         |
 | `@aio-ui/table`            | `packages/components/table`        | `dist/index.js`        | `Table.css` → `dist/Table.css`                                                                                                                                                                     |
 | `@aio-ui/animations`       | `packages/modules/animations`      | `dist/index.js`        | `Animations.css` → `dist/Animations.css`                                                                                                                                                           |
@@ -274,17 +275,18 @@ node orchestrator/layout.mjs --out orchestrator/layout.json
 ### Step 4 — build release artefacts
 
 ```bash
-node scripts/release.mjs --version 0.1.1            # dry run: prints the target and first packages
-node scripts/release.mjs --version 0.1.1 --apply    # writes .draft/release/v0.1.1/
+V=0.2.1                                            # the version being published
+node scripts/release.mjs --version "$V"            # dry run: prints the target and first packages
+node scripts/release.mjs --version "$V" --apply    # writes .draft/release/v$V/
 ```
 
-Expected output: `39 tarball(s) + registry.json + layout.json + checksums.txt`.
+Expected output: `40 tarball(s) + registry.json + layout.json + checksums.txt`.
 
 Sanity checks:
 
 ```bash
-node -e 'const r=require("./.draft/release/v0.1.1/registry.json"); console.log(r.repository, Object.keys(r.packages).length)'
-cd .draft/release/v0.1.1 && sha256sum -c checksums.txt | grep -v ': OK$' ; cd -
+node -e "const r=require('./.draft/release/v$V/registry.json'); console.log(r.repository, Object.keys(r.packages).length)"
+cd ".draft/release/v$V" && sha256sum -c checksums.txt | grep -v ': OK$' ; cd -
 ```
 
 > A release directory that does not exist yet is normal before Step 4, but it makes
@@ -318,13 +320,13 @@ What it does:
 The CDN does not need the assets, but `npm i` and the generator do. Use the GitHub UI or CLI:
 
 ```bash
-gh release create v0.1.1 .draft/release/v0.1.1/* \
-  --prerelease --title "v0.1.1 (pre-release)" \
-  --notes "Build-free artefacts for @aio-ui 0.1.1"
+gh release create "v$V" ".draft/release/v$V"/* \
+  --prerelease --title "v$V (pre-release)" \
+  --notes "Build-free artefacts for @aio-ui $V"
 ```
 
-Web UI equivalent: **Releases → Draft a new release → tag `v0.1.1` → attach all 42 files →
-pre-release**. A new version gets a **new** release; the `v0.1.0` release keeps its 42 assets.
+Web UI equivalent: **Releases → Draft a new release → tag `v$V` → attach all 43 files →
+pre-release**. A new version gets a **new** release; older releases keep their own asset sets.
 
 Refreshing assets of an _existing_ release: delete the old assets first (uploading the same name
 returns `422 already_exists`), then upload the new set. With the REST API:
@@ -338,7 +340,7 @@ curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
 ### Step 7 — purge and verify jsDelivr
 
 ```bash
-curl -s "https://purge.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/registry.json" > /dev/null
+curl -s "https://purge.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v$V/registry.json" > /dev/null
 sleep 3
 
 for u in registry.json \
@@ -348,7 +350,7 @@ for u in registry.json \
   packages/components/input/dist/Dropdown/Dropdown.InputModule.js \
   packages/modules/animations/dist/Animations.css \
   packages/components/form/dist/Form.css; do
-  printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/$u")" "$u"
+  printf '%s %s\n' "$(curl -s -o /dev/null -w '%{http_code}' "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v$V/$u")" "$u"
 done
 ```
 
@@ -359,7 +361,7 @@ Every line must be `200`.
 Generate copies whose import map points at the published tag, then serve the files locally:
 
 ```bash
-SMOKE_BASE=https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/ \
+SMOKE_BASE=https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v$V/ \
   npx vitest run orchestrator/release.test.ts
 
 node .draft/smoke/serve.mjs 5300
@@ -375,7 +377,7 @@ hosts are `div#masonry` / `div#carousel` (no custom elements); console has no er
 
 ```bash
 git add -A
-git commit -m "chore(release): v0.1.1"
+git commit -m "chore(release): v$V"
 git push origin main
 ```
 
@@ -425,12 +427,12 @@ Never push `main` to the old `rajutan` remote.
 [ ] working tree committed
 [ ] npm run verify  → exit 0
 [ ] npm run build:pkgs
-[ ] layout.json regenerated (39 packages)
-[ ] release.mjs --apply → 39 tarballs + 3 files
-[ ] checksums 39/39 OK
+[ ] layout.json regenerated (40 packages)
+[ ] release.mjs --apply → 40 tarballs + 3 files
+[ ] checksums 40/40 OK
 [ ] publish-cdn.mjs --apply → cdn branch + tag pushed
 [ ] branch README published (curl …/@v<version>/README.md → 200, correct version)
-[ ] release assets uploaded (42 files) and marked pre-release
+[ ] release assets uploaded (43 files) and marked pre-release
 [ ] purge + all CDN URLs 200
 [ ] real-CDN smoke: store form + gallery masonry/carousel, console clean
 [ ] main pushed to origin

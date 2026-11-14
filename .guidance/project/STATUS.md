@@ -19,7 +19,8 @@ Last updated: 2026-11-14
   `calculation`, `id-address`, `modules`, `layout`). Building them exposed a real defect: a
   loader handed over by a manifest/registry never ran the **initialize** phase, so `calculation`
   was dead on every form mounted through the registry. `Form` now resolves every phase through
-  the active loader and unloads it between prepares; pinned by a `FormModules` case.
+  the active loader and unloads it between prepares; pinned by a `FormModules` case. Housekeeping:
+  `orchestrator/layout.json` regenerated (never listed `skeleton`); CDN guide counts → 40/43.
 - **Batch 31 (2026-11-14):** the `#form` docs tree stopped slicing Markdown. `selectOutline`
   carries the subsections nested under a selection (`#config` renders its `###` blocks — what the
   engine's own comment promised). `form`/`input`/`id-address` READMEs declare `<!-- part: id=… -->`

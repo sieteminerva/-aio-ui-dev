@@ -60,8 +60,7 @@
       "./DomUtils": "dist/DomUtils.js",
       "./color.utils": "dist/color.utils.js",
       "./helper": "dist/helper.js",
-      "./parseTableFile": "dist/parseTableFile.js",
-      "./Markdown": "dist/Markdown.js"
+      "./parseTableFile": "dist/parseTableFile.js"
     }
   },
   "@aio-ui/accordion": {
@@ -275,6 +274,15 @@
     "subpaths": {
       ".": "dist/index.js",
       "./Section.css": "dist/Section.css"
+    }
+  },
+  "@aio-ui/skeleton": {
+    "dir": "packages/components/skeleton",
+    "entry": "dist/index.js",
+    "stylesRoot": "dist",
+    "subpaths": {
+      ".": "dist/index.js",
+      "./Skeleton.css": "dist/Skeleton.css"
     }
   },
   "@aio-ui/tab": {
