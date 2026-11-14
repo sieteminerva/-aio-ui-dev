@@ -1,13 +1,16 @@
 import type { iBuilderConfig, iBuilderRegistry, iBuilderSelectorsConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
 import { Skeleton } from "@aio-ui/skeleton";
-import { parseMarkdown } from "./markdown.parser";
-import type { iMarkdownBlock, iMarkdownInline } from "./markdown.parser";
+import { outline, parseMarkdown, selectOutline } from "./Markdown.engine";
+import type { iMarkdownBlock, iMarkdownInline, iMarkdownMarkerConfig } from "./Markdown.engine";
+
+/** The marker spelling is a parse concern, but a host types its config with it. */
+export type { iMarkdownMarkerConfig } from "./Markdown.engine";
 
 /**
  * Markdown — renders a Markdown source string as DOM.
  *
- * The parser (`./markdown.parser.ts`) produces an AST and owns no DOM; this builder walks
+ * The parser (`./Markdown.engine.ts`) produces an AST and owns no DOM; this builder walks
  * it and renders keys, exactly like every other component. Fenced code reuses the
  * `code-block` markup (`figure > figcaption + pre > code`), and `Markdown.css` imports
  * `CodeBlock.css`, so there is one definition of what a code panel looks like.
@@ -19,6 +22,7 @@ import type { iMarkdownBlock, iMarkdownInline } from "./markdown.parser";
 /** Every node this component can render. */
 export const ELEMENT_KEYS = [
   "@markdown",
+  "@markdown>section",
   "@markdown>heading-1",
   "@markdown>heading-2",
   "@markdown>heading-3",
@@ -50,6 +54,7 @@ export type MarkdownElementType = (typeof ELEMENT_KEYS)[number];
 /** Default shape per key. The root is a real `article`; headings clamp at `h4`. */
 export const DEFAULT_SELECTORS: iBuilderSelectorsConfig<MarkdownElementType> = {
   "@markdown": { tagName: "article", className: "markdown" },
+  "@markdown>section": { tagName: "section", className: "markdown-section" },
   "@markdown>heading-1": { tagName: "h1", className: "markdown-h1" },
   "@markdown>heading-2": { tagName: "h2", className: "markdown-h2" },
   "@markdown>heading-3": { tagName: "h3", className: "markdown-h3" },
@@ -76,17 +81,53 @@ export const DEFAULT_SELECTORS: iBuilderSelectorsConfig<MarkdownElementType> = {
   "@markdown>link": { tagName: "a", className: "markdown-link" },
 };
 
-/** Component options. A markdown document takes no per-instance styling options. */
-export interface iMarkdownConfig extends iBuilderConfig<MarkdownElementType> { }
+/**
+ * Which parts of a document to render, in what order.
+ *
+ * Absent → the whole document, unchanged from a builder that never heard of outlines. A path
+ * that resolves to nothing is skipped: the document is the source of truth, and a page that
+ * needs the section to exist asserts it in a test instead of throwing at runtime.
+ */
+export interface iMarkdownOutline {
+  /** `@title`, `@lead`, `#anchor`, `role:name`, `H2`, or `H2 > H3` — see the README. */
+  parts: string[];
+  /** Wrap every part in `@markdown>section`. Default `false`. */
+  section?: boolean;
+  /** Render the heading that introduced a part. Default `"keep"`. */
+  heading?: "keep" | "drop";
+}
+
+/** Component options. */
+export interface iMarkdownConfig extends iBuilderConfig<MarkdownElementType> {
+  /** How the document spells its part markers. Default: `part`, comment form. */
+  marker?: iMarkdownMarkerConfig | null;
+  /** Which parts to render. Default `null` — the whole document. */
+  outline?: iMarkdownOutline | null;
+}
+
+/** Normalised payload. */
+export interface iMarkdownPayload {
+  source: string;
+  /** Per-instance override of `config.outline`. */
+  outline: iMarkdownOutline | null;
+  /** Per-instance override of `config.marker`. */
+  marker: iMarkdownMarkerConfig | null;
+}
 
 /**
- * Payload normalizer: `{ source }` or a bare string. Everything else renders nothing,
- * because guessing at a document shape would print the wrong thing with confidence.
+ * Payload normalizer: `{ source }`, a bare string, or `{ source, outline, marker }`.
+ * Anything else renders nothing, because guessing at a document shape would print the wrong
+ * thing with confidence.
  */
-export function normalizePayload(data: any): string {
-  if (typeof data === "string") return data;
-  if (data && typeof data === "object" && typeof data.source === "string") return data.source;
-  return "";
+export function normalizePayload(data: any): iMarkdownPayload {
+  if (typeof data === "string") return { source: data, outline: null, marker: null };
+  if (!data || typeof data !== "object") return { source: "", outline: null, marker: null };
+
+  return {
+    source: typeof data.source === "string" ? data.source : "",
+    outline: data.outline ?? null,
+    marker: data.marker ?? null,
+  };
 }
 
 export class MarkdownBuilder extends Builder<MarkdownElementType, iMarkdownConfig> {
@@ -122,20 +163,52 @@ export class MarkdownBuilder extends Builder<MarkdownElementType, iMarkdownConfi
       namespace: null,
       emit: () => { },
       selectors: DEFAULT_SELECTORS,
+      marker: null,
+      outline: null,
     };
 
     this.config = this.resolveConfig(defaultConfig, config);
   }
 
-  /** Parse the source, then render one key per block. */
+  /**
+   * Parse the source, then render every block — or only the parts an outline names.
+   *
+   * The outline is answered from the same parse: selection happens on the AST, so a part is
+   * never rebuilt as Markdown text and parsed a second time.
+   */
   public prepare(data: any): HTMLElement {
-    const source = normalizePayload(data);
-    const blocks = source ? parseMarkdown(source) : [];
+    const payload = normalizePayload(data);
+    const marker = payload.marker ?? this.config.marker;
+    const spec = payload.outline ?? this.config.outline;
+
+    const blocks = payload.source ? parseMarkdown(payload.source, { marker }) : [];
 
     const root = this.render("@markdown", { count: blocks.length });
-    for (const block of blocks) this.appendBlock(root, block);
+    if (!root) return this.load("@markdown") as HTMLElement;
+
+    const selected = Boolean(spec?.parts?.length);
+
+    if (selected && spec) this.appendParts(root, blocks, spec);
+    else for (const block of blocks) this.appendBlock(root, block);
 
     return this.load("@markdown") as HTMLElement;
+  }
+
+  /** Render the outline's parts in declaration order, each optionally wrapped. */
+  private appendParts(root: HTMLElement, blocks: iMarkdownBlock[], spec: iMarkdownOutline): void {
+    const doc = outline(blocks);
+
+    for (const path of spec.parts) {
+      for (const pick of selectOutline(doc, path)) {
+        const target = spec.section ? this.render("@markdown>section", { path }) : root;
+        if (!target) continue;
+
+        if (spec.heading !== "drop" && pick.heading) this.appendBlock(target, pick.heading);
+        for (const block of pick.blocks) this.appendBlock(target, block);
+
+        if (target !== root) root.appendChild(target);
+      }
+    }
   }
 
   /**

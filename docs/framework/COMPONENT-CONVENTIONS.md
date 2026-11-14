@@ -100,6 +100,20 @@ works while the headings are predictable, so the H2 set is closed and its order 
 Any other H2 breaks the contract: `examples/demo/src/__tests__/readme.skeleton.test.ts` fails on it.
 H3s are free inside a section (`### Actions`, `### detail`, `### Built-in adapters`).
 
+**Pointers.** A heading can carry a marker on the line above it, so a consumer selects the
+section by identity instead of by heading text — that is what `markdown`'s `config.outline`
+reads:
+
+```md
+<!-- part: id=validation role=usage -->
+
+### Validation
+```
+
+The marker is invisible in every Markdown renderer, belongs to the heading under it, and its
+`role` is a word only the **consumer** gives meaning to. Use it when a page cites a section:
+the heading stays free to change.
+
 ### Plugin skeleton (kind: plugin)
 
 A **plugin** is a package whose markup was written by hand instead of by a builder: the DOM looks

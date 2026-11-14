@@ -15,8 +15,14 @@ Last updated: 2026-11-14
 
 ## Landed recently
 
+- **Batch 29 (2026-11-14):** `markdown` can render _parts_ of a document. The engine
+  (`Markdown.engine.ts`, per §1b) reads invisible **part markers** (`part: id=x role=y` inside an
+  HTML comment, or the reference-definition form) and exposes `outline()` + `selectOutline()`; the
+  builder gained `config.outline` (`@title` / `@lead` / `#anchor` / `role:name` / `H2` / `H2 > H3`),
+  `config.marker`, payload overrides, a `@markdown>section` key. No outline = the old behaviour;
+  unmatched comments are dropped, markers inside fences stay source.
 - **Batch 28 (2026-11-14):** the Markdown parser moved out of `@aio-ui/utilities` and into its only
-  consumer, as `packages/components/markdown/markdown.parser.ts`. `@aio-ui/utilities` lost the
+  consumer (naming settled in batch 29). `@aio-ui/utilities` lost the
   `./Markdown` subpath and 13 barrel names (`api-map.json` updated, 27 → 13 utilities values).
   Nothing is published for it: the builder imports it relatively, `build-pack` rewrites the
   emitted specifier to `.js`, and the package surface stays `MarkdownBuilder` only.

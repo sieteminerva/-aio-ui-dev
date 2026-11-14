@@ -288,7 +288,9 @@
       ],
       "types": [
         "MarkdownElementType",
-        "iMarkdownConfig"
+        "iMarkdownConfig",
+        "iMarkdownMarkerConfig",
+        "iMarkdownOutline"
       ]
     },
     "@aio-ui/masonry": {
