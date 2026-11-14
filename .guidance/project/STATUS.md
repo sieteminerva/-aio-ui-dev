@@ -20,6 +20,7 @@ Last updated: 2026-11-14
   sampled CDN URLs answer `200`, `checksums.txt` is byte-identical, and `release.test.ts` is
   15/15 against the tag. New handout `docs/live-cdn-migration.md` maps copied files and symbols
   onto the packages for apps that still vendor the source; `docs/live-cdn-repo.md` follows the tag.
+  The demo deploys itself to Pages: `deploy.yml` builds `build:pkgs` + the demo under `/-aio-ui-dev/`.
 - **Batch 32 (2026-11-14):** the last five `#form` topics have live demos (`cascade`,
   `calculation`, `id-address`, `modules`, `layout`). Building them exposed a real defect: a
   loader handed over by a manifest/registry never ran the **initialize** phase, so `calculation`
