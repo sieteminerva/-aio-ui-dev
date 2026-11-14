@@ -32,10 +32,12 @@ One monorepo, four working bands. **Start here, then open the band's `AGENTS.md`
 - Form sub-module refs need `export: "<symbol>"`, or the registry resolves the class.
 - **CSS house style** (`.guidance/rules.md`) — check every sheet you touch:
   one component sheet has **one root selector**, and every rule nests under it with `&`:
-  `& .child` (descendant), `&.skeleton-bone` (compound — the element carries both classes),
+  `& .child` (descendant), `&.bone` (compound — the element carries both classes),
   `&:hover` (state). Media queries stay top-level and re-name the selector they scope.
   **Never** write Sass-style `&-suffix`: the build drops those rules silently.
-  A class is one clean word; a modifier may add **one** `-word` (`skeleton-bone`), never two.
+  A class is one clean word. Prefer a **bare** modifier on a compound (`.skeleton` +
+  `.bone` → `&.bone`); a `-` join (`skeleton-bone`) is only for a modifier that must
+  stand alone as its own class, and never more than two words.
   Component tokens are `--<component>-*` and must derive from an `--app-*` token.
 - Gate before finishing: `npm run verify`
   (build 39 pkgs — `styles` is CSS-only → typecheck → bounds → api → version → tests → examples).

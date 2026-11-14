@@ -3,7 +3,7 @@
 ## Structure
 
 - HTML the outer element must be valid html element not just `div`, like `main>section`, `nav`, `aside` etc.
-- CSS written in nested style, class must be `clean one word`, also for the modifier but accepted for modifier to use `-` separator, but not more than 2 words
+- CSS written in nested style, class must be `clean one word`, also for the modifier. Prefer a bare modifier on the compound (`.skeleton` + `.bone` → `&.bone`); a `-` separator is only for a modifier that stands alone as its own class, and never more than 2 words
 - Nesting uses `& .child` (descendant), `&.modifier` (compound) or `&:state` only. A Sass-style `&-suffix` concatenation is dropped **silently** by the build — the rule disappears and nothing warns.
 - `src/style.css` is global styling file. if it reusable or configuration find or put it in `src/lib/Styles/*.css`
 - global variables written in` src/lib/Styles/variables.css`. and must be prefixed with `--app`

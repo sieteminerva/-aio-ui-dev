@@ -74,11 +74,14 @@ and tracking its nodes would be waste:
 
 | `shape`  | Class             | Marker                   |
 | -------- | ----------------- | ------------------------ |
-| `stack`  | `skeleton-stack`  | `data-skeleton="stack"`  |
-| `row`    | `skeleton-row`    | `data-skeleton="row"`    |
-| `bone`   | `skeleton-bone`   | `data-skeleton="bone"`   |
-| `line`   | `skeleton-line`   | `data-skeleton="line"`   |
-| `circle` | `skeleton-circle` | `data-skeleton="circle"` |
+| `stack`  | `skeleton stack`  | `data-skeleton="stack"`  |
+| `row`    | `skeleton row`    | `data-skeleton="row"`    |
+| `bone`   | `skeleton bone`   | `data-skeleton="bone"`   |
+| `line`   | `skeleton line`   | `data-skeleton="line"`   |
+| `circle` | `skeleton circle` | `data-skeleton="circle"` |
+
+Every node carries the root class plus one bare shape word, so the sheet writes a
+compound (`&.bone`) and needs no dash-joined class name.
 
 ## Tokens
 

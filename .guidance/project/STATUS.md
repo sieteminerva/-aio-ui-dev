@@ -15,8 +15,13 @@ Last updated: 2026-11-14
 
 ## Landed recently
 
+- **Batch 25 (2026-11-14):** skeleton shape classes de-dashed. `SHAPE_CLASS` now emits bare
+  `stack / row / line / bone / circle` on the same element as `.skeleton`, so the sheet writes
+  `&.bone` instead of `&.skeleton-bone` and no class name needs a dash join. Rule of record
+  tightened in root `AGENTS.md` + `.guidance/rules.md`: prefer the bare compound modifier. Gate:
+  656 pass / 1 skip, built CSS carries `.skeleton.bone/.line/.circle/.stack/.row`.
 - **Batch 24 (2026-11-14):** CSS house style enforced. `Skeleton.css` was the only flat sheet in
-  the tree — rewritten as one root selector (`.skeleton`) with every shape nested (`&.skeleton-bone`).
+  the tree — rewritten as one root selector (`.skeleton`) with every shape nested (`&.bone`).
   The trap that came out of it is now written down in the root `AGENTS.md` and `.guidance/rules.md`:
   **Sass-style `&-suffix` is dropped silently by the build** (the rules vanished from the bundle and
   nothing warned), so nesting is `& .child` / `&.modifier` / `&:state` only. Gate: 656 pass / 1 skip.

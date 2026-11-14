@@ -11,7 +11,8 @@ describe("Skeleton.create", () => {
   it("draws one bone by default, with the class and the marker that name its shape", () => {
     const bone = Skeleton.create({ height: "2rem" });
 
-    expect(bone.className).toContain("skeleton-bone");
+    expect(bone.classList.contains("skeleton")).toBe(true);
+    expect(bone.classList.contains("bone")).toBe(true);
     expect(bone.getAttribute("data-skeleton")).toBe("bone");
     expect(bone.style.height).toBe("2rem");
   });
@@ -22,9 +23,10 @@ describe("Skeleton.create", () => {
       children: [{ shape: "line", count: 3 }, { shape: "row", children: [{ shape: "circle" }] }],
     });
 
-    expect(tree.className).toContain("skeleton-stack");
-    expect(tree.querySelectorAll(".skeleton-line")).toHaveLength(3);
-    expect(tree.querySelector(".skeleton-row .skeleton-circle")).not.toBeNull();
+    expect(tree.classList.contains("skeleton")).toBe(true);
+    expect(tree.classList.contains("stack")).toBe(true);
+    expect(tree.querySelectorAll(".skeleton.line")).toHaveLength(3);
+    expect(tree.querySelector(".skeleton.row .skeleton.circle")).not.toBeNull();
   });
 
   it("reserves media space with an aspect ratio instead of a height", () => {
@@ -40,8 +42,8 @@ describe("Skeleton.create", () => {
       children: [{ shape: "row", count: 2, children: [{ shape: "circle" }] }],
     });
 
-    expect(tree.querySelectorAll(".skeleton-row")).toHaveLength(2);
-    expect(tree.querySelectorAll(".skeleton-circle")).toHaveLength(2);
+    expect(tree.querySelectorAll(".skeleton.row")).toHaveLength(2);
+    expect(tree.querySelectorAll(".skeleton.circle")).toHaveLength(2);
   });
 
   it("writes no lifetime marker for the default `auto`", () => {
@@ -70,8 +72,8 @@ describe("Skeleton.create", () => {
     });
 
     expect(tree.classList.contains("is-brand")).toBe(true);
-    expect(tree.classList.contains("skeleton-stack")).toBe(true);
-    expect(tree.querySelector(".skeleton-line")?.classList.contains("is-brand")).toBe(false);
+    expect(tree.classList.contains("stack")).toBe(true);
+    expect(tree.querySelector(".skeleton.line")?.classList.contains("is-brand")).toBe(false);
   });
 });
 
@@ -81,7 +83,8 @@ describe("SkeletonBuilder", () => {
 
     const element = builder.prepare({});
 
-    expect(element.className).toContain("skeleton-line");
+    expect(element.classList.contains("skeleton")).toBe(true);
+    expect(element.classList.contains("line")).toBe(true);
     expect(element.style.width).toBe("50%");
   });
 
@@ -90,7 +93,7 @@ describe("SkeletonBuilder", () => {
 
     const element = builder.prepare({ shape: "circle" });
 
-    expect(element.className).toContain("skeleton-circle");
+    expect(element.classList.contains("circle")).toBe(true);
   });
 
   it("carries the configured duration and className onto the mockup", () => {

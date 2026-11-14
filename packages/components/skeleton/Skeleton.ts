@@ -65,13 +65,18 @@ export interface iSkeletonSpec {
 /** The attribute the hold reads its visibility floor from. */
 export const SKELETON_DURATION_ATTRIBUTE = "data-skeleton-duration";
 
-/** Shape → class. Kept as a map so the DOM shape and the CSS shape cannot drift apart. */
+/**
+ * Shape → class. Kept as a map so the DOM shape and the CSS shape cannot drift apart.
+ *
+ * @summary Bare words on purpose: the root always carries `.skeleton`, so the sheet can
+ *   write `&.bone` (a compound) and the markup never needs a dash-joined name.
+ */
 const SHAPE_CLASS: Record<SkeletonShape, string> = {
-  stack: "skeleton-stack",
-  row: "skeleton-row",
-  line: "skeleton-line",
-  bone: "skeleton-bone",
-  circle: "skeleton-circle",
+  stack: "stack",
+  row: "row",
+  line: "line",
+  bone: "bone",
+  circle: "circle",
 };
 
 export class Skeleton {
