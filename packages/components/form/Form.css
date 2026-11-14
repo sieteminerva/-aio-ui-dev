@@ -556,12 +556,18 @@
       background 0.2s ease,
       transform 0.1s ease;
 
+    /* A square, token-sized glyph centred in its decorative band. It used to be
+       `width: 17%` × `height: 20px` + padding, so the mask stretched with the button's
+       width — a 200px step button drew a 34px wide icon next to 1rem body text. */
     & > i.icon {
       position: absolute;
       z-index: 1;
-      padding: 5px;
-      width: 17%;
-      height: 20px;
+      inset-block: 0;
+      margin-block: auto;
+      margin-inline: 0.45em;
+      width: calc(var(--input-icon-size) * 0.7);
+      height: calc(var(--input-icon-size) * 0.7);
+      padding: 0;
     }
 
     &::after {

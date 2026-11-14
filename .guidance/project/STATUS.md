@@ -15,6 +15,14 @@ Last updated: 2026-11-14
 
 ## Landed recently
 
+- **Batch 30 (2026-11-14):** a regression sweep on the docs shell, found in a browser. `Tab.css`
+  reached into mounted panels with `& .menu` / `& .body`, so a dropdown popover inside a tab was
+  laid out as a row, lost its entry transition and inherited the tab's border; both are now `>`
+  (own nodes only), and `COMPONENT-CONVENTIONS.md` §12/§13 make that a rule and an anti-pattern.
+  `input.css`: the select-mode search box no longer draws a second border, chips keep a horizontal
+  inset in the frame, the datalist frame draws nothing (the input is the box) and the frame now
+  measures exactly like a plain input (36.6 px, was 38.6). `Form.css`: step-button glyphs are
+  square and token-sized (`calc(--input-icon-size * 0.7)`), not `width: 17%` × `20px`.
 - **Batch 29 (2026-11-14):** `markdown` can render _parts_ of a document. The engine
   (`Markdown.engine.ts`, per §1b) reads invisible **part markers** (`part: id=x role=y` inside an
   HTML comment, or the reference-definition form) and exposes `outline()` + `selectOutline()`; the
@@ -26,28 +34,16 @@ Last updated: 2026-11-14
   `./Markdown` subpath and 13 barrel names (`api-map.json` updated, 27 → 13 utilities values).
   Nothing is published for it: the builder imports it relatively, `build-pack` rewrites the
   emitted specifier to `.js`, and the package surface stays `MarkdownBuilder` only.
-- **Batch 27 (2026-11-14):** the shared-`Config` problem closed at the source, not on the page.
-  `packages/components/form/README.md` gained `## Supported syntax` with one `###` per engine
-  (registering the form, validation, cascade, calculation, multistep), each carrying a runnable
-  example of registration and use. `readme.ts` gained `subsectionOf()` (fence-aware H3 slice), the
-  topic `sections` now accept `"<H2> > <H3>"`, and the five behaviour/wiring topics render their
-  own block instead of the whole `Config` table. Skeleton default changed to a **2000 ms floor**
-  (`duration: "auto"` never painted: a warm sheet settles in one microtask) in `Skeleton.ts` and
-  the package README, which also explains when `"auto"` is still the right value. Gate: 668 tests
-  (1 skip), demo typecheck clean, browser: each topic renders exactly one `###` + one code block.
-- **Batch 26 (2026-11-14):** `#form` became a docs tree instead of one long column. The route
-  now reads a fragment (`#form/<topic>`), renders the `#kitchen` shell (sidebar grouped Schema ·
-  Behaviour · Inputs · Wiring, main column Display · Usage · API) and declares ten topics in
-  `src/form/topics.ts`. **A topic declares navigation only**: the package README (`source`), the
-  H2s it claims (`sections`) and an optional live `demo` — Usage renders lead + claimed sections,
-  API renders the contract sections it did not claim, and the tab description is the README's own
-  lead. No prose is written beside the READMEs. Schemas split into `src/form/schema.ts`, panels
-  into `src/form/panels.ts`, the route into a `FormPage` controller that releases its builders,
-  and `__tests__/form-docs.test.ts` fails on a missing README, a missing heading, an over-claimed
-  topic (empty API tab) or an unrendered group. Live demos: overview, field types, validation,
-  input controls, multistep; the other five show their README sections and say the demo is pending.
-  Gate: 665 tests (1 skip), demo typecheck clean, browser check on every live topic and the
-  README/API split.
+- **Batch 27 (2026-11-14):** the shared-`Config` problem closed at the source. `form/README.md`
+  gained `## Supported syntax` with one `###` per engine (register, validation, cascade,
+  calculation, multistep), each runnable; `readme.ts` gained `subsectionOf()` (fence-aware H3
+  slice), topic `sections` accept `"<H2> > <H3>"`. Skeleton default became a **2000 ms floor**
+  (`"auto"` never painted: a warm sheet settles in one microtask).
+- **Batch 26 (2026-11-14):** `#form` became a docs tree (`#form/<topic>`, ten topics) reusing the
+  `#kitchen` shell. **A topic declares navigation only** — README `source`, claimed `sections`,
+  optional live `demo`; Usage renders lead + claims, API renders the unclaimed contract, and no
+  prose is written beside the READMEs. `__tests__/form-docs.test.ts` fails on a missing README,
+  missing heading, over-claimed topic or unrendered group.
 - **Batches 21–25 (2026-11-14):** skeleton, start to finish. 20 in-flow builders draw their own
   silhouette (`loading()`); the three overlays keep the shimmer because the missing sheet owns
   their placement. `duration: number | "auto"` became a floor published as

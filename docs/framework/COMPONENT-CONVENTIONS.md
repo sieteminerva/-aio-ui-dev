@@ -471,6 +471,11 @@ Anything that needs a real DOM belongs in the demo page, not the suite.
 ```
 
 - Scope every rule under the component's own classes; never style bare tags.
+- **Reach your own structure with `>`.** A descendant selector over a generic class name
+  (`.menu`, `.body`, `.title`, `.content`) also matches a nested component's element: `tab`'s
+  `& .menu` restyled every dropdown popover inside a panel (row layout, lost transition), and
+  `& .body` restyled `code.body` inside a code block. If the element is a direct child of your
+  root or of a keyed node, say so in the selector.
 - Use `--app-*` tokens only (`--app-gap`, `--app-margin-component`,
   `--app-padding-component`, `--app-text-color`, `--app-text-heading-color`,
   `--app-text-accent-color`, `--app-border-color`, `--app-surface-background-color`,
@@ -504,6 +509,7 @@ Anything that needs a real DOM belongs in the demo page, not the suite.
 | Two components sharing one key name                     | Each builder owns its keys; namespace handles collisions |
 | Registering a wrapper object around the builder class   | Register the class; the registry constructs it           |
 | Joining `label` and `value` with `" "` without checking | Decide the display rule in `template()` and document it  |
+| `& .menu` / `& .body` reaching into nested components   | `& > .menu` — only the node your own `prepare()` created |
 
 ---
 
