@@ -7,6 +7,8 @@ the submit payload.
 Fields themselves are components. The form builds the layout and calls the field adapters, so a
 field's look still belongs to `@aio-ui/input`; the form only positions it.
 
+<!-- part: id=payload -->
+
 ## Payload
 
 ```ts
@@ -22,6 +24,8 @@ field's look still belongs to `@aio-ui/input`; the form only positions it.
 
 An array of groups, each with an optional `group` array of field nodes (or nested rows). The shape of
 a field node is the input package's contract, not this one.
+
+<!-- part: id=group-row-keys -->
 
 ### Group and row keys
 
@@ -41,6 +45,8 @@ a field node is the input package's contract, not this one.
 A field's own keys (`type`, `id`, `title`, `placeholder`, `editable`, `condition`,
 `config.wide`, `config.csv`, …) belong to `@aio-ui/input`; `config.wide` (`50` = half,
 `"auto"` = full row) is only read by the form when it lays a row out.
+
+<!-- part: id=config role=contract -->
 
 ## Config
 
@@ -84,6 +90,8 @@ and when it is absent the form degrades to a no-op instead of throwing. The form
 engine or a sibling package — `FORM_ADAPTER_MANIFEST` is the default stack, and the host composes
 the rest.
 
+<!-- part: id=register -->
+
 ### Registering the form
 
 ```ts
@@ -116,6 +124,8 @@ const element = build("form", { schema, config: { id: "checkout" } });
 element.addEventListener("formSubmit", (event) => console.log(event.detail.data));
 ```
 
+<!-- part: id=validation -->
+
 ### Validation
 
 The rules are the fields' own DOM attributes (`required`, `pattern`, `min`, `max`, `minlength`,
@@ -142,6 +152,8 @@ element.addEventListener("formValidation", (event) => {
   if (reason !== "valid") console.warn(reason, message);
 });
 ```
+
+<!-- part: id=cascade -->
 
 ### Cascade
 
@@ -176,6 +188,8 @@ build("form", {
   },
 });
 ```
+
+<!-- part: id=calculation -->
 
 ### Calculation
 
@@ -216,6 +230,8 @@ const schema = [
 build("form", { schema, config: { calculation: true } });
 ```
 
+<!-- part: id=multistep -->
+
 ### Multistep
 
 `multistep: true` turns each group into a step. `prepare()` plants a `<template data-step>` in place
@@ -241,6 +257,8 @@ build("form", {
 });
 ```
 
+<!-- part: id=nodes role=contract -->
+
 ## Nodes
 
 | Key                          | Default tag | Class                      |
@@ -260,11 +278,15 @@ build("form", {
 | `@form>footer`               | `div`       | `form-footer`              |
 | `@form>buttons-set`          | `div`       | `buttons set`              |
 
+<!-- part: id=tokens role=contract -->
+
 ## Tokens
 
 `Form.css` deliberately consumes `--input-*` (`--input-border-radius`, `--input-label-size`) instead
 of declaring a `--form-*` layer: a form has no look of its own, its fields do. If the form is used
 without the input module mounted, those tokens need a host-level fallback.
+
+<!-- part: id=wiring role=contract -->
 
 ## Wiring checklist
 

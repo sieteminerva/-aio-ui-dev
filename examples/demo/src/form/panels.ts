@@ -5,58 +5,31 @@
  * route should not make a reader learn a second pattern. The difference is the input: a topic
  * (navigation only) instead of a manifest row.
  *
- * **No documentation is written here.** Usage renders the README sections the topic claims;
- * API renders the contract sections it does not claim, so the two tabs cover one README with no
- * line repeated. Display is the only authored panel, and what it authors is a schema to build.
+ * **No documentation is written here.** Usage renders the README parts the topic claims; API
+ * renders the sections the README marks as its contract, so the two tabs cover one document with
+ * no line repeated. Display is the only authored panel, and what it authors is a schema to build.
  */
-import { FORM_GROUPS, FORM_TOPICS, sectionHeading, subsectionHeading, topicHref } from "./topics";
+import { CONTRACT_PARTS, FORM_GROUPS, FORM_TOPICS, topicHref } from "./topics";
 import type { iFormTopic } from "./topics";
 import { mountInto, node } from "../dom";
-import { readmeFor, sectionOf, subsectionOf } from "../readme";
+import { readmeFor } from "../readme";
 
 type BuildFn = (name: string, data?: any) => HTMLElement;
 
-/** The contract sections, in the order the API tab renders them. */
-const API_SECTIONS = ["Config", "Nodes", "Tokens", "Wiring checklist"] as const;
-
 /**
- * One README slice as Markdown, heading included.
+ * Render README parts with the `markdown` builder — the only sink, never `innerHTML`.
  *
- * `path` is `<H2>` or `<H2> > <H3>`: the path form renders only that `###` block, which is how a
- * single document can document several topics without repeating itself. `null` means the README
- * does not have it — the caller decides whether that is fatal (the topic test says it is).
+ * The document travels whole and the pointer list decides what shows, so no prose is sliced
+ * here. `section: true` gives each part the same rhythm the document had when it was whole.
  */
-function pathMarkdown(source: string, path: string): string | null {
-  const doc = readmeFor(source);
-  if (!doc) return null;
-
-  const heading = sectionHeading(path);
-  const section = sectionOf(doc, heading);
-  if (!section) return null;
-
-  const sub = subsectionHeading(path);
-  if (!sub) return `## ${section.heading}\n\n${section.body}`.trim();
-
-  const body = subsectionOf(section, sub);
-  return body === null ? null : `### ${sub}\n\n${body}`.trim();
-}
-
-/** Render Markdown with the `markdown` builder — the only sink, never `innerHTML`. */
-function renderMarkdown(host: HTMLElement, build: BuildFn, source: string): void {
+function renderMarkdown(
+  host: HTMLElement,
+  build: BuildFn,
+  source: string,
+  parts: readonly string[],
+): void {
   if (!source.trim()) return;
-  mountInto(host, build("markdown", { source }));
-}
-
-/**
- * The first sentence of the README lead — the one-line description the tab header shows.
- *
- * Taken from the document rather than written beside it: a package that renames itself must not
- * leave a stale sentence on the page.
- */
-export function leadOf(source: string): string {
-  const lead = readmeFor(source)?.lead ?? "";
-  const first = lead.split(/(?<=[.!?])\s/)[0]?.trim();
-  return first || "";
+  mountInto(host, build("markdown", { source, outline: { parts: [...parts], section: true } }));
 }
 
 /**
@@ -121,7 +94,7 @@ export function formDisplayPanel(topic: iFormTopic, build: BuildFn): HTMLElement
   return panel;
 }
 
-/** Usage: the README's lead plus the sections this topic claims. Nothing else. */
+/** Usage: the README's lead plus the parts this topic claims. Nothing else. */
 export function formUsagePanel(topic: iFormTopic, build: BuildFn): HTMLElement {
   const panel = node("div", "usage-panel");
   const doc = readmeFor(topic.source);
@@ -131,12 +104,7 @@ export function formUsagePanel(topic: iFormTopic, build: BuildFn): HTMLElement {
     return panel;
   }
 
-  const blocks = [
-    doc.lead,
-    ...topic.sections.map((path) => pathMarkdown(topic.source, path)),
-  ].filter((block): block is string => Boolean(block));
-
-  renderMarkdown(panel, build, blocks.length ? blocks.join("\n\n") : doc.text);
+  renderMarkdown(panel, build, doc.text, ["@lead", ...topic.parts]);
   return panel;
 }
 
@@ -144,19 +112,16 @@ export function formUsagePanel(topic: iFormTopic, build: BuildFn): HTMLElement {
  * API: the contract sections the Usage tab did not claim.
  *
  * Splitting one README across the two tabs is what keeps a topic page from printing the same
- * table twice — and from restating it in a second, hand-maintained copy.
+ * table twice — and from restating it in a second, hand-maintained copy. A topic that claims
+ * `#nodes` (Layout & tokens) simply gets the rest of the contract here.
  */
 export function formApiPanel(topic: iFormTopic, build: BuildFn): HTMLElement {
   const panel = node("div", "api-panel");
   const doc = readmeFor(topic.source);
   if (!doc) return panel;
 
-  const claimed = topic.sections.map((path) => sectionHeading(path).toLowerCase());
-  const blocks = API_SECTIONS.filter((heading) => !claimed.includes(heading.toLowerCase()))
-    .map((heading) => pathMarkdown(topic.source, heading))
-    .filter((block): block is string => Boolean(block));
-
-  renderMarkdown(panel, build, blocks.length ? blocks.join("\n\n") : doc.text);
+  const parts = CONTRACT_PARTS.filter((part) => !topic.parts.includes(part));
+  renderMarkdown(panel, build, doc.text, parts);
   return panel;
 }
 

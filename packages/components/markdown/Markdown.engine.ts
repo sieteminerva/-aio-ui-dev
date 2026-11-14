@@ -602,8 +602,8 @@ export function outline(blocks: iMarkdownBlock[]): iMarkdownDocument {
  *
  *   `@title`       the H1 block
  *   `@lead`        everything before the first section opener
- *   `#anchor`      the section that declared (or slugged to) that id
- *   `role:name`    every section declaring that role, in document order
+ *   `#anchor`      the section that declared (or slugged to) that id, and its subsections
+ *   `role:name`    every section declaring that role, in document order, with its subsections
  *   `A` / `A > B`  a heading trail, compared case-insensitively on text
  *
  * An unresolvable path returns `[]` — a template never guesses, and a caller that needs the
@@ -618,13 +618,19 @@ export function selectOutline(doc: iMarkdownDocument, path: string): iMarkdownPi
 
   if (wanted.startsWith("#")) {
     const id = wanted.slice(1).trim().toLowerCase();
-    return doc.sections.filter((section) => section.id === id).map(pickOf);
+    return subtreeOf(
+      doc.sections,
+      doc.sections.filter((section) => section.id === id),
+    );
   }
 
   if (wanted.startsWith("role:")) {
     const role = wanted.slice("role:".length).trim().toLowerCase();
     if (!role) return [];
-    return doc.sections.filter((section) => section.role?.toLowerCase() === role).map(pickOf);
+    return subtreeOf(
+      doc.sections,
+      doc.sections.filter((section) => section.role?.toLowerCase() === role),
+    );
   }
 
   const trail = wanted
@@ -633,7 +639,32 @@ export function selectOutline(doc: iMarkdownDocument, path: string): iMarkdownPi
     .filter(Boolean);
   if (!trail.length) return [];
 
-  return doc.sections.filter((section) => sameTrail(section.trail, trail)).map(pickOf);
+  return subtreeOf(
+    doc.sections,
+    doc.sections.filter((section) => sameTrail(section.trail, trail)),
+  );
+}
+
+/**
+ * One pick per matched section **and** per section nested under it, in document order.
+ *
+ * A selection names a section, not the paragraph box that ends at its first H3: `#config` has
+ * to render the `### Adapters` blocks under it, or a README would need one pointer per level.
+ * A trail keeps its own meaning — `A > B` is a leaf when nothing is nested deeper.
+ */
+function subtreeOf(sections: iMarkdownSection[], matched: iMarkdownSection[]): iMarkdownPick[] {
+  if (!matched.length) return [];
+
+  const picked = new Set<iMarkdownSection>();
+  for (const section of matched) {
+    picked.add(section);
+    const start = sections.indexOf(section);
+    for (let i = start + 1; i < sections.length && sections[i].level > section.level; i++) {
+      picked.add(sections[i]);
+    }
+  }
+
+  return sections.filter((section) => picked.has(section)).map(pickOf);
 }
 
 /** A section as a renderer consumes it: heading separate, so it can be dropped on its own. */

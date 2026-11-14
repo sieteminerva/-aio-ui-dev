@@ -6,9 +6,13 @@
  * topic declares two things and nothing else:
  *
  * 1. **which package README it reads** (`source`);
- * 2. **which README sections it claims** (`sections`) — the Usage tab renders exactly those,
- *    and the API tab renders the rest of the contract, so the two tabs cover one document
+ * 2. **which parts of it it claims** (`parts`) — the Usage tab renders exactly those, and the
+ *    API tab renders the contract sections (`role:contract`), so the two tabs cover one document
  *    without repeating a single line.
+ *
+ * A part is a **pointer**, not a heading: the README declares `<!-- part: id=validation -->` on
+ * the line above `### Validation`, and the topic cites `#validation`. Rename the heading, edit
+ * the README — never this file.
  *
  * What remains authored is the demo (Display tab) and the sidebar label. Nothing that could
  * be taken from a README is written here; if a topic needs prose that does not exist yet, the
@@ -52,13 +56,13 @@ export interface iFormTopic {
   /** Package whose README documents this topic. */
   source: string;
   /**
-   * README sections the Usage tab renders, in order.
+   * Outline parts the Usage tab renders, in order — `markdown`'s `config.outline.parts`.
    *
-   * An entry is either an H2 (`"Config"`) or a path into one (`"Supported syntax > Validation"`).
-   * The path form is what lets one document carry several topics: the page renders the `###`
-   * block only, so no topic has to restate prose that the README already owns.
+   * A part is an anchor (`#validation`) or the document's lead (`@lead`), and it brings the
+   * sections nested under it with it. Nothing here is a heading text: the README owns the
+   * wording, the pointer owns the identity.
    */
-  sections: readonly string[];
+  parts: readonly string[];
   /** Live example; `null` while the schema is not wired yet. */
   demo: iFormTopicDemo | null;
 }
@@ -66,13 +70,21 @@ export interface iFormTopic {
 /** The hub. The bare route `#form` shows it too. */
 export const OVERVIEW_ID = "overview";
 
+/**
+ * The contract sections, in the order the API tab renders them.
+ *
+ * Every package README declares these four pointers with `role=contract`, so the list is not a
+ * second copy of the prose — the topic test fails if a README stops marking one.
+ */
+export const CONTRACT_PARTS = ["#config", "#nodes", "#tokens", "#wiring"] as const;
+
 export const FORM_TOPICS: readonly iFormTopic[] = [
   {
     id: OVERVIEW_ID,
     label: "Overview",
     group: "Schema",
     source: "@aio-ui/form",
-    sections: ["Payload"],
+    parts: ["#payload"],
     demo: {
       note: "one schema: actions, rows, cascade, files and dropdowns",
       schema: orderSchema,
@@ -84,7 +96,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Field types",
     group: "Schema",
     source: "@aio-ui/input",
-    sections: ["Payload"],
+    parts: ["#payload"],
     demo: {
       note: "every editable field type, grouped: text & number · choice · other values",
       schema: fieldTypesSchema,
@@ -96,7 +108,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Layout & tokens",
     group: "Schema",
     source: "@aio-ui/form",
-    sections: ["Nodes", "Tokens"],
+    parts: ["#nodes", "#tokens"],
     demo: null,
   },
   {
@@ -104,7 +116,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Validation",
     group: "Behaviour",
     source: "@aio-ui/form",
-    sections: ["Supported syntax > Validation"],
+    parts: ["#validation"],
     demo: {
       note: "required, pattern and a number range — submit to see the message",
       schema: validationSchema,
@@ -116,7 +128,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Cascade",
     group: "Behaviour",
     source: "@aio-ui/form",
-    sections: ["Supported syntax > Cascade"],
+    parts: ["#cascade"],
     demo: null,
   },
   {
@@ -124,7 +136,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Calculation",
     group: "Behaviour",
     source: "@aio-ui/form",
-    sections: ["Supported syntax > Calculation"],
+    parts: ["#calculation"],
     demo: null,
   },
   {
@@ -132,7 +144,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Multistep",
     group: "Behaviour",
     source: "@aio-ui/form",
-    sections: ["Supported syntax > Multistep"],
+    parts: ["#multistep"],
     // Kept live because the old single-column `#form` page built it: splitting the page must
     // not drop a demo that already existed.
     demo: {
@@ -146,7 +158,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Input controls",
     group: "Inputs",
     source: "@aio-ui/input",
-    sections: ["Payload"],
+    parts: ["#payload"],
     demo: {
       note: "per-field actions, then the two dropdown modes",
       schema: [InputControlSet, DropdownSet],
@@ -158,7 +170,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Id Address",
     group: "Inputs",
     source: "@aio-ui/id-address",
-    sections: ["Payload"],
+    parts: ["#payload"],
     demo: null,
   },
   {
@@ -166,7 +178,9 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Modules & adapters",
     group: "Wiring",
     source: "@aio-ui/form",
-    sections: ["Supported syntax > Registering the form", "Wiring checklist"],
+    // `role:contract` is the API tab, so a topic never claims a contract section: the checklist
+    // renders once, under API, for every topic.
+    parts: ["#register"],
     demo: null,
   },
 ];
@@ -176,18 +190,6 @@ export function topicForFragment(fragment?: string | null): iFormTopic {
   const wanted = (fragment ?? "").trim().toLowerCase();
   if (!wanted) return FORM_TOPICS[0];
   return FORM_TOPICS.find((topic) => topic.id === wanted) ?? FORM_TOPICS[0];
-}
-
-/** The H2 part of a section path: `"Supported syntax > Validation"` → `"Supported syntax"`. */
-export function sectionHeading(path: string): string {
-  return path.split(">")[0].trim();
-}
-
-/** The H3 part of a section path, or `null` when the entry is a whole section. */
-export function subsectionHeading(path: string): string | null {
-  const parts = path.split(">");
-  const sub = parts.length > 1 ? parts[1].trim() : "";
-  return sub || null;
 }
 
 /**

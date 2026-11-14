@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CONTRACT_PARTS,
   FORM_GROUPS,
   FORM_TOPICS,
   OVERVIEW_ID,
-  sectionHeading,
-  subsectionHeading,
   topicForFragment,
   topicHref,
 } from "../form/topics";
@@ -16,11 +15,27 @@ import { readmeFor, sectionOf, subsectionOf } from "../readme";
  * are exactly the silent failures a README-driven page can have:
  *
  * - a topic whose `source` has no README renders an error box instead of documentation;
- * - a topic claiming a heading the README does not have silently falls back to rendering the
- *   whole README (or nothing), and nobody notices the topic lost its focus;
+ * - a topic citing a pointer the README never declares renders nothing, and nobody notices
+ *   the topic lost its focus — `config.outline` skips an unresolved path by design;
  * - a topic in an unknown group never appears in the sidebar at all;
- * - two topics claiming every contract section would leave the API tab empty.
+ * - two topics claiming the same part would print one paragraph twice.
  */
+
+/** The `id → role` map a README declares with its `<!-- part: … -->` lines. */
+function markerRoles(text: string): Map<string, string> {
+  const roles = new Map<string, string>();
+
+  for (const line of text.split("\n")) {
+    const marker = /^\s*<!--\s*part:\s*(.*?)\s*-->\s*$/.exec(line);
+    if (!marker) continue;
+
+    const id = /(?:^|\s)id=([\w-]+)/.exec(marker[1])?.[1];
+    if (id) roles.set(id, /(?:^|\s)role=([\w-]+)/.exec(marker[1])?.[1] ?? "");
+  }
+
+  return roles;
+}
+
 describe("form docs topics", () => {
   it("declares the hub plus nine topics, with unique ids", () => {
     expect(OVERVIEW_ID).toBe("overview");
@@ -48,23 +63,16 @@ describe("form docs topics", () => {
     }
   });
 
-  it("claims only section headings its README really has", () => {
+  it("claims a pointer its README really declares", () => {
     for (const topic of FORM_TOPICS) {
       const doc = readmeFor(topic.source)!;
+      const declared = markerRoles(doc.text);
 
-      expect(topic.sections.length, `${topic.id} claims no section`).toBeGreaterThan(0);
-      for (const path of topic.sections) {
-        const heading = sectionHeading(path);
-        const section = sectionOf(doc, heading);
-        expect(section, `${topic.id} → ${topic.source} #${heading}`).not.toBeNull();
-
-        const sub = subsectionHeading(path);
-        if (sub) {
-          expect(
-            subsectionOf(section!, sub),
-            `${topic.id} → ${topic.source} #${heading} > ${sub}`,
-          ).not.toBeNull();
-        }
+      expect(topic.parts.length, `${topic.id} claims no part`).toBeGreaterThan(0);
+      for (const part of topic.parts) {
+        // Heading text is not a part any more: a rename must not silently empty a tab.
+        expect(part.startsWith("#"), `${topic.id} → ${part} is not an anchor`).toBe(true);
+        expect(declared.has(part.slice(1)), `${topic.id} → ${topic.source} ${part}`).toBe(true);
       }
     }
   });
@@ -85,12 +93,18 @@ describe("form docs topics", () => {
   });
 
   it("leaves the API tab something to render", () => {
-    const contract = ["Config", "Nodes", "Tokens", "Wiring checklist"];
-
     for (const topic of FORM_TOPICS) {
-      const claimed = topic.sections.map((path) => sectionHeading(path).toLowerCase());
-      const remaining = contract.filter((heading) => !claimed.includes(heading.toLowerCase()));
-      expect(remaining.length, `${topic.id} claims every contract section`).toBeGreaterThan(0);
+      const doc = readmeFor(topic.source)!;
+      const declared = markerRoles(doc.text);
+
+      // Every README marks the four contract sections, so the demo's list is derived, not copied.
+      for (const part of CONTRACT_PARTS) {
+        expect(declared.get(part.slice(1)), `${topic.source} ${part}`).toBe("contract");
+      }
+
+      // A claimed section is subtracted, so no paragraph is printed in both tabs.
+      const api = CONTRACT_PARTS.filter((part) => !topic.parts.includes(part));
+      expect(api.length, `${topic.id} claims every contract section`).toBeGreaterThan(0);
     }
   });
 

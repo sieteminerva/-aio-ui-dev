@@ -192,3 +192,14 @@ export function readmeFor(pkg: string): iReadmeDoc | null {
 export function missingSections(doc: iReadmeDoc): string[] {
   return README_REQUIRED.filter((heading) => !sectionOf(doc, heading));
 }
+
+/**
+ * The first sentence of a README's lead — the one-line description a page header shows.
+ *
+ * Taken from the document rather than written beside it: a package that renames itself must not
+ * leave a stale sentence on the page.
+ */
+export function leadSentence(doc: iReadmeDoc | null): string {
+  const first = (doc?.lead ?? "").split(/(?<=[.!?])\s/)[0]?.trim();
+  return first || "";
+}

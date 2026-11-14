@@ -46,7 +46,7 @@ The parts are answered from the same parse, so nothing is rebuilt as text and pa
 | ----------- | ---------------------------------------------------- |
 | `@title`    | The first H1                                         |
 | `@lead`     | Blocks between the H1 and the first section opener   |
-| `#anchor`   | The section that declared (or slugged to) that id    |
+| `#anchor`   | That section **and** the sections nested under it    |
 | `role:name` | Every section declaring that role, in document order |
 | `Config`    | An H2 by heading text                                |
 | `A > B`     | An H3 under an H2, joined with `>`                   |
@@ -65,6 +65,9 @@ const doc = build("markdown", {
 | `heading` | `"keep"` | `"drop"` renders the body without its heading              |
 
 Trails match on text **and** length: `Config` never resolves to `Config > Notes`.
+
+A selection carries its subsections with it, so `#config` renders the `###` blocks written
+under `## Config` — a document never needs one pointer per heading level.
 
 ### Markers
 

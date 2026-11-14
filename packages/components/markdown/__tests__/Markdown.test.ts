@@ -265,6 +265,23 @@ describe("selectOutline", () => {
     ]);
     expect(selectOutline(marked, "role:none")).toEqual([]);
   });
+
+  it("carries the H3s nested under a selected H2, and nothing beside it", () => {
+    const nested = outline(
+      parseMarkdown(
+        ["## A", "", "a", "", "### A1", "", "a1", "", "### A2", "", "a2", "", "## B", "", "b"].join(
+          "\n",
+        ),
+      ),
+    );
+
+    expect(selectOutline(nested, "#a").map((pick) => pick.heading?.content)).toEqual([
+      [{ type: "text", value: "A" }],
+      [{ type: "text", value: "A1" }],
+      [{ type: "text", value: "A2" }],
+    ]);
+    expect(selectOutline(nested, "A > A1")).toHaveLength(1);
+  });
 });
 
 describe("outline rendering", () => {

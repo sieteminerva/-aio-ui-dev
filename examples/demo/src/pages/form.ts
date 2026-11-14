@@ -2,9 +2,10 @@ import type { iPageContent, iPageController, iPageContext, iPageReadyContext } f
 import { releaseBuilders } from "@aio-ui/core";
 
 import { mountInto } from "../dom";
-import { formApiPanel, formDisplayPanel, formUsagePanel, leadOf, mountFormSidebar } from "../form/panels";
+import { formApiPanel, formDisplayPanel, formUsagePanel, mountFormSidebar } from "../form/panels";
 import { topicForFragment } from "../form/topics";
 import type { iFormTopic } from "../form/topics";
+import { leadSentence, readmeFor } from "../readme";
 import { shellPage } from "../shell";
 
 type BuildFn = (name: string, data?: any) => HTMLElement;
@@ -40,7 +41,7 @@ function mountMain(host: HTMLElement, topic: iFormTopic, build: BuildFn): void {
               eyebrow: `Form · ${topic.group}`,
               title: topic.label,
               // The description is the README's own opening sentence, not a second copy.
-              description: leadOf(topic.source),
+              description: leadSentence(readmeFor(topic.source)),
             },
           },
           { id: "panel-usage", content: formUsagePanel(topic, build) },

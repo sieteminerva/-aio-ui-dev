@@ -15,20 +15,18 @@ Last updated: 2026-11-14
 
 ## Landed recently
 
-- **Batch 30 (2026-11-14):** a regression sweep on the docs shell, found in a browser. `Tab.css`
-  reached into mounted panels with `& .menu` / `& .body`, so a dropdown popover inside a tab was
-  laid out as a row, lost its entry transition and inherited the tab's border; both are now `>`
-  (own nodes only), and `COMPONENT-CONVENTIONS.md` §12/§13 make that a rule and an anti-pattern.
-  `input.css`: the select-mode search box no longer draws a second border, chips keep a horizontal
-  inset in the frame, the datalist frame draws nothing (the input is the box) and the frame now
-  measures exactly like a plain input (36.6 px, was 38.6). `Form.css`: step-button glyphs are
-  square and token-sized (`calc(--input-icon-size * 0.7)`), not `width: 17%` × `20px`.
-- **Batch 29 (2026-11-14):** `markdown` can render _parts_ of a document. The engine
-  (`Markdown.engine.ts`, per §1b) reads invisible **part markers** (`part: id=x role=y` inside an
-  HTML comment, or the reference-definition form) and exposes `outline()` + `selectOutline()`; the
-  builder gained `config.outline` (`@title` / `@lead` / `#anchor` / `role:name` / `H2` / `H2 > H3`),
-  `config.marker`, payload overrides, a `@markdown>section` key. No outline = the old behaviour;
-  unmatched comments are dropped, markers inside fences stay source.
+- **Batch 31 (2026-11-14):** the `#form` docs tree stopped slicing Markdown. `selectOutline`
+  carries the subsections nested under a selection (`#config` renders its `###` blocks — what the
+  engine's own comment promised). `form`/`input`/`id-address` READMEs declare `<!-- part: id=… -->`
+  pointers, with `role=contract` on the four contract sections. Demo: `FORM_TOPICS.sections` →
+  `parts` (`#payload`, `#cascade` …), `pathMarkdown` / `leadOf` / `sectionHeading` /
+  `subsectionHeading` deleted (`leadSentence` lives in `readme.ts`); Usage renders
+  `["@lead", …parts]`, API renders `CONTRACT_PARTS` minus what the topic claims.
+- **Batch 30 (2026-11-14):** docs-shell CSS regression sweep — `Tab.css` `& .menu` / `& .body` →
+  `& > …`; `input.css` select-mode frame/input/chips and the datalist frame; `Form.css` step glyph.
+  Rule + anti-pattern row in `COMPONENT-CONVENTIONS.md` §12/§13.
+- **Batch 29 (2026-11-14):** `markdown` renders document _parts_: `config.outline` (`@title` /
+  `@lead` / `#anchor` / `role:` / `H2 > H3`), invisible `part:` markers, `@markdown>section`.
 - **Batch 28 (2026-11-14):** the Markdown parser moved out of `@aio-ui/utilities` and into its only
   consumer (naming settled in batch 29). `@aio-ui/utilities` lost the
   `./Markdown` subpath and 13 barrel names (`api-map.json` updated, 27 → 13 utilities values).

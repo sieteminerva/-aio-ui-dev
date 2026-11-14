@@ -112,7 +112,12 @@ reads:
 
 The marker is invisible in every Markdown renderer, belongs to the heading under it, and its
 `role` is a word only the **consumer** gives meaning to. Use it when a page cites a section:
-the heading stays free to change.
+the heading stays free to change. A selection names a section, so it brings the `###` blocks
+nested under it — a document never needs one pointer per heading level.
+
+The demo's `#form` tree is the reference consumer: `role=contract` marks the four sections its
+API tab renders (`Config`, `Nodes`, `Tokens`, `Wiring checklist`), and a topic's `parts` cite
+everything else by `id`. A new section a page should show belongs in that list.
 
 ### Plugin skeleton (kind: plugin)
 
