@@ -7,8 +7,6 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Framework (`packages/`, `examples/demo`)
 
-- [ ] Review `AioApp` entry/render output, then define and implement `isRoot` builder semantics
-      (default host wraps; `isRoot: true` replaces the host with the builder root). See `plan-generator.md` §3.11.
 - [ ] Observe the mockup path in a real browser (cold sheet): needs a throttled network or a
       disabled HTTP cache — Vite resolves the loader in one microtask, so dev never shows the hold.
 - [ ] Fix and validate the Masonry column distribution.
@@ -38,6 +36,9 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Generator (`orchestrator/`)
 
+- [ ] Emit `isRoot: true` in the generated `mount()` pass (the renderer owns the swap since
+      `dd34f2d`), then probe `gallery` + `store` in a browser: one wrapper per block, metadata tree
+      still walks, `onDestroy` still runs.
 - [ ] GitHub release workflow: tag → `verify` → `release.mjs` → `publish-cdn.mjs` → upload assets.
 - [ ] Verify `npm i <tarball>` from a clean folder (bundler project) and a Node ESM import.
 - [ ] Feed `parsePreset()`/`parseAiContent()` issues back to the model verbatim (retry loop).

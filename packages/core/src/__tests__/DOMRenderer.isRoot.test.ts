@@ -85,6 +85,7 @@ describe("isRoot — host versus builder root", () => {
   });
 
   it("falls back to the host when the builder resolves to nothing", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => { });
     const build = stubBuilder(() => null);
 
     const out = render({ "div#masonry": { builder: "missing", isRoot: true, content: {} } }, build);
@@ -92,6 +93,20 @@ describe("isRoot — host versus builder root", () => {
     expect(out.tagName).toBe("DIV");
     expect(out.id).toBe("masonry");
     expect(build).toHaveBeenCalledTimes(1);
+    warn.mockRestore();
+  });
+
+  it("warns once per builder name when the root it promised never arrives", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => { });
+    const build = stubBuilder(() => null);
+
+    render({ "div#ghost": { builder: "ghost", isRoot: true, content: {} } }, build);
+    render({ "div#ghost": { builder: "ghost", isRoot: true, content: {} } }, build);
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain("ghost");
+    expect(warn.mock.calls[0][0]).toContain("keeping the host");
+    warn.mockRestore();
   });
 
   it("adopts the builder's own records instead of orphaning them", () => {

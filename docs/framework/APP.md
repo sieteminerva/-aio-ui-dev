@@ -266,6 +266,21 @@ bindings are **not** copied into the node, because the renderer would turn them 
 attributes. Filling a tabled block with records is a controller/transformer job — the
 entry never fetches.
 
+### `isRoot` — who owns the element
+
+`blockToNode()` emits `isRoot: true` for every block, and that flag is the whole contract
+between a page document and the renderer (`DOMRenderer.buildStructure`).
+
+| Input                                      | Result                                                                                                                                                  |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| builder resolves, no `onCreated`           | the builder root **replaces** the host — `div#masonry` disappears and `section.masonry` is the anchor; the key's `id`, classes and `attrs` move onto it |
+| `onCreated` is present                     | the host keeps its slot and the hook's element is its content (a hook owns its mount)                                                                   |
+| `isRoot: true`, builder missing/unresolved | fall back to the host wrapper, and warn once per builder name in development                                                                            |
+
+A node with `builder` and **no** `isRoot` keeps the host — that is the default shape, and
+`isRoot` is the author's assertion that the component _is_ the box. The component's own
+metadata records are adopted into the page pool when the host is replaced, never orphaned.
+
 ## Preload
 
 Two sources, unioned into one list.

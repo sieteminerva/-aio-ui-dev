@@ -7,14 +7,22 @@ Last updated: 2026-11-14
 
 ## Active (max 3)
 
-| #   | Task                        | Project   | State       | Gate                                                                  |
-| --- | --------------------------- | --------- | ----------- | --------------------------------------------------------------------- |
-| 1   | Page-level components (P9b) | Framework | in progress | generator emits `iPageDefinition`s; docs still call `isRoot` proposed |
-| 2   | Build `profile` reference   | Examples  | not started | home, services, contact, portfolio render; boundaries documented      |
-| 3   | Build `blog` reference      | Examples  | not started | home, post list, post, about render; boundaries documented            |
+| #   | Task                        | Project   | State       | Gate                                                                                            |
+| --- | --------------------------- | --------- | ----------- | ----------------------------------------------------------------------------------------------- |
+| 1   | Page-level components (P9b) | Framework | in progress | `isRoot` and `loading()` settled; generator must emit `isRoot: true` in `mount()` and be probed |
+| 2   | Build `profile` reference   | Examples  | not started | home, services, contact, portfolio render; boundaries documented                                |
+| 3   | Build `blog` reference      | Examples  | not started | home, post list, post, about render; boundaries documented                                      |
 
 ## Landed recently
 
+- **Batch 23 (2026-11-14):** the `isRoot` debt closed. The swap itself already shipped in
+  `dd34f2d` (`DOMRenderer.buildStructure` replaces the host with the builder root, `onCreated`
+  keeps it, metadata adopted); what was missing was the fallback's voice and the paper trail.
+  `warnMissingRoot()` now warns once per builder name in dev when a promised root never arrives
+  (8th case in `DOMRenderer.isRoot.test.ts`). Docs retracted their "proposed": `APP.md` has the
+  rule table, `packages/AGENTS.md` is declared and implemented, `plan-generator.md` §3.11 answers
+  its own four questions, `TASK-builder-array.md` unblocked. The generator may emit
+  `isRoot: true` now. Gate: 656 pass / 1 skip.
 - **Batch 22 (2026-11-14):** the skeleton got its two knobs. `duration: number | "auto"` —
   `"auto"` (default) releases with the component's sheet, a number is a **floor** so a fast
   sheet cannot flash the mockup (the hold joins it with the stylesheet promise via
@@ -70,5 +78,3 @@ _(Batches 11–14 are in `git log`; only open work stays in this file.)_
 
 - Generated-site hosting (GitHub Pages vs Cloudflare Pages) — affects deployment only, not the
   preset contract.
-- `plan-generator.md` §3.11 still calls `isRoot` proposed; it is implemented (`dd34f2d`). Sync the
-  doc on the next generator pass.

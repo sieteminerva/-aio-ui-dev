@@ -56,12 +56,12 @@ Scope: `orchestrator/**` and `docs/generator/**` only. The Framework band (`pack
       (`Pemesanan` + 3 field groups), `gallery#/` renders, 0 requests ≥ 400, 0 duplicate
       stylesheet links. **This is what caught the boot bug below** — unit tests were green.
 
-## Blocked on the Framework band
+## No longer blocked (Framework band closed it)
 
-- [ ] **`isRoot` in the emitted `mount()` pass.** `.guidance/plan-generator.md` §3.11 is
-      still open: the renderer only names metadata with `isRoot` today. Do not emit
-      `isRoot: true` in generated content until the renderer owns the swap. Current
-      decision to respect when it lands: `onCreated` wins and keeps the host.
+- [x] **`isRoot` in the emitted `mount()` pass.** The renderer owns the swap (`DOMRenderer`,
+      commit `dd34f2d`): a node with `builder` + `isRoot: true` renders the builder root in place
+      of the host, with `onCreated` still winning. Generated content may emit `isRoot: true` now.
+      `.guidance/plan-generator.md` §3.11 and `docs/framework/APP.md` carry the rule.
 
 ## Done in the Gallery band (2026-11-11)
 

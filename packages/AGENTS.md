@@ -59,15 +59,18 @@ npm run verify           # full gate — run once per batch, not per step
 - `packages/core/ComponentRegistry.md` — registry/loader internals.
 - Do **not** read `docs/generator/apps-script-integration.md` or `orchestrator/**` from this band.
 
-## Open design (decide, do not implement blind)
+## `isRoot` — decided and implemented (`core/src/DOMRenderer.ts`, `dd34f2d`)
 
-`isRoot` (`.guidance/plan-generator.md` §3.11): default builder node wraps (`div#masonry` host);
-`isRoot: true` should **replace** the host with the builder root. Decided: `onCreated` wins and
-keeps the host (a hook owns its mount), and an unresolved builder falls back to the host. Decided
-against: adding a helper or a new parameter to existing renderer methods — `buildStructure`
-already holds `builderFn`, and `attachMetadata` can tell a builder root by its `getMetadata`.
-`AioApp.blockToNode()` keeps emitting `isRoot: true`; until this lands, page-document blocks
-still render an empty host.
+| Input                            | Result                                                                              |
+| -------------------------------- | ----------------------------------------------------------------------------------- |
+| builder resolves, no `onCreated` | the builder root **replaces** the host; the key's `id`/classes/`attrs` move onto it |
+| `onCreated` present              | the host stays; the builder element becomes its content (a hook owns its mount)     |
+| builder missing/unresolved       | the host stays, and dev warns once per builder name                                 |
+
+`AioApp.blockToNode()` emits `isRoot: true` for every page block, so a page document renders the
+component as the block instead of nesting it. Decided against: a helper or a new renderer
+parameter — `buildStructure` already holds `builderFn`, and `attachMetadata` recognises a builder
+root by its `getMetadata`. A node with `builder` and no `isRoot` keeps the host.
 
 ## Verify
 

@@ -16,6 +16,28 @@ function isValidHTMLTag(tag: string): tag is keyof HTMLElementTagNameMap {
   return !(document.createElement(tag) instanceof HTMLUnknownElement);
 }
 
+/** Builders that already reported a root they could not deliver. */
+const warnedRoots = new Set<string>();
+
+/**
+ * Reports an `isRoot` promise the builder could not keep.
+ *
+ * @param builder - The builder name the node asked for.
+ * @returns Nothing.
+ *
+ * @summary `isRoot: true` says "this component *is* the box"; a builder that yields nothing
+ *   leaves the host in its place, which is a silent hole in the page. It warns once per
+ *   builder name and only in development — a page rendering a hundred cards must not print
+ *   a hundred lines, and a production build has no console budget for a resolved fallback.
+ */
+function warnMissingRoot(builder: string): void {
+  if (!import.meta.env?.DEV || warnedRoots.has(builder)) return;
+  warnedRoots.add(builder);
+  console.warn(
+    `[DOMRenderer] isRoot: true on "${builder}", but the builder produced no element — keeping the host wrapper.`,
+  );
+}
+
 export class DOMRenderer<
   C extends Partial<any> = {},
   S extends string = DefaultSelectors
@@ -198,7 +220,8 @@ export class DOMRenderer<
       // - `onCreated` keeps the host. A hook owns its mount: it was handed an element and
       //   may append into it, so replacing that element under its feet would orphan the hook.
       // - an unresolvable builder keeps the host too. Dropping the element would leave a hole
-      //   exactly where the author expected a component.
+      //   exactly where the author expected a component, so it falls back *and* warns
+      //   (`warnMissingRoot`, once per builder name, dev only).
       const wantsBuilderRoot =
         typeof (value as any).builder === "string" &&
         (value as any).isRoot === true &&
@@ -208,6 +231,7 @@ export class DOMRenderer<
       if (wantsBuilderRoot) {
         const builtRoot = builderFn!((value as any).builder as keyof iBuilderRegistry, value);
         if (builtRoot && builtRoot !== currentElement) currentElement = builtRoot;
+        else if (!builtRoot) warnMissingRoot((value as any).builder as string);
       }
 
       // Phase 2: 🧱 ATTRIBUTE PROCESSOR

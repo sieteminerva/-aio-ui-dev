@@ -253,46 +253,44 @@ every import-map URL on disk, and every reachable bare import has an exact key. 
 plus `SMOKE_BASE=<cdn>` runs the same sites against the real tag; both paint with a clean console,
 styles included. `vitest` excludes the generated trees (`cdn-tree`, `cdn-smoke`, `smoke`).
 
-### 3.11 Open design — builder node host vs `isRoot` replacement (2026-11-11)
+### 3.11 Builder node host vs `isRoot` replacement — **implemented** (`dd34f2d`)
 
-A builder node currently renders as a **host**: the node key becomes the element and the builder
+A builder node normally renders as a **host**: the node key becomes the element and the builder
 output is mounted inside it.
 
 ```
 "div#masonry": { "builder": "masonry" }   →   <div id="masonry"><section class="masonry">…</section></div>
 ```
 
-That is the default and it works. The proposed extension is `isRoot: true`: the host is replaced
-by the builder output, so the component owns its element directly.
+`isRoot: true` turns the node into a **placeholder**: the builder output _is_ the element, so the
+key's tag disappears and the component becomes the anchor.
 
 ```
 "div#masonry": { "builder": "masonry", "isRoot": true }   →   <section class="masonry">…</section>
 ```
 
-**Not implemented, and not yet verified.** `AioApp`'s entry/render path was rewritten and its
-output has not been reviewed against this idea, so the semantics must be pinned before code.
+**Where it lives:** `DOMRenderer.buildStructure()` (`wantsBuilderRoot`) — not `AioApp`, because
+`buildStructure` already holds `builderFn` and `attachMetadata` recognises a builder root by its
+`getMetadata`. `AioApp.blockToNode()` emits `isRoot: true` for page blocks, so a page document
+renders the component as the block instead of nesting it.
 
-What exists today:
+The four questions this section used to leave open, now answered:
 
-- `DOMRenderer.contentEvaluator()` returns early for a node with `builder`; the host element comes
-  from `nodeFactory()` using the key's tag.
-- `DOMRenderer.attachMetadata()` reads `isRoot` only to name the builder template relation; it does
-  not change the DOM.
-- `AioApp.blockToNode()` emits `isRoot: true` for page blocks — a different use of the same flag.
-- The generated `mount()` pass ignores `isRoot` and always appends into the host.
+1. **Where the swap happens** — the renderer, before `attributeProcessor`, so the key's `id`,
+   classes and `attrs` land on the builder root instead of a host that is about to be discarded.
+2. **What carries over** — `id`/`class`/`attrs`/`data-*` move onto the builder root; nested keys
+   still render inside it. Nothing is illegal when `isRoot` is set.
+3. **Metadata and lifecycle** — the builder's own records are adopted into the page pool (test:
+   "adopts the builder's own records instead of orphaning them"); `onCreated` keeps the host, so a
+   hook's mount is never replaced under it; `onDestroy` is untouched.
+4. **Page blocks vs content nodes** — one meaning: "the component owns the box". A node with
+   `builder` and no `isRoot` keeps the host.
 
-Decisions to make before implementation:
+An unresolved builder falls back to the host and warns once per builder name in development
+(`warnMissingRoot`).
 
-1. **Where the swap happens** — renderer (`nodeFactory` needs a pre-built element), `AioApp`
-   (transform the node before render), or the generator (`mount()` replaces `el`).
-2. **What carries over** — `id`, `class`, `attrs`, `data-*` and child nodes on the key: do they
-   move onto the builder root, or are they illegal when `isRoot` is set?
-3. **Metadata and lifecycle** — `attachMetadata`/`setMetadata` records, `onCreated`/`onDestroy`,
-   hydration gate and the event-emitter bridge all assume the host element is the record owner.
-   A swap must re-point them, not orphan them.
-4. **Page blocks vs content nodes** — `AioApp` already uses `isRoot` for blocks; the flag needs one
-   meaning, or two distinct names.
-
-Gates: DOM/wrapper counts for `isRoot` true and false on both generated sites, metadata tree still
-walks (no orphan records), `onDestroy` still runs, no duplicate stylesheet, and a browser probe of
-`gallery` + `store` with both shapes.
+Gates (done): `packages/core/src/__tests__/DOMRenderer.isRoot.test.ts` — default host,
+replacement, attribute carry-over, `onCreated`, missing builder, single dev warning, metadata
+adoption, nested keys. Still open for the Generator band: emit `isRoot: true` in the generated
+`mount()` pass (`docs/generator/TASK-builder-array.md`, no longer blocked) and probe both generated
+sites in a browser.
