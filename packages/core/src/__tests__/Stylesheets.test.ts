@@ -1,15 +1,18 @@
 // @vitest-environment happy-dom
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ensureStylesheet, injectLazyCss, isStyleInjected, replaceLazyCss, styleTagId, useStylesheetAssets } from "../Stylesheets";
+import { ensureStylesheet, injectLazyCss, isStyleInjected, isStylesheetPending, replaceLazyCss, styleTagId, useStylesheetAssets } from "../Stylesheets";
 
 /**
  * The stylesheet seam is what replaced `import "./X.css"` in every component.
  *
- * Two things have to hold: a component can name its sheet the way it always did
- * (`"./Table.css"`, relative to itself) even though the host keys the map by module
+ * Two things have to hold: a component can name its sheet the way it always did * (`"./Table.css"`, relative to itself) even though the host keys the map by module
  * specifier, and no code path may inject the same sheet twice — the registry injects
  * before a render, a nested builder asks again on `create()`.
+ *
+ * The hold that *consumes* this seam (`holdUntilStyled` / `releaseMarkers` / the
+ * `loading()` mockup) is a builder concern and is tested in
+ * `@aio-ui/base` — `BaseAdapters/Hydration`.
  */
 
 const CSS = "@media all { table.table { border: 1px solid gold } }";
@@ -84,31 +87,47 @@ describe("stylesheet seam", () => {
     expect(document.querySelector("style")?.textContent).toContain("border: 1px solid gold");
   });
 
-describe("stylesheet hot path (opt-in)", () => {
-  const SPEC = "@aio-ui/table/Table.css";
+  describe("stylesheet hot path (opt-in)", () => {
+    const SPEC = "@aio-ui/table/Table.css";
 
-  it("keeps injection lazy: a second inject never overwrites the sheet", () => {
-    injectLazyCss(CSS, SPEC);
-    injectLazyCss("/* edited */", SPEC);
+    it("keeps injection lazy: a second inject never overwrites the sheet", () => {
+      injectLazyCss(CSS, SPEC);
+      injectLazyCss("/* edited */", SPEC);
 
-    expect(document.querySelectorAll("style")).toHaveLength(1);
-    expect(document.getElementById(styleTagId(SPEC))?.textContent).toBe(CSS);
-  });
+      expect(document.querySelectorAll("style")).toHaveLength(1);
+      expect(document.getElementById(styleTagId(SPEC))?.textContent).toBe(CSS);
+    });
 
-  it("swaps the text of an injected sheet without adding a second element", () => {
-    injectLazyCss(CSS, SPEC);
+    it("swaps the text of an injected sheet without adding a second element", () => {
+      injectLazyCss(CSS, SPEC);
 
-    replaceLazyCss("@media all { table.table { border: 2px solid teal } }", SPEC);
+      replaceLazyCss("@media all { table.table { border: 2px solid teal } }", SPEC);
 
-    expect(document.querySelectorAll("style")).toHaveLength(1);
-    expect(document.getElementById(styleTagId(SPEC))?.textContent).toContain("2px solid teal");
-  });
+      expect(document.querySelectorAll("style")).toHaveLength(1);
+      expect(document.getElementById(styleTagId(SPEC))?.textContent).toContain("2px solid teal");
+    });
 
-  it("falls back to lazy injection when the sheet is not there yet", () => {
-    replaceLazyCss(CSS, SPEC);
+    it("falls back to lazy injection when the sheet is not there yet", () => {
+      replaceLazyCss(CSS, SPEC);
 
-    expect(document.querySelectorAll("style")).toHaveLength(1);
-    expect(isStyleInjected(SPEC)).toBe(true);
+      expect(document.querySelectorAll("style")).toHaveLength(1);
+      expect(isStyleInjected(SPEC)).toBe(true);
+    });
   });
 });
+
+describe("pending probe (anti-FOUC decision)", () => {
+  it("is pending only while the host has a loader and the document lacks the sheet", () => {
+    useStylesheetAssets({ "@aio-ui/table/Table.css": async () => CSS });
+
+    expect(isStylesheetPending("./Table.css")).toBe(true);
+
+    injectLazyCss(CSS, "@aio-ui/table/Table.css");
+
+    expect(isStylesheetPending("./Table.css")).toBe(false);
+  });
+
+  it("is never pending for a sheet no loader can serve", () => {
+    expect(isStylesheetPending("./Undeclared.css")).toBe(false);
+  });
 });

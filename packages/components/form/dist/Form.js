@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { FORM_MODULE_IDS } from "./FormModuleTypes.js";
 import { FORM_ADAPTER_DEFINITIONS } from "./FormRegistry.js";
 import { INPUT_MODULE_IDS } from "@aio-ui/input/InputRegistry";
@@ -101,6 +102,28 @@ export class FormBuilder extends Builder {
         if (definitions.length)
             this.#providedLoader = new ModuleLoader("form", definitions);
     }
+    /**
+     * 🪶 LOADING MOCKUP — a title, three labelled fields and the action row, drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. Field count and types are payload detail; the
+     * mockup only promises the column the sheet will take over.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "line", width: "40%" },
+                {
+                    shape: "stack",
+                    count: 3,
+                    children: [
+                        { shape: "line", width: "25%" },
+                        { shape: "bone", height: "2.75rem" },
+                    ],
+                },
+                { shape: "bone", width: "30%", height: "2.75rem" },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultSelectors = {
@@ -172,7 +195,9 @@ export class FormBuilder extends Builder {
         }
         this.#inputs = Array.isArray(inputs) ? inputs : [inputs];
         // 🌊 Siklus hidup baru per prepare: seluruh modul dilepas lalu dimuat ulang.
-        this.#loader.unloadAll();
+        // Loader yang diserahkan registry ikut dilepas — instance lama masih memegang form
+        // yang sudah dibuang, dan `resolveAll()` melewati id yang masih punya instance.
+        this.#activeLoader.unloadAll();
         this.#features = [];
         this.#cascade = null;
         this.#multistep = null;
@@ -586,11 +611,10 @@ export class FormBuilder extends Builder {
             this.attachFormListener(formElement);
         }
         // 🧮 Fase initialize: modul yang membaca DOM final (calculation) baru layak dimuat
-        // sekarang, setelah step multistep lahir dari attach() di atas. Bila registry sudah
-        // menyerahkan definisinya, loader itu yang memutuskan fasenya — jangan dobel.
-        if (!this.#providedLoader) {
-            this.#features.push(...this.#loader.resolveAll(this._buildModuleContext(formElement, "initialize")));
-        }
+        // sekarang, setelah step multistep lahir dari attach() di atas. Loader aktif yang
+        // memutuskan — termasuk loader dari manifest registry, yang dulu melewati fase ini
+        // sehingga `calculation` tidak pernah hidup pada form yang dimount lewat registry.
+        this.#features.push(...this.#activeLoader.resolveAll(this._buildModuleContext(formElement, "initialize")));
         // console.log(`[Form Engine v2] Form ID "${formElement?.id}" successfully compiled with active listeners.`);
     }
     template(typeKey, el, payload) {
@@ -712,7 +736,7 @@ export class FormBuilder extends Builder {
     }
     unmount() {
         // Loader memiliki siklus hidup modul: dispose/destroy dipanggil oleh definisi.
-        this.#loader.unloadAll();
+        this.#activeLoader.unloadAll();
         this.#features = [];
         this.#validation = null;
         this.#cascade = null;

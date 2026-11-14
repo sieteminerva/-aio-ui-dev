@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { DEFAULT_SELECTORS } from "./ProductDetail.kit.js";
 import { formatPrice, imageOf, normalizeProduct } from "./ProductDetail.engine.js";
 export class ProductDetailBuilder extends Builder {
@@ -8,6 +9,25 @@ export class ProductDetailBuilder extends Builder {
     config;
     record = {};
     selectedColor;
+    /**
+     * 🪶 LOADING MOCKUP — the detail column top to bottom: media, eyebrow, title, copy, price,
+     * swatch row and checkout. Drawn with the mandatory `@aio-ui/skeleton` primitive, so it
+     * never waits for `ProductDetail.css` (the sheet it is standing in for).
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "bone", aspect: "1 / 1" },
+                { shape: "line", width: "25%" },
+                { shape: "bone", width: "70%", height: "1.75rem" },
+                { shape: "line", count: 2 },
+                { shape: "bone", width: "30%", height: "1.4rem" },
+                { shape: "row", gap: "0.5rem", children: [{ shape: "circle", width: "1.5rem", count: 4 }] },
+                { shape: "bone", height: "2.75rem" },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultConfig = {

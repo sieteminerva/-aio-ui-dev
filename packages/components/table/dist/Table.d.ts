@@ -54,6 +54,15 @@ export declare class TableBuilder extends Builder<TableElementType, iTableConfig
     prepare(content: any, _config: Required<iTableConfig>): HTMLElement | Record<string, any | HTMLElement>;
     private renderTable;
     /**
+     * 🪶 LOADING MOCKUP — one header bar and four placeholder rows, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive.
+     *
+     * Deliberately independent of the payload: a skeleton that mirrored every real row would
+     * be the per-element placeholder pass again. `Table.css` is what is still loading, so the
+     * skin cannot come from it — the skeleton sheet ships with the app shell.
+     */
+    protected loading(): HTMLElement;
+    /**
      * Runtime event-binding hook.
      * Triggered at the very end of the creation lifecycle to lock persistent browser
      * click/drag/swipe interactive listeners onto the completed DOM structure.

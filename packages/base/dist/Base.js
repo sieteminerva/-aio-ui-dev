@@ -1,9 +1,8 @@
 var _a;
 // import { TemplateRegistry } from "@aio-ui/template-registry";
-import { ensureStylesheet } from "@aio-ui/core";
 // import { ElementCreatedEventBus } from "../Services/EventBus";
 import { BuilderProxy } from "./BaseAdapters/BuilderProxy.js";
-import { HydrationGate } from "./BaseAdapters/HydrationGate.js";
+import { holdUntilStyled } from "./BaseAdapters/Hydration.js";
 import { setBuilderAdapter } from "@aio-ui/core";
 import { getTemplates } from "@aio-ui/core";
 import { buildNamespace, setMetadata } from "@aio-ui/utilities/Metadata";
@@ -56,16 +55,7 @@ export const GLOBAL_INSTANCE_COUNTER = new Map();
  * @version 1.0.0
  */
 export class Builder {
-    /** 🧊 ANTI-FOUC GATE — extracted to `BaseAdapters/HydrationGate`.
-     *  Marker mechanics (`--is-loading` / `data-hydrating` / `data-loaded`)
-     *  live there; the builder only holds the gate instance and exposes the
-     *  `isLoaded` flag that ComponentRegistry flips before `create()`.
-     *  Kept in this fork on purpose: a builder moved onto Builder (the color
-     *  theme now is) must not silently lose the pre-paint hold its Base sibling
-     *  had — the registry release path (`instance.hydration`) stays identical. */
-    /** Compatibility surface: ComponentRegistry does `instance.isLoaded = false`. */
-    isLoaded = false;
-    /** 🧩 THE BUILDER CURRENTLY MATERIALIZING — `create()` pins itself here for
+    /**  THE BUILDER CURRENTLY MATERIALIZING — `create()` pins itself here for
      *  the whole duration of prepare()/initialize(), which is exactly the window
      *  in which a parent instantiates its children. Same spirit as
      *  `#namespaceStack`: the child picks up its caller without anyone having to
@@ -402,11 +392,11 @@ export class Builder {
      */
     create(content, config) {
         // console.log({ content, config });
-        // 🎨 No component imports its own CSS: the sheet is requested here, so a builder
-        // created outside the registry (a table inside a form field, a dropdown inside an
-        // input) is styled by the same lazy loader the registry uses — and a static import
-        // would otherwise ride in the JS chunk and be injected a second time.
-        void ensureStylesheet(this.#stylesheetSpecifier()).catch(() => null);
+        // 🎨 No component imports its own CSS: the sheet is requested at the end of this
+        // method through the stylesheet seam, so a builder created outside the registry (a
+        // table inside a form field, a dropdown inside an input) is styled by the same lazy
+        // loader the registry uses — a static import would ride in the JS chunk and be
+        // injected a second time.
         const effectiveConfig = config || (content && typeof content === "object" ? content.config : undefined);
         if (effectiveConfig)
             this.config = this.resolveConfig(this.config, effectiveConfig);
@@ -431,6 +421,16 @@ export class Builder {
             this.initialize(DOMTree, content);
             this.hierarchy.update();
             // console.log("hierarchy", this.hierarchy.get(), identity);
+            // 🧊 ANTI-FOUC: one call, and it lands before the root is returned (pre-mount,
+            // pre-paint). The seam decides per *sheet* — two components built in one pass own
+            // two sheets, so no per-instance flag could answer "is my CSS here" — and it
+            // releases from its own loader promise, so a builder the registry never sees
+            // heals itself. A component that implements `loading()` shows its own mockup
+            // meanwhile; the rest fall back to the generic shimmer skin.
+            const mockup = typeof this.loading === "function"
+                ? () => this.loading(content, this.config)
+                : null;
+            holdUntilStyled(DOMTree, this.#stylesheetSpecifier(), mockup);
             return DOMTree;
         }
         finally {
@@ -892,23 +892,13 @@ _a = Builder;
 Object.freeze(Builder.prototype);
 // ====================================================
 // 🔌 BUILDER PORT — plug this package into `@aio-ui/core`.
-// `ComponentRegistry` needs exactly two things from a builder: a counter reset
-// when the registry is cleared, and a hydration release when a lazy build
-// finishes. Core declares them in `BuilderPort`; this package supplies them, so
-// the import direction stays base → core and `core` never learns about `base`.
+// `ComponentRegistry` needs exactly one thing from a builder: a counter reset
+// when the registry is cleared. Core declares it in `BuilderPort`; this package
+// supplies it, so the import direction stays base → core and `core` never learns
+// about `base`. The anti-FOUC release is *not* here: it belongs to the builder
+// that owns the root, and `create()` already handles it for every instance.
 // ====================================================
 setBuilderAdapter({
     resetCounters: () => Builder.resetCounters(),
-    releaseHydration: (instance, element) => {
-        // A builder instance may expose its own gate; reuse it so the held root is
-        // released together with the element. Otherwise write the markers directly.
-        const gate = instance?.hydration;
-        if (gate instanceof HydrationGate) {
-            gate.release(element);
-            return;
-        }
-        if (element instanceof HTMLElement)
-            HydrationGate.releaseMarkers(element);
-    },
 });
 //# sourceMappingURL=Base.js.map

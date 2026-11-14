@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { DEFAULT_SELECTORS } from "./Badge.kit.js";
 import { normalizePayload } from "./Badge.engine.js";
 export class BadgeBuilder extends Builder {
@@ -6,6 +7,18 @@ export class BadgeBuilder extends Builder {
     name = "badge";
     stylesheet = "./Badge.css";
     config;
+    /**
+     * 🪶 LOADING MOCKUP — three pill labels in a row, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. A badge is inline, so the mockup is a row of short
+     * bones rather than a full-width bar.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "row",
+            gap: "0.5rem",
+            children: [{ shape: "bone", width: "5rem", height: "1.5rem", count: 3 }],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultConfig = {

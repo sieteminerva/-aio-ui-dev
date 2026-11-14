@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { collectComponentNames, ComponentRegistry, type iComponentAssetMaps } from "../ComponentRegistry";
+import { BUILDER_INSTANCE } from "../Registry/BuilderInstances";
 
 /**
  * Registry behaviour under the single-manifest contract.
@@ -65,8 +66,8 @@ describe("ComponentRegistry — one module, several builders", () => {
 
   /** A package like `@aio-ui/product`: several builders behind one path. */
   function productAssets() {
-    class GridBuilder extends makeBuilderClass(instances) {}
-    class DetailBuilder extends makeBuilderClass(instances) {}
+    class GridBuilder extends makeBuilderClass(instances) { }
+    class DetailBuilder extends makeBuilderClass(instances) { }
     return makeAssets({ "@fake/product": async () => ({ GridBuilder, DetailBuilder }) });
   }
 
@@ -96,7 +97,7 @@ describe("ComponentRegistry — one module, several builders", () => {
   });
 
   it("warns in development when a module is ambiguous and the manifest stays silent", async () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => { });
     const registry = new ComponentRegistry(productAssets());
     registry.register("product-card-grid", () => ({ path: "@fake/product" }));
 
@@ -112,6 +113,24 @@ describe("ComponentRegistry manifest contract", () => {
 
   beforeEach(() => {
     instances = [];
+  });
+
+  it("pins the instance on the element it returns, so a discarded subtree can destroy it", async () => {
+    const registry = new ComponentRegistry(
+      makeAssets({ "@fake/form": async () => ({ default: makeBuilderClass(instances) }) }),
+    );
+    registry.register("form", () => ({ path: "@fake/form" }));
+
+    await registry.load(["form"]);
+    const element = registry.build("form", {}) as unknown as Record<symbol, unknown>;
+
+    // The registry is the only owner that replaces whole trees, so it is the only
+    // writer of the pin — `Builder.create()` stays free of it.
+    expect(element[BUILDER_INSTANCE]).toBe(instances[0]);
+
+    const host = { querySelectorAll: () => [element] } as unknown as ParentNode;
+    expect(registry.releaseBuilders(host)).toBe(1);
+    expect(element[BUILDER_INSTANCE]).toBeUndefined();
   });
 
   it("loads the module declared by the manifest and builds from the cache", async () => {
@@ -285,8 +304,8 @@ describe("ComponentRegistry manifest contract", () => {
 
     await registry.load(["product", "table"]);
 
-    expect(registry.build("product", {})).toEqual({ tag: "alpha" });
-    expect(registry.build("table", {})).toEqual({ tag: "beta" });
+    expect(registry.build("product", {})).toMatchObject({ tag: "alpha" });
+    expect(registry.build("table", {})).toMatchObject({ tag: "beta" });
   });
 
   it("warns in DEV mode when a module has >1 builder and no export is specified", async () => {
@@ -301,7 +320,7 @@ describe("ComponentRegistry manifest contract", () => {
       }
     }
 
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => { });
 
     const registry = new ComponentRegistry({
       modules: {

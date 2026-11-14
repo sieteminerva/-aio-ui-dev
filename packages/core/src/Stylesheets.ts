@@ -10,10 +10,15 @@
  *
  * Two callers use it:
  *
+ * - the `ComponentRegistry`, which injects through the `<style>` id scheme declared here;
  * - {@link ensureStylesheet} — any builder, including the ones created *outside* the
- *   registry (a table built inside a form field, a dropdown inside an input);
- * - the `ComponentRegistry`, which injects through the same `<style>` id scheme so a
- *   sheet touched by both paths still lands exactly once.
+ *   registry (a table built inside a form field, a dropdown inside an input), asks for
+ *   its own sheet by specifier.
+ *
+ * The anti-FOUC *hold* is deliberately absent: hiding an unstyled root is a lifecycle
+ * detail of `Builder.create()` (which knows its own `loading()` mockup), so it lives next
+ * to the builder in `@aio-ui/base/BaseAdapters/Hydration`. This module only answers "is
+ * the sheet there" and "give me the sheet".
  */
 
 /** Lazy loader for one stylesheet, returning its text (`?inline` import). */
@@ -101,6 +106,27 @@ export function isStyleInjected(specifier: string): boolean {
 }
 
 /**
+ * Whether a component's own stylesheet is still on its way.
+ *
+ * @param specifier - The component's declared `stylesheet` (`"./Table.css"`).
+ * @returns `true` only when the host declares a loader for this sheet and the document
+ *   does not have it yet — the single state in which a builder must hold its root.
+ *
+ * @example
+ * if (isStylesheetPending("./Table.css")) return "still coming";
+ *
+ * @summary A component without a loader is never "pending": waiting for a sheet nobody
+ *   can serve would strand the anti-FOUC hold forever. A non-DOM host (SSR, tests) has no
+ *   document to be styled, so it never holds either. This is the question the hold asks
+ *   *before* a root is returned — hence synchronous, unlike {@link ensureStylesheet}.
+ */
+export function isStylesheetPending(specifier: string): boolean {
+  const resolved = resolveLoader(specifier);
+  if (!resolved) return false;
+  return !isStyleInjected(resolved.key);
+}
+
+/**
  * Writes a stylesheet into the document as a real `<style>` element.
  *
  * @param rawCss - Stylesheet text as returned by the loader.
@@ -168,10 +194,10 @@ export function replaceLazyCss(rawCss: string, specifier: string): void {
  * @example
  * void ensureStylesheet("./Table.css"); // a table built outside the registry
  *
- * @summary The registry loads sheets for components it builds *before* rendering them
- * (anti-FOUC); this is the same job for components a builder constructs directly. It is
- * a no-op when the sheet already arrived through the registry, so the two paths cannot
- * double-inject.
+ * @summary The one call the hydration hold makes: `Builder.create()` asks for its own
+ *   sheet, so a component a builder constructs directly (never through the registry) is
+ *   styled by the same loader. It is a no-op when the sheet already arrived, so the two
+ *   paths cannot double-inject.
  */
 export function ensureStylesheet(specifier: string): Promise<void> {
   const resolved = resolveLoader(specifier);

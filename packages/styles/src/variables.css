@@ -45,6 +45,11 @@
   --app-surface-strong: #ffffff;
   --app-surface-muted: rgba(244, 238, 226, 0.7);
 
+  /* Placeholder bone for a builder's `loading()` mockup. It is the one colour that has to
+     exist BEFORE a component's own sheet does, so it belongs to this contract and not to a
+     component layer. */
+  --app-skeleton-bg: rgba(146, 84, 8, 0.12);
+
   --app-text-color: #2c251e; /* Deep charcoal umber */
   --app-text-accent-color: #6e5f51; /* Muted earthy taupe */
   --app-text-heading-color: #1a140e; /* Solid contrast header */
@@ -92,6 +97,7 @@
     --app-surface-background-color: rgba(28, 22, 17, 0.78);
     --app-surface-strong: #231b14;
     --app-surface-muted: rgba(38, 30, 23, 0.65);
+    --app-skeleton-bg: rgba(255, 249, 240, 0.1);
 
     --app-text-color: #f3ede2; /* Linen ivory */
     --app-text-accent-color: #bfaea0; /* Soft sand */
@@ -130,6 +136,7 @@
   --app-surface-background-color: rgba(28, 22, 17, 0.78);
   --app-surface-strong: #231b14;
   --app-surface-muted: rgba(38, 30, 23, 0.65);
+  --app-skeleton-bg: rgba(255, 249, 240, 0.1);
 
   --app-text-color: #f3ede2;
   --app-text-accent-color: #bfaea0;

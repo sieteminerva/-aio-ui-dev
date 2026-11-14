@@ -1,0 +1,95 @@
+/* =========================================================================
+   SKELETON — the placeholder primitive a builder's `loading()` draws.
+
+   This sheet must be loaded with the app shell, never lazily: it is the only
+   CSS that can style a component *while that component's own sheet is still
+   on its way*. Precision lives in the spec (`Skeleton.create`), the skin lives
+   here and reads only the app contract through its own layer.
+
+   One root selector (`.skeleton`), every shape nested under it with `&` — the
+   same shape as every other component sheet. The shapes are compound modifiers
+   (`&.bone` → `.skeleton.bone`), because `Skeleton.create` puts the base class
+   and the shape class on the same element. One bare word each, no dash join.
+   ========================================================================= */
+
+/* ─── Layer ─── */
+:root,
+[data-theme] {
+  --skeleton-fill: var(--app-skeleton-bg, rgba(127, 127, 127, 0.16));
+  --skeleton-gap: var(--app-margin-component, 0.85rem);
+  --skeleton-radius: calc(var(--app-component-border-radius, 1rem) / 2);
+  /* Pulse *speed*, not lifetime: how long a mockup stays on screen is decided by the
+     hold (`duration: number | "auto"` on the spec), never by a CSS timer. */
+  --skeleton-pulse: 1.4s;
+}
+
+/* ─── Base ─── */
+.skeleton {
+  box-sizing: border-box;
+  animation: skeletonPulse var(--skeleton-pulse) ease-in-out infinite;
+
+  /* One animation per mockup: a child of a mockup inherits the motion of its
+     container instead of running a second keyframe set. */
+  & .skeleton {
+    animation: none;
+  }
+
+  /* ─── Shapes ───
+     `&.bone`, never `&-bone`: the house style nests with `& ` (descendant), `&.`
+     (compound) and `&:` (state) only — a Sass-style concatenation is dropped
+     silently by the build, which is exactly how a mockup ends up with no skin.
+     The element always carries `.skeleton` too, so one bare word is enough. */
+  &.bone,
+  &.line,
+  &.circle {
+    flex: 0 0 auto;
+    background: var(--skeleton-fill);
+  }
+
+  &.bone {
+    min-height: 1rem;
+    border-radius: var(--skeleton-radius);
+  }
+
+  &.line {
+    height: 0.7rem;
+    border-radius: 999px;
+  }
+
+  &.circle {
+    aspect-ratio: 1;
+    border-radius: 50%;
+  }
+
+  /* ─── Layouts ─── */
+  &.stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--skeleton-gap);
+    width: 100%;
+  }
+
+  &.row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--skeleton-gap);
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}

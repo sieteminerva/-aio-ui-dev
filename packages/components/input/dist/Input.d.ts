@@ -140,6 +140,12 @@ export declare class InputBuilder extends Builder<InputElementType, iInputConfig
     readonly builderId: keyof iBuilderRegistry;
     readonly name: keyof iBuilderRegistry;
     readonly stylesheet: string;
+    /**
+     * 🪶 LOADING MOCKUP — one label and one control box, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. The control type (select, textarea, switch) changes the
+     * skin, never the box: a field reserves one line plus one control.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iInputConfig>);
     private resolvePayload;
     prepare(inputObj: Partial<iBasicInputNode>, _config?: Required<iInputConfig> | undefined): HTMLElement | Record<string, any | HTMLElement>;

@@ -324,3 +324,8 @@ footer {
     }
   }
 }
+
+/* ─── Loading mockup ───
+   The silhouette a builder draws while its own sheet is still missing is NOT styled here:
+   it is the `@aio-ui/skeleton` component, loaded with the app shell so its sheet is always
+   present. This file only owns the colour it reads — `--app-skeleton-bg` in `variables.css`. */

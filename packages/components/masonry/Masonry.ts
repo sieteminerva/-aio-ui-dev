@@ -1,5 +1,6 @@
 import type { iElementProperty, iBasicNode, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 
 export type MasonryElementType =
   | "@container"
@@ -62,6 +63,29 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
     destroy: () => void;
   };
   private observer?: IntersectionObserver;
+
+  /**
+   * 🪶 LOADING MOCKUP — the filter row and three staggered boards, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive. The aspect ratios (not a payload loop) are what make the
+   * grid read as masonry, and they are geometry, not data.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "row", gap: "0.5rem", children: [{ shape: "bone", width: "4.5rem", height: "1.4rem", count: 3 }] },
+        {
+          shape: "row",
+          gap: "0.9rem",
+          children: [
+            { shape: "bone", width: "28%", aspect: "3 / 4" },
+            { shape: "bone", width: "28%", aspect: "1 / 1.6" },
+            { shape: "bone", width: "28%", aspect: "3 / 5" },
+          ],
+        },
+      ],
+    });
+  }
 
   constructor(config: Partial<iMasonryConfig> = {}) {
     super();
@@ -764,9 +788,16 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
       if (e.target === modalEl) hide();
     });
 
-    document.addEventListener('keydown', handleKeyDown);
+    // The keyboard listener lives on the modal, not on `document`. A document-level
+    // listener is owned by nobody: its closure captures the builder (`show` reads
+    // `this.currentVisibleImages`), so every mount pinned this whole gallery forever —
+    // measured 21 live instances / ~260 KB per visit, retainer
+    // `handleKeyDown → Context → this`. On the modal it dies with the node.
+    // `tabindex="-1"` makes the overlay focusable, which `show()` relies on below.
+    modalEl?.setAttribute('tabindex', '-1');
+    modalEl?.addEventListener('keydown', handleKeyDown);
     const destroy = () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      modalEl?.removeEventListener('keydown', handleKeyDown);
       modalEl?.remove();
     };
     return { show, updateNavigation, destroy };

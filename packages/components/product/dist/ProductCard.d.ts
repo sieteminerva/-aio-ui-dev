@@ -32,6 +32,16 @@ export declare class ProductCardBuilder extends Builder<ProductCardElementType, 
      */
     protected template(typeKey: string, el: HTMLElement, payload?: any): void;
     /**
+     * 🪶 LOADING MOCKUP — the card's silhouette, composed from the mandatory
+     * `@aio-ui/skeleton` primitive.
+     *
+     * The skin has to exist before `ProductCard.css` does, so it cannot come from this
+     * component's sheet; precision comes from the spec instead — the display box reserves the
+     * same square, the swatch row mirrors the real variants, the caption keeps two lines and
+     * the button keeps its height. No `render()`, no node records, no payload loop.
+     */
+    protected loading(): HTMLElement;
+    /**
      * 👑 PINTU 3: THE INITIALIZE DETONATOR (SUCI BERSIH SETIPIS SILET)
      */
     initialize(_el?: HTMLElement, _payload?: any, _context?: any): void;

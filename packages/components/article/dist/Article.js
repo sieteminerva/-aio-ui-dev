@@ -1,5 +1,6 @@
 import { createImageError } from "@aio-ui/utilities/DomUtils";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 /**
  * The DOM only carries the record's key; the component keeps the record itself.
  * Attaching objects to elements (`el._payload`) works until the node is cloned or
@@ -21,6 +22,29 @@ export class ArticleBuilder extends Builder {
     listElement = null;
     /** Records by id (`slug`/`uid`), so cards only carry a key. */
     records = new Map();
+    /**
+     * 🪶 LOADING MOCKUP — a cover, a headline, a meta row and body lines, drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. `Article.css` decides whether the real box is a
+     * list or a detail; both start with the same top-to-bottom rhythm.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "bone", aspect: "16 / 9" },
+                { shape: "line", width: "55%" },
+                {
+                    shape: "row",
+                    gap: "0.5rem",
+                    children: [
+                        { shape: "circle", width: "1.5rem" },
+                        { shape: "line", width: "30%" },
+                    ],
+                },
+                { shape: "line", count: 3 },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultSelectors = {

@@ -50,6 +50,12 @@ export declare class ProductDetailBuilder extends Builder<ProductDetailElementTy
     config: Required<iProductDetailConfig>;
     private record;
     private selectedColor;
+    /**
+     * 🪶 LOADING MOCKUP — the detail column top to bottom: media, eyebrow, title, copy, price,
+     * swatch row and checkout. Drawn with the mandatory `@aio-ui/skeleton` primitive, so it
+     * never waits for `ProductDetail.css` (the sheet it is standing in for).
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iProductDetailConfig>);
     prepare(data: any): HTMLElement;
     protected template(typeKey: ProductDetailElementType, el: HTMLElement, payload?: any): void;

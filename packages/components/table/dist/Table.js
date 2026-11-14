@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { __applyTableClasses, __normalizeCell, __applyCellOptions, __applyFormula, __applyRowFormula, __findColIndexByHeader, __parseValue, __formatValue, __getRowData, __countVisibleSubRowsByUid, __computeRowTotalValue, __getHeaderGroupNames, tcell, __bindSortListener, __calculateRow, } from "./Table.helper.js";
 export class TableBuilder extends Builder {
     builderId = "table";
@@ -111,6 +112,23 @@ export class TableBuilder extends Builder {
         this._applyFreezeColumns(this.table);
         // Step 3: Return the fully rendered table element.
         return this.table;
+    }
+    /**
+     * 🪶 LOADING MOCKUP — one header bar and four placeholder rows, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive.
+     *
+     * Deliberately independent of the payload: a skeleton that mirrored every real row would
+     * be the per-element placeholder pass again. `Table.css` is what is still loading, so the
+     * skin cannot come from it — the skeleton sheet ships with the app shell.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "bone", height: "2.75rem" },
+                { shape: "line", count: 4 },
+            ],
+        });
     }
     /**
      * Runtime event-binding hook.

@@ -1,9 +1,26 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 export class PricingCardBuilder extends Builder {
     builderId = "pricing-card";
     name = "pricing-card";
     stylesheet = "./PricingCard.css";
     rawDataNode = null;
+    /**
+     * 🪶 LOADING MOCKUP — plan name, price, feature list and the action row, drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. One card only: the mockup is a picture of the
+     * box, not a loop over the plans the payload happens to carry.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "line", width: "45%" },
+                { shape: "bone", width: "40%", height: "2.5rem" },
+                { shape: "line", count: 4 },
+                { shape: "bone", height: "2.75rem" },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultSelectors = {

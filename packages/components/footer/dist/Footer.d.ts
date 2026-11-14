@@ -48,6 +48,12 @@ export declare class FooterBuilder extends Builder<FooterElementType, iFooterCon
     readonly name: keyof iBuilderRegistry;
     readonly stylesheet: string;
     config: Required<iFooterConfig>;
+    /**
+     * 🪶 LOADING MOCKUP — three column headers over their link lines, then the copyright row,
+     * drawn with the mandatory `@aio-ui/skeleton` primitive. Widths stay under a third so the
+     * columns read as columns before `Footer.css` arrives.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iFooterConfig>);
     prepare(data: any): HTMLElement;
     /**

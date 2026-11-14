@@ -48,15 +48,6 @@ export declare const GLOBAL_INSTANCE_COUNTER: Map<string, number>;
  */
 export declare abstract class Builder<TType extends string = string, TConfig extends iBuilderConfig<TType> = iBuilderConfig<TType>> {
     #private;
-    /** 🧊 ANTI-FOUC GATE — extracted to `BaseAdapters/HydrationGate`.
-     *  Marker mechanics (`--is-loading` / `data-hydrating` / `data-loaded`)
-     *  live there; the builder only holds the gate instance and exposes the
-     *  `isLoaded` flag that ComponentRegistry flips before `create()`.
-     *  Kept in this fork on purpose: a builder moved onto Builder (the color
-     *  theme now is) must not silently lose the pre-paint hold its Base sibling
-     *  had — the registry release path (`instance.hydration`) stays identical. */
-    /** Compatibility surface: ComponentRegistry does `instance.isLoaded = false`. */
-    isLoaded: boolean;
     /** 🧩 ROOT of the builder that hosts my projections — the shared ancestor
      *  token vars are painted on; null when I have no caller (standalone). Set
      *  in `attach()` the first time I project into a caller. */
@@ -184,6 +175,30 @@ export declare abstract class Builder<TType extends string = string, TConfig ext
      * interactive listeners onto the completed DOM structure.
      */
     abstract initialize(el?: HTMLElement, payload?: any, context?: any): void;
+    /**
+     * 🪶 LOADING MOCKUP — what this component shows while its OWN sheet is missing.
+     *
+     * Optional, and called at most once per cold `create()`: only when the sheet this builder
+     * declares is genuinely still on its way. Return a throwaway silhouette (a handful of
+     * `data-skeleton` nodes) — never the real tree, never `this.render()`, never a loop over
+     * the payload. The framework hides the real children, prepends the mockup, and restores
+     * the children the moment the sheet lands, so this hook only has to describe a shape.
+     *
+     * @example
+     * protected loading(): HTMLElement {
+     *   const mock = document.createElement("div");
+     *   mock.setAttribute("data-skeleton", "root");
+     *   mock.innerHTML = '<div data-skeleton="bone" style="height: 8rem"></div>';
+     *   return mock;
+     * }
+     *
+     * @summary Buying a good silhouette: the alternative is a per-element placeholder pass,
+     *   which knows the exact shape but also records every node and dominates the render
+     *   budget. Skip this hook and the generic shimmer skin applies instead —
+     *   `packages/styles/src/components.css` styles both, so the mockup never waits for the
+     *   stylesheet it is standing in for.
+     */
+    protected loading?(content: any, config: TConfig): HTMLElement | null | undefined;
     constructor();
     /**
      * @description

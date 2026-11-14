@@ -1,5 +1,6 @@
 import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import {
   __applyTableClasses,
   __normalizeCell,
@@ -208,6 +209,24 @@ export class TableBuilder extends Builder<TableElementType, iTableConfig> {
     // Step 3: Return the fully rendered table element.
 
     return this.table;
+  }
+
+  /**
+   * 🪶 LOADING MOCKUP — one header bar and four placeholder rows, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive.
+   *
+   * Deliberately independent of the payload: a skeleton that mirrored every real row would
+   * be the per-element placeholder pass again. `Table.css` is what is still loading, so the
+   * skin cannot come from it — the skeleton sheet ships with the app shell.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "bone", height: "2.75rem" },
+        { shape: "line", count: 4 },
+      ],
+    });
   }
 
   /**

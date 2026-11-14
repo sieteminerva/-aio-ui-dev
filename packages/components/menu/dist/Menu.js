@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { DEFAULT_MENU_SELECTORS } from "./Menu.kit.js";
 import { splitMenuContent } from "./Menu.engine.js";
 export class MenuBuilder extends Builder {
@@ -6,6 +7,22 @@ export class MenuBuilder extends Builder {
     name = "menu";
     stylesheet = "./Menu.css";
     isMenuOpened = false;
+    /**
+     * 🪶 LOADING MOCKUP — brand, four navigation labels and the action button, drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. One row serves both the horizontal bar and the
+     * sidebar: the sheet that is still missing is the one that decides the direction.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "row",
+            gap: "1rem",
+            children: [
+                { shape: "bone", width: "5rem", height: "1.75rem" },
+                { shape: "line", width: "3rem", count: 4 },
+                { shape: "bone", width: "2.5rem", height: "1.75rem" },
+            ],
+        });
+    }
     constructor(config = {}) {
         super(); // Wajib mengetuk pintu rahim induk BuilderBase
         const defaultSelectors = DEFAULT_MENU_SELECTORS;

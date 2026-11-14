@@ -41,6 +41,17 @@ export interface iComponentRegistryPort {
     /** Builds one component element synchronously from already-preloaded assets. */
     build(name: keyof iBuilderRegistry, data: any): HTMLElement;
     /**
+     * Destroys every builder inside a subtree the shell is about to replace.
+     *
+     * Optional: a custom registry may track no instances, and the shell must keep working
+     * with it. When implemented, the shell calls it on the outgoing tree at paint time —
+     * the only moment at which that tree is really discarded.
+     *
+     * @param root - The subtree being dropped.
+     * @returns How many builder instances were destroyed.
+     */
+    releaseBuilders?(root: ParentNode | null): number;
+    /**
      * Hands the registry the publisher every builder config will carry.
      *
      * Optional: a custom registry may not support component events at all, and the shell

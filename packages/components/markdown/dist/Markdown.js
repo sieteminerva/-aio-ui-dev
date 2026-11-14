@@ -1,9 +1,10 @@
 import { Builder } from "@aio-ui/base";
-import { parseMarkdown } from "@aio-ui/utilities/Markdown";
+import { Skeleton } from "@aio-ui/skeleton";
+import { outline, parseMarkdown, selectOutline } from "./Markdown.engine.js";
 /**
  * Markdown — renders a Markdown source string as DOM.
  *
- * The parser lives in `@aio-ui/utilities/Markdown` and produces an AST; this builder walks
+ * The parser (`./Markdown.engine.ts`) produces an AST and owns no DOM; this builder walks
  * it and renders keys, exactly like every other component. Fenced code reuses the
  * `code-block` markup (`figure > figcaption + pre > code`), and `Markdown.css` imports
  * `CodeBlock.css`, so there is one definition of what a code panel looks like.
@@ -14,6 +15,7 @@ import { parseMarkdown } from "@aio-ui/utilities/Markdown";
 /** Every node this component can render. */
 export const ELEMENT_KEYS = [
     "@markdown",
+    "@markdown>section",
     "@markdown>heading-1",
     "@markdown>heading-2",
     "@markdown>heading-3",
@@ -42,6 +44,7 @@ export const ELEMENT_KEYS = [
 /** Default shape per key. The root is a real `article`; headings clamp at `h4`. */
 export const DEFAULT_SELECTORS = {
     "@markdown": { tagName: "article", className: "markdown" },
+    "@markdown>section": { tagName: "section", className: "markdown-section" },
     "@markdown>heading-1": { tagName: "h1", className: "markdown-h1" },
     "@markdown>heading-2": { tagName: "h2", className: "markdown-h2" },
     "@markdown>heading-3": { tagName: "h3", className: "markdown-h3" },
@@ -68,21 +71,44 @@ export const DEFAULT_SELECTORS = {
     "@markdown>link": { tagName: "a", className: "markdown-link" },
 };
 /**
- * Payload normalizer: `{ source }` or a bare string. Everything else renders nothing,
- * because guessing at a document shape would print the wrong thing with confidence.
+ * Payload normalizer: `{ source }`, a bare string, or `{ source, outline, marker }`.
+ * Anything else renders nothing, because guessing at a document shape would print the wrong
+ * thing with confidence.
  */
 export function normalizePayload(data) {
     if (typeof data === "string")
-        return data;
-    if (data && typeof data === "object" && typeof data.source === "string")
-        return data.source;
-    return "";
+        return { source: data, outline: null, marker: null };
+    if (!data || typeof data !== "object")
+        return { source: "", outline: null, marker: null };
+    return {
+        source: typeof data.source === "string" ? data.source : "",
+        outline: data.outline ?? null,
+        marker: data.marker ?? null,
+    };
 }
 export class MarkdownBuilder extends Builder {
     builderId = "markdown";
     name = "markdown";
     stylesheet = "./Markdown.css";
     config;
+    /**
+     * 🪶 LOADING MOCKUP — heading, paragraph, subheading, paragraph, fence, closing line:
+     * the document rhythm, drawn with the mandatory `@aio-ui/skeleton` primitive. The real
+     * block order is the payload's business and never read here.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "bone", width: "55%", height: "2rem" },
+                { shape: "line", count: 3 },
+                { shape: "bone", width: "40%", height: "1.5rem" },
+                { shape: "line", count: 2 },
+                { shape: "bone", height: "8rem" },
+                { shape: "line", width: "80%" },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultConfig = {
@@ -90,17 +116,49 @@ export class MarkdownBuilder extends Builder {
             namespace: null,
             emit: () => { },
             selectors: DEFAULT_SELECTORS,
+            marker: null,
+            outline: null,
         };
         this.config = this.resolveConfig(defaultConfig, config);
     }
-    /** Parse the source, then render one key per block. */
+    /**
+     * Parse the source, then render every block — or only the parts an outline names.
+     *
+     * The outline is answered from the same parse: selection happens on the AST, so a part is
+     * never rebuilt as Markdown text and parsed a second time.
+     */
     prepare(data) {
-        const source = normalizePayload(data);
-        const blocks = source ? parseMarkdown(source) : [];
+        const payload = normalizePayload(data);
+        const marker = payload.marker ?? this.config.marker;
+        const spec = payload.outline ?? this.config.outline;
+        const blocks = payload.source ? parseMarkdown(payload.source, { marker }) : [];
         const root = this.render("@markdown", { count: blocks.length });
-        for (const block of blocks)
-            this.appendBlock(root, block);
+        if (!root)
+            return this.load("@markdown");
+        const selected = Boolean(spec?.parts?.length);
+        if (selected && spec)
+            this.appendParts(root, blocks, spec);
+        else
+            for (const block of blocks)
+                this.appendBlock(root, block);
         return this.load("@markdown");
+    }
+    /** Render the outline's parts in declaration order, each optionally wrapped. */
+    appendParts(root, blocks, spec) {
+        const doc = outline(blocks);
+        for (const path of spec.parts) {
+            for (const pick of selectOutline(doc, path)) {
+                const target = spec.section ? this.render("@markdown>section", { path }) : root;
+                if (!target)
+                    continue;
+                if (spec.heading !== "drop" && pick.heading)
+                    this.appendBlock(target, pick.heading);
+                for (const block of pick.blocks)
+                    this.appendBlock(target, block);
+                if (target !== root)
+                    root.appendChild(target);
+            }
+        }
     }
     /**
      * Hydration valve. Only the leaf payloads are written here; structure is built in

@@ -6,6 +6,25 @@ function isValidHTMLTag(tag) {
     // Browser otomatis mengembalikan HTMLUnknownElement jika tag tidak dikenali
     return !(document.createElement(tag) instanceof HTMLUnknownElement);
 }
+/** Builders that already reported a root they could not deliver. */
+const warnedRoots = new Set();
+/**
+ * Reports an `isRoot` promise the builder could not keep.
+ *
+ * @param builder - The builder name the node asked for.
+ * @returns Nothing.
+ *
+ * @summary `isRoot: true` says "this component *is* the box"; a builder that yields nothing
+ *   leaves the host in its place, which is a silent hole in the page. It warns once per
+ *   builder name and only in development — a page rendering a hundred cards must not print
+ *   a hundred lines, and a production build has no console budget for a resolved fallback.
+ */
+function warnMissingRoot(builder) {
+    if (!import.meta.env?.DEV || warnedRoots.has(builder))
+        return;
+    warnedRoots.add(builder);
+    console.warn(`[DOMRenderer] isRoot: true on "${builder}", but the builder produced no element — keeping the host wrapper.`);
+}
 export class DOMRenderer {
     /** Slot this class fills when registered as an app module. */
     static slot = "renderer";
@@ -148,7 +167,8 @@ export class DOMRenderer {
             // - `onCreated` keeps the host. A hook owns its mount: it was handed an element and
             //   may append into it, so replacing that element under its feet would orphan the hook.
             // - an unresolvable builder keeps the host too. Dropping the element would leave a hole
-            //   exactly where the author expected a component.
+            //   exactly where the author expected a component, so it falls back *and* warns
+            //   (`warnMissingRoot`, once per builder name, dev only).
             const wantsBuilderRoot = typeof value.builder === "string" &&
                 value.isRoot === true &&
                 typeof value.onCreated !== "function" &&
@@ -157,6 +177,8 @@ export class DOMRenderer {
                 const builtRoot = builderFn(value.builder, value);
                 if (builtRoot && builtRoot !== currentElement)
                     currentElement = builtRoot;
+                else if (!builtRoot)
+                    warnMissingRoot(value.builder);
             }
             // Phase 2: 🧱 ATTRIBUTE PROCESSOR
             this.attributeProcessor(currentElement, value, id, classNames, parsedAttrs);

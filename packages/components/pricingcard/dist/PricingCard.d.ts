@@ -8,6 +8,12 @@ export declare class PricingCardBuilder extends Builder<PricingCardElementType, 
     readonly name = "pricing-card";
     readonly stylesheet = "./PricingCard.css";
     protected rawDataNode: any;
+    /**
+     * 🪶 LOADING MOCKUP — plan name, price, feature list and the action row, drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. One card only: the mockup is a picture of the
+     * box, not a loop over the plans the payload happens to carry.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iPricingCardConfig>);
     prepare(data: iBasicNode, _config?: Partial<iBuilderConfig<PricingCardElementType>> | undefined): HTMLElement;
     /**

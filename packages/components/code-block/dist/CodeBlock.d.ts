@@ -103,6 +103,12 @@ export declare class CodeBlockBuilder extends Builder<CodeBlockElementType, iCod
     readonly name: keyof iBuilderRegistry;
     readonly stylesheet: string;
     config: Required<iCodeBlockConfig>;
+    /**
+     * 🪶 LOADING MOCKUP — the frame's own anatomy (label, paper, action row), drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. The line count is the payload's business; the
+     * mockup only reserves the box the sheet will take over.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iCodeBlockConfig>);
     /**
      * Build the tree: one `figure` per entry (label above, `pre > code` below), and one

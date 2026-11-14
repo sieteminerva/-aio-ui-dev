@@ -119,8 +119,9 @@ export declare class ComponentRegistry {
      * 🧱 Builder storage backed by the generic registry kernel.
      *
      * `duplicate: "replace"` preserves the previous silent-overwrite behaviour
-     * that HMR and preset rebuilds depend on. Lazy loading, stylesheet injection,
-     * and hydration gating stay in this adapter — the kernel only stores values.
+     * that HMR and preset rebuilds depend on. Lazy loading and stylesheet injection
+     * stay in this adapter — the kernel only stores values. The anti-FOUC hold is
+     * not here: it belongs to the builder that owns the root.
      */
     private builders;
     /**
@@ -148,21 +149,8 @@ export declare class ComponentRegistry {
     /** Sub-modules resolved per component name: `componentName → { moduleId → module }`. */
     private _modules;
     private _dynamicConfigs;
-    private _stylesReady;
-    private _stylesLoading;
     /** Components currently being loaded, so a `modules` cycle cannot recurse forever. */
     private _loading;
-    /**
-     * 🚀 POST-LAUNCH FLIPPER (O(1) RELEASE VIA POINTER data-loaded)
-     * Dipanggil SETELAH promise style lazy terselesaikan (sukses/gagal).
-     * Pelepasan didelegasikan ke HydrationGate (instance.hydration.release(actualElement)):
-     * satu penulis marker di Base — `--is-loading: 0` + hapus `data-hydrating`
-     * + pasang `data-loaded="true"` pada elemen puncak yang memang dipegang
-     * registry. Rule CSS `[data-loaded="true"] *` lalu memaksa SELURUH
-     * keturunan membaca --is-loading: 0 (pointer permanen untuk anak-anak),
-     * tanpa forEach/querySelectorAll/observer — aman page-switching brutal.
-     */
-    private _launchPostLoadInstance;
     /**
      * Registers a component factory under a stable name.
      *
@@ -269,6 +257,18 @@ export declare class ComponentRegistry {
     setConfig(builderName: keyof iBuilderRegistry, newConfig: Record<string, any>): void;
     clear(): void;
     destroy(): void;
+    /**
+     * Destroys every builder pinned inside a subtree the app is about to replace.
+     *
+     * @param root - The outgoing shell (or any subtree a page remembers).
+     * @returns How many builder instances were destroyed.
+     *
+     * @summary The registry is where instances are created, so it is the natural door for
+     *   releasing them: `AioApp` calls this on the tree it is about to swap out, and a page
+     *   controller can call it from `onDestroy()` with its own shell. Idempotent — a
+     *   builder is unpinned before its `destroy()` runs, so a second sweep does nothing.
+     */
+    releaseBuilders(root: ParentNode | null | undefined): number;
     getBuilderNode(nodes: iBasicNode[] | iBasicNode, name: string, visited?: Set<unknown>): iBasicNode | undefined;
 }
 //# sourceMappingURL=ComponentRegistry.d.ts.map

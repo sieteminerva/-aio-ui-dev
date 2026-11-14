@@ -1,5 +1,6 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 
 export type FooterElementType =
   | "@footer"
@@ -80,6 +81,23 @@ export class FooterBuilder extends Builder<FooterElementType, iFooterConfig> {
   readonly name: keyof iBuilderRegistry = "footer";
   readonly stylesheet: string = "./Footer.css";
   public config: Required<iFooterConfig>
+
+  /**
+   * 🪶 LOADING MOCKUP — three column headers over their link lines, then the copyright row,
+   * drawn with the mandatory `@aio-ui/skeleton` primitive. Widths stay under a third so the
+   * columns read as columns before `Footer.css` arrives.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "row", gap: "1rem", children: [{ shape: "bone", width: "28%", height: "1rem", count: 3 }] },
+        { shape: "row", gap: "1rem", children: [{ shape: "line", width: "28%", count: 3 }] },
+        { shape: "row", gap: "1rem", children: [{ shape: "line", width: "28%", count: 3 }] },
+        { shape: "line", width: "35%" },
+      ],
+    });
+  }
 
   constructor(config: Partial<iFooterConfig> = {}) {
     super();

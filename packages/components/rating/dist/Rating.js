@@ -1,9 +1,23 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 export class RatingBuilder extends Builder {
     builderId = "rating";
     name = "rating";
     stylesheet = "";
     config;
+    /**
+     * 🪶 LOADING MOCKUP — five stars over the numeric bar, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. The score is data; the silhouette is the widget.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "row", gap: "0.25rem", children: [{ shape: "bone", width: "1.25rem", height: "1.25rem", count: 5 }] },
+                { shape: "line", width: "60%" },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultSelectors = {

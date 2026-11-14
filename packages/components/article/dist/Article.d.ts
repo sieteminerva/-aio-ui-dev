@@ -35,6 +35,12 @@ export declare class ArticleBuilder extends Builder<ArticleElementType, iArticle
     private listElement;
     /** Records by id (`slug`/`uid`), so cards only carry a key. */
     private records;
+    /**
+     * 🪶 LOADING MOCKUP — a cover, a headline, a meta row and body lines, drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. `Article.css` decides whether the real box is a
+     * list or a detail; both start with the same top-to-bottom rhythm.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iArticleConfig>);
     /**
      * 👑 COMPOSITION — membangun kontainer modul dan seluruh slot:

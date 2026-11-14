@@ -6,6 +6,8 @@ kodepos), the reverse postal-code lookup and the optional geocode lookup. Adapte
 parts of the markup are authoritative; in `headless` mode there is no markup at all and the host
 drives `schema.select()` itself.
 
+<!-- part: id=payload -->
+
 ## Payload
 
 The engine takes no `content` payload. Its input is the query it sends to a data source:
@@ -34,6 +36,8 @@ Each level is represented once, as `IdAddressSchemaRef`:
 | `index`       | position in the chain                   |
 | `isDropdown`  | whether the level is selectable         |
 | `getDetail()` | accumulated address detail so far       |
+
+<!-- part: id=config role=contract -->
 
 ## Config
 
@@ -80,6 +84,8 @@ Three callbacks, all shaped `(schema, data, complete) => void`:
 | `onLevelChanged`  | a selection changed and the cascade re-ran           |
 | `onGeocodeLoaded` | geocode data for the current detail became available |
 
+<!-- part: id=nodes role=contract -->
+
 ## Nodes
 
 The plugin never creates a field; it decorates the markup it is given. The contract is one control
@@ -98,6 +104,8 @@ so the builder filters the elements it decorates instead of taking every match.
 
 `@aio-ui/core/Stylesheets` fetches `id-address.css` on `init()`, so a host only declares where the
 sheet can be found (its `styles` asset map) — nothing is injected twice.
+
+<!-- part: id=tokens role=contract -->
 
 ## Tokens
 
@@ -144,6 +152,8 @@ the next level, emits the lifecycle callbacks and optionally resolves geocode da
 ```js
 await schema.select(data.find((row) => row.kota_id === value));
 ```
+
+<!-- part: id=wiring role=contract -->
 
 ## Wiring checklist
 

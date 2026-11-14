@@ -5,4 +5,4 @@
  */
 
 export { MarkdownBuilder } from "./Markdown";
-export type { iMarkdownConfig, MarkdownElementType } from "./Markdown";
+export type { iMarkdownConfig, iMarkdownMarkerConfig, iMarkdownOutline, MarkdownElementType } from "./Markdown";

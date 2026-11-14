@@ -4,5 +4,5 @@
  * a second exported function would turn every load into a fallback guess.
  */
 export { MarkdownBuilder } from "./Markdown";
-export type { iMarkdownConfig, MarkdownElementType } from "./Markdown";
+export type { iMarkdownConfig, iMarkdownMarkerConfig, iMarkdownOutline, MarkdownElementType } from "./Markdown";
 //# sourceMappingURL=index.d.ts.map

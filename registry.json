@@ -1,8 +1,8 @@
 {
-  "version": "0.1.1",
+  "version": "0.2.0",
   "repository": "sieteminerva/-aio-ui-dev",
-  "base": "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/",
-  "generatedAt": "2026-11-12T19:17:32.298Z",
+  "base": "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.2.0/",
+  "generatedAt": "2026-11-14T07:43:20.045Z",
   "packages": {
     "@aio-ui/app": {
       "dir": "packages/app",
@@ -11,9 +11,9 @@
         "./ports": "dist/ports.js",
         "./types": "dist/types.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-app-0.1.1.tgz",
-      "integrity": "sha512-f+RGBiZrJJ26XtmKWvzZpyw3vi9Eja4gq3DcMJJbBu0iUE6AldjBgiKdoxhR+GPPUh+Azj6Q2UHaa9emmHQJiw==",
-      "size": 47453
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-app-0.2.0.tgz",
+      "integrity": "sha512-XhyjjyEfp3k8neFXr9p7ppX27n/+P1UBjfWV5rHapLHQhA7ZBkUnJCpf2zfTmW3pIFs6EOklazZDL9adT7GO7g==",
+      "size": 49918
     },
     "@aio-ui/base": {
       "dir": "packages/base",
@@ -21,9 +21,9 @@
         ".": "dist/index.js",
         "./BaseAdapters/*": "src/BaseAdapters/*"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-base-0.1.1.tgz",
-      "integrity": "sha512-6RIV8A9ckBIeJDLERpeK5g9ihu/FrkgAfjnGPDufNUVS8a2L/cgcKCit2cByNwfoic9uQ+CDMnfpZw2kk6vaBQ==",
-      "size": 54368
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-base-0.2.0.tgz",
+      "integrity": "sha512-dQkrjtVUzFAtWHfMFj3Td2hmVUsAfY6HV/HXf3cR+UhU+3YLN6JWFsLUoRpQyuAfneDqE0n3HRGWfBr+kdIlPw==",
+      "size": 65004
     },
     "@aio-ui/core": {
       "dir": "packages/core",
@@ -39,9 +39,9 @@
         "./renderer": "dist/types/renderer.js",
         "./api": "dist/types/api.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-core-0.1.1.tgz",
-      "integrity": "sha512-mf9XtwwlhpPiHCuTaFK7/UGwMW8mZEqAiZ/VVHwpLq6mDVtiH1d2pROw7kfkBnjiG68Rq9o7WjjPs3PHOTbW9Q==",
-      "size": 94237
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-core-0.2.0.tgz",
+      "integrity": "sha512-Pb7vDkxCU8PNhZ5oTxCxF407DO5eZ/vXK4xuMFVcUZqTrFaiC5LMcshQIy7Gb/etXvguQREuhieypl2iY5AO/Q==",
+      "size": 98374
     },
     "@aio-ui/styles": {
       "dir": "packages/styles",
@@ -54,9 +54,9 @@
         "./layout.css": "src/layout.css",
         "./icon.css": "src/icon.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-styles-0.1.1.tgz",
-      "integrity": "sha512-eHh93bjlEZo/hiLDJtD4Hi7nRBt/uZmdP5KomoHeRjuqgnc84Z4MIwUNSVjO3DPEeNyPsf775TYV1yLvgmDnKQ==",
-      "size": 74989
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-styles-0.2.0.tgz",
+      "integrity": "sha512-fy/Xgy5gBqD8xySzdEnDf/FBWXYiWFdwILisnM4W9IsSHYulvpM4aMfLoMZcGtRN5f3czBh5ZOPx2FdG8ETFnw==",
+      "size": 75368
     },
     "@aio-ui/utilities": {
       "dir": "packages/utilities",
@@ -68,12 +68,11 @@
         "./DomUtils": "dist/DomUtils.js",
         "./color.utils": "dist/color.utils.js",
         "./helper": "dist/helper.js",
-        "./parseTableFile": "dist/parseTableFile.js",
-        "./Markdown": "dist/Markdown.js"
+        "./parseTableFile": "dist/parseTableFile.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-utilities-0.1.1.tgz",
-      "integrity": "sha512-WyHENk+pTWK7X7nlKzsav+ZgUWMWWbde2jlu4cFAYn4Z4WpqvHQ43EGBRkDiGMmmjAQBQ4xpw+/vJhBUvfJH2g==",
-      "size": 33174
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-utilities-0.2.0.tgz",
+      "integrity": "sha512-9lYspI6fXFTMtqi7BfTVUHYQTORQ3kkUgj3WwS1RA0qzWYQvyLI2HN8fb4tmhguQ9VGrURsyHsCaA9ZckvrhxA==",
+      "size": 25856
     },
     "@aio-ui/accordion": {
       "dir": "packages/components/accordion",
@@ -81,9 +80,9 @@
         ".": "dist/index.js",
         "./Accordion.css": "dist/Accordion.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-accordion-0.1.1.tgz",
-      "integrity": "sha512-dHeSEYZJpGJVxZxJ6Zl0I3qNbwjkZAXY/eP1JAQts+XwdZIiI7WLwn4cJLvpqWJKOcEh2FZ+Nn2wgQ6RycEUZQ==",
-      "size": 5077
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-accordion-0.2.0.tgz",
+      "integrity": "sha512-JBT1koRfnrB5BIvgJdVuVgY0khA7vK/9wIWcZcBXf5zr0PSDG3WG1VneTb6gbC5GFIFRSpl3od6Dc2ZaDZDduw==",
+      "size": 5525
     },
     "@aio-ui/article": {
       "dir": "packages/components/article",
@@ -91,9 +90,9 @@
         ".": "dist/index.js",
         "./Article.css": "dist/Article.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-article-0.1.1.tgz",
-      "integrity": "sha512-xUjNJXmO0SuXCRMImFwkovTg8a/yVDCfAnIsBM4zlZV8m5Fj4grCFIDGs0O0idgPhc6DIEj+Tlt3ZWH2lOGNQg==",
-      "size": 19352
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-article-0.2.0.tgz",
+      "integrity": "sha512-5Rs5frvUJy3jDIgPLWC71ikPSj+Ibiilr/Wh5Y4EjBDwRoUoEgusXO+AeRpmaFaCGX80KCJl/L/lj1eHNICz9g==",
+      "size": 20092
     },
     "@aio-ui/badge": {
       "dir": "packages/components/badge",
@@ -101,9 +100,9 @@
         ".": "dist/index.js",
         "./Badge.css": "dist/Badge.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-badge-0.1.1.tgz",
-      "integrity": "sha512-iBCRQGHKgIVDjxEF87YTpphLfnOy5Arf3ZfHj1q0RInzrd5sk0h/EVEcizy0uLRME3OnshGLXigjozH46jg0nQ==",
-      "size": 7318
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-badge-0.2.0.tgz",
+      "integrity": "sha512-a5estQCwSNiI/jG2pjXXbWhstiQzye2nOgs6IfKps0vuPfWt5o/Ae3boRuJmy74efsRf9avbaf/0dX3ExMr5YQ==",
+      "size": 7776
     },
     "@aio-ui/carousel": {
       "dir": "packages/components/carousel",
@@ -111,9 +110,9 @@
         ".": "dist/index.js",
         "./Carousel.css": "dist/Carousel.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-carousel-0.1.1.tgz",
-      "integrity": "sha512-kFArtOzUA0YN415zclaI+OhlnLMFFTWb3ZbZ375+ygLsLuB3tCF4Q06zZIYnc8Q00MSpEYqjgSGUyjikKaglqg==",
-      "size": 24324
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-carousel-0.2.0.tgz",
+      "integrity": "sha512-COUaVAW+qPhfFrlQAH2cPvkWcO6iHJ1Z59Wp0CTPIzescWBgsE1FQFd6yTUIF4f6axv3btHOgL94Ov77bwQ5PA==",
+      "size": 25472
     },
     "@aio-ui/code-block": {
       "dir": "packages/components/code-block",
@@ -121,9 +120,9 @@
         ".": "dist/index.js",
         "./CodeBlock.css": "dist/CodeBlock.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-code-block-0.1.1.tgz",
-      "integrity": "sha512-K2rqe0y7hBsbS546Pvdoyd91ERanWXr860H3w3Z+heiRrGiUXoU9Iagl1FjhsflEQ4TsHOGwiSyQZb90HZzWtw==",
-      "size": 14214
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-code-block-0.2.0.tgz",
+      "integrity": "sha512-Q15t9FUIYNHYCiWRrc2BVyB8kqIJvY4h75KQLT+Oatw7/lgoRaT1SiJsc/iUAq+5zTXvZ1akX3ZXrFsTBD50Ng==",
+      "size": 14911
     },
     "@aio-ui/fabmenu": {
       "dir": "packages/components/fabmenu",
@@ -131,8 +130,8 @@
         ".": "dist/index.js",
         "./FabMenu.css": "dist/FabMenu.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-fabmenu-0.1.1.tgz",
-      "integrity": "sha512-G0YJJ+yUa9a09FGf9acm7zPOoLWyFHcGegiL2LBN8UZdtgM2XsxsHJA7+N5xiOv9Trvq3DCI7wLzaoRK7MfgMw==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-fabmenu-0.2.0.tgz",
+      "integrity": "sha512-b2YoGyk93Rgt4vOmxXslO6frUzxgHlqgp/kFhdC/ocdg0I+2W5IsRX5HkMg8PcLVtSUbovcji5HA+1ezjyjzmw==",
       "size": 7156
     },
     "@aio-ui/footer": {
@@ -141,9 +140,9 @@
         ".": "dist/index.js",
         "./Footer.css": "dist/Footer.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-footer-0.1.1.tgz",
-      "integrity": "sha512-2DTeglgzHXsFS/3CYVkHK2xM4YUrEj0GXzFK25sb8IIlcN2wpnFUUSBsd3tEvQyrltREu76pSfFR/LcMfszMag==",
-      "size": 8433
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-footer-0.2.0.tgz",
+      "integrity": "sha512-jQyypRBBydF3W4r3thQUj2z7H49TuSsSaJUXs2wrbNebJ9lgZxBAjjhlW4YQgVHWzpvnUtlq5iQhST9sg1MwEw==",
+      "size": 8870
     },
     "@aio-ui/form": {
       "dir": "packages/components/form",
@@ -160,9 +159,9 @@
         "./multistep-adapter": "dist/adapters/Multistep.js",
         "./validation-adapter": "dist/adapters/Validation.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-form-0.1.1.tgz",
-      "integrity": "sha512-IHDpL9tYvwUaMUHKT/N0POtvJlWtKFOhGzSAA0DI8yYN0mhxyZj8enzt+lQf746MsqhFLpcYy3rIY7i0wj9x1g==",
-      "size": 115433
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-form-0.2.0.tgz",
+      "integrity": "sha512-lsZs+Dze35rS7yGjjZ/h/tiGCBs7J30Zcone8TiyXW4pYhqt7oUuqdpwzYEyRNiykG0174QC/LiixFMi3tYS/w==",
+      "size": 118894
     },
     "@aio-ui/id-address": {
       "dir": "packages/components/id-address",
@@ -175,9 +174,9 @@
         "./form": "dist/IdAddress.FormAdapter.js",
         "./id-address.css": "dist/id-address.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-id-address-0.1.1.tgz",
-      "integrity": "sha512-PP6u3gja7GoCTFQl+GHLLcMykfECRV73upRIp7kpuYkbPtKOiFpRtTYA+1v3KlJcCu8qWYeBmuyKi29+g9yPHA==",
-      "size": 80594
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-id-address-0.2.0.tgz",
+      "integrity": "sha512-/r5IQp4eB3h0yxzuDZwG3gQV+DHJ+3WSC+Ti6v2N7+x+QeK8MnYKJFXPZRC3WnQhVG0txKUYvHMIhhoD7HCgYA==",
+      "size": 80631
     },
     "@aio-ui/input": {
       "dir": "packages/components/input",
@@ -201,9 +200,9 @@
         "./popover/module": "dist/Popover.InputModule.js",
         "./input.css": "dist/input.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-input-0.1.1.tgz",
-      "integrity": "sha512-qfhB+pxV68l/C7L10InRNTPLTEFHM/x9mkW/TJiE7kGDNNbFgF402JqdGpk62M9L9whUuwtdFIm5o+Ay8QUXFQ==",
-      "size": 162555
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-input-0.2.0.tgz",
+      "integrity": "sha512-kCVKOhR/tjAzSgZiX+yLufiQdbyIF/+QFfjDH93QTsMqt6uI+j9jzTIKxaPqhu+ccnLYoZTVjIOnXhGfcpg74A==",
+      "size": 164496
     },
     "@aio-ui/markdown": {
       "dir": "packages/components/markdown",
@@ -211,9 +210,9 @@
         ".": "dist/index.js",
         "./Markdown.css": "dist/Markdown.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-markdown-0.1.1.tgz",
-      "integrity": "sha512-Js1WMFgIuNrTgrGyBwpYbD8gRp+Mb+CNFteU9lvHypTv+PbRf0ECeprMkVPXYCWUrfX9u5sdualgsmJJAw6YAg==",
-      "size": 11330
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-markdown-0.2.0.tgz",
+      "integrity": "sha512-UoyzNNr+0lkWV0hyzPUxyhg6G+cUw7ewr5B/oOeXT3U1Bdhof7in7156RPDtfeuIw6dQGebdWK1Ftf6MVLh0Ew==",
+      "size": 33707
     },
     "@aio-ui/masonry": {
       "dir": "packages/components/masonry",
@@ -221,9 +220,9 @@
         ".": "dist/index.js",
         "./Masonry.css": "dist/Masonry.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-masonry-0.1.1.tgz",
-      "integrity": "sha512-2dpY7hjqDaRZejIRqDCdfFzMAJ8GW1aUv4gako3CCgYHZX1VJrlFw8sbtN5QUVurhCuJ7Y6AbAXGCpVr3jf5Ew==",
-      "size": 29898
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-masonry-0.2.0.tgz",
+      "integrity": "sha512-i7PBmGGdrwIaKz47T4lr5yvSWA7mYtcbGDzEnBkOcTQ0mMYkM0dV5L1W2jbCY2llSGMVOf2z/rzs20mAlSxpbw==",
+      "size": 31231
     },
     "@aio-ui/menu": {
       "dir": "packages/components/menu",
@@ -231,9 +230,9 @@
         ".": "dist/index.js",
         "./Menu.css": "dist/Menu.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-menu-0.1.1.tgz",
-      "integrity": "sha512-uyiMkbEcZLTsGX+iCt1Xi4FpXoCJQA7g83GuwkbbbeUbx213ma5zfKUrkPr053nPvoOunwuek4F2pccBwxVQ1Q==",
-      "size": 15932
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-menu-0.2.0.tgz",
+      "integrity": "sha512-v42krBhlJCVtMly6nNXmpopbJ5KweSbNj/q8fgjSD76wwneZJbZaDsvbTO5RNBh0TZRXDvxqayUUR34tVgTBwA==",
+      "size": 16549
     },
     "@aio-ui/message": {
       "dir": "packages/components/message",
@@ -242,9 +241,9 @@
         "./Message.css": "dist/Message.css",
         "./adapters/FormAdapter": "dist/adapters/FormAdapter.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-message-0.1.1.tgz",
-      "integrity": "sha512-o04fnw4ovrfw85N4NAUPO0J1sgECJPTU6RGkkDnJEfWvX/6QeLFvFQuONZWwvMeRngis19qWyV/LoYHgOKrdLw==",
-      "size": 13154
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-message-0.2.0.tgz",
+      "integrity": "sha512-EAUu9tfVeORsOtILtNBIxhG9LfxzyX3m8eIxl5Tqz/ZluyPjBRDPRX/1ihFM1WcsxD4/hUSEEINaVnLXUaLNbQ==",
+      "size": 13153
     },
     "@aio-ui/modal": {
       "dir": "packages/components/modal",
@@ -252,8 +251,8 @@
         ".": "dist/index.js",
         "./Modal.css": "dist/Modal.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-modal-0.1.1.tgz",
-      "integrity": "sha512-GvAumTvE+b+x6y6EZEOn1UUybvNVIn51lvIScVn/rPqNNG3ZEz4f7K4Ekx59rS376yI/0dSz/spA55qvRwiMZA==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-modal-0.2.0.tgz",
+      "integrity": "sha512-MDNlN9YHJMEwoCVNoLfY2zCkBFy6D2N7//2guLWc0WPGByIBMOB+CuoHcj5ENU+6uhT/k/K9rvL+hq9fyIiHkA==",
       "size": 9925
     },
     "@aio-ui/modeswitcher": {
@@ -262,9 +261,9 @@
         ".": "dist/index.js",
         "./ModeSwitcher.css": "dist/ModeSwitcher.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-modeswitcher-0.1.1.tgz",
-      "integrity": "sha512-hRprPCt6WMQ0UShblGI449xVUpBHyOO7GAxlR68Lx8mHrJh5Z8oCfFHZwK+5oLLXAhTym3MLgQ9TqT0SOjHwpw==",
-      "size": 5301
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-modeswitcher-0.2.0.tgz",
+      "integrity": "sha512-/1lwCXeQ2uPEGH+xNFfYIWOrhnnn+F6/HIqrnKek1aEYOXzmtRqzS5gR8CSNdwBK0JX9S09JRH+IrVQJbD89Ww==",
+      "size": 5665
     },
     "@aio-ui/pricingcard": {
       "dir": "packages/components/pricingcard",
@@ -272,9 +271,9 @@
         ".": "dist/index.js",
         "./PricingCard.css": "dist/PricingCard.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-pricingcard-0.1.1.tgz",
-      "integrity": "sha512-EYgPQ3A9QZk9WX6/b9KY7dGvzww/Si11Rd8UHOHU2lSjBfUCG69/q/AQQgPL6I29kd3Zmx1y6N03cXGHTAknnA==",
-      "size": 6792
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-pricingcard-0.2.0.tgz",
+      "integrity": "sha512-fFahKM+gX3UdSwB+pbNRkWRfbcBFzVO0z9hQ9VhNCFDC9G4uAq0Z8Poj4lNkdK/T200XTn5Bt15h6Z08R0eZxg==",
+      "size": 7214
     },
     "@aio-ui/product": {
       "dir": "packages/components/product",
@@ -284,9 +283,9 @@
         "./ProductDetail.css": "dist/ProductDetail.css",
         "./ProductGrid.css": "dist/ProductGrid.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-product-0.1.1.tgz",
-      "integrity": "sha512-dPdvcgL0s8wfng4qCvgJTPs1+YbfYbXoccx+ym0+YRh1sexK7y3DZtdFKgG3RTkKM3jK4RQX9TnQINIsA+Wc+g==",
-      "size": 34515
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-product-0.2.0.tgz",
+      "integrity": "sha512-5OMxcPwHTE3mrKYTaE6uGATxcGJQhm6z+Pia5YVF1x/pjAoqNjPcPv6RXQpmcfhFK6EhtEARYfeh+ptYFRzThA==",
+      "size": 36270
     },
     "@aio-ui/rating": {
       "dir": "packages/components/rating",
@@ -294,9 +293,9 @@
         ".": "dist/index.js",
         "./Rating.css": "dist/Rating.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-rating-0.1.1.tgz",
-      "integrity": "sha512-VnX6jMSoz0cWtp5uNt6i7C+pqA7oir0MrQ9jpIy7mrOMODsFOGfh2geTgxS2cukSTnEnV4aznSEDEzihUgLMSA==",
-      "size": 7898
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-rating-0.2.0.tgz",
+      "integrity": "sha512-YswlohIBPl0aYfgfZWWp1e5Jci9hT58ZH/9Q6WO2aYo4qXZXNod7L5gG8ECA7Z/lE98mwVEBFT8RfzKHjYEA5Q==",
+      "size": 8282
     },
     "@aio-ui/section": {
       "dir": "packages/components/section",
@@ -304,9 +303,19 @@
         ".": "dist/index.js",
         "./Section.css": "dist/Section.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-section-0.1.1.tgz",
-      "integrity": "sha512-I3AJlKjHVuOSkHGDY6//hjLXEbdV1+tegnrYqh8J/iUYi7ahprtIKD/ueGqllWKpb//BIU9PH07zgXnF3XgU1g==",
-      "size": 11216
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-section-0.2.0.tgz",
+      "integrity": "sha512-LdYK7dqZE4SSwBWOWbXmSVaWZxaK8ZvEfuLsUeX4l0ey1cf/QtvcTmGUlyWCtKni/XlKL6YKJGNAso/wiPukgA==",
+      "size": 11913
+    },
+    "@aio-ui/skeleton": {
+      "dir": "packages/components/skeleton",
+      "subpaths": {
+        ".": "dist/index.js",
+        "./Skeleton.css": "dist/Skeleton.css"
+      },
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-skeleton-0.2.0.tgz",
+      "integrity": "sha512-UdRp03dvzBqOeVUN1FHDQXYPzggTb/VfZuiJO51fnlyYv9cmbipDdzxQmAtHSBK3XzmvOqpHU+EccONPYmZYEQ==",
+      "size": 8499
     },
     "@aio-ui/tab": {
       "dir": "packages/components/tab",
@@ -314,9 +323,9 @@
         ".": "dist/index.js",
         "./Tab.css": "dist/Tab.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-tab-0.1.1.tgz",
-      "integrity": "sha512-ZFUdKJw25ah04TrONgLt1Oi9zezUxzs0CvHTwej0E/KSyaAfVSoANf9y+ORRoPAJSaHHl5aquRZVm2fk1wUusQ==",
-      "size": 17840
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-tab-0.2.0.tgz",
+      "integrity": "sha512-rYZqMGEPVi4kgDYZqMYEwgOtb1rRFJZfgdvfcg88BCCDrd+Dgi66Bl7t4dcjoZAnBpoLcHF21z+YnLTXHIILTw==",
+      "size": 18621
     },
     "@aio-ui/table": {
       "dir": "packages/components/table",
@@ -325,9 +334,9 @@
         "./Table.css": "dist/Table.css",
         "./adapters/FormAdapter": "dist/adapters/FormAdapter.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-table-0.1.1.tgz",
-      "integrity": "sha512-Nculrm9/3Sb+qt8Zm5ABDYtebLHi6JZh2PAq9wv1ya5KxceyVoZ7ZRdH5W1RbXeum8hYy2hdZfVzmh7HFbBP6A==",
-      "size": 67796
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-table-0.2.0.tgz",
+      "integrity": "sha512-VhBKI8+LYyCA352TsQPqgqdIwTpE8HuGieTDlAxDyZKYlQTRd97SpYL3xSCVl16M5DyB5o1ftoHfzULH4FBbYQ==",
+      "size": 68827
     },
     "@aio-ui/animations": {
       "dir": "packages/modules/animations",
@@ -338,17 +347,17 @@
         "./behaviours/*": "dist/behaviours/*.js",
         "./canvas/*": "dist/canvas/*.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-animations-0.1.1.tgz",
-      "integrity": "sha512-Ycfv8inY9KxpvYwf14+7YCRJhTGpi1tC8fMwIS+EDIbKqvWNEE88PZAzYpxCN8Iael/hjVo+PrSDT2hjmUr5tg==",
-      "size": 70652
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-animations-0.2.0.tgz",
+      "integrity": "sha512-EVfata/wzjaKC2VpPj0Hw3WwaFnNvwK70Dyj7z7+wqLPD6pbw1Xk67eH3ogMKLo8Aqs0hbxEjglQ4uoL22TGnA==",
+      "size": 70783
     },
     "@aio-ui/event-emitter": {
       "dir": "packages/modules/event-emitter",
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-event-emitter-0.1.1.tgz",
-      "integrity": "sha512-vp7A6eHKQVKiLnkvbpBN8WPoC5Uf1gPTeGcMZmbeJ/oLTHbb8IaZjShFas1/N2nVjfLCcVWgncJIixr0Thb6cw==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-event-emitter-0.2.0.tgz",
+      "integrity": "sha512-bhnLP3DlSl9Aj9/bkqxaXWcGNnwS39YM0I/po2uPfP75OiVyH8HB+lv4y2so48sY7Qty9KdZJzWs6efD7+dQdg==",
       "size": 3738
     },
     "@aio-ui/http-service": {
@@ -356,8 +365,8 @@
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-http-service-0.1.1.tgz",
-      "integrity": "sha512-TGrsQxSmi93vQWTR9/GIJDbRb6ynbrfs6BWi3K1n0BlwsIXC67mzog6BANM6jURZtAR1SCOcsmA5G7tbzm8+Nw==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-http-service-0.2.0.tgz",
+      "integrity": "sha512-WujAIaUN+J2G5ePZlpF2chP1G9lL/+KDYtwi+O8247GKJkt+iGO8VBr4kzvTfoqgICVgRIru9G2eMb2WWFtVKA==",
       "size": 15565
     },
     "@aio-ui/module-loader": {
@@ -365,8 +374,8 @@
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-module-loader-0.1.1.tgz",
-      "integrity": "sha512-9SVc+Hw3oINcvQ7/j3lxNI56LbdCBS2bnakdMpkOAx3vCVsmSXn1KfIQbF0LaDIjBsrSyl7WnOJ+EWAsho4IQg==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-module-loader-0.2.0.tgz",
+      "integrity": "sha512-yQxcIIfnvV7tp2k54FStDa2igm/N+9yDifR7ksoMnG/MEMagBnLFzY/PMHHRnieJmWSgQqH9SIyJODs3pe/AXw==",
       "size": 9255
     },
     "@aio-ui/router": {
@@ -374,18 +383,18 @@
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-router-0.1.1.tgz",
-      "integrity": "sha512-+0ITYGA6MnocdCxlfDJWXbnigX7tN1Pxp1YQ3IIyoqv6eioqGUH9Rwdz+fPdlU1+89e6qtyzGl/jKGjgp444jw==",
-      "size": 7534
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-router-0.2.0.tgz",
+      "integrity": "sha512-oPLccvVjX9ItojsU2fE1znaCHEbEBLyeGsWPmjmogT29dOUD2eIeupxFMAFcFAKQMMh86doZ/M/78N4fIn9ebw==",
+      "size": 7533
     },
     "@aio-ui/theme": {
       "dir": "packages/modules/theme",
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-theme-0.1.1.tgz",
-      "integrity": "sha512-XQTnYD77oJRziXBbqWaZkqxONGyPQDA/KWLn6qta/TnOZ+S+eQuwhO47l7KrllWrerPQkUAHre/+3i3+nrdlWw==",
-      "size": 6127
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-theme-0.2.0.tgz",
+      "integrity": "sha512-BO++9ITZVYb1VT6Av/cKkFmkjqEDWUpoc+7t2evnu6XT5BWUng2ePN2xnIHp9kATXZ2heb29Tk+0HS21iYFZTg==",
+      "size": 6126
     },
     "@aio-ui/theme-cyberpunk": {
       "dir": "packages/themes/cyberpunk",
@@ -393,8 +402,8 @@
         ".": "dist/index.js",
         "./CyberpunkTheme.css": "dist/src/CyberpunkTheme.css"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-theme-cyberpunk-0.1.1.tgz",
-      "integrity": "sha512-gzi6pKFAysUR1M9jJqbKS21SZPAQMZqW4mmF0UfmgGlOM+NJbVin0zi5yPCWmR7wpDG6ODne33GQDTAjKZfsVQ==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-theme-cyberpunk-0.2.0.tgz",
+      "integrity": "sha512-4J7WEECmexm0TQKMSU+NaMpxEYqe8jLcEY+KLH+l/a/a2u0u60gmQrGuLo92VyN9bdhL6qAbkUZj7aCsqcLY1w==",
       "size": 3209
     },
     "@aio-ui/theme-default": {
@@ -402,17 +411,17 @@
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-theme-default-0.1.1.tgz",
-      "integrity": "sha512-tzoi1utJhdaAmAJEz93CDi+HXlNBb2A+9/D5qwmA5Gv1RUKUcngFn2CD+Gb9/WVxzaw0YurBm/U5wPULXJDQHQ==",
-      "size": 1904
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-theme-default-0.2.0.tgz",
+      "integrity": "sha512-Hmq334NjL9L68pGPuqG6g77c9wO4DVO5iVyZrehBqfbF7ZzcTZGzsVG4q6vIquQGYrgoat0IGOCA1lJkKfWkTw==",
+      "size": 1903
     },
     "@aio-ui/theme-horizontal": {
       "dir": "packages/themes/horizontal",
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-theme-horizontal-0.1.1.tgz",
-      "integrity": "sha512-JZv7bITYQW+FGpxK1wMU3is8QEFGKoWyHATSLVjX6sYfAaI9TwPpsFCzXZsEy6FRIcxTzZeM05guSMl0ZzDCgw==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-theme-horizontal-0.2.0.tgz",
+      "integrity": "sha512-UrJ2lrV1kMMDx47yp5UjVZM8wt/fsZBf/Hc+SlS321AEQMeLGYqwRBsFYKw3CkbVxgwtTnJkWOzAxYNvuOlBZg==",
       "size": 12719
     },
     "@aio-ui/frameworks": {
@@ -420,8 +429,8 @@
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-frameworks-0.1.1.tgz",
-      "integrity": "sha512-oUI50/mptDLm4Z0JG0N4J6B1QhmTHLl7EukfdAmYCo2qBJ9JnvwTDdHGYMxQnQzHMABat6b7fGmfqGlAAUc+mA==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-frameworks-0.2.0.tgz",
+      "integrity": "sha512-ykm++SeJUiRL8TD0AkIHpgjfM+3TOYHN1nJ5KK+uhLgFq/iPcrTCrR7A/b+TASuIcJhACrmR5obZNUY0WQZ/kg==",
       "size": 670
     },
     "@aio-ui/modules": {
@@ -429,8 +438,8 @@
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-modules-0.1.1.tgz",
-      "integrity": "sha512-/HQEHxYhtFJOt1U3YXsm01aq63HsvG9ljsLmGUtgzpw6hTM2vmu6oEm+IoNUF0sROi0So/y0eN1muSXqTO212Q==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-modules-0.2.0.tgz",
+      "integrity": "sha512-RxrNZg2zz47omKb/YM87lee2MKKOxg+wOZ/MXgxT0zee2Mghx2R9wH5vfoXo1l1UrbpPHQRZsHhnPENW2F2BgQ==",
       "size": 746
     },
     "@aio-ui/themes": {
@@ -438,8 +447,8 @@
       "subpaths": {
         ".": "dist/index.js"
       },
-      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-themes-0.1.1.tgz",
-      "integrity": "sha512-ckyHOSdhMBq4rgBNYT93QfnCTJ4a2g+aL5dVyIUMPrzZtkvQmyuZAVBSNeBRjUOvFl7s9h9MyUza0d9nCdwIFQ==",
+      "tarball": "https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-themes-0.2.0.tgz",
+      "integrity": "sha512-yv/b02hplb7fcCgoXkQSPeQfuAMoeQPUnd6CG9FyJi8+p3YjKyfCxG8Do+CVpoo5PHgKmnEgvxWGKBLm/wzwMg==",
       "size": 696
     }
   }

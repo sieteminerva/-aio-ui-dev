@@ -60,6 +60,13 @@
     margin: 0;
   }
 
+  /* A part rendered by an outline. It is a grouping for the page, not a new rhythm: the
+     gap between parts is the same gap between blocks. */
+  & .markdown-section {
+    display: grid;
+    gap: var(--markdown-gap);
+  }
+
   & .markdown-list {
     margin: 0;
     padding-left: 1.15rem;

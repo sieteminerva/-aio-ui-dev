@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 export class ProductCardBuilder extends Builder {
     builderId = "product-card";
     name = "product-card";
@@ -167,6 +168,36 @@ export class ProductCardBuilder extends Builder {
                 el.textContent = this.config.buttonText || "Add to Cart";
                 break;
         }
+    }
+    /**
+     * 🪶 LOADING MOCKUP — the card's silhouette, composed from the mandatory
+     * `@aio-ui/skeleton` primitive.
+     *
+     * The skin has to exist before `ProductCard.css` does, so it cannot come from this
+     * component's sheet; precision comes from the spec instead — the display box reserves the
+     * same square, the swatch row mirrors the real variants, the caption keeps two lines and
+     * the button keeps its height. No `render()`, no node records, no payload loop.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "bone", aspect: "1 / 1" },
+                {
+                    shape: "row",
+                    gap: "0.5rem",
+                    children: [
+                        { shape: "circle", width: "1.25rem" },
+                        { shape: "circle", width: "1.25rem" },
+                        { shape: "circle", width: "1.25rem" },
+                    ],
+                },
+                { shape: "line", width: "62%" },
+                { shape: "line", width: "88%" },
+                { shape: "bone", width: "35%", height: "1.1rem" },
+                { shape: "bone", height: "2.5rem" },
+            ],
+        });
     }
     /**
      * 👑 PINTU 3: THE INITIALIZE DETONATOR (SUCI BERSIH SETIPIS SILET)

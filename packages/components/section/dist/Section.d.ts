@@ -41,6 +41,12 @@ export declare class SectionBuilder extends Builder<SectionElementType, iSection
     readonly name = "section";
     readonly stylesheet: string;
     config: Required<iSectionConfig>;
+    /**
+     * 🪶 LOADING MOCKUP — eyebrow, header, copy and the action row, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. Column count is a payload detail; one column is the
+     * layout the sheet will stack first anyway.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iSectionConfig>);
     prepare(data: any): HTMLElement;
     protected template(typeKey: SectionElementType, el: HTMLElement, payload?: any): void;

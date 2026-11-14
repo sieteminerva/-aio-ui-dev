@@ -7,6 +7,12 @@ export declare class AccordionBuilder extends Builder<AccordionElementType, iAcc
     readonly builderId = "accordion";
     readonly name = "accordion";
     readonly stylesheet = "./Accordion.css";
+    /**
+     * 🪶 LOADING MOCKUP — one open panel between two closed headers, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. `Accordion.css` is the sheet that is still on its way, so
+     * the skin cannot come from it; the rhythm comes from the spec instead.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iAccordionConfig>);
     prepare(data: iBasicNode, _config?: Partial<iAccordionConfig>): HTMLElement;
     initialize(): void;

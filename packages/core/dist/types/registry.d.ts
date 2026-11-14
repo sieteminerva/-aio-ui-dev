@@ -60,6 +60,8 @@ export interface iBuilderRegistry {
     "editor": iBasicNode;
     "form-editor": iBasicNode;
     badge: any;
+    /** The mandatory placeholder primitive — payload is an `iSkeletonSpec`. */
+    skeleton: any;
     /** A dark panel for source text — payload `{ code, label?, language? } | { blocks }`. */
     "code-block": any;
     /** A Markdown document rendered to DOM — payload `{ source: string }`. */

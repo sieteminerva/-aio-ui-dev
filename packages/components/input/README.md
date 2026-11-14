@@ -9,6 +9,8 @@ Sub-modules extend the field without changing the builder: `dropdown` (select/se
 `file-uploader`, `controls` (action buttons) and `popover`. Each one is an `iInputAdapter`
 that the builder resolves once per `prepare()` and disposes on teardown.
 
+<!-- part: id=payload -->
+
 ## Payload
 
 ```ts
@@ -31,6 +33,8 @@ action buttons are present), `info`, `position` (`top | left | right | bottom`),
 `useLabel`, `view`, `thumbnail`, `maxUpload`, `maxFileSize`, `groupUnallowed` and
 `createEventListener` are consumed by the file module.
 
+<!-- part: id=config role=contract -->
+
 ## Config
 
 | Option      | Default                | Meaning                                                             |
@@ -44,6 +48,8 @@ action buttons are present), `info`, `position` (`top | left | right | bottom`),
 `modules: null` keeps every core adapter available. Pass an already-resolved adapter array
 when a parent already loaded the set — the field then never loads or unloads modules the
 host owns (that is what `Form` does).
+
+<!-- part: id=nodes role=contract -->
 
 ## Nodes
 
@@ -59,6 +65,8 @@ host owns (that is what `Form` does).
 | `@field>toggle`   | `input`     | same switch shell, opt in with `config.style` |
 | `@field>file`     | `input`     | `type=file`                                   |
 | `@field>info`     | `small`     | `info`                                        |
+
+<!-- part: id=tokens role=contract -->
 
 ## Tokens
 
@@ -115,6 +123,8 @@ covers both modes.
 
 The loading spinner is **not** an input token: it is shared with the form package and lives
 in the app layer as `--app-spinner-content`.
+
+<!-- part: id=wiring role=contract -->
 
 ## Wiring checklist
 

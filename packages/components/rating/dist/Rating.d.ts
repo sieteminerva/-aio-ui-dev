@@ -12,6 +12,11 @@ export declare class RatingBuilder extends Builder<RatingElementType, iRatingCon
     readonly name: keyof iBuilderRegistry;
     readonly stylesheet: string;
     config: Required<iRatingConfig>;
+    /**
+     * 🪶 LOADING MOCKUP — five stars over the numeric bar, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. The score is data; the silhouette is the widget.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iRatingConfig>);
     /**
      * 👑 THE POLYMORPHIC RATING COMPILER

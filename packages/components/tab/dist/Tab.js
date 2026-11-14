@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 export class TabBuilder extends Builder {
     builderId = "tab";
     name = "tab";
@@ -10,6 +11,20 @@ export class TabBuilder extends Builder {
     _listenersTabChanged = [];
     _listenersContentLoaded = [];
     _boundKeyDownHandler;
+    /**
+     * 🪶 LOADING MOCKUP — the tab bar over an empty panel, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. Tab count stays at three: the panel is what reserves the
+     * vertical space, and it is geometry, not data.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "row", gap: "0.5rem", children: [{ shape: "bone", width: "6rem", height: "2.25rem", count: 3 }] },
+                { shape: "bone", height: "10rem" },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultTabSelectors = {

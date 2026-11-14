@@ -5,8 +5,6 @@ export { generateRandomColor, hexToRgb, hexToRgba } from "./color.utils";
 export { createImageError } from "./DomUtils";
 export { mergeInputConfig, numberToText, toBeString, truncateText } from "./helper";
 export { buildNamespace, ensureMetadataIdentity, setMetadata } from "./Metadata";
-export { parseInline, parseMarkdown, splitTableRow } from "./Markdown";
-export type { iMarkdownBlock, iMarkdownFence, iMarkdownHeading, iMarkdownInline, iMarkdownLink, iMarkdownList, iMarkdownParagraph, iMarkdownQuote, iMarkdownTable, } from "./Markdown";
 export { EMPTY_TABLE, detectDelimiter, parseTableRecords, parseTableText, splitCsvRows } from "./parseTableFile";
 export type { iParsedTableFile } from "./parseTableFile";
 export { selectorToTree } from "./SelectorToTree";

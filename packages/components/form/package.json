@@ -1,6 +1,6 @@
 {
   "name": "@aio-ui/form",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "files": [
     "dist",
@@ -62,13 +62,13 @@
     }
   },
   "peerDependencies": {
-    "@aio-ui/base": "^0.1.1",
-    "@aio-ui/core": "^0.1.1",
-    "@aio-ui/http-service": "^0.1.1",
-    "@aio-ui/message": "^0.1.1",
-    "@aio-ui/module-loader": "^0.1.1",
-    "@aio-ui/utilities": "^0.1.1",
-    "@aio-ui/input": "^0.1.1"
+    "@aio-ui/base": "^0.2.0",
+    "@aio-ui/core": "^0.2.0",
+    "@aio-ui/http-service": "^0.2.0",
+    "@aio-ui/message": "^0.2.0",
+    "@aio-ui/module-loader": "^0.2.0",
+    "@aio-ui/utilities": "^0.2.0",
+    "@aio-ui/input": "^0.2.0"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",

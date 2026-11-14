@@ -130,6 +130,12 @@ export declare class FormBuilder extends Builder<FormElementType, iFormConfig> {
      * mencocokkan lewat id membuat manifest lama tanpa `scope` tetap benar.
      */
     provideModules(modules: Record<string, unknown>): void;
+    /**
+     * 🪶 LOADING MOCKUP — a title, three labelled fields and the action row, drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. Field count and types are payload detail; the
+     * mockup only promises the column the sheet will take over.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iFormConfig>);
     /**
      * REFACTOR TOTAL: Merakit Form menggunakan struktur iBasicNode[] murni

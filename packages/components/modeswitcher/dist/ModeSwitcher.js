@@ -1,10 +1,25 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 export class ModeSwitcherBuilder extends Builder {
     builderId = "mode-switcher";
     name = "mode-switcher";
     stylesheet = "./ModeSwitcher.css";
     mode = "light";
     config;
+    /**
+     * 🪶 LOADING MOCKUP — the track and the label next to it, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. Two short bones, because the whole widget is short.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "row",
+            gap: "0.5rem",
+            children: [
+                { shape: "bone", width: "2.5rem", height: "1.5rem" },
+                { shape: "line", width: "3rem" },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         // 💡 SINKRONISASI INITIAL STATE: Baca kondisi mode browser live semenjak detik pertama lahir!

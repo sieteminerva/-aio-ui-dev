@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { AttrsConfigMap } from "./Carousel.kit.js";
 ;
 export class CarouselBuilder extends Builder {
@@ -15,6 +16,20 @@ export class CarouselBuilder extends Builder {
     slides = [];
     dots = [];
     buttons = [];
+    /**
+     * 🪶 LOADING MOCKUP — one media box and its dot row, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. The slide count is a payload detail: a picture of the
+     * widget only needs the frame and the navigation rhythm.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "bone", aspect: "16 / 9" },
+                { shape: "row", gap: "0.4rem", children: [{ shape: "circle", width: "0.5rem", count: 5 }] },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultSelectors = {
@@ -521,6 +536,20 @@ export class CarouselBuilder extends Builder {
         this.buttons = [];
         if (this.container && this.config.container)
             this.container.innerHTML = "";
+    }
+    /**
+     * Releases instance state, then the DOM.
+     *
+     * `Base.destroy()` unhooks the root element only: the autoplay interval and the hover
+     * listeners are state this class owns, so they are released here. Before this override a
+     * destroyed carousel kept calling `next()` every `autoPlay` ms on a detached tree — one
+     * interval per mount, `clearInterval` never called (see `docs/framework/APP-LIFECYCLE.md`).
+     */
+    destroy(typeKey) {
+        this.unmount();
+        this.container?.removeEventListener("mouseenter", this.handleEnter);
+        this.container?.removeEventListener("mouseleave", this.handleLeave);
+        super.destroy(typeKey);
     }
     resolveRuntimeConfig(element, payload, totalSlides) {
         const mergeAttributes = (attrs) => {

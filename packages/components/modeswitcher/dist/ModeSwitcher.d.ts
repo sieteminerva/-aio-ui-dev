@@ -9,6 +9,11 @@ export declare class ModeSwitcherBuilder extends Builder<ModeSwitcherElementType
     readonly stylesheet: string;
     private mode;
     config: Required<iModeSwitcherConfig>;
+    /**
+     * 🪶 LOADING MOCKUP — the track and the label next to it, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. Two short bones, because the whole widget is short.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iModeSwitcherConfig>);
     prepare(): HTMLElement;
     protected template(typeKey: ModeSwitcherElementType, el: HTMLElement, _payload?: any): void;

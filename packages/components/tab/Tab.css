@@ -33,7 +33,7 @@
   /* POSISI ATAS (TOP) */
   &.position-top {
     flex-direction: column;
-    & .menu:not(.pagination) {
+    & > .menu {
       flex-direction: row;
       border-bottom: 2px solid var(--tab-accent-strong);
     }
@@ -42,12 +42,12 @@
   /* POSISI BAWAH (BOTTOM) */
   &.position-bottom {
     flex-direction: column;
-    & .menu:not(.pagination) {
+    & > .menu {
       flex-direction: row;
       border-top: 2px solid var(--tab-accent-strong);
       order: 2; /* Turun ke lantai bawah secara visual */
     }
-    & .body {
+    & > .body {
       order: 1; /* Naik ke lantai atas secara visual */
     }
   }
@@ -55,13 +55,13 @@
   /* POSISI KIRI (LEFT) */
   &.position-left {
     flex-direction: row;
-    & .menu:not(.pagination) {
+    & > .menu {
       flex-direction: column;
       border-right: 2px solid var(--tab-accent-strong);
       width: 250px;
       flex-shrink: 0;
     }
-    & .body {
+    & > .body {
       flex: 1;
     }
   }
@@ -69,7 +69,7 @@
   /* POSISI KANAN (RIGHT) */
   &.position-right {
     flex-direction: row-reverse;
-    & > .menu:not(.pagination) {
+    & > .menu {
       flex-direction: column;
       border-left: 2px solid var(--tab-accent-strong);
       width: 250px;
@@ -83,13 +83,17 @@
   /* ====================================================
      🪐 MENU BUTTON STYLING (CORRECTED CLASSES)
      ==================================================== */
-  & .menu:not(.pagination) {
+  /* Direct children only. `& .menu` used to reach every `.menu` in a mounted panel —
+     including a dropdown's popover list, which rendered as a row with the tab's border
+     and lost its own entry transition. Same reason for `> .body`/`> .panel` below: a
+     code block prints `.body` too. */
+  & > .menu {
     display: flex;
     gap: 0.5rem;
     padding: 0.5rem 0;
 
     /* 🟢 RE-ANCHOR: Mencari kelas .button ksatria, bukan .tab-btn purba! */
-    & .button {
+    & > .button {
       display: flex;
       /* flex-direction: column; */
       justify-content: center;
@@ -147,21 +151,21 @@
   /* ====================================================
      🪐 BODY & PANEL STYLING (CORRECTED CLASSES)
      ==================================================== */
-  & .body {
+  & > .body {
     position: relative;
     padding: 1rem 0;
     height: 100%;
     flex: 1;
 
     /* 🟢 RE-ANCHOR: Mencari kelas .panel ksatria, bukan .tab-panel purba! */
-    & .panel {
+    & > .panel {
       animation: tabFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 
       &.hidden {
         display: none !important;
       }
 
-      & .content {
+      & > .content {
         & .eyebrow {
           font-size: 0.8rem;
           font-weight: 600;

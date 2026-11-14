@@ -1,8 +1,24 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 export class AccordionBuilder extends Builder {
     builderId = "accordion";
     name = "accordion";
     stylesheet = "./Accordion.css";
+    /**
+     * 🪶 LOADING MOCKUP — one open panel between two closed headers, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. `Accordion.css` is the sheet that is still on its way, so
+     * the skin cannot come from it; the rhythm comes from the spec instead.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "bone", height: "3rem" },
+                { shape: "line", count: 3 },
+                { shape: "bone", height: "3rem", count: 2 },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultConfig = {

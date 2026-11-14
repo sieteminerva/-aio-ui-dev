@@ -171,15 +171,18 @@
 
 /* =========================================================================
    4. MODULE: HYDRATION HOLD — data-hydrating + --is-loading (O(1), ROOT-ONLY)
-   Hold & release terjadi pada SATU elemen puncak per komponen lazy:
-   • HOLD    (Builder.create) : inline --is-loading: 1 + attr data-hydrating
-   • RELEASE (releaseHydration): inline --is-loading: 0 + hapus data-hydrating
-                                + pasang data-loaded="true"
-   Anak-anak TIDAK pernah disentuh Javascript: visual mereka digerakkan
-   selector keturunan [data-hydrating] (presence-attr — jauh lebih murah
-   dari [style*=...] substring yang di-match ulang per elemen tiap recalc),
-   dan state --is-loading mengalir lewat warisan custom property. Tanpa
-   forEach/querySelectorAll/observer ⇒ aman page-switching brutal.
+   ONE seam owns this whole protocol: `holdUntilStyled(root, specifier, mockup?)`
+   in `@aio-ui/base/BaseAdapters/Hydration`, called at the end of `Builder.create()`.
+   This section is the FALLBACK skin: a builder that implements `loading()` shows
+   its own `@aio-ui/skeleton` mockup instead and never sets `data-hydrating`.
+   • HOLD    — only while THAT component's own sheet is missing (asked before
+               the root is returned ⇒ before the first paint): inline
+               --is-loading: 1 + attr data-hydrating.
+   • RELEASE — from the same `ensureStylesheet()` promise: inline
+               --is-loading: 0 + remove data-hydrating + data-loaded="true".
+   Decided per sheet, never per instance: two components in one pass own two
+   sheets. Release always rides the loader promise, so a builder no registry
+   ever sees cannot stay held (a failed load releases too).
    ========================================================================= */
 
 @keyframes isHydratingShimmer {

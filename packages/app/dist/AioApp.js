@@ -517,8 +517,12 @@ export class AioApp {
         this.#abort?.abort();
         const abort = (this.#abort = new AbortController());
         try {
-            if (this.#route && this.#route !== target)
-                this.#release();
+            // Every pass replaces the controller: a fragment switch (`#kitchen/a` → `#kitchen/b`)
+            // and a theme switch both build a new instance from the registered class, so the
+            // outgoing one is released here, not only when the route *name* changes. This step
+            // touches no DOM — `#paint` owns the tree — so a pass that fails later still leaves
+            // the previous page on screen.
+            this.#release();
             const { controller, context } = this.#createPage(target, fragment, abort.signal);
             // `onPrepare` failing is reported, not fatal: the route keeps whatever DOM it had.
             let prepared = undefined;
@@ -715,7 +719,13 @@ export class AioApp {
         }
         return blocks;
     }
-    /** Releases the controller of the route being left. */
+    /**
+     * Releases the controller being replaced.
+     *
+     * Runs at the start of every render pass. `onDestroy` means "this controller is being
+     * superseded", not "this route name is going away": the same route re-renders on a
+     * fragment switch and on a theme switch, and both create a new instance.
+     */
     #release() {
         const controller = this.#active;
         this.#active = null;
@@ -762,6 +772,12 @@ export class AioApp {
         const container = this.#container;
         if (!container)
             return;
+        // The outgoing shell is discarded on the next line, so this is the last moment its
+        // builders can be told to stop (`Carousel.destroy()`, `Masonry.destroy()`,
+        // `Dropdown`'s open-state listeners). It happens here — after the new tree exists —
+        // so a failed pass never tears down a page that is still on screen.
+        if (this.#root)
+            this.#registry?.releaseBuilders?.(this.#root);
         container.replaceChildren(tree);
         this.#root = tree;
         // A route that opened a modal or overlay must not leave the page frozen.

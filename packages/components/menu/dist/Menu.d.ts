@@ -25,6 +25,12 @@ export declare class MenuBuilder extends Builder<MenuElementType, iMenuConfig> {
     readonly name = "menu";
     readonly stylesheet = "./Menu.css";
     protected isMenuOpened: boolean;
+    /**
+     * 🪶 LOADING MOCKUP — brand, four navigation labels and the action button, drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. One row serves both the horizontal bar and the
+     * sidebar: the sheet that is still missing is the one that decides the direction.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iMenuConfig>);
     prepare(content: iBasicNode, _config?: Partial<iMenuConfig>): HTMLElement;
     /**

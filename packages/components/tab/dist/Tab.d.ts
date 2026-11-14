@@ -47,6 +47,12 @@ export declare class TabBuilder extends Builder<TabElementType, iTabConfig> {
     private _listenersTabChanged;
     private _listenersContentLoaded;
     private _boundKeyDownHandler?;
+    /**
+     * 🪶 LOADING MOCKUP — the tab bar over an empty panel, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. Tab count stays at three: the panel is what reserves the
+     * vertical space, and it is geometry, not data.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iTabConfig>);
     private set items(value);
     /** Local DOM lookup for the tab root. Named `tabRoot` because `rootElement`

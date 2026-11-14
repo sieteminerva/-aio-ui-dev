@@ -30,6 +30,12 @@ export declare class MasonryBuilder extends Builder<MasonryElementType, iMasonry
     private isServerFetching;
     private modal;
     private observer?;
+    /**
+     * 🪶 LOADING MOCKUP — the filter row and three staggered boards, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. The aspect ratios (not a payload loop) are what make the
+     * grid read as masonry, and they are geometry, not data.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iMasonryConfig>);
     /**
      * SETTER: Tempat validasi pusat untuk mengamankan data sebelum masuk ke aplikasi

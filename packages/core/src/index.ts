@@ -19,11 +19,13 @@ export {
   ensureStylesheet,
   injectLazyCss,
   isStyleInjected,
+  isStylesheetPending,
   normalizeStylesheetPath,
   replaceLazyCss,
   styleTagId,
   useStylesheetAssets,
 } from "./Stylesheets";
+export { releaseBuilders } from "./Registry/BuilderInstances";
 export { TemplateRegistry, getTemplates, setTemplates } from "./TemplateRegistry";
 export {
   DEFAULT_REGISTRY_SCOPE,

@@ -12,10 +12,10 @@ the source; `dist/` is gitignored there, which is why this orphan `cdn` branch e
 
 | | |
 | --- | --- |
-| Version | `0.1.1` |
-| Tag | `v0.1.1` |
-| Packages | 39 |
-| Published | 2026-11-12 |
+| Version | `0.2.0` |
+| Tag | `v0.2.0` |
+| Packages | 40 |
+| Published | 2026-11-14 |
 | Repository | `sieteminerva/-aio-ui-dev` |
 
 ## 1. What is here
@@ -40,9 +40,9 @@ subpath you import.
 <script type="importmap">
   {
     "imports": {
-      "@aio-ui/core": "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/packages/core/dist/index.js",
-      "@aio-ui/code-block": "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/packages/components/code-block/dist/index.js",
-      "@aio-ui/code-block/CodeBlock.css": "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.1.1/packages/components/code-block/dist/CodeBlock.css"
+      "@aio-ui/core": "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.2.0/packages/core/dist/index.js",
+      "@aio-ui/code-block": "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.2.0/packages/components/code-block/dist/index.js",
+      "@aio-ui/code-block/CodeBlock.css": "https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@v0.2.0/packages/components/code-block/dist/CodeBlock.css"
     }
   }
 </script>
@@ -52,7 +52,7 @@ Three ways to name the same tree:
 
 | Ref | URL shape | When to use |
 | --- | --- | --- |
-| Tag | `…@v0.1.1/…` | default. Tag content never changes, so the browser/CDN cache is safe forever |
+| Tag | `…@v0.2.0/…` | default. Tag content never changes, so the browser/CDN cache is safe forever |
 | Branch | `…@cdn/…` | follow the newest publish without editing the import map |
 | Commit | `…@<full-sha>/…` | pin a specific build for a test or a rollback |
 
@@ -66,13 +66,13 @@ attached to the release of this tag:
 
 ```bash
 # 1. fetch the tarballs (one per package you use)
-#    https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.1.1/aio-ui-<name>-0.1.1.tgz
+#    https://github.com/sieteminerva/-aio-ui-dev/releases/download/v0.2.0/aio-ui-<name>-0.2.0.tgz
 
 # 2. install them into a normal project
 mkdir my-app && cd my-app && npm init -y
-npm i ./aio-ui-core-0.1.1.tgz \
-      ./aio-ui-base-0.1.1.tgz \
-      ./aio-ui-code-block-0.1.1.tgz
+npm i ./aio-ui-core-0.2.0.tgz \
+      ./aio-ui-base-0.2.0.tgz \
+      ./aio-ui-code-block-0.2.0.tgz
 ```
 
 > **Declare the whole peer closure.** Components depend on each other through `peerDependencies`
@@ -111,7 +111,7 @@ Tag refs are frozen. To move forward:
 # a) follow the branch - nothing to edit, the next request revalidates
 https://cdn.jsdelivr.net/gh/sieteminerva/-aio-ui-dev@cdn/packages/core/dist/index.js
 
-# b) pin a new tag - replace v0.1.1 in the import map with the newest release tag
+# b) pin a new tag - replace v0.2.0 in the import map with the newest release tag
 https://github.com/sieteminerva/-aio-ui-dev/releases        # newest tag + tarballs
 npm i ./aio-ui-core-<new-version>.tgz             # offline installs: re-download, re-install
 ```
@@ -132,45 +132,46 @@ Generated from `registry.json` at publish time, so it always matches the tree ab
 
 | Package | Directory | Entry (`exports["."]`) | Release asset |
 | --- | --- | --- | --- |
-| `@aio-ui/app` | `packages/app` | `dist/index.js` | `aio-ui-app-0.1.1.tgz` |
-| `@aio-ui/base` | `packages/base` | `dist/index.js` | `aio-ui-base-0.1.1.tgz` |
-| `@aio-ui/core` | `packages/core` | `dist/index.js` | `aio-ui-core-0.1.1.tgz` |
-| `@aio-ui/styles` | `packages/styles` | `src/index.css` | `aio-ui-styles-0.1.1.tgz` |
-| `@aio-ui/utilities` | `packages/utilities` | `dist/index.js` | `aio-ui-utilities-0.1.1.tgz` |
-| `@aio-ui/accordion` | `packages/components/accordion` | `dist/index.js` | `aio-ui-accordion-0.1.1.tgz` |
-| `@aio-ui/article` | `packages/components/article` | `dist/index.js` | `aio-ui-article-0.1.1.tgz` |
-| `@aio-ui/badge` | `packages/components/badge` | `dist/index.js` | `aio-ui-badge-0.1.1.tgz` |
-| `@aio-ui/carousel` | `packages/components/carousel` | `dist/index.js` | `aio-ui-carousel-0.1.1.tgz` |
-| `@aio-ui/code-block` | `packages/components/code-block` | `dist/index.js` | `aio-ui-code-block-0.1.1.tgz` |
-| `@aio-ui/fabmenu` | `packages/components/fabmenu` | `dist/index.js` | `aio-ui-fabmenu-0.1.1.tgz` |
-| `@aio-ui/footer` | `packages/components/footer` | `dist/index.js` | `aio-ui-footer-0.1.1.tgz` |
-| `@aio-ui/form` | `packages/components/form` | `dist/index.js` | `aio-ui-form-0.1.1.tgz` |
-| `@aio-ui/id-address` | `packages/components/id-address` | `dist/index.js` | `aio-ui-id-address-0.1.1.tgz` |
-| `@aio-ui/input` | `packages/components/input` | `dist/index.js` | `aio-ui-input-0.1.1.tgz` |
-| `@aio-ui/markdown` | `packages/components/markdown` | `dist/index.js` | `aio-ui-markdown-0.1.1.tgz` |
-| `@aio-ui/masonry` | `packages/components/masonry` | `dist/index.js` | `aio-ui-masonry-0.1.1.tgz` |
-| `@aio-ui/menu` | `packages/components/menu` | `dist/index.js` | `aio-ui-menu-0.1.1.tgz` |
-| `@aio-ui/message` | `packages/components/message` | `dist/index.js` | `aio-ui-message-0.1.1.tgz` |
-| `@aio-ui/modal` | `packages/components/modal` | `dist/index.js` | `aio-ui-modal-0.1.1.tgz` |
-| `@aio-ui/modeswitcher` | `packages/components/modeswitcher` | `dist/index.js` | `aio-ui-modeswitcher-0.1.1.tgz` |
-| `@aio-ui/pricingcard` | `packages/components/pricingcard` | `dist/index.js` | `aio-ui-pricingcard-0.1.1.tgz` |
-| `@aio-ui/product` | `packages/components/product` | `dist/index.js` | `aio-ui-product-0.1.1.tgz` |
-| `@aio-ui/rating` | `packages/components/rating` | `dist/index.js` | `aio-ui-rating-0.1.1.tgz` |
-| `@aio-ui/section` | `packages/components/section` | `dist/index.js` | `aio-ui-section-0.1.1.tgz` |
-| `@aio-ui/tab` | `packages/components/tab` | `dist/index.js` | `aio-ui-tab-0.1.1.tgz` |
-| `@aio-ui/table` | `packages/components/table` | `dist/index.js` | `aio-ui-table-0.1.1.tgz` |
-| `@aio-ui/animations` | `packages/modules/animations` | `dist/index.js` | `aio-ui-animations-0.1.1.tgz` |
-| `@aio-ui/event-emitter` | `packages/modules/event-emitter` | `dist/index.js` | `aio-ui-event-emitter-0.1.1.tgz` |
-| `@aio-ui/http-service` | `packages/modules/http-service` | `dist/index.js` | `aio-ui-http-service-0.1.1.tgz` |
-| `@aio-ui/module-loader` | `packages/modules/module-loader` | `dist/index.js` | `aio-ui-module-loader-0.1.1.tgz` |
-| `@aio-ui/router` | `packages/modules/router` | `dist/index.js` | `aio-ui-router-0.1.1.tgz` |
-| `@aio-ui/theme` | `packages/modules/theme` | `dist/index.js` | `aio-ui-theme-0.1.1.tgz` |
-| `@aio-ui/theme-cyberpunk` | `packages/themes/cyberpunk` | `dist/index.js` | `aio-ui-theme-cyberpunk-0.1.1.tgz` |
-| `@aio-ui/theme-default` | `packages/themes/default` | `dist/index.js` | `aio-ui-theme-default-0.1.1.tgz` |
-| `@aio-ui/theme-horizontal` | `packages/themes/horizontal` | `dist/index.js` | `aio-ui-theme-horizontal-0.1.1.tgz` |
-| `@aio-ui/frameworks` | `packages/kits/frameworks` | `dist/index.js` | `aio-ui-frameworks-0.1.1.tgz` |
-| `@aio-ui/modules` | `packages/kits/modules` | `dist/index.js` | `aio-ui-modules-0.1.1.tgz` |
-| `@aio-ui/themes` | `packages/kits/themes` | `dist/index.js` | `aio-ui-themes-0.1.1.tgz` |
+| `@aio-ui/app` | `packages/app` | `dist/index.js` | `aio-ui-app-0.2.0.tgz` |
+| `@aio-ui/base` | `packages/base` | `dist/index.js` | `aio-ui-base-0.2.0.tgz` |
+| `@aio-ui/core` | `packages/core` | `dist/index.js` | `aio-ui-core-0.2.0.tgz` |
+| `@aio-ui/styles` | `packages/styles` | `src/index.css` | `aio-ui-styles-0.2.0.tgz` |
+| `@aio-ui/utilities` | `packages/utilities` | `dist/index.js` | `aio-ui-utilities-0.2.0.tgz` |
+| `@aio-ui/accordion` | `packages/components/accordion` | `dist/index.js` | `aio-ui-accordion-0.2.0.tgz` |
+| `@aio-ui/article` | `packages/components/article` | `dist/index.js` | `aio-ui-article-0.2.0.tgz` |
+| `@aio-ui/badge` | `packages/components/badge` | `dist/index.js` | `aio-ui-badge-0.2.0.tgz` |
+| `@aio-ui/carousel` | `packages/components/carousel` | `dist/index.js` | `aio-ui-carousel-0.2.0.tgz` |
+| `@aio-ui/code-block` | `packages/components/code-block` | `dist/index.js` | `aio-ui-code-block-0.2.0.tgz` |
+| `@aio-ui/fabmenu` | `packages/components/fabmenu` | `dist/index.js` | `aio-ui-fabmenu-0.2.0.tgz` |
+| `@aio-ui/footer` | `packages/components/footer` | `dist/index.js` | `aio-ui-footer-0.2.0.tgz` |
+| `@aio-ui/form` | `packages/components/form` | `dist/index.js` | `aio-ui-form-0.2.0.tgz` |
+| `@aio-ui/id-address` | `packages/components/id-address` | `dist/index.js` | `aio-ui-id-address-0.2.0.tgz` |
+| `@aio-ui/input` | `packages/components/input` | `dist/index.js` | `aio-ui-input-0.2.0.tgz` |
+| `@aio-ui/markdown` | `packages/components/markdown` | `dist/index.js` | `aio-ui-markdown-0.2.0.tgz` |
+| `@aio-ui/masonry` | `packages/components/masonry` | `dist/index.js` | `aio-ui-masonry-0.2.0.tgz` |
+| `@aio-ui/menu` | `packages/components/menu` | `dist/index.js` | `aio-ui-menu-0.2.0.tgz` |
+| `@aio-ui/message` | `packages/components/message` | `dist/index.js` | `aio-ui-message-0.2.0.tgz` |
+| `@aio-ui/modal` | `packages/components/modal` | `dist/index.js` | `aio-ui-modal-0.2.0.tgz` |
+| `@aio-ui/modeswitcher` | `packages/components/modeswitcher` | `dist/index.js` | `aio-ui-modeswitcher-0.2.0.tgz` |
+| `@aio-ui/pricingcard` | `packages/components/pricingcard` | `dist/index.js` | `aio-ui-pricingcard-0.2.0.tgz` |
+| `@aio-ui/product` | `packages/components/product` | `dist/index.js` | `aio-ui-product-0.2.0.tgz` |
+| `@aio-ui/rating` | `packages/components/rating` | `dist/index.js` | `aio-ui-rating-0.2.0.tgz` |
+| `@aio-ui/section` | `packages/components/section` | `dist/index.js` | `aio-ui-section-0.2.0.tgz` |
+| `@aio-ui/skeleton` | `packages/components/skeleton` | `dist/index.js` | `aio-ui-skeleton-0.2.0.tgz` |
+| `@aio-ui/tab` | `packages/components/tab` | `dist/index.js` | `aio-ui-tab-0.2.0.tgz` |
+| `@aio-ui/table` | `packages/components/table` | `dist/index.js` | `aio-ui-table-0.2.0.tgz` |
+| `@aio-ui/animations` | `packages/modules/animations` | `dist/index.js` | `aio-ui-animations-0.2.0.tgz` |
+| `@aio-ui/event-emitter` | `packages/modules/event-emitter` | `dist/index.js` | `aio-ui-event-emitter-0.2.0.tgz` |
+| `@aio-ui/http-service` | `packages/modules/http-service` | `dist/index.js` | `aio-ui-http-service-0.2.0.tgz` |
+| `@aio-ui/module-loader` | `packages/modules/module-loader` | `dist/index.js` | `aio-ui-module-loader-0.2.0.tgz` |
+| `@aio-ui/router` | `packages/modules/router` | `dist/index.js` | `aio-ui-router-0.2.0.tgz` |
+| `@aio-ui/theme` | `packages/modules/theme` | `dist/index.js` | `aio-ui-theme-0.2.0.tgz` |
+| `@aio-ui/theme-cyberpunk` | `packages/themes/cyberpunk` | `dist/index.js` | `aio-ui-theme-cyberpunk-0.2.0.tgz` |
+| `@aio-ui/theme-default` | `packages/themes/default` | `dist/index.js` | `aio-ui-theme-default-0.2.0.tgz` |
+| `@aio-ui/theme-horizontal` | `packages/themes/horizontal` | `dist/index.js` | `aio-ui-theme-horizontal-0.2.0.tgz` |
+| `@aio-ui/frameworks` | `packages/kits/frameworks` | `dist/index.js` | `aio-ui-frameworks-0.2.0.tgz` |
+| `@aio-ui/modules` | `packages/kits/modules` | `dist/index.js` | `aio-ui-modules-0.2.0.tgz` |
+| `@aio-ui/themes` | `packages/kits/themes` | `dist/index.js` | `aio-ui-themes-0.2.0.tgz` |
 
 ## 6. Tag immutability
 

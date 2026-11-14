@@ -545,6 +545,15 @@ select:focus-visible {
       visibility: hidden;
     }
 
+    /* The frame is the control in select mode, so the search box inside it must not draw a
+       second box: no border, no fill, no radius. Chips need a horizontal inset of their own,
+       otherwise the first one sits on the frame's left border. Vertical padding stays 0: the
+       frame is `min-height` tall and a padded box would sit taller than its single-select
+       sibling. */
+    &:is([data-style="select"]):has(> .tags > .badge) {
+      padding: 0 0.4em;
+    }
+
     & > input[type="text"] {
       z-index: 1;
       flex: 1 1 160px;
@@ -581,6 +590,25 @@ select:focus-visible {
         outline: none;
         background-color: transparent;
       }
+    }
+
+    /* Height parity: the frame carries the box (1px each side) in `select` mode, so the
+       search box inside it must be two pixels shorter or the control measures taller than
+       the plain input beside it. In `datalist` mode the input *is* the box, so the frame
+       draws nothing — otherwise the field shows a box inside a box. */
+    &[data-style="select"] > input[type="text"] {
+      border: 0;
+      border-radius: 0;
+      background-color: transparent;
+      box-shadow: none;
+      min-height: calc(var(--input-min-height) - 2px);
+      max-height: calc(var(--input-min-height) - 2px);
+    }
+
+    &[data-style="datalist"] {
+      border: 0;
+      background: none;
+      min-height: 0;
     }
 
     & > input[type="hidden"] {

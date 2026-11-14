@@ -15,6 +15,12 @@ export declare class ProductGridBuilder extends Builder<ProductGridElementType, 
     readonly name: "product-card-grid";
     stylesheet: string;
     config: Required<iProductGridConfig>;
+    /**
+     * 🪶 LOADING MOCKUP — three cards of the grid's own aspect, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. Counting the real products would be a second render;
+     * three boards are enough to reserve the row.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iProductGridConfig>);
     /**
      * 👑 PINTU PREPARE: Melumat array massal kiriman dari ProductController pusat

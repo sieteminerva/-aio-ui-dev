@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 /**
  * Turn a data value into a usable link target.
  *
@@ -24,6 +25,22 @@ export class FooterBuilder extends Builder {
     name = "footer";
     stylesheet = "./Footer.css";
     config;
+    /**
+     * 🪶 LOADING MOCKUP — three column headers over their link lines, then the copyright row,
+     * drawn with the mandatory `@aio-ui/skeleton` primitive. Widths stay under a third so the
+     * columns read as columns before `Footer.css` arrives.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "row", gap: "1rem", children: [{ shape: "bone", width: "28%", height: "1rem", count: 3 }] },
+                { shape: "row", gap: "1rem", children: [{ shape: "line", width: "28%", count: 3 }] },
+                { shape: "row", gap: "1rem", children: [{ shape: "line", width: "28%", count: 3 }] },
+                { shape: "line", width: "35%" },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultSelectors = {

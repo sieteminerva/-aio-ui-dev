@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { ModuleLoader } from "@aio-ui/module-loader";
 import { inputTypeOf } from "./FieldTypes.js";
 import { INPUT_MODULE_DEFINITIONS, } from "./InputRegistry.js";
@@ -45,6 +46,20 @@ export class InputBuilder extends Builder {
     /** Host data a module may read: the builder's own configuration. */
     get #moduleContext() {
         return { builderConfig: this.config };
+    }
+    /**
+     * 🪶 LOADING MOCKUP — one label and one control box, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. The control type (select, textarea, switch) changes the
+     * skin, never the box: a field reserves one line plus one control.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "line", width: "25%" },
+                { shape: "bone", height: "2.75rem" },
+            ],
+        });
     }
     constructor(config = {}) {
         super();

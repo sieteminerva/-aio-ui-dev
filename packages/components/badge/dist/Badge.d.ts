@@ -34,6 +34,12 @@ export declare class BadgeBuilder extends Builder<BadgeElementType, iBadgeConfig
     readonly name: keyof iBuilderRegistry;
     readonly stylesheet: string;
     config: Required<iBadgeConfig>;
+    /**
+     * 🪶 LOADING MOCKUP — three pill labels in a row, drawn with the mandatory
+     * `@aio-ui/skeleton` primitive. A badge is inline, so the mockup is a row of short
+     * bones rather than a full-width bar.
+     */
+    protected loading(): HTMLElement;
     constructor(config?: Partial<iBadgeConfig>);
     /**
      * Build the tree. `render()` registers the node under its key, calls `template()`,

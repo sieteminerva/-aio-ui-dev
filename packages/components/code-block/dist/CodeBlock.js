@@ -1,4 +1,5 @@
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 /**
  * Code Block — one or more dark "paper" panels holding source text.
  *
@@ -103,6 +104,21 @@ export class CodeBlockBuilder extends Builder {
     name = "code-block";
     stylesheet = "./CodeBlock.css";
     config;
+    /**
+     * 🪶 LOADING MOCKUP — the frame's own anatomy (label, paper, action row), drawn with the
+     * mandatory `@aio-ui/skeleton` primitive. The line count is the payload's business; the
+     * mockup only reserves the box the sheet will take over.
+     */
+    loading() {
+        return Skeleton.create({
+            shape: "stack",
+            children: [
+                { shape: "row", gap: "0.5rem", children: [{ shape: "bone", width: "30%", height: "0.9rem" }] },
+                { shape: "bone", height: "12rem" },
+                { shape: "row", gap: "0.5rem", children: [{ shape: "bone", width: "4.5rem", height: "1.75rem", count: 3 }] },
+            ],
+        });
+    }
     constructor(config = {}) {
         super();
         const defaultConfig = {
