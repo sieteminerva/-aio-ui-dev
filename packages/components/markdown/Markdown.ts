@@ -1,13 +1,13 @@
 import type { iBuilderConfig, iBuilderRegistry, iBuilderSelectorsConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
 import { Skeleton } from "@aio-ui/skeleton";
-import { parseMarkdown } from "@aio-ui/utilities/Markdown";
-import type { iMarkdownBlock, iMarkdownInline } from "@aio-ui/utilities/Markdown";
+import { parseMarkdown } from "./markdown.parser";
+import type { iMarkdownBlock, iMarkdownInline } from "./markdown.parser";
 
 /**
  * Markdown — renders a Markdown source string as DOM.
  *
- * The parser lives in `@aio-ui/utilities/Markdown` and produces an AST; this builder walks
+ * The parser (`./markdown.parser.ts`) produces an AST and owns no DOM; this builder walks
  * it and renders keys, exactly like every other component. Fenced code reuses the
  * `code-block` markup (`figure > figcaption + pre > code`), and `Markdown.css` imports
  * `CodeBlock.css`, so there is one definition of what a code panel looks like.

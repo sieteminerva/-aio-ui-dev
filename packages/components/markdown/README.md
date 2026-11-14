@@ -1,9 +1,9 @@
 # Markdown (`@aio-ui/markdown`)
 
-A Markdown document rendered as DOM. The parser is `@aio-ui/utilities/Markdown` (own subset,
-no dependency); this package walks its AST and renders component keys. Source text is written
-with `textContent` and text nodes, so a document containing `<script>` prints it instead of
-running it.
+A Markdown document rendered as DOM. The parser is `./markdown.parser.ts` — this package's own
+subset with no dependency, and not a published subpath; the builder walks its AST and renders
+component keys. Source text is written with `textContent` and text nodes, so a document
+containing `<script>` prints it instead of running it.
 
 Fenced code is **not** restyled here: it renders the `code-block` markup
 (`figure > figcaption + pre > code`) and `Markdown.css` imports `CodeBlock.css`.

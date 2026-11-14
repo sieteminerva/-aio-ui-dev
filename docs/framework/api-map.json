@@ -544,28 +544,16 @@
         "hexToRgba",
         "mergeInputConfig",
         "numberToText",
-        "parseInline",
-        "parseMarkdown",
         "parseTableRecords",
         "parseTableText",
         "selectorToTree",
         "setMetadata",
         "splitCsvRows",
-        "splitTableRow",
         "toBeString",
         "truncateText"
       ],
       "types": [
         "iAttributeSpec",
-        "iMarkdownBlock",
-        "iMarkdownFence",
-        "iMarkdownHeading",
-        "iMarkdownInline",
-        "iMarkdownLink",
-        "iMarkdownList",
-        "iMarkdownParagraph",
-        "iMarkdownQuote",
-        "iMarkdownTable",
         "iParsedTableFile"
       ]
     }

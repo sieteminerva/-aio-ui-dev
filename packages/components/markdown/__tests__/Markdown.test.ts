@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from "vitest";
 
-import { parseMarkdown } from "@aio-ui/utilities/Markdown";
+import { parseMarkdown } from "../markdown.parser";
 import { DEFAULT_SELECTORS, ELEMENT_KEYS, MarkdownBuilder, normalizePayload } from "../Markdown";
 
 /**

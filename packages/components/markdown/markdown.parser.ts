@@ -1,10 +1,14 @@
 /**
  * Markdown — a dependency-free subset parser.
  *
+ * Lives beside its only consumer instead of in `@aio-ui/utilities`: the builder
+ * (`./Markdown.ts`) is the one thing in the repo that reads a document, so publishing a
+ * parser subpath would have been surface with no second caller.
+ *
  * The repository documents itself in `.md` files (every package README, `docs/framework/*.md`),
  * so a page that shows documentation must be able to read one. This module turns Markdown
  * into a small **AST**, and nothing else: it never touches the DOM, never builds HTML, and
- * never escapes by string concatenation. The renderer (`@aio-ui/markdown`) walks the tree and
+ * never escapes by string concatenation. The renderer (`./Markdown.ts`) walks the tree and
  * writes text with `textContent`, which is why a `<script>` in the source is printed, not run.
  *
  * The subset is exactly what this repo writes:
