@@ -23,7 +23,8 @@ import './style.css';
 
 import { DEMO, manifestFor } from './manifest';
 import { ArticlePage } from './pages/article';
-import { formContent, formManifest } from './pages/form';
+import { FormPage } from './pages/form';
+import { formManifest } from './form/schema';
 import { GettingStartedPage } from './pages/getting-started';
 import { KitchenPage } from './pages/kitchen';
 import { ModulesPage } from './pages/modules';
@@ -64,9 +65,7 @@ const mockApi = {
   endpoint: (query: Record<string, any>) => `${import.meta.env.BASE_URL}mock/${query.sheetName}.json`,
 };
 
-const pages = {
-  form: formContent(),
-};
+const pages = {};
 
 /**
  * What each route mounts, declared once beside the registry.
@@ -85,7 +84,10 @@ const componentRoutes: iComponentRoute[] = [
   { route: 'kitchen', components: [...DEMO.map((entry) => entry.name), 'menu', 'fab-menu', 'code-block', 'markdown'] },
   { route: 'product', components: ['product', 'menu', 'fab-menu'] },
   { route: 'article', components: ['article', 'menu', 'fab-menu'] },
-  { route: 'form', components: ['form', 'menu', 'fab-menu'] },
+  // `#form` is the form-family docs route: sidebar + tab, with the live schema on the
+  // Display panel. Every builder the topic pages use is named here, because a builder
+  // called inside `onCreated` is invisible to the node collector.
+  { route: 'form', components: ['form', 'menu', 'fab-menu', 'tab', 'markdown', 'code-block'] },
 ];
 
 const themeStorage = globalThis.localStorage;
@@ -149,7 +151,9 @@ async function start(container: HTMLElement) {
     .registerPage('modules', ModulesPage)
     .registerPage('kitchen', KitchenPage)
     .registerPage('product', ProductPage)
-    .registerPage('article', ArticlePage);
+    .registerPage('article', ArticlePage)
+    // `#form` reads its topic from the fragment (`#form/<topic>`), like `#kitchen/<name>`.
+    .registerPage('form', FormPage);
 
   await app.render();
   // Debug handles: the app, and the bus it publishes through (component + page events).

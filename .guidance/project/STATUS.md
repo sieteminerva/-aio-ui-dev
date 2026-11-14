@@ -15,6 +15,19 @@ Last updated: 2026-11-14
 
 ## Landed recently
 
+- **Batch 26 (2026-11-14):** `#form` became a docs tree instead of one long column. The route
+  now reads a fragment (`#form/<topic>`), renders the `#kitchen` shell (sidebar grouped Schema ·
+  Behaviour · Inputs · Wiring, main column Display · Usage · API) and declares ten topics in
+  `src/form/topics.ts`. **A topic declares navigation only**: the package README (`source`), the
+  H2s it claims (`sections`) and an optional live `demo` — Usage renders lead + claimed sections,
+  API renders the contract sections it did not claim, and the tab description is the README's own
+  lead. No prose is written beside the READMEs. Schemas split into `src/form/schema.ts`, panels
+  into `src/form/panels.ts`, the route into a `FormPage` controller that releases its builders,
+  and `__tests__/form-docs.test.ts` fails on a missing README, a missing heading, an over-claimed
+  topic (empty API tab) or an unrendered group. Live demos: overview, field types, validation,
+  input controls, multistep; the other five show their README sections and say the demo is pending.
+  Gate: 665 tests (1 skip), demo typecheck clean, browser check on every live topic and the
+  README/API split.
 - **Batch 25 (2026-11-14):** skeleton shape classes de-dashed. `SHAPE_CLASS` now emits bare
   `stack / row / line / bone / circle` on the same element as `.skeleton`, so the sheet writes
   `&.bone` instead of `&.skeleton-bone` and no class name needs a dash join. Rule of record

@@ -6,7 +6,9 @@
 
 ## Live claims
 
-_No live writer. Add a row here before your first edit — see the rules below._
+| Agent       | Band      | Task                                   | Write scope                                                                          | Started    | Checkpoint                             | State  |
+| ----------- | --------- | -------------------------------------- | ------------------------------------------------------------------------------------ | ---------- | -------------------------------------- | ------ |
+| copilot b26 | Framework | `#form` docs tree, README-driven       | `examples/demo/src/form/**`, `examples/demo/src/pages/form.ts`, `examples/demo/src/main.ts`, `examples/demo/src/__tests__/form-docs.test.ts` | 2026-11-14 | `/memories/session/page-level-plan.md` | active |
 
 ## Row shape
 

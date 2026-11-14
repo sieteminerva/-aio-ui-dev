@@ -158,7 +158,7 @@ export class SkeletonBuilder extends Builder<SkeletonElementType, iSkeletonConfi
       emit: () => { },
       selectors: {},
       spec: {},
-      duration: "auto",
+      duration: "2000ms",
       className: "",
     }, config);
   }
