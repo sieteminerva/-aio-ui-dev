@@ -21,8 +21,18 @@
 import {
   DropdownSet,
   InputControlSet,
+  calculationConfig,
+  calculationSchema,
+  cascadeConfig,
+  cascadeSchema,
   fieldTypesSchema,
   formConfig,
+  idAddressConfig,
+  idAddressSchema,
+  layoutConfig,
+  layoutSchema,
+  modulesConfig,
+  modulesSchema,
   multiStepConfig,
   multiStepSchema,
   orderSchema,
@@ -109,7 +119,11 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     group: "Schema",
     source: "@aio-ui/form",
     parts: ["#nodes", "#tokens"],
-    demo: null,
+    demo: {
+      note: "one group, two columns — wide 50 beside wide auto",
+      schema: layoutSchema,
+      config: layoutConfig,
+    },
   },
   {
     id: "validation",
@@ -129,7 +143,11 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     group: "Behaviour",
     source: "@aio-ui/form",
     parts: ["#cascade"],
-    demo: null,
+    demo: {
+      note: "a radio reveals a field; a filled invoice reveals the next",
+      schema: cascadeSchema,
+      config: cascadeConfig,
+    },
   },
   {
     id: "calculation",
@@ -137,7 +155,11 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     group: "Behaviour",
     source: "@aio-ui/form",
     parts: ["#calculation"],
-    demo: null,
+    demo: {
+      note: "quantity × price writes the total while you type",
+      schema: calculationSchema,
+      config: calculationConfig,
+    },
   },
   {
     id: "multistep",
@@ -171,7 +193,11 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     group: "Inputs",
     source: "@aio-ui/id-address",
     parts: ["#payload"],
-    demo: null,
+    demo: {
+      note: "five levels, one source — pick a province to see the cascade",
+      schema: idAddressSchema,
+      config: idAddressConfig,
+    },
   },
   {
     id: "modules",
@@ -181,7 +207,11 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     // `role:contract` is the API tab, so a topic never claims a contract section: the checklist
     // renders once, under API, for every topic.
     parts: ["#register"],
-    demo: null,
+    demo: {
+      note: "search + copy from the controls module, file from the file adapter",
+      schema: modulesSchema,
+      config: modulesConfig,
+    },
   },
 ];
 

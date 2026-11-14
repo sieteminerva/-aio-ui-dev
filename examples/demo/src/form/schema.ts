@@ -509,3 +509,141 @@ export const validationSchema = [
     ] as iBasicInputNode[],
   },
 ];
+
+/**
+ * Conditional fields — the `cascade` topic.
+ *
+ * Two spellings of one rule: `equals` follows a radio group, `filled` waits for a value.
+ * `cascadeMode: "hidden"` keeps the field in the DOM so another engine (an address picker)
+ * can inject into it; the default `"template"` would hand it nothing.
+ */
+export const cascadeSchema = [
+  {
+    id: "cascade-delivery",
+    title: "Metode pengiriman",
+    group: [
+      { type: "radio", id: "cs-pickup", name: "delivery", value: "pickup", title: "Ambil di toko", checked: true },
+      { type: "radio", id: "cs-courier", name: "delivery", value: "courier", title: "Kirim kurir" },
+      {
+        type: "text",
+        id: "cs-note",
+        title: "Catatan kurir",
+        placeholder: "Patokan alamat…",
+        condition: { field: "delivery", equals: "courier" },
+      },
+      { type: "text", id: "cs-invoice", title: "No. invoice", placeholder: "INV-…" },
+      {
+        type: "text",
+        id: "cs-approval",
+        title: "Nama penyetuju",
+        // `message` is the guidance a multistep gate shows; on a single page it is inert.
+        condition: { field: "cs-invoice", filled: true },
+      },
+    ] as iBasicInputNode[],
+  },
+];
+
+export const cascadeConfig = {
+  id: "demo-cascade",
+  cascading: true,
+  cascadeMode: "hidden" as const,
+};
+
+/**
+ * A running total — the `calculation` topic.
+ *
+ * The formula travels with the field that carries the quantity: `config.calculator` names
+ * the output field, and the engine re-runs it on every `input`/`change`.
+ */
+export const calculationSchema = [
+  {
+    id: "calc-lines",
+    title: "Satu baris pesanan",
+    column: 2,
+    group: [
+      {
+        type: "number",
+        id: "calc-qty",
+        title: "Qty",
+        min: 0,
+        config: {
+          wide: 50,
+          calculator: {
+            id: "line-total",
+            outputId: "calc-total",
+            formula: ({ getNumber }: any) => ({
+              id: "line-total",
+              label: "Line",
+              quantity: getNumber("calc-qty"),
+              unitPrice: getNumber("calc-price"),
+              total: getNumber("calc-qty") * getNumber("calc-price"),
+            }),
+          },
+        },
+      },
+      { type: "number", id: "calc-price", title: "Harga satuan", min: 0, config: { wide: 50 } },
+      { type: "number", id: "calc-total", title: "Total (dihitung)", readonly: true, config: { wide: "auto" } },
+    ] as iBasicInputNode[],
+  },
+];
+
+export const calculationConfig = { id: "demo-calculation", calculation: true };
+
+/** The address cascade — the `id-address` topic. One group, five `[data-level]` controls. */
+export const idAddressSchema = [AddressSet];
+
+export const idAddressConfig = { id: "demo-id-address", address: addressSource };
+
+/**
+ * The adapter stack at runtime — the `modules` topic.
+ *
+ * `search` and `copy` are the controls module, `file` is the file adapter: every one of them
+ * arrives through `FORM_ADAPTER_MANIFEST`, never through an import in this file.
+ */
+export const modulesSchema = [
+  {
+    id: "modules-lookup",
+    title: "Cari, lalu salin",
+    actions: ["search", "copy"],
+    group: [
+      { type: "text", id: "mod-invoice", title: "No. invoice", placeholder: "INV-…" },
+      { type: "select", id: "mod-status", title: "Status", options: ["Baru", "Diproses", "Selesai"] },
+    ] as iBasicInputNode[],
+  },
+  {
+    id: "modules-files",
+    title: "Lampiran",
+    group: [{ type: "file", id: "mod-file", title: "Berkas", config: { wide: "auto" } }] as iBasicInputNode[],
+  },
+];
+
+export const modulesConfig = { id: "demo-modules" };
+
+/**
+ * The layout contract — the `layout` topic.
+ *
+ * `config.title` / `config.description` render above the first group; `column: 2` with
+ * `config.wide: 50` splits a row, `"auto"` takes the rest.
+ */
+export const layoutSchema = [
+  {
+    id: "layout-row",
+    title: "Satu grup, dua kolom",
+    description: "Baris membagi ruang: wide 50 = setengah, auto = sisa baris.",
+    column: 2,
+    row: [
+      { type: "text", id: "ly-name", title: "Nama", config: { wide: 50 } },
+      { type: "text", id: "ly-city", title: "Kota", config: { wide: 50 } },
+      { type: "text", id: "ly-address", title: "Alamat lengkap", config: { wide: "auto" } },
+      { type: "select", id: "ly-tier", title: "Tier", options: ["Bronze", "Silver", "Gold"], config: { wide: 50 } },
+      { type: "textarea", id: "ly-note", title: "Catatan", config: { wide: 50 } },
+    ] as iBasicInputNode[],
+  },
+];
+
+export const layoutConfig = {
+  id: "demo-layout",
+  title: "Layout & tokens",
+  description: "Judul dan deskripsi form, lalu satu grup dua kolom yang bisa dijatuhkan ke grid.",
+  buttonText: "Simpan",
+};

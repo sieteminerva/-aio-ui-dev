@@ -365,7 +365,9 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     this.#inputs = Array.isArray(inputs) ? inputs : [inputs];
 
     // 🌊 Siklus hidup baru per prepare: seluruh modul dilepas lalu dimuat ulang.
-    this.#loader.unloadAll();
+    // Loader yang diserahkan registry ikut dilepas — instance lama masih memegang form
+    // yang sudah dibuang, dan `resolveAll()` melewati id yang masih punya instance.
+    this.#activeLoader.unloadAll();
     this.#features = [];
     this.#cascade = null;
     this.#multistep = null;
@@ -808,11 +810,10 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     }
 
     // 🧮 Fase initialize: modul yang membaca DOM final (calculation) baru layak dimuat
-    // sekarang, setelah step multistep lahir dari attach() di atas. Bila registry sudah
-    // menyerahkan definisinya, loader itu yang memutuskan fasenya — jangan dobel.
-    if (!this.#providedLoader) {
-      this.#features.push(...this.#loader.resolveAll(this._buildModuleContext(formElement, "initialize")));
-    }
+    // sekarang, setelah step multistep lahir dari attach() di atas. Loader aktif yang
+    // memutuskan — termasuk loader dari manifest registry, yang dulu melewati fase ini
+    // sehingga `calculation` tidak pernah hidup pada form yang dimount lewat registry.
+    this.#features.push(...this.#activeLoader.resolveAll(this._buildModuleContext(formElement, "initialize")));
 
     // console.log(`[Form Engine v2] Form ID "${formElement?.id}" successfully compiled with active listeners.`);
   }
@@ -950,7 +951,7 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
 
   public unmount(): void {
     // Loader memiliki siklus hidup modul: dispose/destroy dipanggil oleh definisi.
-    this.#loader.unloadAll();
+    this.#activeLoader.unloadAll();
     this.#features = [];
     this.#validation = null;
     this.#cascade = null;

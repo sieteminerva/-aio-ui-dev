@@ -5,6 +5,7 @@ import { INPUT_MODULE_IDS } from "@aio-ui/input/InputRegistry";
 import type { iInputAdapter } from "@aio-ui/input/InputModuleTypes";
 
 import { FormBuilder } from "../Form";
+import { inputFormAdapter } from "../Input.FormAdapter";
 import { FORM_ADAPTER_DEFINITIONS, FORM_ADAPTER_IDS, FORM_ADAPTER_MANIFEST } from "../FormRegistry";
 
 /**
@@ -90,5 +91,31 @@ describe("Form.provideModules", () => {
     const input = el.querySelector<HTMLInputElement>("#default-field");
     expect(input).not.toBeNull();
     expect(input?.dataset.marker).toBeUndefined();
+  });
+
+  it("runs the initialize phase on a module handed over by a loader", () => {
+    // A manifest-provided loader used to skip `resolveAll("initialize")` entirely, so a
+    // DOM-reading module (calculation) never attached when the form came from the registry.
+    const phases: string[] = [];
+    const form = new FormBuilder();
+
+    form.provideModules({
+      // A manifest always carries the input adapter; the probe only adds the phase case.
+      input: inputFormAdapter,
+      probe: {
+        id: "probe",
+        matches: (context: any) => context.phase === "initialize",
+        load: (context: any) => {
+          phases.push(String(context.phase));
+          return { probe: true };
+        },
+        destroy: () => phases.push("destroy"),
+      },
+    } as any);
+
+    const el = form.create([{ type: "text", id: "probe-field", title: "Field" }] as any) as HTMLElement;
+    document.body.appendChild(el);
+
+    expect(phases).toEqual(["initialize"]);
   });
 });

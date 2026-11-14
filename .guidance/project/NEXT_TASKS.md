@@ -7,14 +7,10 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Framework (`packages/`, `examples/demo`)
 
-- [ ] Finish the five remaining `#form` docs topics that have no live demo yet
-      (`cascade`, `calculation`, `id-address`, `modules`, `layout`): each needs a schema in
-      `src/form/schema.ts` and a `demo` in `FORM_TOPICS`.
 - [ ] Observe the mockup path in a real browser (cold sheet): needs a throttled network or a
       disabled HTTP cache — Vite resolves the loader in one microtask, so dev never shows the hold.
 - [ ] Fix and validate the Masonry column distribution.
 - [ ] Audit remaining `TemplateRegistry` and page registration references.
-- [ ] Activate a `ModuleLoader` in a real Form instance and verify both paths in the browser.
 - [ ] Add a jsdom regression test for the file adapter mount order (adapter must see its `.field` parent).
 - [ ] Verify a real form in the browser with the CORE preset and with the manifest presets.
       _(The `LITE_FORM_MODULES` variant was removed; preset sets are manifests now.)_
