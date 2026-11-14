@@ -1,5 +1,6 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { DEFAULT_SELECTORS } from "./Badge.kit";
 import type { BadgeElementType } from "./Badge.kit";
 import { normalizePayload } from "./Badge.engine";
@@ -40,6 +41,19 @@ export class BadgeBuilder extends Builder<BadgeElementType, iBadgeConfig> {
   readonly name: keyof iBuilderRegistry = "badge";
   readonly stylesheet: string = "./Badge.css";
   public config: Required<iBadgeConfig>;
+
+  /**
+   * 🪶 LOADING MOCKUP — three pill labels in a row, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive. A badge is inline, so the mockup is a row of short
+   * bones rather than a full-width bar.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "row",
+      gap: "0.5rem",
+      children: [{ shape: "bone", width: "5rem", height: "1.5rem", count: 3 }],
+    });
+  }
 
   constructor(config: Partial<iBadgeConfig> = {}) {
     super();

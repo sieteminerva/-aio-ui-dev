@@ -1,5 +1,6 @@
 import type { iElementProperty, iBasicNode, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 
 export type MasonryElementType =
   | "@container"
@@ -62,6 +63,29 @@ export class MasonryBuilder extends Builder<MasonryElementType, iMasonryConfig> 
     destroy: () => void;
   };
   private observer?: IntersectionObserver;
+
+  /**
+   * 🪶 LOADING MOCKUP — the filter row and three staggered boards, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive. The aspect ratios (not a payload loop) are what make the
+   * grid read as masonry, and they are geometry, not data.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "row", gap: "0.5rem", children: [{ shape: "bone", width: "4.5rem", height: "1.4rem", count: 3 }] },
+        {
+          shape: "row",
+          gap: "0.9rem",
+          children: [
+            { shape: "bone", width: "28%", aspect: "3 / 4" },
+            { shape: "bone", width: "28%", aspect: "1 / 1.6" },
+            { shape: "bone", width: "28%", aspect: "3 / 5" },
+          ],
+        },
+      ],
+    });
+  }
 
   constructor(config: Partial<iMasonryConfig> = {}) {
     super();

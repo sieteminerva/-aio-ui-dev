@@ -1,5 +1,6 @@
 import type { iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 
 export type AccordionElementType =
   | "@accordion"
@@ -13,6 +14,22 @@ export class AccordionBuilder extends Builder<AccordionElementType, iAccordionCo
   readonly builderId = "accordion";
   readonly name = "accordion";
   readonly stylesheet = "./Accordion.css";
+
+  /**
+   * 🪶 LOADING MOCKUP — one open panel between two closed headers, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive. `Accordion.css` is the sheet that is still on its way, so
+   * the skin cannot come from it; the rhythm comes from the spec instead.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "bone", height: "3rem" },
+        { shape: "line", count: 3 },
+        { shape: "bone", height: "3rem", count: 2 },
+      ],
+    });
+  }
 
   constructor(config: Partial<iAccordionConfig> = {}) {
     super();

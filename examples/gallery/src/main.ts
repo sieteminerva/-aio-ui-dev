@@ -11,6 +11,9 @@ import '@aio-ui/styles/index.css';
 // Stylesheets are files, not module side effects: the package JS never imports its own CSS
 // (a browser import map would reject text/css as a module), so the host links them.
 import '@aio-ui/animations/Animations.css';
+// Mandatory, like the design system's <Skeleton>: this is the only skin that exists while a
+// component's own sheet is still loading, so it must never be lazy.
+import '@aio-ui/skeleton/Skeleton.css';
 import './style.css';
 
 import { EventEmitter } from '@aio-ui/event-emitter';

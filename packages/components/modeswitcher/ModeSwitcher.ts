@@ -1,5 +1,6 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 
 
 export type ModeSwitcherElementType =
@@ -20,6 +21,21 @@ export class ModeSwitcherBuilder extends Builder<ModeSwitcherElementType, iModeS
 
   private mode: "light" | "dark" = "light";
   public config: Required<iModeSwitcherConfig>;
+
+  /**
+   * 🪶 LOADING MOCKUP — the track and the label next to it, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive. Two short bones, because the whole widget is short.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "row",
+      gap: "0.5rem",
+      children: [
+        { shape: "bone", width: "2.5rem", height: "1.5rem" },
+        { shape: "line", width: "3rem" },
+      ],
+    });
+  }
 
   constructor(config: Partial<iModeSwitcherConfig> = {}) {
     super();

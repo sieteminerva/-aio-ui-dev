@@ -1,5 +1,6 @@
 import type { iBasicNode, iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 
 export type TabElementType =
   | "@container"
@@ -54,6 +55,21 @@ export class TabBuilder extends Builder<TabElementType, iTabConfig> {
   private _listenersTabChanged: ((detail: { index: number; label: string; title: string }) => void)[] = [];
   private _listenersContentLoaded: ((detail: { index: number; element: HTMLElement }) => void)[] = [];
   private _boundKeyDownHandler?: (e: KeyboardEvent) => void;
+
+  /**
+   * 🪶 LOADING MOCKUP — the tab bar over an empty panel, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive. Tab count stays at three: the panel is what reserves the
+   * vertical space, and it is geometry, not data.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "row", gap: "0.5rem", children: [{ shape: "bone", width: "6rem", height: "2.25rem", count: 3 }] },
+        { shape: "bone", height: "10rem" },
+      ],
+    });
+  }
 
   constructor(config: Partial<iTabConfig> = {}) {
     super();

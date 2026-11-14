@@ -1,5 +1,6 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import type { iMessageContent } from "@aio-ui/message";
 import type { FormCascade } from "./adapters/Cascade";
 import type { FormCascadeHost, iCascadeEventDetail } from "./FormModuleTypes";
@@ -263,6 +264,29 @@ export class FormBuilder extends Builder<FormElementType, iFormConfig> {
     }
 
     if (definitions.length) this.#providedLoader = new ModuleLoader<iFormModuleContext, any>("form", definitions);
+  }
+
+  /**
+   * 🪶 LOADING MOCKUP — a title, three labelled fields and the action row, drawn with the
+   * mandatory `@aio-ui/skeleton` primitive. Field count and types are payload detail; the
+   * mockup only promises the column the sheet will take over.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "line", width: "40%" },
+        {
+          shape: "stack",
+          count: 3,
+          children: [
+            { shape: "line", width: "25%" },
+            { shape: "bone", height: "2.75rem" },
+          ],
+        },
+        { shape: "bone", width: "30%", height: "2.75rem" },
+      ],
+    });
   }
 
   constructor(config: Partial<iFormConfig> = {}) {

@@ -1,5 +1,6 @@
 import type { iBasicNode, iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 
 export type PricingCardElementType =
   | "@container"
@@ -21,6 +22,23 @@ export class PricingCardBuilder extends Builder<PricingCardElementType, iPricing
   readonly stylesheet = "./PricingCard.css";
 
   protected rawDataNode: any = null;
+
+  /**
+   * 🪶 LOADING MOCKUP — plan name, price, feature list and the action row, drawn with the
+   * mandatory `@aio-ui/skeleton` primitive. One card only: the mockup is a picture of the
+   * box, not a loop over the plans the payload happens to carry.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "line", width: "45%" },
+        { shape: "bone", width: "40%", height: "2.5rem" },
+        { shape: "line", count: 4 },
+        { shape: "bone", height: "2.75rem" },
+      ],
+    });
+  }
 
   constructor(config: Partial<iPricingCardConfig> = {}) {
     super();

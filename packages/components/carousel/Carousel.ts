@@ -1,5 +1,6 @@
 import type { iBuilderConfig, iBuilderRegistry } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { AttrsConfigMap } from "./Carousel.kit";
 
 export type CarouselElementType =
@@ -58,6 +59,21 @@ export class CarouselBuilder extends Builder<CarouselElementType, iCarouselConfi
   private slides: HTMLElement[] = [];
   private dots: HTMLElement[] = [];
   private buttons: HTMLButtonElement[] = [];
+
+  /**
+   * 🪶 LOADING MOCKUP — one media box and its dot row, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive. The slide count is a payload detail: a picture of the
+   * widget only needs the frame and the navigation rhythm.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "bone", aspect: "16 / 9" },
+        { shape: "row", gap: "0.4rem", children: [{ shape: "circle", width: "0.5rem", count: 5 }] },
+      ],
+    });
+  }
 
   constructor(config: Partial<iCarouselConfig> = {}) {
     super();

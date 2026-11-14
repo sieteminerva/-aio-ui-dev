@@ -15,6 +15,14 @@ Last updated: 2026-11-14
 
 ## Landed recently
 
+- **Batch 21 (2026-11-14):** `loading()` coverage finished. Every in-flow builder now draws
+  its own silhouette (20 builders; `ProductCard` and `Table` already had one) — accordion,
+  article, badge, carousel, code-block, footer, form, input, markdown, masonry, menu,
+  mode-switcher, pricing-card, product-card/-grid/-detail, rating, section, tab, table. The
+  three overlays (`fab-menu`, `message`, `modal`) stay on the shimmer **on purpose**: the sheet
+  that is missing is also the sheet that owns their placement. Census test
+  `packages/components/skeleton/__tests__/Mockups.test.ts` (23 cases) locks both lists, and the
+  gallery host loads `Skeleton.css` eagerly like the demo. Gate: 648 pass / 1 skip.
 - **Batch 20 (2026-11-14):** the placeholder became a component, and the teardown pin moved
   into the registry. New mandatory package `@aio-ui/skeleton` (`Skeleton.create` +
   `SkeletonBuilder`, sheet loaded with the app shell) and a new optional hook

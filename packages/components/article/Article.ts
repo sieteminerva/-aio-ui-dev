@@ -2,6 +2,7 @@ import type { iElementProperty, iBuilderConfig, iBuilderRegistry } from "@aio-ui
 import { createImageError } from "@aio-ui/utilities/DomUtils";
 
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 
 export type ArticleElementType =
   | "@container"
@@ -83,6 +84,30 @@ export class ArticleBuilder extends Builder<ArticleElementType, iArticleConfig> 
   private listElement: HTMLElement | null = null;
   /** Records by id (`slug`/`uid`), so cards only carry a key. */
   private records = new Map<string, any>();
+
+  /**
+   * 🪶 LOADING MOCKUP — a cover, a headline, a meta row and body lines, drawn with the
+   * mandatory `@aio-ui/skeleton` primitive. `Article.css` decides whether the real box is a
+   * list or a detail; both start with the same top-to-bottom rhythm.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "bone", aspect: "16 / 9" },
+        { shape: "line", width: "55%" },
+        {
+          shape: "row",
+          gap: "0.5rem",
+          children: [
+            { shape: "circle", width: "1.5rem" },
+            { shape: "line", width: "30%" },
+          ],
+        },
+        { shape: "line", count: 3 },
+      ],
+    });
+  }
 
   constructor(config: Partial<iArticleConfig> = {}) {
     super();

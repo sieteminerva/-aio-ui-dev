@@ -299,6 +299,15 @@ protected loading(): HTMLElement {
   written by another component. Override `--skeleton-fill` in your own layer if the tone is off.
 - If `loading()` returns nothing or throws, `create()` falls back to the shimmer skin.
 
+**Coverage.** Every in-flow builder draws a mockup: `accordion`, `article`, `badge`,
+`carousel`, `code-block`, `footer`, `form`, `input`, `markdown`, `masonry`, `menu`,
+`mode-switcher`, `pricing-card`, `product-card`, `product-card-grid`, `product-detail`,
+`rating`, `section`, `tab`, `table`. The three overlays — `fab-menu`, `message`, `modal` — stay
+on the shimmer on purpose: the sheet that is missing is also the sheet that owns their
+placement (`position: fixed`, viewport anchoring), so a skeleton laid out in the document flow
+would point at the wrong place. `packages/components/skeleton/__tests__/Mockups.test.ts` is the
+census of both lists: add a row when you add a hook, and it fails if an overlay grows one.
+
 Multi-mode components (e.g. `Rating`'s four visual types, `Footer`'s two rows) branch on
 `this.config` inside `prepare()` and render only the keys that mode needs.
 

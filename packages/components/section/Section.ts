@@ -1,5 +1,6 @@
 import type { iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { DEFAULT_SELECTORS } from "./Section.kit";
 import type { SectionElementType } from "./Section.kit";
 import { normalizeColumns } from "./Section.engine";
@@ -55,6 +56,23 @@ export class SectionBuilder extends Builder<SectionElementType, iSectionConfig> 
   readonly name = "section";
   readonly stylesheet: string = "./Section.css";
   public config: Required<iSectionConfig>;
+
+  /**
+   * 🪶 LOADING MOCKUP — eyebrow, header, copy and the action row, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive. Column count is a payload detail; one column is the
+   * layout the sheet will stack first anyway.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "line", width: "35%" },
+        { shape: "bone", width: "65%", height: "2rem" },
+        { shape: "line", count: 2 },
+        { shape: "row", gap: "0.5rem", children: [{ shape: "bone", width: "7rem", height: "2.5rem", count: 2 }] },
+      ],
+    });
+  }
 
   constructor(config: Partial<iSectionConfig> = {}) {
     super();

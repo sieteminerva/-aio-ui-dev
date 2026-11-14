@@ -1,5 +1,6 @@
 import type { iBuilderConfig, iBuilderRegistry, iBuilderSelectorsConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { parseMarkdown } from "@aio-ui/utilities/Markdown";
 import type { iMarkdownBlock, iMarkdownInline } from "@aio-ui/utilities/Markdown";
 
@@ -93,6 +94,25 @@ export class MarkdownBuilder extends Builder<MarkdownElementType, iMarkdownConfi
   readonly name: keyof iBuilderRegistry = "markdown";
   readonly stylesheet: string = "./Markdown.css";
   public config: Required<iMarkdownConfig>;
+
+  /**
+   * 🪶 LOADING MOCKUP — heading, paragraph, subheading, paragraph, fence, closing line:
+   * the document rhythm, drawn with the mandatory `@aio-ui/skeleton` primitive. The real
+   * block order is the payload's business and never read here.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "stack",
+      children: [
+        { shape: "bone", width: "55%", height: "2rem" },
+        { shape: "line", count: 3 },
+        { shape: "bone", width: "40%", height: "1.5rem" },
+        { shape: "line", count: 2 },
+        { shape: "bone", height: "8rem" },
+        { shape: "line", width: "80%" },
+      ],
+    });
+  }
 
   constructor(config: Partial<iMarkdownConfig> = {}) {
     super();

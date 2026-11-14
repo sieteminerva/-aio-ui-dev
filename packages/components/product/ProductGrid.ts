@@ -1,6 +1,7 @@
 // Components/ProductGrid.ts — the list module: builds one card per record.
 import type { iBuilderConfig } from "@aio-ui/core/interface";
 import { Builder } from "@aio-ui/base";
+import { Skeleton } from "@aio-ui/skeleton";
 import { ProductCardBuilder } from "./ProductCard";
 import type { iProductCardConfig } from "./ProductCard";
 import type { ProductGridElementType } from "./ProductGrid.kit";
@@ -20,6 +21,19 @@ export class ProductGridBuilder extends Builder<ProductGridElementType, iProduct
   readonly name = "product-card-grid" as const;
   stylesheet: string = "./ProductGrid.css";
   public config: Required<iProductGridConfig>;
+
+  /**
+   * 🪶 LOADING MOCKUP — three cards of the grid's own aspect, drawn with the mandatory
+   * `@aio-ui/skeleton` primitive. Counting the real products would be a second render;
+   * three boards are enough to reserve the row.
+   */
+  protected loading(): HTMLElement {
+    return Skeleton.create({
+      shape: "row",
+      gap: "1rem",
+      children: [{ shape: "bone", width: "30%", aspect: "3 / 4", count: 3 }],
+    });
+  }
 
   constructor(config: Partial<iProductGridConfig> = {}) {
     super();

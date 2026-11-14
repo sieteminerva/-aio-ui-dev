@@ -21,6 +21,7 @@
     "@aio-ui/message": "*",
     "@aio-ui/rating": "*",
     "@aio-ui/router": "*",
+    "@aio-ui/skeleton": "*",
     "@aio-ui/styles": "*",
     "@aio-ui/table": "*",
     "@aio-ui/theme": "*",
