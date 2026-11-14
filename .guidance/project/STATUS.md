@@ -37,30 +37,18 @@ Last updated: 2026-11-14
   input controls, multistep; the other five show their README sections and say the demo is pending.
   Gate: 665 tests (1 skip), demo typecheck clean, browser check on every live topic and the
   README/API split.
-- **Batch 25 (2026-11-14):** skeleton shape classes de-dashed. `SHAPE_CLASS` now emits bare
-  `stack / row / line / bone / circle` on the same element as `.skeleton`, so the sheet writes
-  `&.bone` instead of `&.skeleton-bone` and no class name needs a dash join. Rule of record
-  tightened in root `AGENTS.md` + `.guidance/rules.md`: prefer the bare compound modifier. Gate:
-  656 pass / 1 skip, built CSS carries `.skeleton.bone/.line/.circle/.stack/.row`.
-- **Batch 24 (2026-11-14):** CSS house style enforced. `Skeleton.css` was the only flat sheet in
-  the tree — rewritten as one root selector (`.skeleton`) with every shape nested (`&.bone`).
-  The trap that came out of it is now written down in the root `AGENTS.md` and `.guidance/rules.md`:
-  **Sass-style `&-suffix` is dropped silently by the build** (the rules vanished from the bundle and
-  nothing warned), so nesting is `& .child` / `&.modifier` / `&:state` only. Gate: 656 pass / 1 skip.
+- **Batches 21–25 (2026-11-14):** skeleton, start to finish. 20 in-flow builders draw their own
+  silhouette (`loading()`); the three overlays keep the shimmer because the missing sheet owns
+  their placement. `duration: number | "auto"` became a floor published as
+  `data-skeleton-duration`; shapes became bare compounds (`&.bone`, no dash join). `Skeleton.css`
+  was the last flat sheet in the tree — the rewrite exposed that **Sass-style `&-suffix` is dropped
+  silently by the build**, now a rule in the root `AGENTS.md` + `.guidance/rules.md`.
 - **Batch 23 (2026-11-14):** the `isRoot` debt closed. The swap shipped in `dd34f2d`
   (`DOMRenderer.buildStructure` replaces the host with the builder root, `onCreated` keeps it,
   metadata adopted); what was missing was the fallback's voice and the paper trail.
   `warnMissingRoot()` warns once per builder name in dev; `APP.md` gained the rule table,
   `packages/AGENTS.md` is now "decided and implemented", `plan-generator.md` §3.11 answers its own
   four questions, `TASK-builder-array.md` unblocked — the generator may emit `isRoot: true`.
-- **Batch 22 (2026-11-14):** skeleton config. `duration: number | "auto"` (`"auto"` releases with
-  the sheet; a number is a **floor**, published as `data-skeleton-duration` and joined with the
-  sheet promise by the hold) and `className` (mockup root only). Pulse speed renamed
-  `--skeleton-pulse`. Same knobs on `SkeletonBuilder`.
-- **Batch 21 (2026-11-14):** `loading()` coverage finished — 20 in-flow builders draw their own
-  silhouette with `Skeleton.create`. The three overlays (`fab-menu`, `message`, `modal`) keep the
-  shimmer on purpose: the missing sheet owns their placement. Census test
-  `packages/components/skeleton/__tests__/Mockups.test.ts`. Both hosts load `Skeleton.css` eagerly.
 - **Batch 20 (2026-11-14):** placeholder became the mandatory `@aio-ui/skeleton` package, the
   optional `Builder.loading?()` hook landed, the hold moved to `base/BaseAdapters/Hydration`
   (core's `Stylesheets` is loader-only), and the teardown pin became registry-only.
