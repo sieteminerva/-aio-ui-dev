@@ -15,6 +15,11 @@ Last updated: 2026-11-14
 
 ## Landed recently
 
+- **Batch 34 (2026-11-14):** `@aio-ui` **0.2.0** is published — tag `v0.2.0` and the `cdn` branch
+  both at `5251e20` (40 packages), the GitHub release carries 43 assets as a pre-release, 10/10
+  sampled CDN URLs answer `200`, `checksums.txt` is byte-identical, and `release.test.ts` is
+  15/15 against the tag. New handout `docs/live-cdn-migration.md` maps copied files and symbols
+  onto the packages for apps that still vendor the source; `docs/live-cdn-repo.md` follows the tag.
 - **Batch 32 (2026-11-14):** the last five `#form` topics have live demos (`cascade`,
   `calculation`, `id-address`, `modules`, `layout`). Building them exposed a real defect: a
   loader handed over by a manifest/registry never ran the **initialize** phase, so `calculation`
@@ -48,18 +53,12 @@ Last updated: 2026-11-14
   optional live `demo`; Usage renders lead + claims, API renders the unclaimed contract, and no
   prose is written beside the READMEs. `__tests__/form-docs.test.ts` fails on a missing README,
   missing heading, over-claimed topic or unrendered group.
-- **Batches 21–25 (2026-11-14):** skeleton, start to finish. 20 in-flow builders draw their own
-  silhouette (`loading()`); the three overlays keep the shimmer because the missing sheet owns
-  their placement. `duration: number | "auto"` became a floor published as
-  `data-skeleton-duration`; shapes became bare compounds (`&.bone`, no dash join). `Skeleton.css`
-  was the last flat sheet in the tree — the rewrite exposed that **Sass-style `&-suffix` is dropped
-  silently by the build**, now a rule in the root `AGENTS.md` + `.guidance/rules.md`.
-- **Batch 23 (2026-11-14):** the `isRoot` debt closed. The swap shipped in `dd34f2d`
-  (`DOMRenderer.buildStructure` replaces the host with the builder root, `onCreated` keeps it,
-  metadata adopted); what was missing was the fallback's voice and the paper trail.
-  `warnMissingRoot()` warns once per builder name in dev; `APP.md` gained the rule table,
-  `packages/AGENTS.md` is now "decided and implemented", `plan-generator.md` §3.11 answers its own
-  four questions, `TASK-builder-array.md` unblocked — the generator may emit `isRoot: true`.
+- **Batches 21–25 (2026-11-14):** skeleton, start to finish — 20 in-flow builders draw their own
+  silhouette, `duration` became a published floor, shapes became bare compounds. The rewrite
+  proved that **Sass-style `&-suffix` is dropped silently by the build** (rule in `AGENTS.md`).
+- **Batch 23 (2026-11-14):** the `isRoot` debt closed — the swap shipped in `dd34f2d`, the
+  fallback now warns once per builder name in development, and `APP.md` carries the rule table.
+  The generator may emit `isRoot: true` (`TASK-builder-array.md` unblocked).
 - **Batch 20 (2026-11-14):** placeholder became the mandatory `@aio-ui/skeleton` package, the
   optional `Builder.loading?()` hook landed, the hold moved to `base/BaseAdapters/Hydration`
   (core's `Stylesheets` is loader-only), and the teardown pin became registry-only.
@@ -71,8 +70,8 @@ _(Everything before batch 15 is in `git log`; only open work stays in this file.
 ## Blocked
 
 - **Official release** waits for all four manual model references (`gallery` exists; `store`,
-  `profile`, `blog` do not). Test tags are allowed before then. The tree is at `0.2.0`; the
-  last published tag is `v0.1.1`.
+  `profile`, `blog` do not). The tree is at `0.2.0`; the last published tag is `v0.2.0`
+  (pre-release, 2026-11-14).
 
 ## Open questions
 
