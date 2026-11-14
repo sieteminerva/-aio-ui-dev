@@ -7,6 +7,9 @@ An item lives in exactly one file: it starts here, moves to `STATUS.md` when wor
 
 ## Framework (`packages/`, `examples/demo`)
 
+- [ ] Move the demo onto `markdown`'s new outline: delete `pathMarkdown` / `leadOf` from
+      `src/form/panels.ts`, pass `outline.parts` from `FORM_TOPICS`, and put `part:` markers on the
+      form README sections so a topic cites `#anchor` / `role:` instead of heading text.
 - [ ] Finish the five remaining `#form` docs topics that have no live demo yet
       (`cascade`, `calculation`, `id-address`, `modules`, `layout`): each needs a schema in
       `src/form/schema.ts` and a `demo` in `FORM_TOPICS`.
