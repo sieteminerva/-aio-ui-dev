@@ -36,7 +36,7 @@ The registry face (`SkeletonBuilder`) takes one spec, merged over `config.spec`:
 | Option      | Default     | Meaning                                                              |
 | ----------- | ----------- | -------------------------------------------------------------------- |
 | `spec`      | `{}`        | The silhouette to draw                                               |
-| `duration`  | `"auto"`    | Default lifetime — milliseconds, or `"auto"` (until the sheet lands) |
+| `duration`  | `2000`      | Default lifetime — milliseconds, or `"auto"` (until the sheet lands) |
 | `className` | `""`        | Extra class(es) for the mockup root (the host's own skin)            |
 | `selectors` | `{}`        | Unused — this builder has no selector keys                           |
 | `themeId`   | `"default"` | Standard builder config                                              |
@@ -52,7 +52,7 @@ The registry face (`SkeletonBuilder`) takes one spec, merged over `config.spec`:
 | `gap`       | CSS length                                         | Only for `stack` / `row`.                            |
 | `count`     | number                                             | Repeats the node (text lines, placeholder rows).     |
 | `children`  | `iSkeletonSpec[]`                                  | Laid out by the parent's `stack` / `row`.            |
-| `duration`  | `number \| "auto"`                                 | How long the mockup stays on screen. Default `auto`. |
+| `duration`  | `number \| "auto"`                                 | How long the mockup stays on screen. Default `2000`. |
 | `className` | string                                             | Host class(es) on the mockup root only.              |
 
 ### `duration` — lifetime, not pulse
@@ -61,6 +61,10 @@ The registry face (`SkeletonBuilder`) takes one spec, merged over `config.spec`:
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `"auto"` | Released the moment the component's own sheet settles — the honest, measured load time.                                                                             |
 | `number` | A **floor**: the mockup stays visible at least this many milliseconds, so a fast sheet cannot flash it. It never releases early — a slow sheet is still waited for. |
+
+The builder's default is `2000`, not `"auto"`: on a warm cache the sheet settles in a single
+microtask, so an `"auto"` placeholder is never painted and the component appears to have no
+loading state at all. `"auto"` stays available for a host that measures the sheet itself.
 
 `Skeleton.create` writes the number as `data-skeleton-duration`; the hold in
 `@aio-ui/base/BaseAdapters/Hydration` is the only reader, and it joins that floor with the

@@ -143,6 +143,44 @@ export function sectionOf(doc: iReadmeDoc, heading: string): iReadmeSection | nu
   return doc.sections.find((section) => section.heading.toLowerCase() === wanted) ?? null;
 }
 
+/**
+ * The `### heading` block inside an H2 section, without the heading line.
+ *
+ * A topic that is one feature of a subsystem (validation, cascade, multistep …) needs a slice of
+ * a document, not the whole section: the alternative is a second, hand-maintained copy of the
+ * prose on the demo page. Fence-aware for the same reason `parseReadme` is — an example may print
+ * `### something` as source.
+ *
+ * @returns the block body, or `null` when the section has no such H3.
+ */
+export function subsectionOf(section: iReadmeSection, heading: string): string | null {
+  const wanted = heading.trim().toLowerCase();
+  const lines = section.body.replace(/\r\n/g, "\n").split("\n");
+  const collected: string[] = [];
+  let inFence = false;
+  let found = false;
+
+  for (const line of lines) {
+    if (isFence(line)) {
+      inFence = !inFence;
+      if (found) collected.push(line);
+      continue;
+    }
+
+    if (!inFence && /^###\s+/.test(line)) {
+      const title = line.replace(/^###\s+/, "").trim().toLowerCase();
+      // A second H3 ends the block — unless it is the one we are looking for again.
+      if (found) break;
+      found = title === wanted;
+      continue;
+    }
+
+    if (found) collected.push(line);
+  }
+
+  return found ? collected.join("\n").trim() : null;
+}
+
 /** The README for a package id (`@aio-ui/accordion`) or a bare folder name (`accordion`). */
 export function readmeFor(pkg: string): iReadmeDoc | null {
   const folder = pkg.trim().replace(/^@aio-ui\//, "");

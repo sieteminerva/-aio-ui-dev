@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { FORM_GROUPS, FORM_TOPICS, OVERVIEW_ID, topicForFragment, topicHref } from "../form/topics";
-import { readmeFor, sectionOf } from "../readme";
+import {
+  FORM_GROUPS,
+  FORM_TOPICS,
+  OVERVIEW_ID,
+  sectionHeading,
+  subsectionHeading,
+  topicForFragment,
+  topicHref,
+} from "../form/topics";
+import { readmeFor, sectionOf, subsectionOf } from "../readme";
 
 /**
  * The `#form` docs tree is navigation, so it is checkable without a browser — and the checks
@@ -45,17 +53,43 @@ describe("form docs topics", () => {
       const doc = readmeFor(topic.source)!;
 
       expect(topic.sections.length, `${topic.id} claims no section`).toBeGreaterThan(0);
-      for (const heading of topic.sections) {
-        expect(sectionOf(doc, heading), `${topic.id} → ${topic.source} #${heading}`).not.toBeNull();
+      for (const path of topic.sections) {
+        const heading = sectionHeading(path);
+        const section = sectionOf(doc, heading);
+        expect(section, `${topic.id} → ${topic.source} #${heading}`).not.toBeNull();
+
+        const sub = subsectionHeading(path);
+        if (sub) {
+          expect(
+            subsectionOf(section!, sub),
+            `${topic.id} → ${topic.source} #${heading} > ${sub}`,
+          ).not.toBeNull();
+        }
       }
     }
+  });
+
+  it("splits one shared README section per feature", () => {
+    // `Supported syntax` documents all four engines; each topic must get its own block, or the
+    // page would render the same four examples under three different headings.
+    const doc = readmeFor("@aio-ui/form")!;
+    const section = sectionOf(doc, "Supported syntax")!;
+
+    const cascade = subsectionOf(section, "Cascade")!;
+    expect(cascade).toContain("cascadeMode");
+    expect(cascade).not.toContain("multistep");
+
+    const multistep = subsectionOf(section, "Multistep")!;
+    expect(multistep).toContain("multistep: true");
+    expect(multistep).not.toContain("cascadeMode");
   });
 
   it("leaves the API tab something to render", () => {
     const contract = ["Config", "Nodes", "Tokens", "Wiring checklist"];
 
     for (const topic of FORM_TOPICS) {
-      const remaining = contract.filter((heading) => !topic.sections.includes(heading));
+      const claimed = topic.sections.map((path) => sectionHeading(path).toLowerCase());
+      const remaining = contract.filter((heading) => !claimed.includes(heading.toLowerCase()));
       expect(remaining.length, `${topic.id} claims every contract section`).toBeGreaterThan(0);
     }
   });

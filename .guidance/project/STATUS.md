@@ -15,6 +15,15 @@ Last updated: 2026-11-14
 
 ## Landed recently
 
+- **Batch 27 (2026-11-14):** the shared-`Config` problem closed at the source, not on the page.
+  `packages/components/form/README.md` gained `## Supported syntax` with one `###` per engine
+  (registering the form, validation, cascade, calculation, multistep), each carrying a runnable
+  example of registration and use. `readme.ts` gained `subsectionOf()` (fence-aware H3 slice), the
+  topic `sections` now accept `"<H2> > <H3>"`, and the five behaviour/wiring topics render their
+  own block instead of the whole `Config` table. Skeleton default changed to a **2000 ms floor**
+  (`duration: "auto"` never painted: a warm sheet settles in one microtask) in `Skeleton.ts` and
+  the package README, which also explains when `"auto"` is still the right value. Gate: 668 tests
+  (1 skip), demo typecheck clean, browser: each topic renders exactly one `###` + one code block.
 - **Batch 26 (2026-11-14):** `#form` became a docs tree instead of one long column. The route
   now reads a fragment (`#form/<topic>`), renders the `#kitchen` shell (sidebar grouped Schema ·
   Behaviour · Inputs · Wiring, main column Display · Usage · API) and declares ten topics in

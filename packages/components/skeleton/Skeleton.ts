@@ -158,7 +158,9 @@ export class SkeletonBuilder extends Builder<SkeletonElementType, iSkeletonConfi
       emit: () => { },
       selectors: {},
       spec: {},
-      duration: "2000ms",
+      // A floor, not a timer: `"auto"` releases on the sheet, and a warm sheet settles in one
+      // microtask, so the placeholder would never be seen. 2000 is the shipped floor.
+      duration: 2000,
       className: "",
     }, config);
   }

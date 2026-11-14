@@ -51,7 +51,13 @@ export interface iFormTopic {
   group: iFormTopicGroup;
   /** Package whose README documents this topic. */
   source: string;
-  /** README H2s the Usage tab renders. */
+  /**
+   * README sections the Usage tab renders, in order.
+   *
+   * An entry is either an H2 (`"Config"`) or a path into one (`"Supported syntax > Validation"`).
+   * The path form is what lets one document carry several topics: the page renders the `###`
+   * block only, so no topic has to restate prose that the README already owns.
+   */
   sections: readonly string[];
   /** Live example; `null` while the schema is not wired yet. */
   demo: iFormTopicDemo | null;
@@ -98,7 +104,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Validation",
     group: "Behaviour",
     source: "@aio-ui/form",
-    sections: ["Config"],
+    sections: ["Supported syntax > Validation"],
     demo: {
       note: "required, pattern and a number range — submit to see the message",
       schema: validationSchema,
@@ -110,7 +116,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Cascade",
     group: "Behaviour",
     source: "@aio-ui/form",
-    sections: ["Config"],
+    sections: ["Supported syntax > Cascade"],
     demo: null,
   },
   {
@@ -118,7 +124,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Calculation",
     group: "Behaviour",
     source: "@aio-ui/form",
-    sections: ["Config"],
+    sections: ["Supported syntax > Calculation"],
     demo: null,
   },
   {
@@ -126,7 +132,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Multistep",
     group: "Behaviour",
     source: "@aio-ui/form",
-    sections: ["Config"],
+    sections: ["Supported syntax > Multistep"],
     // Kept live because the old single-column `#form` page built it: splitting the page must
     // not drop a demo that already existed.
     demo: {
@@ -160,7 +166,7 @@ export const FORM_TOPICS: readonly iFormTopic[] = [
     label: "Modules & adapters",
     group: "Wiring",
     source: "@aio-ui/form",
-    sections: ["Config", "Wiring checklist"],
+    sections: ["Supported syntax > Registering the form", "Wiring checklist"],
     demo: null,
   },
 ];
@@ -170,6 +176,18 @@ export function topicForFragment(fragment?: string | null): iFormTopic {
   const wanted = (fragment ?? "").trim().toLowerCase();
   if (!wanted) return FORM_TOPICS[0];
   return FORM_TOPICS.find((topic) => topic.id === wanted) ?? FORM_TOPICS[0];
+}
+
+/** The H2 part of a section path: `"Supported syntax > Validation"` → `"Supported syntax"`. */
+export function sectionHeading(path: string): string {
+  return path.split(">")[0].trim();
+}
+
+/** The H3 part of a section path, or `null` when the entry is a whole section. */
+export function subsectionHeading(path: string): string | null {
+  const parts = path.split(">");
+  const sub = parts.length > 1 ? parts[1].trim() : "";
+  return sub || null;
 }
 
 /**

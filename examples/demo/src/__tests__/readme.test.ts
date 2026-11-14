@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { missingSections, parseReadme, readmeFor, sectionOf } from "../readme";
+import { missingSections, parseReadme, readmeFor, sectionOf, subsectionOf } from "../readme";
 
 const SAMPLE = `# Widget (\`@aio-ui/widget\`)
 
@@ -63,6 +63,38 @@ describe("parseReadme", () => {
 
   it("returns null for a section the document does not have", () => {
     expect(sectionOf(parseReadme(SAMPLE), "Appendix")).toBeNull();
+  });
+
+  it("slices one H3 block out of an H2 section, fence-aware", () => {
+    const doc = parseReadme(
+      [
+        "# Widget",
+        "",
+        "## Supported syntax",
+        "",
+        "### First",
+        "",
+        "one",
+        "",
+        "```md",
+        "### not a heading",
+        "```",
+        "",
+        "### Second",
+        "",
+        "two",
+        "",
+      ].join("\n"),
+    );
+    const section = sectionOf(doc, "Supported syntax")!;
+
+    const first = subsectionOf(section, "First")!;
+    expect(first).toContain("one");
+    expect(first).toContain("### not a heading"); // inside a fence, so still part of the block
+    expect(first).not.toContain("two");
+
+    expect(subsectionOf(section, "Second")).toBe("two");
+    expect(subsectionOf(section, "Third")).toBeNull();
   });
 
   it("reports every required section as missing for a document without H2s", () => {

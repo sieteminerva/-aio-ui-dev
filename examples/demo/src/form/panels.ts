@@ -9,22 +9,36 @@
  * API renders the contract sections it does not claim, so the two tabs cover one README with no
  * line repeated. Display is the only authored panel, and what it authors is a schema to build.
  */
-import { FORM_GROUPS, FORM_TOPICS, topicHref } from "./topics";
+import { FORM_GROUPS, FORM_TOPICS, sectionHeading, subsectionHeading, topicHref } from "./topics";
 import type { iFormTopic } from "./topics";
 import { mountInto, node } from "../dom";
-import { readmeFor, sectionOf } from "../readme";
+import { readmeFor, sectionOf, subsectionOf } from "../readme";
 
 type BuildFn = (name: string, data?: any) => HTMLElement;
 
 /** The contract sections, in the order the API tab renders them. */
 const API_SECTIONS = ["Config", "Nodes", "Tokens", "Wiring checklist"] as const;
 
-/** One README section as Markdown, heading included; `null` when the README lacks it. */
-function sectionMarkdown(source: string, heading: string): string | null {
+/**
+ * One README slice as Markdown, heading included.
+ *
+ * `path` is `<H2>` or `<H2> > <H3>`: the path form renders only that `###` block, which is how a
+ * single document can document several topics without repeating itself. `null` means the README
+ * does not have it — the caller decides whether that is fatal (the topic test says it is).
+ */
+function pathMarkdown(source: string, path: string): string | null {
   const doc = readmeFor(source);
   if (!doc) return null;
+
+  const heading = sectionHeading(path);
   const section = sectionOf(doc, heading);
-  return section ? `## ${section.heading}\n\n${section.body}`.trim() : null;
+  if (!section) return null;
+
+  const sub = subsectionHeading(path);
+  if (!sub) return `## ${section.heading}\n\n${section.body}`.trim();
+
+  const body = subsectionOf(section, sub);
+  return body === null ? null : `### ${sub}\n\n${body}`.trim();
 }
 
 /** Render Markdown with the `markdown` builder — the only sink, never `innerHTML`. */
@@ -119,7 +133,7 @@ export function formUsagePanel(topic: iFormTopic, build: BuildFn): HTMLElement {
 
   const blocks = [
     doc.lead,
-    ...topic.sections.map((heading) => sectionMarkdown(topic.source, heading)),
+    ...topic.sections.map((path) => pathMarkdown(topic.source, path)),
   ].filter((block): block is string => Boolean(block));
 
   renderMarkdown(panel, build, blocks.length ? blocks.join("\n\n") : doc.text);
@@ -137,8 +151,9 @@ export function formApiPanel(topic: iFormTopic, build: BuildFn): HTMLElement {
   const doc = readmeFor(topic.source);
   if (!doc) return panel;
 
-  const blocks = API_SECTIONS.filter((heading) => !topic.sections.includes(heading))
-    .map((heading) => sectionMarkdown(topic.source, heading))
+  const claimed = topic.sections.map((path) => sectionHeading(path).toLowerCase());
+  const blocks = API_SECTIONS.filter((heading) => !claimed.includes(heading.toLowerCase()))
+    .map((heading) => pathMarkdown(topic.source, heading))
     .filter((block): block is string => Boolean(block));
 
   renderMarkdown(panel, build, blocks.length ? blocks.join("\n\n") : doc.text);

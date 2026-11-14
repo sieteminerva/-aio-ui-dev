@@ -77,6 +77,170 @@ this framework, `"native"` for platform controls, default `"native"`).
 `cascadeMode: "hidden"` exists because a chained field (an address picker feeding the next select)
 needs a live element to inject into; a `<template>` gives it nothing.
 
+## Supported syntax
+
+Four behaviour engines, one flag each. A flag only opens the door: the engine itself is a module,
+and when it is absent the form degrades to a no-op instead of throwing. The form never imports an
+engine or a sibling package — `FORM_ADAPTER_MANIFEST` is the default stack, and the host composes
+the rest.
+
+### Registering the form
+
+```ts
+import { FORM_ADAPTER_MANIFEST } from "@aio-ui/form/FormRegistry";
+
+// 1. The adapter stack: the form's own engines, then whatever the host adds.
+const modules = [
+  ...FORM_ADAPTER_MANIFEST,
+  { id: "idAddress", path: "@aio-ui/id-address/form", export: "idAddressFormAdapter" },
+  { id: "table", path: "@aio-ui/table/adapters/FormAdapter", export: "tableFormAdapter" },
+  { id: "message", path: "@aio-ui/message/adapters/FormAdapter", export: "messageFormAdapter" },
+];
+
+// 2. The registry entry. `export` is required: the package publishes more than one builder.
+components.register("form", () => ({
+  path: "@aio-ui/form",
+  stylesheet: "@aio-ui/form/Form.css",
+  modules,
+  export: "FormBuilder",
+  schema,
+  config,
+}));
+
+// 3. The route plan. A builder called inside `onCreated` is invisible to the node collector,
+//    so a cold load fails before it is fetched unless the route names it.
+registerModule(components, [{ route: "checkout", components: ["form", "input", "menu"] }]);
+
+// 4. Use it. `config` is optional; every key in the table above has a default.
+const element = build("form", { schema, config: { id: "checkout" } });
+element.addEventListener("formSubmit", (event) => console.log(event.detail.data));
+```
+
+### Validation
+
+The rules are the fields' own DOM attributes (`required`, `pattern`, `min`, `max`, `minlength`,
+`maxlength`, `type`). Nothing is declared in `config`: the engine reads the constraints at submit
+or at `next`, so a message never appears while the user is still typing.
+
+```ts
+const schema = [
+  {
+    id: "order",
+    title: "Order details",
+    group: [
+      { type: "text", id: "name", title: "Name", required: true },
+      { type: "text", id: "invoice", title: "Invoice", required: true, pattern: "INV-[0-9]+" },
+      { type: "number", id: "qty", title: "Quantity", min: 1, max: 10 },
+    ],
+  },
+];
+
+const element = build("form", { schema, config: { id: "order-form" } });
+
+element.addEventListener("formValidation", (event) => {
+  const { reason, message } = event.detail; // reason: "valid" | "native" | …
+  if (reason !== "valid") console.warn(reason, message);
+});
+```
+
+### Cascade
+
+`condition` on a field is the whole declaration: while the condition is false the field is not in
+the DOM. `cascadeMode` decides whether it is built and hidden (`"hidden"`) or planted as a
+`<template>` (`"template"`, the default). Use `"hidden"` when another engine needs a live element
+to inject into — a chained address picker, for example.
+
+```ts
+const schema = [
+  {
+    id: "delivery",
+    group: [
+      { type: "radio", id: "pickup", name: "delivery", value: "pickup", title: "Pickup" },
+      { type: "radio", id: "courier", name: "delivery", value: "courier", title: "Courier" },
+      {
+        type: "text",
+        id: "courierNote",
+        title: "Note for the courier",
+        condition: { field: "delivery", equals: "courier" },
+      },
+    ],
+  },
+];
+
+build("form", {
+  schema,
+  config: {
+    cascading: true,
+    cascadeMode: "hidden",
+    onCascade: (state) => console.log("cascade", state),
+  },
+});
+```
+
+### Calculation
+
+`calculation: true` turns the engine on; a field opts in with `config.calculator`. The engine walks
+the schema, runs each formula against the current values and writes the total into `outputId`.
+
+```ts
+const schema = [
+  {
+    id: "line",
+    group: [
+      {
+        type: "number",
+        id: "qty",
+        title: "Qty",
+        min: 0,
+        // The formula travels with the field that carries the quantity.
+        config: {
+          calculator: {
+            id: "line-total",
+            outputId: "total",
+            formula: ({ getNumber }) => ({
+              id: "line-total",
+              label: "Line",
+              quantity: getNumber("qty"),
+              unitPrice: getNumber("price"),
+              total: getNumber("qty") * getNumber("price"),
+            }),
+          },
+        },
+      },
+      { type: "number", id: "price", title: "Price", min: 0 },
+      { type: "number", id: "total", title: "Total", readonly: true },
+    ],
+  },
+];
+
+build("form", { schema, config: { calculation: true } });
+```
+
+### Multistep
+
+`multistep: true` turns each group into a step. `prepare()` plants a `<template data-step>` in place
+of every step and the fieldset is built when that step is opened, so a heavy step costs nothing
+until it is reached. Validation is scanned per step: a step that has not been opened cannot block
+the one the user is on.
+
+```ts
+const schema = [
+  { id: "contact", title: "Step 1 · Contact", group: [{ type: "email", id: "email", title: "Email", required: true }] },
+  { id: "address", title: "Step 2 · Address", group: [{ type: "text", id: "city", title: "City", required: true }] },
+  { id: "confirm", title: "Step 3 · Confirm", group: [{ type: "checkbox", id: "agree", title: "I agree" }] },
+];
+
+build("form", {
+  schema,
+  config: {
+    id: "signup",
+    multistep: true,
+    // Optional: keep `next` disabled until the current step validates.
+    autoDisableNextStep: true,
+  },
+});
+```
+
 ## Nodes
 
 | Key                          | Default tag | Class                      |
