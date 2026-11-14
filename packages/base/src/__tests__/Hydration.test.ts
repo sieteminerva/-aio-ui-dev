@@ -204,4 +204,33 @@ describe("hold seam — component mockup", () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining("loading()"), expect.any(Error));
     warn.mockRestore();
   });
+
+  it("honours the minimum visible time a mockup asks for", async () => {
+    vi.useFakeTimers();
+    try {
+      // A specifier no earlier case touched: `ensureStylesheet` keeps its in-flight
+      // promise per key, and two cases above deliberately leave a never-settling loader.
+      const sheet = deferred<{ default: string }>();
+      useStylesheetAssets({ "@aio-ui/skeleton/Skeleton.css": () => sheet.promise });
+      const { element, mockup } = heldRoot();
+      mockup.setAttribute("data-skeleton-duration", "600");
+
+      holdUntilStyled(element, "./Skeleton.css", () => mockup);
+
+      await vi.advanceTimersByTimeAsync(0); // the loader is invoked from a microtask
+      sheet.resolve({ default: CSS });
+      await vi.advanceTimersByTimeAsync(10);
+
+      // The sheet is in, the floor is not: a fast load must not flash a skeleton.
+      expect(element.firstElementChild).toBe(mockup);
+      expect(element.getAttribute("data-loaded")).not.toBe("true");
+
+      await vi.advanceTimersByTimeAsync(600);
+
+      expect(element.hasAttribute("data-mockup")).toBe(false);
+      expect(element.getAttribute("data-loaded")).toBe("true");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

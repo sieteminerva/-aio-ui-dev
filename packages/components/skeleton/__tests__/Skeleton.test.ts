@@ -43,6 +43,36 @@ describe("Skeleton.create", () => {
     expect(tree.querySelectorAll(".skeleton-row")).toHaveLength(2);
     expect(tree.querySelectorAll(".skeleton-circle")).toHaveLength(2);
   });
+
+  it("writes no lifetime marker for the default `auto`", () => {
+    const bone = Skeleton.create({ duration: "auto" });
+
+    expect(bone.hasAttribute("data-skeleton-duration")).toBe(false);
+  });
+
+  it("publishes a numeric duration as a floor the hold can read", () => {
+    const bone = Skeleton.create({ duration: 600 });
+
+    expect(bone.getAttribute("data-skeleton-duration")).toBe("600");
+  });
+
+  it("ignores a duration that could never be a floor", () => {
+    expect(Skeleton.create({ duration: 0 }).hasAttribute("data-skeleton-duration")).toBe(false);
+    expect(Skeleton.create({ duration: -5 }).hasAttribute("data-skeleton-duration")).toBe(false);
+    expect(Skeleton.create({ duration: Number.NaN }).hasAttribute("data-skeleton-duration")).toBe(false);
+  });
+
+  it("adds a host class to the mockup root only", () => {
+    const tree = Skeleton.create({
+      shape: "stack",
+      className: "is-brand",
+      children: [{ shape: "line" }],
+    });
+
+    expect(tree.classList.contains("is-brand")).toBe(true);
+    expect(tree.classList.contains("skeleton-stack")).toBe(true);
+    expect(tree.querySelector(".skeleton-line")?.classList.contains("is-brand")).toBe(false);
+  });
 });
 
 describe("SkeletonBuilder", () => {
@@ -61,5 +91,26 @@ describe("SkeletonBuilder", () => {
     const element = builder.prepare({ shape: "circle" });
 
     expect(element.className).toContain("skeleton-circle");
+  });
+
+  it("carries the configured duration and className onto the mockup", () => {
+    const builder = new SkeletonBuilder({ duration: 800, className: "is-brand" });
+
+    const element = builder.prepare({ shape: "line" });
+
+    expect(element.getAttribute("data-skeleton-duration")).toBe("800");
+    expect(element.classList.contains("is-brand")).toBe(true);
+  });
+
+  it("lets the spec override the configured defaults", () => {
+    const builder = new SkeletonBuilder({
+      duration: 800,
+      spec: { duration: "auto", className: "is-spec" },
+    });
+
+    const element = builder.prepare({});
+
+    expect(element.hasAttribute("data-skeleton-duration")).toBe(false);
+    expect(element.classList.contains("is-spec")).toBe(true);
   });
 });

@@ -297,6 +297,11 @@ protected loading(): HTMLElement {
 - Precision lives in the spec (`ProductCard` mirrors its display/swatches/caption/button
   rhythm, `Table` mirrors its header and row height) — never in a rule for `[data-skeleton]`
   written by another component. Override `--skeleton-fill` in your own layer if the tone is off.
+- Lifetime is config, not a timer you write. `duration: "auto"` (default) releases with the
+  sheet — the real, measured load time. `duration: <ms>` is a **floor**, so a fast sheet cannot
+  flash the mockup; a slow one is still waited for. `className` adds your own class(es) to the
+  mockup root only, which is the supported way to give it a skin or a motion the skeleton sheet
+  does not own.
 - If `loading()` returns nothing or throws, `create()` falls back to the shimmer skin.
 
 **Coverage.** Every in-flow builder draws a mockup: `accordion`, `article`, `badge`,

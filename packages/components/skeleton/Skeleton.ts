@@ -42,7 +42,28 @@ export interface iSkeletonSpec {
   count?: number;
   /** Children, laid out by `stack` (column) or `row`. */
   children?: iSkeletonSpec[];
+  /**
+   * How long this mockup stays on screen, in milliseconds.
+   *
+   * - `"auto"` (default) — the lifetime belongs to the hold: the mockup disappears the
+   *   moment the component's own sheet settles. This is the real load time, never a guess.
+   * - `number` — a **floor**, not a timer: the mockup is guaranteed to be visible at least
+   *   this long (a fast sheet otherwise produces a flash of skeleton), and it still waits
+   *   for a slow one. The hold reads it from `data-skeleton-duration`; the skeleton itself
+   *   never hides anything.
+   */
+  duration?: number | "auto";
+  /**
+   * Extra class (or classes) for the mockup root — the host's own skin or animation.
+   *
+   * @summary Root only, never cloned onto the children: a caller that wants a different
+   *   motion writes one rule against its own class. Nothing in this package reads it.
+   */
+  className?: string;
 }
+
+/** The attribute the hold reads its visibility floor from. */
+export const SKELETON_DURATION_ATTRIBUTE = "data-skeleton-duration";
 
 /** Shape → class. Kept as a map so the DOM shape and the CSS shape cannot drift apart. */
 const SHAPE_CLASS: Record<SkeletonShape, string> = {
@@ -77,13 +98,22 @@ export class Skeleton {
   public static create(spec: iSkeletonSpec = {}): HTMLElement {
     const shape: SkeletonShape = spec.shape ?? "bone";
     const node = document.createElement("div");
-    node.className = `skeleton ${SHAPE_CLASS[shape]}`;
+    node.className = ["skeleton", SHAPE_CLASS[shape], spec.className?.trim()]
+      .filter(Boolean)
+      .join(" ");
     node.setAttribute("data-skeleton", shape);
 
     if (spec.width) node.style.width = spec.width;
     if (spec.height) node.style.height = spec.height;
     if (spec.aspect) node.style.aspectRatio = spec.aspect;
     if (spec.gap) node.style.gap = spec.gap;
+
+    // "auto" writes nothing: the hold already releases on the sheet, which *is* the real
+    // load time. A number is a floor the hold has to honour, so it travels as an attribute
+    // rather than as a timer this factory would have to own.
+    if (typeof spec.duration === "number" && Number.isFinite(spec.duration) && spec.duration > 0) {
+      node.setAttribute(SKELETON_DURATION_ATTRIBUTE, String(Math.round(spec.duration)));
+    }
 
     for (const child of spec.children ?? []) {
       const count = Math.max(1, child.count ?? 1);
@@ -102,6 +132,10 @@ export type SkeletonElementType = "@skeleton";
 export interface iSkeletonConfig extends iBuilderConfig<SkeletonElementType> {
   /** The silhouette this component should draw. */
   spec: iSkeletonSpec;
+  /** Default lifetime for every mockup this component draws (`"auto"` = until the sheet). */
+  duration: number | "auto";
+  /** Extra class(es) the host wants on the mockup root. */
+  className: string;
 }
 
 export class SkeletonBuilder extends Builder<SkeletonElementType, iSkeletonConfig> {
@@ -119,12 +153,19 @@ export class SkeletonBuilder extends Builder<SkeletonElementType, iSkeletonConfi
       emit: () => { },
       selectors: {},
       spec: {},
+      duration: "auto",
+      className: "",
     }, config);
   }
 
   public prepare(content: any): HTMLElement {
     const fromContent = content && typeof content === "object" ? content : {};
-    return Skeleton.create({ ...this.config.spec, ...fromContent });
+    return Skeleton.create({
+      duration: this.config.duration,
+      className: this.config.className,
+      ...this.config.spec,
+      ...fromContent,
+    });
   }
 
   protected template(): void { }

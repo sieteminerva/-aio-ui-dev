@@ -15,6 +15,13 @@ Last updated: 2026-11-14
 
 ## Landed recently
 
+- **Batch 22 (2026-11-14):** the skeleton got its two knobs. `duration: number | "auto"` —
+  `"auto"` (default) releases with the component's sheet, a number is a **floor** so a fast
+  sheet cannot flash the mockup (the hold joins it with the stylesheet promise via
+  `Promise.all`; `Skeleton.create` publishes it as `data-skeleton-duration`). `className` puts
+  the host's own class on the mockup root only. Pulse speed renamed to `--skeleton-pulse` so
+  "duration" means one thing. Same config on `SkeletonBuilder` (`duration`, `className`),
+  spec/payload winning over it. Gate: 655 pass / 1 skip.
 - **Batch 21 (2026-11-14):** `loading()` coverage finished. Every in-flow builder now draws
   its own silhouette (20 builders; `ProductCard` and `Table` already had one) — accordion,
   article, badge, carousel, code-block, footer, form, input, markdown, masonry, menu,

@@ -13,13 +13,15 @@
   --skeleton-fill: var(--app-skeleton-bg, rgba(127, 127, 127, 0.16));
   --skeleton-gap: var(--app-margin-component, 0.85rem);
   --skeleton-radius: calc(var(--app-component-border-radius, 1rem) / 2);
-  --skeleton-duration: 1.4s;
+  /* Pulse *speed*, not lifetime: how long a mockup stays on screen is decided by the
+     hold (`duration: number | "auto"` on the spec), never by a CSS timer. */
+  --skeleton-pulse: 1.4s;
 }
 
 /* ─── Base ─── */
 .skeleton {
   box-sizing: border-box;
-  animation: skeletonPulse var(--skeleton-duration) ease-in-out infinite;
+  animation: skeletonPulse var(--skeleton-pulse) ease-in-out infinite;
 }
 
 /* One animation per mockup: a child of a mockup inherits the motion of its

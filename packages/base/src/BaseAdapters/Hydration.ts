@@ -127,6 +127,21 @@ function buildMockup(factory: iMockupFactory | null | undefined): HTMLElement | 
 }
 
 /**
+ * Reads the visibility floor a mockup asked for.
+ *
+ * @param mockup - The element `loading()` returned.
+ * @returns Milliseconds the mockup must stay mounted, or `0` for "release when the sheet does".
+ *
+ * @summary The skeleton owns the config (`duration: number | "auto"`) and writes a number
+ *   as `data-skeleton-duration`; `"auto"` writes nothing. Reading it off the element keeps
+ *   `iMockupFactory` a plain thunk — a builder never has to know the hold exists.
+ */
+function mockupFloor(mockup: HTMLElement): number {
+  const value = Number(mockup.getAttribute("data-skeleton-duration"));
+  return Number.isFinite(value) && value > 0 ? value : 0;
+}
+
+/**
  * The anti-FOUC gate: keep a component root off the screen until its stylesheet is there.
  *
  * @param root - The root the builder is about to return (pre-mount, pre-paint).
@@ -144,6 +159,11 @@ function buildMockup(factory: iMockupFactory | null | undefined): HTMLElement | 
  *   sheets, so a flag cannot answer "is *my* CSS here". Release rides
  *   {@link ensureStylesheet}, which never rejects: a builder no registry ever sees still
  *   heals itself.
+ *
+ *   A mockup may also ask for a minimum on-screen time (`duration` on its spec, surfaced as
+ *   `data-skeleton-duration`). That is a **floor**, joined with the sheet promise via
+ *   `Promise.all`: a fast sheet no longer flashes a skeleton for one frame, and a slow one
+ *   is still waited for — the marker never lifts before the CSS is in.
  */
 export function holdUntilStyled(
   root: HTMLElement,
@@ -160,7 +180,13 @@ export function holdUntilStyled(
 
   const skeleton = buildMockup(mockup);
   const restore = skeleton ? mountMockup(root, skeleton) : markShimmerHold(root);
-  void ensureStylesheet(specifier).then(() => {
+  const floor = skeleton ? mockupFloor(skeleton) : 0;
+  const minimum = floor > 0
+    ? new Promise<void>((resolve) => {
+      setTimeout(resolve, floor);
+    })
+    : Promise.resolve();
+  void Promise.all([ensureStylesheet(specifier), minimum]).then(() => {
     restore();
     releaseMarkers(root);
   });

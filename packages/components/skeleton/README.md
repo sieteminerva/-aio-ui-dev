@@ -33,23 +33,39 @@ The registry face (`SkeletonBuilder`) takes one spec, merged over `config.spec`:
 
 ## Config
 
-| Option      | Default     | Meaning                                    |
-| ----------- | ----------- | ------------------------------------------ |
-| `spec`      | `{}`        | The silhouette to draw                     |
-| `selectors` | `{}`        | Unused — this builder has no selector keys |
-| `themeId`   | `"default"` | Standard builder config                    |
+| Option      | Default     | Meaning                                                              |
+| ----------- | ----------- | -------------------------------------------------------------------- |
+| `spec`      | `{}`        | The silhouette to draw                                               |
+| `duration`  | `"auto"`    | Default lifetime — milliseconds, or `"auto"` (until the sheet lands) |
+| `className` | `""`        | Extra class(es) for the mockup root (the host's own skin)            |
+| `selectors` | `{}`        | Unused — this builder has no selector keys                           |
+| `themeId`   | `"default"` | Standard builder config                                              |
 
 `iSkeletonSpec`:
 
-| Field      | Type                                               | Meaning                                              |
-| ---------- | -------------------------------------------------- | ---------------------------------------------------- |
-| `shape`    | `"stack" \| "row" \| "line" \| "bone" \| "circle"` | Layout (`stack`/`row`) or leaf skin. Default `bone`. |
-| `width`    | CSS length                                         | Geometry the real node would have had.               |
-| `height`   | CSS length                                         | A bone without it keeps the sheet's `min-height`.    |
-| `aspect`   | CSS `aspect-ratio`                                 | For media boxes that reserve their own space.        |
-| `gap`      | CSS length                                         | Only for `stack` / `row`.                            |
-| `count`    | number                                             | Repeats the node (text lines, placeholder rows).     |
-| `children` | `iSkeletonSpec[]`                                  | Laid out by the parent's `stack` / `row`.            |
+| Field       | Type                                               | Meaning                                              |
+| ----------- | -------------------------------------------------- | ---------------------------------------------------- |
+| `shape`     | `"stack" \| "row" \| "line" \| "bone" \| "circle"` | Layout (`stack`/`row`) or leaf skin. Default `bone`. |
+| `width`     | CSS length                                         | Geometry the real node would have had.               |
+| `height`    | CSS length                                         | A bone without it keeps the sheet's `min-height`.    |
+| `aspect`    | CSS `aspect-ratio`                                 | For media boxes that reserve their own space.        |
+| `gap`       | CSS length                                         | Only for `stack` / `row`.                            |
+| `count`     | number                                             | Repeats the node (text lines, placeholder rows).     |
+| `children`  | `iSkeletonSpec[]`                                  | Laid out by the parent's `stack` / `row`.            |
+| `duration`  | `number \| "auto"`                                 | How long the mockup stays on screen. Default `auto`. |
+| `className` | string                                             | Host class(es) on the mockup root only.              |
+
+### `duration` — lifetime, not pulse
+
+| Value    | Effect                                                                                                                                                              |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"auto"` | Released the moment the component's own sheet settles — the honest, measured load time.                                                                             |
+| `number` | A **floor**: the mockup stays visible at least this many milliseconds, so a fast sheet cannot flash it. It never releases early — a slow sheet is still waited for. |
+
+`Skeleton.create` writes the number as `data-skeleton-duration`; the hold in
+`@aio-ui/base/BaseAdapters/Hydration` is the only reader, and it joins that floor with the
+stylesheet promise (`Promise.all`). A skeleton never hides anything itself, and a warm sheet never
+builds one. The pulse _speed_ is a different knob: `--skeleton-pulse` in this package's layer.
 
 ## Nodes
 
@@ -66,12 +82,12 @@ and tracking its nodes would be waste:
 
 ## Tokens
 
-| Token                 | Reads                           | Use                                        |
-| --------------------- | ------------------------------- | ------------------------------------------ |
-| `--skeleton-fill`     | `--app-skeleton-bg`             | Bone colour (layer, `:root, [data-theme]`) |
-| `--skeleton-gap`      | `--app-margin-component`        | Default gap for `stack` / `row`            |
-| `--skeleton-radius`   | `--app-component-border-radius` | Bone corner                                |
-| `--skeleton-duration` | literal `1.4s`                  | Pulse cycle                                |
+| Token               | Reads                           | Use                                        |
+| ------------------- | ------------------------------- | ------------------------------------------ |
+| `--skeleton-fill`   | `--app-skeleton-bg`             | Bone colour (layer, `:root, [data-theme]`) |
+| `--skeleton-gap`    | `--app-margin-component`        | Default gap for `stack` / `row`            |
+| `--skeleton-radius` | `--app-component-border-radius` | Bone corner                                |
+| `--skeleton-pulse`  | literal `1.4s`                  | Pulse cycle (speed, not lifetime)          |
 
 A component that needs a different bone tone overrides `--skeleton-fill` in its own layer; it never
 writes a rule for `[data-skeleton]`.
