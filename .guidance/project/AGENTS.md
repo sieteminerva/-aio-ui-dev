@@ -6,7 +6,9 @@
 
 ## Live claims
 
-_No live writer. Add a row here before your first edit — see the rules below._
+| Agent       | Band    | Task                              | Write scope                                                                                                                                                                                   | Started    | Checkpoint                             | State  |
+| ----------- | ------- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------- | ------ |
+| copilot b34 | Tooling | Release live CDN v0.2.0 + handout | `docs/live-cdn-repo.md`, `docs/live-cdn-migration.md`, `orchestrator/layout.json`, `.guidance/project/*.md`, `scripts/*` (read-only unless a fix is needed), `**/package.json` (release only) | 2026-11-14 | `/memories/session/page-level-plan.md` | active |
 
 ## Row shape
 
