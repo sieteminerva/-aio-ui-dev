@@ -5,6 +5,11 @@
    CSS that can style a component *while that component's own sheet is still
    on its way*. Precision lives in the spec (`Skeleton.create`), the skin lives
    here and reads only the app contract through its own layer.
+
+   One root selector (`.skeleton`), every shape nested under it with `&` — the
+   same shape as every other component sheet. The shapes are modifiers, not
+   descendants (`&-bone` → `.skeleton-bone`), because `Skeleton.create` puts the
+   base class and the shape class on the same element.
    ========================================================================= */
 
 /* ─── Layer ─── */
@@ -22,51 +27,60 @@
 .skeleton {
   box-sizing: border-box;
   animation: skeletonPulse var(--skeleton-pulse) ease-in-out infinite;
+
+  /* One animation per mockup: a child of a mockup inherits the motion of its
+     container instead of running a second keyframe set. */
+  & .skeleton {
+    animation: none;
+  }
+
+  /* ─── Shapes ───
+     `&.skeleton-bone`, never `&-bone`: the house style nests with `& ` (descendant),
+     `&.` (compound) and `&:` (state) only — a Sass-style concatenation is dropped
+     silently by the build, which is exactly how a mockup ends up with no skin. */
+  &.skeleton-bone,
+  &.skeleton-line,
+  &.skeleton-circle {
+    flex: 0 0 auto;
+    background: var(--skeleton-fill);
+  }
+
+  &.skeleton-bone {
+    min-height: 1rem;
+    border-radius: var(--skeleton-radius);
+  }
+
+  &.skeleton-line {
+    height: 0.7rem;
+    border-radius: 999px;
+  }
+
+  &.skeleton-circle {
+    aspect-ratio: 1;
+    border-radius: 50%;
+  }
+
+  /* ─── Layouts ─── */
+  &.skeleton-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--skeleton-gap);
+    width: 100%;
+  }
+
+  &.skeleton-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--skeleton-gap);
+    width: 100%;
+  }
 }
 
-/* One animation per mockup: a child of a mockup inherits the motion of its
-   container instead of running a second keyframe set. */
-.skeleton .skeleton {
-  animation: none;
-}
-
-/* ─── Shapes ─── */
-.skeleton-bone,
-.skeleton-line,
-.skeleton-circle {
-  flex: 0 0 auto;
-  background: var(--skeleton-fill);
-}
-
-.skeleton-bone {
-  min-height: 1rem;
-  border-radius: var(--skeleton-radius);
-}
-
-.skeleton-line {
-  height: 0.7rem;
-  border-radius: 999px;
-}
-
-.skeleton-circle {
-  aspect-ratio: 1;
-  border-radius: 50%;
-}
-
-/* ─── Layouts ─── */
-.skeleton-stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--skeleton-gap);
-  width: 100%;
-}
-
-.skeleton-row {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--skeleton-gap);
-  width: 100%;
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
 }
 
 @keyframes skeletonPulse {
@@ -76,11 +90,5 @@
   }
   50% {
     opacity: 0.55;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skeleton {
-    animation: none;
   }
 }
